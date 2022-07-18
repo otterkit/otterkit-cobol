@@ -1,0 +1,24 @@
+{
+  "name": "libotterkit",
+  "version": "0.1.1",
+  "description": "COBOL runtime library for NodeJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/otterkit/libotterkit.git"
+  },
+  "keywords": [
+    "COBOL",
+    "runtime",
+    "library"
+  ],
+  "author": "Gabriel Gonçalves <KTSnowy@outlook.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/otterkit/libotterkit/issues"
+  },
+  "homepage": "https://github.com/otterkit/libotterkit#readme"
+}

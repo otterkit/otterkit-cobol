@@ -57,11 +57,11 @@ public static class OtterkitCompiler
         List<string> processedLines = new();
         foreach (string line in readLines)
         {
-            if (line.Length >= 6 && sourceFormat == "fixed")
+            if (sourceFormat == "fixed")
             {
-                processedLines.Add(line.Substring(6));
+                processedLines.Add(line.PadRight(6).Substring(6));
             }
-            else
+            if (sourceFormat == "free")
             {
                 processedLines.Add(line);
             }

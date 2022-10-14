@@ -5,6 +5,7 @@
 
 # COBOL source files.
 *.cob
+*.cbl
 *.cpy
 
 # User-specific files

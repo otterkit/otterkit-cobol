@@ -4,6 +4,7 @@ public static class OtterkitCompiler
 {
     private static string fileName = "main.cob";
     private static string sourceFormat = "fixed";
+    private static int maxColumnLength = 80;
     public static void Main(string[] args)
     {
         if (args.Length <= 1)
@@ -37,6 +38,10 @@ public static class OtterkitCompiler
                 case "-F":
                     fileName = args[index];
                     break;
+                // -CL meaning Column Length
+                case "-CL":
+                    maxColumnLength = int.Parse(args[index]);
+                    break;
                 // --Fixed meaning Fixed Format
                 case "--Fixed":
                     sourceFormat = "fixed";
@@ -58,8 +63,14 @@ public static class OtterkitCompiler
         foreach (string line in readLines)
         {
             if (sourceFormat == "fixed")
-            {
-                processedLines.Add(line.PadRight(6).Substring(6));
+            {   
+                string currentLine = line;
+                if (currentLine.Length >= maxColumnLength)
+                {
+                    currentLine = currentLine.Substring(0, maxColumnLength);
+                }
+                currentLine = currentLine.PadRight(6).Substring(6);
+                processedLines.Add(currentLine);
             }
             if (sourceFormat == "free")
             {

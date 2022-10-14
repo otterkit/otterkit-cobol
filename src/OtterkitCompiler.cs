@@ -64,11 +64,20 @@ public static class OtterkitCompiler
         {
             if (sourceFormat == "fixed")
             {   
-                string currentLine = line;
+                string currentLine = line.PadRight(7);
                 if (currentLine.Length >= maxColumnLength)
                 {
+                    // Removes everything after the max column length
                     currentLine = currentLine.Substring(0, maxColumnLength);
                 }
+
+                if (currentLine[6].ToString() == "*")
+                {   
+                    //Removes all comment lines
+                    currentLine = "";
+                }
+
+                // Removes the sequence number area
                 currentLine = currentLine.PadRight(6).Substring(6);
                 processedLines.Add(currentLine);
             }

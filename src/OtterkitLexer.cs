@@ -6,14 +6,16 @@ public static class OtterkitLexer
     public static void Tokenize(List<string> sourceLines)
     {
         int lineNumber = 0;
-        string pattern = "\\w+(-[\\w0-9]+)*|(^-\\s*\"|\")(.*?)(\"|(\r\n|\r|\n)|$)|\\w+|[^\\w\\s]|(\r\n|\r|\n)";
+        string pattern = 
+            "\\w+(-[\\w0-9]+)*|(\")(.*?)(\"|$)|(\')(.*?)(\'|$)|\\w+|[^\\w\\s]|(\r\n|\r|\n)";
         /*  
         **  Explaining the big regex pattern:
         **
         **  < \w+(-[\w0-9]+)* > : Matches all COBOL reserved keywords and
         **                        intrinsic function names
         **
-        **  < (^-\s*"|")(.*?)("|(\r\n|\r|\n)|$) > : 
+        **  < (\")(.*?)(\"|$) > :
+        **  < (\')(.*?)(\'|$) > :
         **          Matches all strings including fixed format continuation lines,
         **          where the string ends without closing the quote and continues
         **          with a -" on the next line. Useful for preserving string formatting

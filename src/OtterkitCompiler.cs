@@ -65,7 +65,7 @@ public static class OtterkitCompiler
         foreach (string line in readLines)
         {
             if (sourceFormat == "fixed")
-            {   
+            {
                 string currentLine = line;
                 if (currentLine.Length >= maxColumnLength)
                 {
@@ -82,19 +82,19 @@ public static class OtterkitCompiler
                     currentLine = "";
                 }
 
-                if (currentLine.StartsWith("-"))
-                {
-                    // Removes potential extra espaces on continuation lines 
-                    // Regex explanation: < (-\s*") > :
-                    //   Replaces: -   "STRING" With: -"STRING" 
-                    currentLine = Regex.Replace(currentLine, "(-\\s*\")", "-\"");
-                }
-
                 processedLines.Add(currentLine);
             }
             if (sourceFormat == "free")
             {
-                processedLines.Add(line);
+                string currentLine = line;
+                int commentIndex = currentLine.IndexOf("*>");
+                if (commentIndex > -1)
+                {
+                    // Removes all free format comments
+                    currentLine = currentLine.Substring(0, commentIndex);
+                }
+
+                processedLines.Add(currentLine);
             }
         }
         return processedLines;

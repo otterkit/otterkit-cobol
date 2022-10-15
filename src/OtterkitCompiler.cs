@@ -1,4 +1,5 @@
-﻿namespace Otterkit;
+﻿using System.Text.RegularExpressions;
+namespace Otterkit;
 
 public static class OtterkitCompiler
 {
@@ -50,7 +51,11 @@ public static class OtterkitCompiler
                 case "--Free":
                     sourceFormat = "free";
                     break;
-                default: break;
+                default:
+                    Console.WriteLine("Otterkit: Invalid command line arguments");
+                    DisplayHelpMessage();
+                    Environment.Exit(0);
+                    break;
             }
 
         }
@@ -64,21 +69,30 @@ public static class OtterkitCompiler
         {
             if (sourceFormat == "fixed")
             {   
-                string currentLine = line.PadRight(7);
+                string currentLine = line;
                 if (currentLine.Length >= maxColumnLength)
                 {
                     // Removes everything after the max column length
                     currentLine = currentLine.Substring(0, maxColumnLength);
                 }
 
-                if (currentLine[6].ToString() == "*")
-                {   
-                    //Removes all comment lines
+                // Removes the sequence number area
+                currentLine = currentLine.PadRight(6).Substring(6);
+
+                if (currentLine.StartsWith("*"))
+                {
+                    // Removes all fixed format comment lines
                     currentLine = "";
                 }
 
-                // Removes the sequence number area
-                currentLine = currentLine.PadRight(6).Substring(6);
+                if (currentLine.StartsWith("-"))
+                {
+                    // Removes potential extra espaces on continuation lines 
+                    // Regex explanation: < (-\s*") > :
+                    //   Replaces: -   "STRING" With: -"STRING" 
+                    currentLine = Regex.Replace(currentLine, "(-\\s*\")", "-\"");
+                }
+
                 processedLines.Add(currentLine);
             }
             if (sourceFormat == "free")
@@ -91,11 +105,15 @@ public static class OtterkitCompiler
 
     private static void DisplayHelpMessage()
     {
-        Console.WriteLine("\nOtterkit COBOL Compiler            ");
-        Console.WriteLine("<Copyright 2022 - Otterkit Project>\n");
-        Console.WriteLine("Command line options:                ");
-        Console.WriteLine("  help - Displays this help message  ");
-        Console.WriteLine("  file <filename> - Compile file     ");
+        Console.WriteLine("\nOtterkit COBOL Compiler                   ");
+        Console.WriteLine("<Copyright 2022 Otterkit Project>           ");
+        Console.WriteLine("<Apache 2.0 license>                      \n");
+        Console.WriteLine("Command line options:                       ");
+        Console.WriteLine("  -H          >> Displays this message      ");
+        Console.WriteLine("  -F filename >> Compile specified file     ");
+        Console.WriteLine("  -CL integer >> Specify max column length  ");
+        Console.WriteLine("  --Fixed     >> Use fixed source format    ");
+        Console.WriteLine("  --Free      >> Use free source format     ");
         Console.WriteLine("\n");
     }
 }

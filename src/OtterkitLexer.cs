@@ -28,9 +28,9 @@ public static class OtterkitLexer
         foreach (string line in sourceLines)
         {
             lineNumber += 1;
-            foreach (Match match in Regex.Matches(line, pattern, RegexOptions.IgnoreCase))
+            foreach (Match token in Regex.Matches(line, pattern, RegexOptions.IgnoreCase))
             {
-                Console.WriteLine("<Line {0}: Column {1}>: {2}", lineNumber, match.Index, match.Value);
+                Console.WriteLine("<Line {0}: Column {1}>: {2}", lineNumber, token.Index, token.Value);
             }
 
         }

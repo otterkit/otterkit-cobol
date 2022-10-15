@@ -52,9 +52,6 @@ public static class OtterkitCompiler
                     sourceFormat = "free";
                     break;
                 default:
-                    Console.WriteLine("Otterkit: Invalid command line arguments");
-                    DisplayHelpMessage();
-                    Environment.Exit(0);
                     break;
             }
 

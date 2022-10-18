@@ -2,20 +2,6 @@ using System.Numerics;
 
 namespace OtterkitLibrary.Numerics;
 
-public static class DecimalMath
-{
-    public static BigDecimal Abs(BigDecimal argument)
-    {
-        BigInteger mantissa = argument.Mantissa;
-        if (mantissa <= 0)
-        {
-            mantissa = -mantissa;
-            return argument;
-        }
-        return argument;
-    }
-}
-
 // public struct OtterkitDPD: IComparable, IComparable<OtterkitDPD>
 // TODO: Implement Densely Packed Decimal.
 

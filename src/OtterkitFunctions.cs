@@ -6,7 +6,7 @@ public static class Functions
 {
     public static BigDecimal ABS(Numeric argument)
     {
-        return DecimalMath.Abs(argument.Value);
+        return DecMath.Abs(argument.Value);
     }
 
 }

@@ -1,21 +1,25 @@
+using System.Numerics;
+using OtterkitLibrary.Numerics;
+
 namespace OtterkitLibrary;
+
 public class OtterkitTypes
 {
     public class Numeric
     {
-        private decimal internalNumber;
-        private int integerSize;
-        private int decimalSize;
-        private string format;
+        private BigDecimal internalNumber;
+        private int intSize;
+        private int intSizePow10;
+        private int decSize;
         private bool isNegative = false;
         private bool isSigned = false;
 
-        public Numeric(decimal number, string format, int intSize, int decSize, bool signed)
+        public Numeric(BigDecimal number, int intSize, int decSize, bool signed)
         {
             this.internalNumber = number;
-            this.format = format;
-            this.integerSize = (int)Math.Pow(10, intSize);
-            this.decimalSize = decSize;
+            this.intSize = intSize;
+            this.intSizePow10 = (int)Math.Pow(10, intSize);
+            this.decSize = decSize + 1;
             this.isSigned = signed;
             if (number < 0 && isSigned)
             {
@@ -23,21 +27,20 @@ public class OtterkitTypes
             }
         }
 
-        private decimal Truncate(decimal number)
+        private BigDecimal Truncate(BigDecimal number)
         {
-            decimal IntValue = Math.Truncate(Math.Abs(number) % integerSize);
-            decimal DecValue = Math.Round(Math.Abs(number), decimalSize, MidpointRounding.ToZero)
-                                - Math.Truncate(Math.Abs(number));
-
-            return IntValue + DecValue;
+            string IntValue = (number.Truncate() % intSizePow10).ToString("decimal");
+            string DecValue = (number - number.Truncate()).ToString("decimal");
+            return String.Format("{0}{1}", IntValue, DecValue.Substring(0, decSize));
+        }
+        private string Formatter(BigDecimal number)
+        {
+            string IntValue = (number.Truncate() % intSizePow10).ToString("decimal").PadLeft(4, '0');
+            string DecValue = (number - number.Truncate()).ToString("decimal").PadLeft(decSize, '0');
+            return String.Format("{0}{1}", IntValue, DecValue.Substring(0, decSize));
         }
 
-        private string Formatter(decimal number)
-        {
-            return Truncate(number).ToString(format);
-        }
-
-        public decimal Value
+        public BigDecimal Value
         {
             get
             {

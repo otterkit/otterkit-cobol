@@ -47,9 +47,51 @@ public struct OtterkitDPD
         0000000000
     };
 
-    public OtterkitDPD()
+    public OtterkitDPD(int sign, int[] declets)
     {
+        this.sign = sign;
+        this.Declets = declets;
+    }
 
+    public OtterkitDPD(int sign, int integer)
+    {
+        this.sign = sign;
+        ToDeclets(integer);
+    }
+
+    public OtterkitDPD(int integer)
+    {
+        ToDeclets(integer);
+    }
+
+    public static implicit operator OtterkitDPD(int value)
+    {
+        if (value < 0)
+        {
+            return new OtterkitDPD(1, value);
+        }
+        return new OtterkitDPD(0, value);
+    }
+
+    private static OtterkitDPD Add(OtterkitDPD left, OtterkitDPD right)
+    {
+        int overflow = 0;
+        int sum = 0;
+        int[] newDeclets = new int[12];
+        for (int index = 11; index > 0; index--)
+        {
+            int leftDeclet = DPDEncoding.Decode(left.Declets[index]);
+            int rightDeclet = DPDEncoding.Decode(right.Declets[index]);
+            sum = leftDeclet + rightDeclet + overflow;
+            newDeclets[index] = DPDEncoding.Encode(sum % 1000);
+            overflow = sum / 1000;
+        }
+        return new OtterkitDPD(0, newDeclets);
+    }
+
+    public static OtterkitDPD operator +(OtterkitDPD left, OtterkitDPD right)
+    {
+        return Add(left, right);
     }
 
     public void ToDeclets(int number)

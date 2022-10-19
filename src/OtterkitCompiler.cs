@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-namespace Otterkit;
+﻿namespace Otterkit;
 
 public static class OtterkitCompiler
 {

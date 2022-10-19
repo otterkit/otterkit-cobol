@@ -6,5 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
+  <ItemGroup>
+    <ProjectReference Include="../../libotterkit/src/OtterkitLibrary.csproj" />
+  </ItemGroup>
 </Project>

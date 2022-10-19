@@ -3,6 +3,14 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# COBOL source files.
+*.cob
+*.cbl
+*.cpy
+
+# macOS DS_Store
+.DS_Store
+
 # User-specific files
 *.rsuser
 *.suo

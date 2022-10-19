@@ -1,7 +1,7 @@
 namespace OtterkitLibrary;
 
 public static class LUTS{
-    public static readonly uint[] DPDLUT = {
+    public static readonly int[] DPDLUT = {
         0000000000,
         0000000001,
         0000000010,

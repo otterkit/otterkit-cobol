@@ -6,7 +6,7 @@ namespace OtterkitLibrary.Numerics;
 // TODO: Implement Densely Packed Decimal.
 
 /// <summary>
-/// Arbitrary Precision Decimal, used by Otterkit COBOL for fixed-point decimal arithmetic.
+/// Arbitrary Precision Decimal, used by Otterkit COBOL for floating-point decimal arithmetic.
 /// <para>All operations are exact, except for division. Division never determines more digits than the given precision.</para>
 /// <para>This is a slightly modified version of Jan Christoph Bernack's public domain BigDecimal implementation.</para>
 /// <para>Original Author: Jan Christoph Bernack (contact: jc.bernack at gmail.com)</para>

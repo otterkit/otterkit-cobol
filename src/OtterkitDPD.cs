@@ -166,6 +166,50 @@ public struct DPD120
         return Divide(left, right);
     }
 
+    public static DPD120 operator %(DPD120 left, DPD120 right)
+    {
+        return left - right * (left / right);
+    }
+
+    public static bool operator ==(DPD120 left, DPD120 right)
+    {
+        for (int index = 11; index > 0; index--)
+        {
+            if (left.Declets[index] != right.Declets[index])
+                return false;
+        }
+        return left.sign == right.sign;
+    }
+
+    public static bool operator !=(DPD120 left, DPD120 right)
+    {
+        for (int index = 11; index > 0; index--)
+        {
+            if (left.Declets[index] == right.Declets[index])
+                return false;
+        }
+        return left.sign != right.sign;
+    }
+
+    public bool Equals(DPD120 other)
+    {
+        return other == this;
+    }
+
+    public override bool Equals(object? o)
+    {
+        if (ReferenceEquals(null, o))
+        {
+            return false;
+        }
+        return o is DPD120 && Equals((DPD120) o);
+    }
+
+    public override int GetHashCode()
+    {
+            return Declets.GetHashCode() ^ sign;
+    }
+
     private void ToDeclets(int number)
     {
         int overflow = 0;
@@ -226,8 +270,8 @@ public struct DPD120
     public string ToInt128String()
     {
         string decimalString = ToString();
-        string Int128 = decimalString.Replace(".", "");
-        return Int128;
+        string int128 = decimalString.Replace(".", "");
+        return int128;
     }
 
     public override string ToString()

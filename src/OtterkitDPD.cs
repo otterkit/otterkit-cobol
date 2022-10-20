@@ -1,3 +1,4 @@
+using System.Numerics;
 namespace OtterkitLibrary;
 
 public static class DPDEncoding
@@ -59,8 +60,15 @@ public struct OtterkitDPD
         ToDeclets(integer);
     }
 
-    public OtterkitDPD(int integer)
+    public OtterkitDPD(int sign, long integer)
     {
+        this.sign = sign;
+        ToDeclets(integer);
+    }
+
+    public OtterkitDPD(int sign, Int128 integer)
+    {
+        this.sign = sign;
         ToDeclets(integer);
     }
 
@@ -73,20 +81,60 @@ public struct OtterkitDPD
         return new OtterkitDPD(0, value);
     }
 
+    public static implicit operator OtterkitDPD(long value)
+    {
+        if (value < 0)
+        {
+            return new OtterkitDPD(1, value);
+        }
+        return new OtterkitDPD(0, value);
+    }
+
+    public static implicit operator OtterkitDPD(Int128 value)
+    {
+        if (value < 0)
+        {
+            return new OtterkitDPD(1, value);
+        }
+        return new OtterkitDPD(0, value);
+    }
+
     private static OtterkitDPD Add(OtterkitDPD left, OtterkitDPD right)
     {
-        int overflow = 0;
-        int sum = 0;
-        int[] newDeclets = new int[12];
-        for (int index = 11; index > 0; index--)
-        {
-            int leftDeclet = DPDEncoding.Decode(left.Declets[index]);
-            int rightDeclet = DPDEncoding.Decode(right.Declets[index]);
-            sum = leftDeclet + rightDeclet + overflow;
-            newDeclets[index] = DPDEncoding.Encode(sum % 1000);
-            overflow = sum / 1000;
-        }
-        return new OtterkitDPD(0, newDeclets);
+        Int128 leftInteger = Int128.Parse(left.ToInt128String());
+        Int128 rightInteger = Int128.Parse(left.ToInt128String());
+        Int128 sum =  leftInteger + rightInteger;
+
+        return new OtterkitDPD(0, sum);
+    }
+
+    private static OtterkitDPD Subtract(OtterkitDPD left, OtterkitDPD right)
+    {
+        Int128 leftInteger = Int128.Parse(left.ToInt128String());
+        Int128 rightInteger = Int128.Parse(left.ToInt128String());
+        Int128 difference =  leftInteger - rightInteger;
+
+        return new OtterkitDPD(0, difference);
+    }
+
+    private static OtterkitDPD Multiply(OtterkitDPD left, OtterkitDPD right)
+    {
+        BigInteger leftNum = BigInteger.Parse(left.ToInt128String());
+        BigInteger rightNum = BigInteger.Parse(right.ToInt128String());
+        leftNum = leftNum / 1000000000000000000;
+        Int128 product = (Int128)(leftNum * rightNum);
+
+        return new OtterkitDPD(0, product);
+    }
+
+    private static OtterkitDPD Divide(OtterkitDPD left, OtterkitDPD right)
+    {
+        BigInteger leftNum = BigInteger.Parse(left.ToInt128String());
+        BigInteger rightNum = BigInteger.Parse(right.ToInt128String());
+        leftNum = leftNum * 1000000000000000000;
+        Int128 quotient = (Int128)(leftNum / rightNum);
+
+        return new OtterkitDPD(0, quotient);
     }
 
     public static OtterkitDPD operator +(OtterkitDPD left, OtterkitDPD right)
@@ -94,7 +142,22 @@ public struct OtterkitDPD
         return Add(left, right);
     }
 
-    public void ToDeclets(int number)
+    public static OtterkitDPD operator -(OtterkitDPD left, OtterkitDPD right)
+    {
+        return Subtract(left, right);
+    }
+
+    public static OtterkitDPD operator *(OtterkitDPD left, OtterkitDPD right)
+    {
+        return Multiply(left, right);
+    }
+
+    public static OtterkitDPD operator /(OtterkitDPD left, OtterkitDPD right)
+    {
+        return Divide(left, right);
+    }
+
+    private void ToDeclets(int number)
     {
         int overflow = 0;
         for (int index = 5; index > 0; index--)
@@ -108,8 +171,40 @@ public struct OtterkitDPD
             }
         }
     }
+
+    private void ToDeclets(long number)
+    {
+        long overflow = 0;
+        for (int index = 5; index > 0; index--)
+        {
+            int declet = (int)(number % 1000);
+            Declets[index] = DPDEncoding.Encode(declet);
+            number /= 1000;
+            overflow = number;
+            if (overflow == 0)
+            {
+                break;
+            }
+        }
+    }
+
+    private void ToDeclets(Int128 number)
+    {
+        Int128 overflow = 0;
+        for (int index = 11; index > 0; index--)
+        {
+            int declet = (int)(number % 1000);
+            Declets[index] = DPDEncoding.Encode(declet);
+            number /= 1000;
+            overflow = number;
+            if (overflow == 0)
+            {
+                break;
+            }
+        }
+    }
     
-    public string DecletsToString()
+    public string DPDToString()
     {
         List<string> decletList = new();
         foreach (int declet in Declets)
@@ -119,17 +214,24 @@ public struct OtterkitDPD
         return String.Join(" ",decletList);
     }
 
+    public string ToInt128String()
+    {
+        string decimalString = ToString();
+        string Int128 = decimalString.Replace(".", "");
+        return Int128;
+    }
+
     public override string ToString()
     {
-        List<int> uintList = new();
+        List<int> intList = new();
         foreach (int declet in Declets)
         {
             int decoded = DPDEncoding.Decode(declet);
-            uintList.Add(decoded);
+            intList.Add(decoded);
         }
 
         List<string> stringList = new();
-        foreach (int declet in uintList)
+        foreach (int declet in intList)
         {
             string padded = declet.ToString().PadLeft(3, '0');
             stringList.Add(padded);

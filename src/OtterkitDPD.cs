@@ -121,7 +121,7 @@ public struct DPD120
     {
         Int128 leftInteger = Int128.Parse(left.ToInt128String());
         Int128 rightInteger = Int128.Parse(left.ToInt128String());
-        Int128 difference =  leftInteger - rightInteger;
+        Int128 difference = leftInteger - rightInteger;
 
         return new DPD120(0, difference);
     }

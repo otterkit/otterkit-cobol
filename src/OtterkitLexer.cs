@@ -3,11 +3,8 @@ using System.Text.RegularExpressions;
 namespace Otterkit;
 public static class OtterkitLexer
 {
-    public static void Tokenize(List<string> sourceLines)
+    public static List<Token> Tokenize(List<string> sourceLines)
     {
-        int lineNumber = 0;
-        string pattern = 
-            "\\w+(-[\\w0-9]+)*|(\")(.*?)(\"|$)|(\')(.*?)(\'|$)|\\w+|[^\\w\\s]|(\r\n|\r|\n)";
         /*  
         **  Explaining the big regex pattern:
         **
@@ -27,14 +24,20 @@ public static class OtterkitLexer
         **  < (\r\n|\r|\n)" > : Matches CRLF, CR and LF. New line characters
         */
 
+        int lineNumber = 0;
+        string pattern = 
+            "\\w+(-[\\w0-9]+)*|(\")(.*?)(\"|$)|(\')(.*?)(\'|$)|\\w+|[^\\w\\s]|(\r\n|\r|\n)";
+        List<Token> tokens = new();
         foreach (string line in sourceLines)
         {
             lineNumber += 1;
             foreach (Match token in Regex.Matches(line, pattern, RegexOptions.IgnoreCase))
             {
-                Console.WriteLine("<Line {0}: Column {1}>: {2}", lineNumber, token.Index, token.Value);
+                Token tokenized = new(token.Value, "", "", lineNumber, token.Index);
+                tokens.Add(tokenized);
             }
 
         }
+        return tokens;
     }
 }

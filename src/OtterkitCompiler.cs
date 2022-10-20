@@ -15,7 +15,12 @@ public static class OtterkitCompiler
 
         ProcessArguments(args);
         List<string> sourceLines = ReadAndProcessFile(fileName, sourceFormat);
-        OtterkitLexer.Tokenize(sourceLines);
+        List<Token> tokens = OtterkitLexer.Tokenize(sourceLines);
+        List<Token> classified = OtterkitClassifier.Classify(tokens);
+        foreach (var item in classified)
+        {
+            Console.WriteLine("{0,4} {1,4} {2,16} {3} {4}", item.line, item.column, item.token, item.type, item.scope);
+        }
     }
 
     private static void ProcessArguments(string[] args)

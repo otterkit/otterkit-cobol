@@ -1,6 +1,12 @@
 using System.Numerics;
 namespace OtterkitLibrary;
 
+public static class DPDConstants
+{
+    public static readonly DPD120 PI = (Int128)3141592653589793238;
+    public static readonly DPD120 E = (Int128)2718281828459045235;
+}
+
 public static class DPDEncoding
 {
     public static int Encode(int integer)
@@ -21,7 +27,7 @@ public static class DPDEncoding
         }
         int integer = Array.IndexOf(DPDLUT.DPDValues, DPD);
         return integer;
-    }  
+    }
 }
 
 /// <summary>
@@ -81,6 +87,12 @@ public struct DPD120
         ToDeclets(integer);
     }
 
+    public DPD120(int sign, double number)
+    {
+        this.sign = sign;
+        ToDeclets(number);
+    }
+
     public static implicit operator DPD120(int value)
     {
         if (value < 0)
@@ -108,11 +120,20 @@ public struct DPD120
         return new DPD120(0, value);
     }
 
+    public static implicit operator DPD120(double value)
+    {
+        if (value < 0)
+        {
+            return new DPD120(1, value);
+        }
+        return new DPD120(0, value);
+    }
+
     private static DPD120 Add(DPD120 left, DPD120 right)
     {
         Int128 leftInteger = Int128.Parse(left.ToInt128String());
         Int128 rightInteger = Int128.Parse(left.ToInt128String());
-        Int128 sum =  leftInteger + rightInteger;
+        Int128 sum = leftInteger + rightInteger;
 
         return new DPD120(0, sum);
     }
@@ -128,22 +149,120 @@ public struct DPD120
 
     private static DPD120 Multiply(DPD120 left, DPD120 right)
     {
-        BigInteger leftNum = BigInteger.Parse(left.ToInt128String());
-        BigInteger rightNum = BigInteger.Parse(right.ToInt128String());
+        Int128 leftNum = Int128.Parse(left.ToInt128String());
+        Int128 rightNum = Int128.Parse(right.ToInt128String());
         leftNum = leftNum / 1000000000000000000;
-        Int128 product = (Int128)(leftNum * rightNum);
+        Int128 product = (leftNum * rightNum);
 
         return new DPD120(0, product);
     }
 
     private static DPD120 Divide(DPD120 left, DPD120 right)
     {
-        BigInteger leftNum = BigInteger.Parse(left.ToInt128String());
-        BigInteger rightNum = BigInteger.Parse(right.ToInt128String());
+        Int128 leftNum = Int128.Parse(left.ToInt128String());
+        Int128 rightNum = Int128.Parse(right.ToInt128String());
         leftNum = leftNum * 1000000000000000000;
-        Int128 quotient = (Int128)(leftNum / rightNum);
+        Int128 quotient = (leftNum / rightNum);
 
         return new DPD120(0, quotient);
+    }
+
+    public static DPD120 Pow(double basis, double exponent)
+    {
+        return Math.Pow(basis, exponent);
+    }
+
+    public static DPD120 Exp(double exponent)
+    {
+        return Math.Exp(exponent);
+    }
+
+    public static DPD120 Log(double logarithm)
+    {
+        return Math.Log(logarithm);
+    }
+
+    public static DPD120 Log2(double logarithm2)
+    {
+        return Math.Log2(logarithm2);
+    }
+
+    public static DPD120 Log10(double logarithm10)
+    {
+        return Math.Log10(logarithm10);
+    }
+
+    public static DPD120 Acos(double arccosine)
+    {
+        if (arccosine >= 1 || arccosine <= -1) return 0; 
+        return Math.Acos(arccosine);
+    }
+
+    public static DPD120 Acosh(double acosh)
+    {
+        return Math.Acosh(acosh);
+    }
+
+    public static DPD120 Cosh(double cosh)
+    {
+        return Math.Cosh(cosh);
+    }
+
+    public static DPD120 Cos(double cosine)
+    {
+        return Math.Cos(cosine);
+    }
+
+    public static DPD120 Asin(double arcsine)
+    {
+        if (arcsine >= 1 || arcsine <= -1) return 0; 
+        return Math.Asin(arcsine);
+    }
+
+    public static DPD120 Asinh(double asinh)
+    {
+        return Math.Asinh(asinh);
+    }
+
+    public static DPD120 Sinh(double sinh)
+    {
+        return Math.Sinh(sinh);
+    }
+
+    public static DPD120 Sin(double sin)
+    {
+        return Math.Sin(sin);
+    }
+
+    public static DPD120 Atan(double arctangent)
+    {
+        if (arctangent >= 1 || arctangent <= -1) return 0; 
+        return Math.Atan(arctangent);
+    }
+
+    public static DPD120 Atan2(double quotient1, double quotient2)
+    {
+        return Math.Atan2(quotient1, quotient2);
+    }
+
+    public static DPD120 Atanh(double atanh)
+    {
+        return Math.Atanh(atanh);
+    }
+
+    public static DPD120 Tanh(double tanh)
+    {
+        return Math.Tanh(tanh);
+    }
+
+    public static DPD120 Tan(double tan)
+    {
+        return Math.Tan(tan);
+    }
+
+    public static DPD120 Sqrt(double sqrt)
+    {
+        return Math.Sqrt(sqrt);
     }
 
     public static DPD120 operator +(DPD120 left, DPD120 right)
@@ -202,16 +321,23 @@ public struct DPD120
         {
             return false;
         }
-        return o is DPD120 && Equals((DPD120) o);
+        return o is DPD120 && Equals((DPD120)o);
     }
 
     public override int GetHashCode()
     {
-            return Declets.GetHashCode() ^ sign;
+        return Declets.GetHashCode() ^ sign;
     }
 
+    // Int32 to 10-bit DPD values
     private void ToDeclets(int number)
     {
+        if (int.IsNegative(number))
+        {
+            sign = 1;
+            number = -number;
+        }
+        
         int overflow = 0;
         for (int index = 5; index > 0; index--)
         {
@@ -225,8 +351,15 @@ public struct DPD120
         }
     }
 
+    // Int64 to 10-bit DPD values
     private void ToDeclets(long number)
     {
+        if (long.IsNegative(number))
+        {
+            sign = 1;
+            number = -number;
+        }
+
         long overflow = 0;
         for (int index = 5; index > 0; index--)
         {
@@ -241,9 +374,16 @@ public struct DPD120
         }
     }
 
+    // Int128 to 10-bit DPD values
     private void ToDeclets(Int128 number)
     {
         Int128 overflow = 0;
+        if (Int128.IsNegative(number))
+        {
+            sign = 1;
+            number = -number;
+        }
+
         for (int index = 11; index > 0; index--)
         {
             int declet = (int)(number % 1000);
@@ -256,26 +396,69 @@ public struct DPD120
             }
         }
     }
-    
+
+    // Float64 to 10-bit DPD values
+    private void ToDeclets(double number)
+    {
+        if (double.IsNegative(number))
+        {
+            sign = 1;
+            number = -number;
+        }
+
+        string doubleToString = number.ToString();
+        if (!double.IsInteger(number))
+        {
+            // If double has decimal digits then:
+            string[] split = doubleToString.Split('.');
+            split[1] = split[1].PadRight(18, '0');
+            doubleToString = String.Concat(split[0], split[1]);
+        }
+
+        if (double.IsInteger(number))
+        {
+            // If double doesn't have any decimal digits:
+            doubleToString = doubleToString.PadRight(19, '0');
+        }
+
+        Int128 parseDouble = Int128.Parse(doubleToString);
+        Int128 overflow = 0;
+        for (int index = 11; index > 0; index--)
+        {
+            int declet = (int)(parseDouble % 1000);
+            Declets[index] = DPDEncoding.Encode(declet);
+            parseDouble /= 1000;
+            overflow = parseDouble;
+            if (overflow == 0)
+            {
+                break;
+            }
+        }
+    }
+
     public string DPDToString()
     {
+        string isPositive = sign == 0 ? "+" : "-";
         List<string> decletList = new();
         foreach (int declet in Declets)
         {
             decletList.Add(declet.ToString().PadLeft(10, '0'));
         }
-        return String.Join(" ",decletList);
+        string decletString = String.Join(" ", decletList);
+        return String.Concat(isPositive, decletString);
     }
 
     public string ToInt128String()
     {
+        string isPositive = sign == 0 ? "+" : "-";
         string decimalString = ToString();
         string int128 = decimalString.Replace(".", "");
-        return int128;
+        return String.Concat(isPositive, int128);
     }
 
     public override string ToString()
     {
+        string isPositive = sign == 0 ? "+" : "-";
         List<int> intList = new();
         foreach (int declet in Declets)
         {
@@ -289,12 +472,13 @@ public struct DPD120
             string padded = declet.ToString().PadLeft(3, '0');
             stringList.Add(padded);
         }
-        return String.Concat(stringList).Insert(18, ".");
+        return isPositive + String.Concat(stringList).Insert(18, ".");
     }
 
 }
 
-public static class DPDLUT{
+public static class DPDLUT
+{
     public static readonly int[] DPDValues = {
         0000000000,
         0000000001,

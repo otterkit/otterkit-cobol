@@ -482,6 +482,22 @@ public static class ClassifiedTokens
         "ALL",
     };
 
+    public static readonly List<string> Symbols = new()
+    {
+        "+",
+        "-",
+        "*",
+        "/",
+        ">",
+        "<",
+        "=",
+        "&",
+        ":",
+        "(",
+        ")",
+    };
+    
+
     public static readonly List<string> intrinsicFunctions = new()
     {
 

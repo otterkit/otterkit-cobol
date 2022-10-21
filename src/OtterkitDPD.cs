@@ -39,7 +39,9 @@ public static class DPDEncoding
 /// <para>Author: Gabriel Duarte Gonçalves (Contact: KTSnowy@outlook.com)</para>
 /// <para>License: Apache 2.0</para>
 /// </summary>
-public struct DPD120
+public struct DPD120 : 
+    IEquatable<DPD120>, 
+    IMinMaxValue<DPD120>
 {
     // Sign bit, 0 = positive, 1 = negative
     private int sign = 0;
@@ -62,6 +64,9 @@ public struct DPD120
         0000000000,
         0000000000
     };
+
+    public static DPD120 MaxValue { get => UpperValue(); }
+    public static DPD120 MinValue { get => LowerValue(); }
 
     public DPD120(int sign, int[] declets)
     {
@@ -149,20 +154,18 @@ public struct DPD120
 
     private static DPD120 Multiply(DPD120 left, DPD120 right)
     {
-        Int128 leftNum = Int128.Parse(left.ToInt128String());
-        Int128 rightNum = Int128.Parse(right.ToInt128String());
-        leftNum = leftNum / 1000000000000000000;
-        Int128 product = (leftNum * rightNum);
+        BigInteger leftNum = BigInteger.Parse(left.ToInt128String());
+        BigInteger rightNum = BigInteger.Parse(right.ToInt128String());
+        Int128 product = (Int128)(leftNum * rightNum / 1000000000000000000);
 
         return new DPD120(0, product);
     }
 
     private static DPD120 Divide(DPD120 left, DPD120 right)
     {
-        Int128 leftNum = Int128.Parse(left.ToInt128String());
-        Int128 rightNum = Int128.Parse(right.ToInt128String());
-        leftNum = leftNum * 1000000000000000000;
-        Int128 quotient = (leftNum / rightNum);
+        BigInteger leftNum = BigInteger.Parse(left.ToInt128String());
+        BigInteger rightNum = BigInteger.Parse(right.ToInt128String());
+        Int128 quotient = (Int128)(leftNum * 1000000000000000000 / rightNum);
 
         return new DPD120(0, quotient);
     }
@@ -339,7 +342,7 @@ public struct DPD120
         }
         
         int overflow = 0;
-        for (int index = 5; index > 0; index--)
+        for (int index = 5; index >= 0; index--)
         {
             Declets[index] = DPDEncoding.Encode(number % 1000);
             number /= 1000;
@@ -349,6 +352,18 @@ public struct DPD120
                 break;
             }
         }
+    }
+
+    public static DPD120 UpperValue()
+    {
+        Int128 MaxValue = Int128.Parse("999999999999999999999999999999999999");
+        return new DPD120(0, MaxValue);
+    }
+
+    public static DPD120 LowerValue()
+    {
+        Int128 MinValue = Int128.Parse("-999999999999999999999999999999999999");
+        return new DPD120(1, MinValue);
     }
 
     // Int64 to 10-bit DPD values
@@ -361,7 +376,7 @@ public struct DPD120
         }
 
         long overflow = 0;
-        for (int index = 5; index > 0; index--)
+        for (int index = 5; index >= 0; index--)
         {
             int declet = (int)(number % 1000);
             Declets[index] = DPDEncoding.Encode(declet);
@@ -384,7 +399,7 @@ public struct DPD120
             number = -number;
         }
 
-        for (int index = 11; index > 0; index--)
+        for (int index = 11; index >= 0; index--)
         {
             int declet = (int)(number % 1000);
             Declets[index] = DPDEncoding.Encode(declet);
@@ -423,7 +438,7 @@ public struct DPD120
 
         Int128 parseDouble = Int128.Parse(doubleToString);
         Int128 overflow = 0;
-        for (int index = 11; index > 0; index--)
+        for (int index = 11; index >= 0; index--)
         {
             int declet = (int)(parseDouble % 1000);
             Declets[index] = DPDEncoding.Encode(declet);

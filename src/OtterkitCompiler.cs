@@ -109,12 +109,12 @@ public static class OtterkitCompiler
         Console.WriteLine("\nOtterkit COBOL Compiler                   ");
         Console.WriteLine("<Copyright 2022 Otterkit Project>           ");
         Console.WriteLine("<Apache 2.0 license>                      \n");
-        Console.WriteLine("Command line options:                       ");
-        Console.WriteLine("  -H          >> Displays this message      ");
-        Console.WriteLine("  -F filename >> Compile specified file     ");
-        Console.WriteLine("  -CL integer >> Specify max column length  ");
-        Console.WriteLine("  --Fixed     >> Use fixed source format    ");
-        Console.WriteLine("  --Free      >> Use free source format     ");
+        Console.WriteLine("Command line options:                     \n");
+        Console.WriteLine("  -H           : Displays this message      ");
+        Console.WriteLine("  -F filename  : Compile specified file     ");
+        Console.WriteLine("  -CL integer  : Specify max column length  ");
+        Console.WriteLine("  --Fixed      : Use fixed source format    ");
+        Console.WriteLine("  --Free       : Use free source format     ");
         Console.WriteLine("\n");
     }
 }

@@ -132,7 +132,7 @@ public struct DPD120
     private static DPD120 Add(DPD120 left, DPD120 right)
     {
         Int128 leftInteger = Int128.Parse(left.ToInt128String());
-        Int128 rightInteger = Int128.Parse(left.ToInt128String());
+        Int128 rightInteger = Int128.Parse(right.ToInt128String());
         Int128 sum = leftInteger + rightInteger;
 
         return new DPD120(0, sum);
@@ -141,7 +141,7 @@ public struct DPD120
     private static DPD120 Subtract(DPD120 left, DPD120 right)
     {
         Int128 leftInteger = Int128.Parse(left.ToInt128String());
-        Int128 rightInteger = Int128.Parse(left.ToInt128String());
+        Int128 rightInteger = Int128.Parse(right.ToInt128String());
         Int128 difference = leftInteger - rightInteger;
 
         return new DPD120(0, difference);
@@ -450,10 +450,9 @@ public struct DPD120
 
     public string ToInt128String()
     {
-        string isPositive = sign == 0 ? "+" : "-";
         string decimalString = ToString();
         string int128 = decimalString.Replace(".", "");
-        return String.Concat(isPositive, int128);
+        return int128;
     }
 
     public override string ToString()

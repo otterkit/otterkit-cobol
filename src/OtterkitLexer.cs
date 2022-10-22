@@ -36,7 +36,6 @@ public static class OtterkitLexer
                 Token tokenized = new(token.Value, "", "", lineNumber, token.Index);
                 tokens.Add(tokenized);
             }
-
         }
         return tokens;
     }

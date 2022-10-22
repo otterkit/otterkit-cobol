@@ -495,8 +495,9 @@ public static class ClassifiedTokens
         ":",
         "(",
         ")",
+        ".",
+        ",",
     };
-    
 
     public static readonly List<string> intrinsicFunctions = new()
     {

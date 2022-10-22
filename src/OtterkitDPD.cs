@@ -34,9 +34,9 @@ public static class DPDEncoding
 /// Otterkit DPD120 Struct
 /// <para>120-bit Fixed-Point Densely Packed Decimal number, custom built for the Otterkit compiler.</para>
 /// <para>This fixed-point number is stored internally as 12 units of 10-bit DPD declets</para>
-/// <para>Max Value: +999999999.999999999</para>
-/// <para>Min Value: -999999999.999999999</para>
-/// <para>Author: Gabriel Duarte Gonçalves (Contact: KTSnowy@outlook.com)</para>
+/// <para>Max Value: +999999999999999999.999999999999999999</para>
+/// <para>Min Value: -999999999999999999.999999999999999999</para>
+/// <para>Author: Otterkit COBOL authors</para>
 /// <para>License: Apache 2.0</para>
 /// </summary>
 public struct DPD120 : 
@@ -487,6 +487,479 @@ public struct DPD120 :
             stringList.Add(padded);
         }
         return isPositive + String.Concat(stringList).Insert(18, ".");
+    }
+
+}
+
+/// <summary>
+/// Otterkit DPDExtended Struct
+/// <para>240-bit Fixed-Point Densely Packed Decimal number, custom built for the Otterkit compiler.</para>
+/// <para>This fixed-point number is stored internally as 24 units of 10-bit DPD declets</para>
+/// <para>Max Value: +999999999999999999999999999999999999.999999999999999999999999999999999999</para>
+/// <para>Min Value: -999999999999999999999999999999999999.999999999999999999999999999999999999</para>
+/// <para>Author: Otterkit COBOL authors</para>
+/// <para>License: Apache 2.0</para>
+/// </summary>
+public struct DPDExtended : 
+    IEquatable<DPDExtended>, 
+    IMinMaxValue<DPDExtended>
+{
+    // Sign bit, 0 = positive, 1 = negative
+    private int sign = 0;
+
+    // Series of DPD encoded declets, initialized with zeros.
+    // Equivalent to: 36.36 Digits.
+    private int[] Declets =
+    {
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        // . fixed decimal point
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000,
+        0000000000
+    };
+
+    public static DPDExtended MaxValue { get => UpperValue(); }
+    public static DPDExtended MinValue { get => LowerValue(); }
+
+    public DPDExtended(int sign, int[] declets)
+    {
+        this.sign = sign;
+        this.Declets = declets;
+    }
+
+    public DPDExtended(int sign, int integer)
+    {
+        this.sign = sign;
+        ToDeclets(integer);
+    }
+
+    public DPDExtended(int sign, long integer)
+    {
+        this.sign = sign;
+        ToDeclets(integer);
+    }
+
+    public DPDExtended(int sign, BigInteger integer)
+    {
+        this.sign = sign;
+        ToDeclets(integer);
+    }
+
+    public DPDExtended(int sign, double number)
+    {
+        this.sign = sign;
+        ToDeclets(number);
+    }
+
+    public static implicit operator DPDExtended(int value)
+    {
+        if (value < 0)
+        {
+            return new DPDExtended(1, value);
+        }
+        return new DPDExtended(0, value);
+    }
+
+    public static implicit operator DPDExtended(long value)
+    {
+        if (value < 0)
+        {
+            return new DPDExtended(1, value);
+        }
+        return new DPDExtended(0, value);
+    }
+
+    public static implicit operator DPDExtended(Int128 value)
+    {
+        if (value < 0)
+        {
+            return new DPDExtended(1, value);
+        }
+        return new DPDExtended(0, value);
+    }
+
+    public static implicit operator DPDExtended(double value)
+    {
+        if (value < 0)
+        {
+            return new DPDExtended(1, value);
+        }
+        return new DPDExtended(0, value);
+    }
+
+    private static DPDExtended Add(DPDExtended left, DPDExtended right)
+    {
+        BigInteger leftInteger = BigInteger.Parse(left.ToBigIntegerString());
+        BigInteger rightInteger = BigInteger.Parse(right.ToBigIntegerString());
+        BigInteger sum = leftInteger + rightInteger;
+
+        return new DPDExtended(0, sum);
+    }
+
+    private static DPDExtended Subtract(DPDExtended left, DPDExtended right)
+    {
+        BigInteger leftInteger = BigInteger.Parse(left.ToBigIntegerString());
+        BigInteger rightInteger = BigInteger.Parse(right.ToBigIntegerString());
+        BigInteger difference = leftInteger - rightInteger;
+
+        return new DPDExtended(0, difference);
+    }
+
+    private static DPDExtended Multiply(DPDExtended left, DPDExtended right)
+    {
+        BigInteger leftNum = BigInteger.Parse(left.ToBigIntegerString());
+        BigInteger rightNum = BigInteger.Parse(right.ToBigIntegerString());
+        BigInteger product = (leftNum * rightNum / BigInteger.Parse("1000000000000000000000000000000000000"));
+
+        return new DPDExtended(0, product);
+    }
+
+    private static DPDExtended Divide(DPDExtended left, DPDExtended right)
+    {
+        BigInteger leftNum = BigInteger.Parse(left.ToBigIntegerString());
+        BigInteger rightNum = BigInteger.Parse(right.ToBigIntegerString());
+        BigInteger quotient = (leftNum * BigInteger.Parse("1000000000000000000000000000000000000") / rightNum);
+
+        return new DPDExtended(0, quotient);
+    }
+
+    public static DPDExtended Pow(double basis, double exponent)
+    {
+        return Math.Pow(basis, exponent);
+    }
+
+    public static DPDExtended Exp(double exponent)
+    {
+        return Math.Exp(exponent);
+    }
+
+    public static DPDExtended Log(double logarithm)
+    {
+        return Math.Log(logarithm);
+    }
+
+    public static DPDExtended Log2(double logarithm2)
+    {
+        return Math.Log2(logarithm2);
+    }
+
+    public static DPDExtended Log10(double logarithm10)
+    {
+        return Math.Log10(logarithm10);
+    }
+
+    public static DPDExtended Acos(double arccosine)
+    {
+        if (arccosine >= 1 || arccosine <= -1) return 0; 
+        return Math.Acos(arccosine);
+    }
+
+    public static DPDExtended Acosh(double acosh)
+    {
+        return Math.Acosh(acosh);
+    }
+
+    public static DPDExtended Cosh(double cosh)
+    {
+        return Math.Cosh(cosh);
+    }
+
+    public static DPDExtended Cos(double cosine)
+    {
+        return Math.Cos(cosine);
+    }
+
+    public static DPDExtended Asin(double arcsine)
+    {
+        if (arcsine >= 1 || arcsine <= -1) return 0; 
+        return Math.Asin(arcsine);
+    }
+
+    public static DPDExtended Asinh(double asinh)
+    {
+        return Math.Asinh(asinh);
+    }
+
+    public static DPDExtended Sinh(double sinh)
+    {
+        return Math.Sinh(sinh);
+    }
+
+    public static DPDExtended Sin(double sin)
+    {
+        return Math.Sin(sin);
+    }
+
+    public static DPDExtended Atan(double arctangent)
+    {
+        if (arctangent >= 1 || arctangent <= -1) return 0; 
+        return Math.Atan(arctangent);
+    }
+
+    public static DPDExtended Atan2(double quotient1, double quotient2)
+    {
+        return Math.Atan2(quotient1, quotient2);
+    }
+
+    public static DPDExtended Atanh(double atanh)
+    {
+        return Math.Atanh(atanh);
+    }
+
+    public static DPDExtended Tanh(double tanh)
+    {
+        return Math.Tanh(tanh);
+    }
+
+    public static DPDExtended Tan(double tan)
+    {
+        return Math.Tan(tan);
+    }
+
+    public static DPDExtended Sqrt(double sqrt)
+    {
+        return Math.Sqrt(sqrt);
+    }
+
+    public static DPDExtended operator +(DPDExtended left, DPDExtended right)
+    {
+        return Add(left, right);
+    }
+
+    public static DPDExtended operator -(DPDExtended left, DPDExtended right)
+    {
+        return Subtract(left, right);
+    }
+
+    public static DPDExtended operator *(DPDExtended left, DPDExtended right)
+    {
+        return Multiply(left, right);
+    }
+
+    public static DPDExtended operator /(DPDExtended left, DPDExtended right)
+    {
+        return Divide(left, right);
+    }
+
+    public static DPDExtended operator %(DPDExtended left, DPDExtended right)
+    {
+        return left - right * (left / right);
+    }
+
+    public static bool operator ==(DPDExtended left, DPDExtended right)
+    {
+        for (int index = 23; index > 0; index--)
+        {
+            if (left.Declets[index] != right.Declets[index])
+                return false;
+        }
+        return left.sign == right.sign;
+    }
+
+    public static bool operator !=(DPDExtended left, DPDExtended right)
+    {
+        for (int index = 23; index > 0; index--)
+        {
+            if (left.Declets[index] == right.Declets[index])
+                return false;
+        }
+        return left.sign != right.sign;
+    }
+
+    public bool Equals(DPDExtended other)
+    {
+        return other == this;
+    }
+
+    public override bool Equals(object? o)
+    {
+        if (ReferenceEquals(null, o))
+        {
+            return false;
+        }
+        return o is DPDExtended && Equals((DPDExtended)o);
+    }
+
+    public override int GetHashCode()
+    {
+        return Declets.GetHashCode() ^ sign;
+    }
+
+    // Int32 to 10-bit DPD values
+    private void ToDeclets(int number)
+    {
+        if (int.IsNegative(number))
+        {
+            sign = 1;
+            number = -number;
+        }
+        
+        int overflow = 0;
+        for (int index = 11; index >= 0; index--)
+        {
+            Declets[index] = DPDEncoding.Encode(number % 1000);
+            number /= 1000;
+            overflow = number;
+            if (overflow == 0)
+            {
+                break;
+            }
+        }
+    }
+
+    public static DPDExtended UpperValue()
+    {
+        BigInteger MaxValue = BigInteger.Parse("999999999999999999999999999999999999999999999999999999999999999999999999");
+        return new DPDExtended(0, MaxValue);
+    }
+
+    public static DPDExtended LowerValue()
+    {
+        BigInteger MinValue = BigInteger.Parse("-999999999999999999999999999999999999999999999999999999999999999999999999");
+        return new DPDExtended(1, MinValue);
+    }
+
+    // Int64 to 10-bit DPD values
+    private void ToDeclets(long number)
+    {
+        if (long.IsNegative(number))
+        {
+            sign = 1;
+            number = -number;
+        }
+
+        long overflow = 0;
+        for (int index = 11; index >= 0; index--)
+        {
+            int declet = (int)(number % 1000);
+            Declets[index] = DPDEncoding.Encode(declet);
+            number /= 1000;
+            overflow = number;
+            if (overflow == 0)
+            {
+                break;
+            }
+        }
+    }
+
+    // Int128 to 10-bit DPD values
+    private void ToDeclets(BigInteger number)
+    {
+        BigInteger overflow = 0;
+        if (BigInteger.IsNegative(number))
+        {
+            sign = 1;
+            number = -number;
+        }
+
+        for (int index = 23; index >= 0; index--)
+        {
+            int declet = (int)(number % 1000);
+            Declets[index] = DPDEncoding.Encode(declet);
+            number /= 1000;
+            overflow = number;
+            if (overflow == 0)
+            {
+                break;
+            }
+        }
+    }
+
+    // Float64 to 10-bit DPD values
+    private void ToDeclets(double number)
+    {
+        if (double.IsNegative(number))
+        {
+            sign = 1;
+            number = -number;
+        }
+
+        string doubleToString = number.ToString();
+        if (!double.IsInteger(number))
+        {
+            // If double has decimal digits then:
+            string[] split = doubleToString.Split('.');
+            split[1] = split[1].PadRight(36, '0');
+            doubleToString = String.Concat(split[0], split[1]);
+        }
+
+        if (double.IsInteger(number))
+        {
+            // If double doesn't have any decimal digits:
+            doubleToString = doubleToString.PadRight(37, '0');
+        }
+
+        BigInteger parseDouble = BigInteger.Parse(doubleToString);
+        BigInteger overflow = 0;
+        for (int index = 23; index >= 0; index--)
+        {
+            int declet = (int)(parseDouble % 1000);
+            Declets[index] = DPDEncoding.Encode(declet);
+            parseDouble /= 1000;
+            overflow = parseDouble;
+            if (overflow == 0)
+            {
+                break;
+            }
+        }
+    }
+
+    public string DPDToString()
+    {
+        string isPositive = sign == 0 ? "+" : "-";
+        List<string> decletList = new();
+        foreach (int declet in Declets)
+        {
+            decletList.Add(declet.ToString().PadLeft(10, '0'));
+        }
+        string decletString = String.Join(" ", decletList);
+        return String.Concat(isPositive, decletString);
+    }
+
+    public string ToBigIntegerString()
+    {
+        string decimalString = ToString();
+        string BigInteger = decimalString.Replace(".", "");
+        return BigInteger;
+    }
+
+    public override string ToString()
+    {
+        string isPositive = sign == 0 ? "+" : "-";
+        List<int> intList = new();
+        foreach (int declet in Declets)
+        {
+            int decoded = DPDEncoding.Decode(declet);
+            intList.Add(decoded);
+        }
+
+        List<string> stringList = new();
+        foreach (int declet in intList)
+        {
+            string padded = declet.ToString().PadLeft(3, '0');
+            stringList.Add(padded);
+        }
+        return isPositive + String.Concat(stringList).Insert(36, ".");
     }
 
 }

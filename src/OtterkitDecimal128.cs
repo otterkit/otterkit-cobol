@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using System.Numerics;
-using System;
 namespace OtterkitLibrary;
 
 /// <summary>
@@ -8,9 +7,23 @@ namespace OtterkitLibrary;
 /// <para>IEEE 754 128-bit Decimal Floating Point Number.</para>
 /// <para>This struct calls native C code from libmpdec to perform Decimal128 operations</para>
 /// </summary>
-public struct Decimal128
+public struct Decimal128:
+    IMinMaxValue<Decimal128>,
+    IEquatable<Decimal128>,
+    IComparable<Decimal128>
 {
     public string Value { get; set; }
+
+    private static readonly Decimal128 maxValue = "9999999999999999999999999999999999E+6111";
+    private static readonly Decimal128 minValue = "-9999999999999999999999999999999999E+6111";
+
+    public static Decimal128 MaxValue => maxValue;
+
+    public static Decimal128 MinValue => minValue;
+
+    public static Decimal128 One => new Decimal128("1");
+
+    public static Decimal128 Zero => new Decimal128("0");
 
     public Decimal128(string value)
     {
@@ -218,6 +231,26 @@ public struct Decimal128
     public static Decimal128 operator ^(Decimal128 left, Decimal128 right)
     {
         return Decimal128And(left.Value, right.Value);
+    }
+    
+    public int CompareTo(object? obj)
+    {
+        if (obj == null || GetType() != obj.GetType())
+        {
+            throw new ArgumentException();
+        }
+        return CompareTo((Decimal128) obj);
+    }
+
+    public int CompareTo(Decimal128 other)
+    {
+        int value = int.Parse(Decimal128Compare(this.Value, other.Value));
+        return value;
+    }
+
+    public bool Equals(Decimal128 other)
+    {
+        return other.Value == Value;
     }
 
     public override bool Equals(object? obj)

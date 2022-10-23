@@ -1,12 +1,10 @@
-﻿using static OtterkitLibrary.OtterkitTypes;
-using OtterkitLibrary.Numerics;
+﻿namespace OtterkitLibrary;
 
-namespace OtterkitLibrary;
 public static class Functions
 {
-    public static BigDecimal ABS(Numeric argument)
+    public static Decimal128 ABS(Decimal128 argument)
     {
-        return DecMath.Abs(argument.Value);
+        return Decimal128.Abs(argument);
     }
 
 }

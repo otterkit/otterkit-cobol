@@ -1,5 +1,4 @@
 using System.Numerics;
-using OtterkitLibrary.Numerics;
 
 namespace OtterkitLibrary;
 
@@ -7,19 +6,17 @@ public class OtterkitTypes
 {
     public class Numeric
     {
-        private BigDecimal internalNumber;
-        private int intSize;
-        private int intSizePow10;
-        private int decSize;
+        private Decimal128 internalNumber;
+        private int integerLength;
+        private int fractionalLength;
         private bool isNegative = false;
         private bool isSigned = false;
 
-        public Numeric(BigDecimal number, int intSize, int decSize, bool signed)
+        public Numeric(Decimal128 number, int integerLength, int fractionalLength, bool signed)
         {
             this.internalNumber = number;
-            this.intSize = intSize;
-            this.intSizePow10 = (int)Math.Pow(10, intSize);
-            this.decSize = decSize + 1;
+            this.integerLength = integerLength;
+            this.fractionalLength = fractionalLength;
             this.isSigned = signed;
             if (number < 0 && isSigned)
             {
@@ -27,26 +24,30 @@ public class OtterkitTypes
             }
         }
 
-        private BigDecimal Truncate(BigDecimal number)
+        private string Formatter(Decimal128 number)
         {
-            string IntValue = (number.Truncate() % intSizePow10).ToString("decimal");
-            string DecValue = (number - number.Truncate()).ToString("decimal");
-            return String.Format("{0}{1}", IntValue, DecValue.Substring(0, decSize));
-        }
-        private string Formatter(BigDecimal number)
-        {
-            string IntValue = (number.Truncate() % intSizePow10).ToString("decimal").PadLeft(4, '0');
-            string DecValue = (number - number.Truncate()).ToString("decimal").PadLeft(decSize, '0');
-            return String.Format("{0}{1}", IntValue, DecValue.Substring(0, decSize));
+            if (fractionalLength != 0)
+            {
+                // TODO: This looks like spaghetti, refactor later
+                string[] numericString = number.ToString().Split(".");
+                string padInteger = numericString[0].PadLeft(integerLength, '0');
+                string padFraction = numericString[1].PadRight(fractionalLength, '0');
+                padInteger = padInteger.Substring(padInteger.Length - integerLength, padInteger.Length);
+                padFraction = padFraction.Substring(0, fractionalLength);
+                return string.Concat(padInteger, ".", padFraction);
+
+            }
+            // TODO: This one as well, refactor later
+            return number.ToString().PadLeft(integerLength, '0').Substring(number.ToString().Length - integerLength, number.ToString().Length);
         }
 
-        public BigDecimal Value
+        public Decimal128 Value
         {
             get
             {
                 return (isNegative && isSigned)
-                        ? -Truncate(internalNumber)
-                        : Truncate(internalNumber);
+                        ? -internalNumber
+                        : internalNumber;
             }
             set
             {

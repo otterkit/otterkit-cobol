@@ -193,14 +193,16 @@ public struct Decimal128
         return result == "-1" || result == "0" ? true : false;
     }
 
-    public static Decimal128 operator <<(Decimal128 left, Decimal128 right)
+    public static Decimal128 operator <<(Decimal128 left, int right)
     {
-        return Decimal128Shift(left.Value, Decimal128Minus(right.Value));
+        Decimal128 shiftAmount = right;
+        return Decimal128Shift(left.Value, Decimal128Minus(shiftAmount.Value));
     }
 
-    public static Decimal128 operator >>(Decimal128 left, Decimal128 right)
+    public static Decimal128 operator >>(Decimal128 left, int right)
     {
-        return Decimal128Shift(left.Value, Decimal128Minus(right.Value));
+        Decimal128 shiftAmount = right;
+        return Decimal128Shift(left.Value, Decimal128Minus(shiftAmount.Value));
     }
 
     public static Decimal128 operator &(Decimal128 left, Decimal128 right)

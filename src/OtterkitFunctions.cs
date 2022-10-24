@@ -31,18 +31,18 @@ public static class Functions
         // TODO ATAN
     }
 
-    public static void BASECONVERT(Decimal128 input, Decimal128 current, Decimal128 target)
+    public static void BASE_CONVERT(Decimal128 input, Decimal128 current, Decimal128 target)
     {
         // TODO BASE-CONVERT
     }
 
-    public static void BOOLEANOFINTEGER(Decimal128 argument)
+    public static void BOOLEAN_OF_INTEGER(Decimal128 argument)
     {
         // TODO BOOLEAN-OF-INTEGER
         // Need to implement usage bit first
     }
 
-    public static Decimal128 BYTELENGTH(Decimal128 argument)
+    public static Decimal128 BYTE_LENGTH(Decimal128 argument)
     {
         // Does not cover all BYTE-LENGTH functionality
         return argument.Value.Length;
@@ -54,14 +54,14 @@ public static class Functions
         return ((char)parseInt).ToString();
     }
 
-    public static string CHARNATIONAL(Decimal128 argument)
+    public static string CHAR_NATIONAL(Decimal128 argument)
     {
         // TODO: Might not work properly, need test with NATIONAL types
         int parseInt = int.Parse(argument.Value);
         return ((char)parseInt).ToString();
     }
 
-    public static Decimal128 COMBINEDDATETIME(Decimal128 date, Decimal128 time)
+    public static Decimal128 COMBINED_DATETIME(Decimal128 date, Decimal128 time)
     {
         // TODO: implement other date time intrinsic functions
         return date;
@@ -89,7 +89,7 @@ public static class Functions
         // TODO: implement COS
     }
 
-    public static Alphanumeric CURRENTDATE()
+    public static Alphanumeric CURRENT_DATE()
     {
         DateTime currentDate = DateTime.Now;
         TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
@@ -108,27 +108,27 @@ public static class Functions
         return new Alphanumeric(DatePlusOffset, 21);
     }
 
-    public static void DATEOFINTEGER(Decimal128 date)
+    public static void DATE_OF_INTEGER(Decimal128 date)
     {
         // TODO: implement DATE-OF-INTEGER
     }
 
-    public static void DATETOYYYYMMDD(Decimal128 date)
+    public static void DATE_TO_YYYYMMDD(Decimal128 date)
     {
         // TODO: implement DATE-TO-YYYYMMDD
     }
 
-    public static void DAYOFINTEGER(Decimal128 date)
+    public static void DAY_OF_INTEGER(Decimal128 date)
     {
         // TODO: implement DAY-OF-INTEGER
     }
 
-    public static void DAYTOYYYYDDD(Decimal128 date)
+    public static void DAY_TO_YYYYDDD(Decimal128 date)
     {
         // TODO: implement DAY-TO-YYYYDDD
     }
 
-    public static void DISPLAYOF(Decimal128 date)
+    public static void DISPLAY_OF(Decimal128 date)
     {
         // TODO: implement National type
     }
@@ -138,32 +138,32 @@ public static class Functions
         return new Decimal128("2.718281828459045235360287471352662");
     }
 
-    public static void EXCEPTIONFILE(string? filename)
+    public static void EXCEPTION_FILE(string? filename)
     {
         // Implement COBOL exceptions
     }
 
-    public static void EXCEPTIONFILEN(string? filename)
+    public static void EXCEPTION_FILE_N(string? filename)
     {
         // Implement COBOL exceptions
     }
 
-    public static void EXCEPTIONLOCATION()
+    public static void EXCEPTION_LOCATION()
     {
         // Implement COBOL exceptions
     }
 
-    public static void EXCEPTIONLOCATIONN()
+    public static void EXCEPTION_LOCATION_N()
     {
         // Implement COBOL exceptions
     }
 
-    public static void EXCEPTIONSTATEMENT()
+    public static void EXCEPTION_STATEMENT()
     {
         // Implement COBOL exceptions
     }
 
-    public static void EXCEPTIONSTATUS()
+    public static void EXCEPTION_STATUS()
     {
         // Implement COBOL exceptions
     }
@@ -204,13 +204,13 @@ public static class Functions
         return factorial;
     }
 
-    public static void FINDSTRING(Alphanumeric argument, Alphanumeric substring, int matches)
+    public static void FIND_STRING(Alphanumeric argument, Alphanumeric substring, int matches)
     {
         // TODO: Implement FIND-STRING
         //  Might be possible with substring and String.IndexOf()
     }
 
-     public static Alphanumeric FORMATTEDCURRENTDATE(string format)
+     public static Alphanumeric FORMATTED_CURRENT_DATE(string format)
     {
         DateTime currentDate = DateTime.Now;
         TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
@@ -229,22 +229,22 @@ public static class Functions
         return new Alphanumeric(DatePlusOffset, 32);
     }
 
-    public static void FORMATTEDDATE(int date, string format)
+    public static void FORMATTED_DATE(int date, string format)
     {
         // TODO: Implement FORMATTED-DATE
     }
 
-    public static void FORMATTEDDATETIME(int date, string format)
+    public static void FORMATTED_DATETIME(int date, string format)
     {
-        // TODO: Implement FORMATTED-DATE-TIME
+        // TODO: Implement FORMATTED-DATETIME
     }
 
-    public static void FORMATTEDTIME(Alphanumeric format, Decimal128 seconds, int offset)
+    public static void FORMATTED_TIME(Alphanumeric format, Decimal128 seconds, int offset)
     {
         // TODO: Implement FORMATTED-TIME
     }
 
-    public static Decimal128 FRACTIONPART(Decimal128 argument)
+    public static Decimal128 FRACTION_PART(Decimal128 argument)
     {
         int indexOfDecimal = argument.Value.IndexOf(".");
         string fractionPart = indexOfDecimal > 0 
@@ -253,7 +253,7 @@ public static class Functions
         return new Decimal128(new String("0." + fractionPart));
     }
 
-    public static Decimal128 HIGHESTALGEBRAIC(Numeric argument)
+    public static Decimal128 HIGHEST_ALGEBRAIC(Numeric argument)
     {
         int integer = argument.integerLength;
         int fraction = argument.fractionalLength;
@@ -261,27 +261,27 @@ public static class Functions
         return new Decimal128("+" + new String('9', integer) + isDecimal);
     }
 
-    public static void INTEGEROFBOOLEAN(int argument)
+    public static void INTEGER_OF_BOOLEAN(int argument)
     {
         // TODO: Implement COBOL boolean type
     }
 
-    public static void INTEGEROFDATE(int argument)
+    public static void INTEGER_OF_DATE(int argument)
     {
         // TODO: Implement INTEGER-OF-DATE
     }
 
-    public static void INTEGEROFDAY(int argument)
+    public static void INTEGER_OF_DAY(int argument)
     {
         // TODO: Implement INTEGER-OF-DAY
     }
 
-    public static void INTEGEROFFORMATTEDDATE(int argument)
+    public static void INTEGER_OF_FORMATTED_DATE(int argument)
     {
         // TODO: Implement INTEGER-OF-FORMATTED-DATE
     }
 
-    public static Decimal128 INTEGERPART(Decimal128 argument)
+    public static Decimal128 INTEGER_PART(Decimal128 argument)
     {
         int indexOfDecimal = argument.Value.IndexOf(".");
         string IntegerPart = indexOfDecimal > 0 
@@ -296,22 +296,22 @@ public static class Functions
         return argument.Value.Length;
     }
 
-    public static void LOCALECOMPARE(Alphanumeric argument)
+    public static void LOCALE_COMPARE(Alphanumeric argument)
     {
         // TODO: Implement COBOL locale functionality
     }
 
-    public static void LOCALEDATE(Alphanumeric argument)
+    public static void LOCALE_DATE(Alphanumeric argument)
     {
         // TODO: Implement COBOL locale functionality
     }
 
-    public static void LOCALETIME(Alphanumeric argument)
+    public static void LOCALE_TIME(Alphanumeric argument)
     {
         // TODO: Implement COBOL locale functionality
     }
 
-    public static void LOCALETIMEFROMSECONDS(Alphanumeric argument)
+    public static void LOCALE_TIME_FROM_SECONDS(Alphanumeric argument)
     {
         // TODO: Implement COBOL locale functionality
     }
@@ -326,17 +326,17 @@ public static class Functions
         return Decimal128.Log10(argument.Value);
     }
 
-    public static Alphanumeric LOWERCASE(Alphanumeric argument, string? locale)
+    public static Alphanumeric LOWER_CASE(Alphanumeric argument, string? locale)
     {
         return new Alphanumeric(argument.Value.ToLower(), argument.stringLength);
     }
 
-    public static Alphabetic LOWERCASE(Alphabetic argument, string? locale)
+    public static Alphabetic LOWER_CASE(Alphabetic argument, string? locale)
     {
         return new Alphabetic(argument.Value.ToLower(), argument.stringLength);
     }
 
-    public static Decimal128 LOWESTALGEBRAIC(Numeric argument)
+    public static Decimal128 LOWEST_ALGEBRAIC(Numeric argument)
     {
         int integer = argument.integerLength;
         int fraction = argument.fractionalLength;
@@ -381,12 +381,12 @@ public static class Functions
         return mod;
     }
 
-    public static void MODULENAME()
+    public static void MODULE_NAME()
     {
         // TODO: Implement MODULE-NAME
     }
 
-    public static void NATIONALOF()
+    public static void NATIONAL_OF()
     {
         // TODO: Implement NATIONAL types
     }
@@ -398,12 +398,12 @@ public static class Functions
         return new Decimal128(argument.Value);
     }
 
-    public static void NUMVALC(Alphanumeric argument)
+    public static void NUMVAL_C(Alphanumeric argument)
     {
         // TODO: Implement NUMVAL-C
     }
 
-    public static void NUMVALF(Alphanumeric argument)
+    public static void NUMVAL_F(Alphanumeric argument)
     {
         // TODO: Implement NUMVAL-F
     }
@@ -413,12 +413,12 @@ public static class Functions
         // TODO: Implement ORD
     }
 
-    public static void ORDMAX(Alphanumeric argument)
+    public static void ORD_MAX(Alphanumeric argument)
     {
         // TODO: Implement ORD-MAX
     }
 
-    public static void ORDMIN(Alphanumeric argument)
+    public static void ORD_MIN(Alphanumeric argument)
     {
         // TODO: Implement ORD-MIN
     }
@@ -428,7 +428,7 @@ public static class Functions
         return new Decimal128("3.141592653589793238462643383279503");
     }
 
-    public static void PRESENTVALUE()
+    public static void PRESENT_VALUE()
     {
         // TODO: Implement PRESENT-VALUE
     }

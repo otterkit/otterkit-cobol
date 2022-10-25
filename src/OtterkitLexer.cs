@@ -17,7 +17,10 @@ public static class OtterkitLexer
         **          with a -" on the next line. Useful for preserving string formatting
         **   
         **  < symbolPattern > : Matches all COBOL special characters and their valid
-        **                      combinations   
+        **                      combinations
+        **   
+        **  < numberPattern > : Matches signed and unsigned number literals, including
+        **                      decimal numbers that might start with 0. or just .
         */
 
         int lineNumber = 0;

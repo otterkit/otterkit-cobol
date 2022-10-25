@@ -31,7 +31,7 @@ public static class OtterkitClassifier
             else if (token.token.StartsWith("\""))
                 classified.Add(new Token(token.token, "string", "", token.line, token.column));
             
-            else if (Regex.IsMatch(token.token, @"^\d"))
+            else if (token.token.All(Char.IsDigit))
                 classified.Add(new Token(token.token, "numeric", "", token.line, token.column));
 
             else

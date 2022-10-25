@@ -1,4 +1,5 @@
-﻿namespace OtterkitLibrary;
+﻿using System.Text.RegularExpressions;
+namespace OtterkitLibrary;
 
 public static class Functions
 {
@@ -15,10 +16,11 @@ public static class Functions
     public static Decimal128 ANNUITY(Decimal128 interest, Decimal128 periods)
     {
         if (interest == Decimal128.Zero)
-        { // (argument-1 / (1 – (1 + argument-1)** (– (argument-2))))
+        {
             return 1 / periods;
         }
-        return interest / (1 - Decimal128.Pow((1 + interest).ToString(), (-periods).ToString()));
+        // (argument-1 / (1 – (1 + argument-1)** (– (argument-2))))
+        return interest / (1 - Decimal128.Pow((1 + interest.Value), (-periods).Value));
     }
 
     public static void ASIN(Decimal128 argument)
@@ -79,7 +81,7 @@ public static class Functions
         return concat;
     }
 
-    public static void CONVERT(Decimal128 value, Decimal128 source, Decimal128 targer)
+    public static void CONVERT(Decimal128 value, Decimal128 source, Decimal128 target)
     {
         // TODO: Need to implement other COBOL data types first
     }
@@ -204,10 +206,27 @@ public static class Functions
         return factorial;
     }
 
-    public static void FIND_STRING(Alphanumeric argument, Alphanumeric substring, int matches)
+    public static int FIND_STRING(string argument, string substring, int ignore, bool last, bool anycase)
     {
-        // TODO: Implement FIND-STRING
-        //  Might be possible with substring and String.IndexOf()
+        if (!last && anycase && ignore == 0) 
+            return argument.ToLower().IndexOf(substring.ToLower()) + 1;
+        
+        if (!last && ignore == 0) 
+            return argument.IndexOf(substring) + 1;
+
+        if (last && anycase) 
+            return argument.ToLower().LastIndexOf(substring.ToLower()) + 1;
+
+        if (last) 
+            return argument.LastIndexOf(substring) + 1;
+
+        List<int> matches = new();
+        foreach (Match str in Regex.Matches(argument, substring, anycase ? RegexOptions.IgnoreCase: RegexOptions.None))
+            matches.Add(str.Index + 1);
+
+        if (ignore >= matches.Count) return 0;
+
+        return matches[ignore];
     }
 
      public static Alphanumeric FORMATTED_CURRENT_DATE(string format)
@@ -229,12 +248,15 @@ public static class Functions
         return new Alphanumeric(DatePlusOffset, 32);
     }
 
-    public static void FORMATTED_DATE(int date, string format)
+    public static string FORMATTED_DATE(string format, int date)
     {
-        // TODO: Implement FORMATTED-DATE
+        // TODO: Parse format string to remove time format
+        DateTime Y1600 = new(1600, 12, 31);
+        DateTime current = Y1600.AddDays(date);
+        return current.ToString(format);
     }
 
-    public static void FORMATTED_DATETIME(int date, string format)
+    public static void FORMATTED_DATETIME(string format, int date)
     {
         // TODO: Implement FORMATTED-DATETIME
     }
@@ -266,14 +288,25 @@ public static class Functions
         // TODO: Implement COBOL boolean type
     }
 
-    public static void INTEGER_OF_DATE(int argument)
+    public static int INTEGER_OF_DATE(int argument)
     {
-        // TODO: Implement INTEGER-OF-DATE
+        DateTime Y1600 = new(1600, 12, 31);
+        // Datetime constructor => Year, Month, Day
+        // Calculations below are to remove the appropriate parts from the argument
+        // It Just Works™
+        DateTime current = new((argument / 10000),(argument / 100) - (argument / 10000 * 100),argument - (argument / 100 * 100));
+        return (current.Date - Y1600.Date).Days;
     }
 
-    public static void INTEGER_OF_DAY(int argument)
+    public static int INTEGER_OF_DAY(int argument)
     {
-        // TODO: Implement INTEGER-OF-DAY
+        DateTime Y1600 = new(1600, 12, 31);
+        // Datetime constructor => Year, Month, Day
+        // Same idea as the INTEGER_OF_DATE function, but from Julian date form
+        // It Just Works™
+        DateTime fromJulianYear = new((argument - argument % 1000) / 1000, 1, 1);
+        DateTime fromJulianDays = fromJulianYear.AddDays(argument % 1000 - 1);
+        return (fromJulianDays.Date - Y1600.Date).Days;
     }
 
     public static void INTEGER_OF_FORMATTED_DATE(int argument)
@@ -394,7 +427,7 @@ public static class Functions
     public static Decimal128 NUMVAL(Alphanumeric argument)
     {
         // Needs further testing, might not work properly
-        // and doesn't not implement all NUMVAL functionality
+        // and doesn't implement all NUMVAL functionality
         return new Decimal128(argument.Value);
     }
 
@@ -462,14 +495,21 @@ public static class Functions
         // TODO: Implement SECONDS-FROM-FORMATTED-TIME
     }
 
-    public static void SECONDS_PAST_MIDNIGHT()
+    public static Decimal128 SECONDS_PAST_MIDNIGHT()
     {
-        // TODO: Implement SECONDS-PAST-MIDNIGHT
+        DateTime timeNow = DateTime.Now;
+        return timeNow.TimeOfDay.TotalSeconds;
     }
 
-    public static void SIGN()
+    public static int SIGN(Decimal128 argument)
     {
-        // TODO: Implement SIGN
+        if (argument.Value.StartsWith("-"))
+            return -1;
+
+        if (argument.Value == Decimal128.Zero)
+            return 0;
+
+        return 1;
     }
 
     public static void SIN()
@@ -497,7 +537,7 @@ public static class Functions
         // TODO: Implement STANDARD-DEVIATION
     }
 
-    public static void SUBSTITUTE(Alphanumeric argument)
+    public static void SUBSTITUTE(string argument, string replace, string to)
     {
         // TODO: Implement SUBSTITUTE
         // Should be possible with String.Replace()
@@ -548,9 +588,18 @@ public static class Functions
         // TODO: Implement TEST-NUMVAL-F
     }
 
-    public static void TRIM(Decimal128 argument)
+    public static string TRIM(string argument, bool leading, bool trailing, char character = ' ')
     {
-        // TODO: Implement TRIM
+        if (leading && trailing)
+            return argument.Trim(character);
+
+        if (leading && !trailing)
+            return argument.TrimStart(character);
+
+        if (trailing && !leading)
+            return argument.TrimEnd(character);
+
+        return argument.Trim(character);
     }
 
     public static Alphabetic UPPER_CASE(Alphabetic argument, string? locale)

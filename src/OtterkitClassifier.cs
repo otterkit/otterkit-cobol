@@ -15,26 +15,26 @@ public static class OtterkitClassifier
         List<Token> classified = new();
         foreach (Token token in tokenList)
         {
-            if (ReservedKeywords.Contains(token.token))
-                classified.Add(new Token(token.token, "reserved", "", token.line, token.column));
+            if (ReservedKeywords.Contains(token.value))
+                classified.Add(new Token(token.value, "reserved", "", token.line, token.column));
 
-            else if (FigurativeLiterals.Contains(token.token))
-                classified.Add(new Token(token.token, "figurative literal", "", token.line, token.column));
+            else if (FigurativeLiterals.Contains(token.value))
+                classified.Add(new Token(token.value, "figurative literal", "", token.line, token.column));
 
-            else if (IntrinsicFunctions.Contains(token.token))
-                classified.Add(new Token(token.token, "intrinsic function", "", token.line, token.column));
+            else if (IntrinsicFunctions.Contains(token.value))
+                classified.Add(new Token(token.value, "intrinsic function", "", token.line, token.column));
 
-            else if (Symbols.Contains(token.token))
-                classified.Add(new Token(token.token, "symbol", "", token.line, token.column));
+            else if (Symbols.Contains(token.value))
+                classified.Add(new Token(token.value, "symbol", "", token.line, token.column));
 
-            else if (token.token.StartsWith("\""))
-                classified.Add(new Token(token.token, "string", "", token.line, token.column));
+            else if (token.value.StartsWith("\""))
+                classified.Add(new Token(token.value, "string", "", token.line, token.column));
             
-            else if (token.token.All(Char.IsDigit))
-                classified.Add(new Token(token.token, "numeric", "", token.line, token.column));
+            else if (token.value.All(Char.IsDigit))
+                classified.Add(new Token(token.value, "numeric", "", token.line, token.column));
 
             else
-                classified.Add(new Token(token.token, "identifier", "", token.line, token.column));
+                classified.Add(new Token(token.value, "identifier", "", token.line, token.column));
 
         }
         return classified;

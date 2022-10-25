@@ -31,9 +31,13 @@ public static class OtterkitAnalyzer
         string topLevelScope = "";
         List<string> previousScope = new();
         string currentScore = "";
+        int index = 0;
 
         List<Token> analyzed = new();
-
+        foreach (Token token in tokenList)
+        {
+            
+        }
 
         return analyzed;
     }

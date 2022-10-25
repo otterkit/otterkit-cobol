@@ -19,7 +19,7 @@ public static class OtterkitCompiler
         List<Token> classified = OtterkitClassifier.Classify(tokens);
         foreach (var item in classified)
         {
-            Console.WriteLine("{0,4} {1,4} {2,16} {3} {4}", item.line, item.column, item.token, item.type, item.scope);
+            Console.WriteLine("{0,4} {1,4} {2,16} {3} {4}", item.line, item.column, item.value, item.type, item.scope);
         }
     }
 

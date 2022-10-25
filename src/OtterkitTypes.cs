@@ -1,6 +1,5 @@
 namespace OtterkitLibrary;
 
-
 public struct Numeric
 {
     private Decimal128 internalNumber;

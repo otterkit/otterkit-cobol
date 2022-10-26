@@ -2,6 +2,13 @@
 #include <stdlib.h>
 #include <mpdecimal.h>
 
+// macOS & Linux Build commands.
+// Linux with GCC:
+// gcc -I. -shared -Wl,-rpath libmpdec.so.3 -o Decimal128.so UnixDecimal128.c libmpdec.a -lm
+//
+// macOS with GCC:
+// gcc -dynamiclib -Wall -W -O2 -o Decimal128.dylib Decimal128.c -lmpdec -lm
+
 char * Decimal128Pow(char *value, char *exponent)
 {
 	mpd_context_t context;

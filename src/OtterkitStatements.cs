@@ -1,0 +1,314 @@
+using System.Threading;
+
+namespace OtterkitLibrary;
+
+public static class Statements
+{
+            
+    public static void ACCEPT(string from)
+    {
+        // TODO: Implement ACCEPT and define Otterkit devices.
+    }
+    
+    public static void ADD()
+    {
+        // TODO: Implement ADD
+    }
+
+    public static void ALLOCATE() 
+    {
+        // TODO: Implement ALLOCATE
+        // Otterkit doesn't have manual memory allocation
+        // Must find a way to mimic behavior without using unsafe C#
+    }
+
+    public static void CALL()
+    {
+        // TODO: Implement CALL
+    }
+
+    public static void CANCEL()
+    {
+        // TODO: Implement CANCEL
+    }
+    
+    public static void CLOSE()
+    {
+        // TODO: Implement CLOSE
+    }
+
+    public static void COMMIT()
+    {
+        // TODO: Implement COMMIT
+    }
+
+    public static void COMPUTE()
+    {
+        // TODO: Implement COMPUTE
+        // Does C# allow arithmetic operations on method arguments?
+        // If not, might have to use templates to transfer them here
+    }
+    
+    public static void CONTINUE(double seconds)
+    {
+        if (seconds > 0) 
+            Thread.Sleep(Convert.ToInt32(seconds * 1000));
+
+        return;
+    }
+
+    public static void DELETE()
+    {
+        // TODO: Implement DELETE
+    }
+
+    public static void DISPLAY(string upon, bool advancing, params string[] strings)
+    {
+        // TODO: Define Otterkit mnemonic device names.
+        // This is needed for the UPON keyword.
+        if (advancing)
+        {
+            Console.WriteLine(String.Join(String.Empty, strings));
+        }
+        
+        Console.Write(String.Join(String.Empty, strings));
+    }
+
+    public static void DIVIDE()
+    {
+        // TODO: Implement DIVIDE
+    }
+
+    public static void EVALUATE()
+    {
+        // TODO: Implement EVALUTE
+        // This is the COBOL switch statement, might need templating
+    }
+
+    public static void EXIT(bool error, string status)
+    {
+        // TODO: Return different message if user doesn't specify status code.
+        if (error)
+            Console.Error.WriteLine("Otterkit Run Unit: Error termination with status: {0}", status);
+            Environment.Exit(1);
+
+        Console.WriteLine("Otterkit Run Unit: Normal termination with status: {0}", status);
+        Environment.Exit(0);
+    }
+
+    public static void FREE()
+    {
+        // NOTE: COBOL FREE is similar to C free() with manual memory management
+        // Otterkit doesn't have manual memory management so this statement
+        // doesn't actually free allocated memory and doesn't do anything.
+        // BUT it is useful for it to exist for compatibility purposes.
+        return;
+    }
+
+    public static void GENERATE()
+    {
+        // TODO: Implement GENERATE
+    }
+
+    public static void GOTO()
+    {
+        // TODO: Implement GO TO
+        // The standard recommends avoiding the use of GO TO
+        // Compiler warnings when GO TOs are used?
+        // Might have to use C# gotos
+    }
+
+    public static void GOBACK()
+    {
+        // TODO: Implement GOBACK
+        // Sounds similar to GO TO, but it's actually really different
+        // GOBACK is equivalent to C#'s return statement with additional features
+    }
+
+    public static void IF()
+    {
+        // TODO: Implement IF
+    }
+    
+    public static void INITIALIZE()
+    {
+        // TODO: Implement INITIALIZE
+        // Assigns values to variables
+        // Basically, initializes them with a value
+    }
+    
+    public static void INITIATE()
+    {
+        // TODO: Implement INITIARE
+    }
+
+    public static void INSPECT()
+    {
+        // TODO: Implement INSPECT
+        // String inspect, awesome feature
+    }
+
+    public static void INVOKE()
+    {
+        // TODO: Implement INVOKE
+        // COBOL OOP method call
+    }
+
+    public static void MERGE()
+    {
+        // TODO: Implement MERGE
+    }
+
+    public static void MOVE()
+    {
+        // TODO: Implement MOVE
+        // Move data between variables and assign values to variables
+    }
+
+    public static void MULTIPLY()
+    {
+        // TODO: Implement MULTIPLY
+    }
+
+    public static void OPEN()
+    {
+        // TODO: Implement OPEN
+    }
+
+    public static void PERFORM()
+    {
+        // TODO: Implement PERFORM
+        // This one is a bit complex
+        //
+        // PERFORM can be equivalent to:
+        // C# function/method call,
+        // Multiple methods calls,
+        // A C# while loop,
+        // A C# for loop,
+        // An until loop,
+        // and a loop with exception checking
+    }
+
+    public static void RAISE()
+    {
+        // TODO: Implement RAISE
+        // Equivalent to C# throw Exception()
+        // Need to implement COBOL exception handling first
+    }
+    
+    public static void READ()
+    {
+        // TODO: Implement READ
+    }
+
+    public static void RECEIVE()
+    {
+        // TODO: Implement RECEIVE
+        // New feature, async messaging
+    }
+
+    public static void RELEASE()
+    {
+        // TODO: Implement RELEASE
+    }
+
+    public static void RESUME()
+    {
+        // TODO: Implement RESUME
+    }
+
+    public static void RETURN()
+    {
+        // TODO: Implement RETURN
+    }
+
+    public static void REWRITE()
+    {
+        // TODO: Implement REWRITE
+    }
+
+    public static void ROLLBACK()
+    {
+        // TODO: Implement ROLLBACK
+    }
+
+    public static void SEARCH()
+    {
+        // TODO: Implement SEARCH
+    }
+
+    public static void SEND()
+    {
+        // TODO: Implement SEND
+        // New feature, async messaging
+    }
+
+    public static void SET()
+    {
+        // TODO: Implement SET
+    }
+
+    public static void SORT()
+    {
+        // TODO: Implement SORT
+    }
+
+    public static void START()
+    {
+        // TODO: Implement START
+    }
+
+    public static void STOP()
+    {
+        // TODO: Implement STOP
+    }
+
+    public static void STRING()
+    {
+        // TODO: Implement STRING
+        // String method, extremely useful
+        // Similar to String.Join()
+    }
+
+    public static void SUBTRACT()
+    {
+        // TODO: Implement SUBTRACT
+    }
+
+    public static void SUPPRESS()
+    {
+        // TODO: Implement SUPPRESS
+    }
+
+    public static void TERMINATE()
+    {
+        // TODO: Implement TERMINATE
+    }
+    
+    public static void UNLOCK()
+    {
+        // TODO: Implement UNLOCK
+    }
+
+    public static void UNSTRING()
+    {
+        // TODO: Implement UNSTRING
+        // String method, extremely useful
+        // Similar to String.Split()
+    }
+
+    public static void USE()
+    {
+        // TODO: Implement USE
+    }
+
+    public static void VALIDATE()
+    {
+        // TODO: Implement VALIDATE
+    }
+    
+    public static void WRITE()
+    {
+        // TODO: Implement WRITE
+    }
+}

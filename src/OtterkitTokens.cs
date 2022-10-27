@@ -2,19 +2,13 @@ namespace Otterkit;
 
 public struct Token
 {
-    public string value;
-    public string type;
-    public string scope;
-    public int line;
-    public int column;
+    public string value { get; set; }
+    public string type { get; set; }
+    public string scope { get; set; }
+    public int line { get; set; }
+    public int column { get; set; }
 
-    public Token(
-        string value,
-        string type,
-        string scope,
-        int line,
-        int column
-        )
+    public Token(string value, string type,  string scope, int line, int column)
     {
         this.value = value;
         this.type = type;

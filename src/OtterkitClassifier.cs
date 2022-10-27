@@ -37,6 +37,7 @@ public static class OtterkitClassifier
                 classified.Add(new Token(token.value, "identifier", "", token.line, token.column));
 
         }
+        classified.Add(new Token("EOF", "EOF", "EOF", -1, -1));
         return classified;
     }
 }

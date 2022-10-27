@@ -17,9 +17,10 @@ public static class OtterkitCompiler
         List<string> sourceLines = ReadAndProcessFile(fileName, sourceFormat);
         List<Token> tokens = OtterkitLexer.Tokenize(sourceLines);
         List<Token> classified = OtterkitClassifier.Classify(tokens);
-        foreach (var item in classified)
+        List<Token> analyzed = OtterkitAnalyzer.Analyze(classified);
+        foreach (var item in analyzed)
         {
-            Console.WriteLine("{0,4} {1,4} {2,16} {3} {4}", item.line, item.column, item.value, item.type, item.scope);
+            Console.WriteLine("{0,4} {1,4} {2,16} {3,10} {4}", item.line, item.column, item.value, item.type, item.scope);
         }
     }
 

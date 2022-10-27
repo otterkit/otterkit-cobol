@@ -69,15 +69,9 @@ public static class Functions
         return date;
     }
 
-    public static Alphanumeric CONCAT(Alphanumeric[] strings, int length)
+    public static string CONCAT(params string[] strings)
     {
-        Alphanumeric concat = new(String.Concat(strings), length);
-        return concat;
-    }
-
-    public static Alphabetic CONCAT(Alphabetic[] strings, int length)
-    {
-        Alphabetic concat = new(String.Concat(strings), length);
+        string concat = String.Concat(strings);
         return concat;
     }
 
@@ -91,7 +85,7 @@ public static class Functions
         // TODO: implement COS
     }
 
-    public static Alphanumeric CURRENT_DATE()
+    public static string CURRENT_DATE()
     {
         DateTime currentDate = DateTime.Now;
         TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
@@ -107,7 +101,7 @@ public static class Functions
             DatePlusOffset = new String(formattedDate + "-" + offset.ToString("hhmm"));
         }
 
-        return new Alphanumeric(DatePlusOffset, 21);
+        return DatePlusOffset;
     }
 
     public static void DATE_OF_INTEGER(Decimal128 date)
@@ -229,7 +223,7 @@ public static class Functions
         return matches[ignore];
     }
 
-     public static Alphanumeric FORMATTED_CURRENT_DATE(string format)
+     public static string FORMATTED_CURRENT_DATE(string format)
     {
         DateTime currentDate = DateTime.Now;
         TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
@@ -245,7 +239,7 @@ public static class Functions
             DatePlusOffset = new String(formattedDate + "-" + offset.ToString("hh:mm"));
         }
 
-        return new Alphanumeric(DatePlusOffset, 32);
+        return DatePlusOffset;
     }
 
     public static string FORMATTED_DATE(string format, int date)
@@ -482,12 +476,11 @@ public static class Functions
         return left % right;
     }
 
-    public static Alphanumeric REVERSE(Alphanumeric argument)
+    public static string REVERSE(string argument)
     {
-        char[] array = argument.Value.ToCharArray();
+        char[] array = argument.ToCharArray();
         Array.Reverse(array);
-        string reversed = new String(array);
-        return new Alphanumeric(reversed, argument.stringLength);
+        return new String(array);
     }
 
     public static void SECONDS_FROM_FORMATTED_TIME(Alphanumeric format, Alphanumeric time)

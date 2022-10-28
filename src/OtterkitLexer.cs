@@ -34,7 +34,12 @@ public static class OtterkitLexer
         foreach (string line in sourceLines)
         {
             lineNumber += 1;
-            foreach (Match token in Regex.Matches(line, allPatterns, RegexOptions.IgnoreCase))
+            foreach (Match token in Regex.Matches(line, allPatterns, 
+                    RegexOptions.IgnoreCase 
+                    | RegexOptions.ExplicitCapture 
+                    | RegexOptions.Compiled
+                    | RegexOptions.NonBacktracking
+                ))
             {
                 Token tokenized = new(token.Value, "", "", lineNumber, token.Index);
                 tokens.Add(tokenized);

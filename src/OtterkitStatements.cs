@@ -5,9 +5,47 @@ namespace OtterkitLibrary;
 public static class Statements
 {
             
-    public static void ACCEPT(string from)
+    public static string ACCEPT(string from, string format = "")
     {
-        // TODO: Implement ACCEPT and define Otterkit devices.
+        // ACCEPT Statement devices: STANDARD-INPUT, COMMAND-LINE.
+        string? value;
+        switch (from)
+        {
+            case "STANDARD-INPUT":
+                value = Console.ReadLine();
+                return value == null ? "null" : value;
+
+            case "COMMAND-LINE":
+                return Environment.CommandLine;
+
+            case "DATE":
+                if (format == "YYYYMMDD")
+                {
+                    value = DateTime.Now.ToString("yyyyMMdd");
+                    return value;
+                }
+                // Default DATE value:
+                value = DateTime.Now.ToString("yyMMdd");
+                return value;
+
+            case "DAY":
+                value = DateTime.Now.Year.ToString() + DateTime.Now.DayOfYear.ToString();
+                if (format == "YYYYDDD")
+                    return value;
+                // Default DAY value:
+                return value.Substring(2);
+
+            case "DAY-OF-WEEK":
+                value = ((int)DateTime.Now.DayOfWeek).ToString();
+                return value;
+
+            case "TIME":
+                value = DateTime.Now.ToString("HHmmssff");
+                return value;
+        }
+
+        value = Console.ReadLine();
+        return value == null ? "null" : value;
     }
     
     public static void ADD()
@@ -51,7 +89,7 @@ public static class Statements
     
     public static void CONTINUE(double seconds)
     {
-        if (seconds > 0) 
+        if (seconds > 0)
             Thread.Sleep(Convert.ToInt32(seconds * 1000));
 
         return;
@@ -69,6 +107,7 @@ public static class Statements
         if (advancing)
         {
             Console.WriteLine(String.Join(String.Empty, strings));
+            return;
         }
         
         Console.Write(String.Join(String.Empty, strings));
@@ -85,15 +124,9 @@ public static class Statements
         // This is the COBOL switch statement, might need templating
     }
 
-    public static void EXIT(bool error, string status)
+    public static void EXIT()
     {
-        // TODO: Return different message if user doesn't specify status code.
-        if (error)
-            Console.Error.WriteLine("Otterkit Run Unit: Error termination with status: {0}", status);
-            Environment.Exit(1);
-
-        Console.WriteLine("Otterkit Run Unit: Normal termination with status: {0}", status);
-        Environment.Exit(0);
+        // TODO: Implement EXIT
     }
 
     public static void FREE()
@@ -258,9 +291,20 @@ public static class Statements
         // TODO: Implement START
     }
 
-    public static void STOP()
+    public static void STOP(bool error, string status = "0")
     {
-        // TODO: Implement STOP
+        if (error)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Error.WriteLine("Error termination with status: {0}", status);
+            Console.ResetColor();
+            Environment.Exit(1);
+        }
+
+        Console.ForegroundColor = ConsoleColor.Blue;
+        Console.WriteLine("Normal termination with status: {0}", status);
+        Console.ResetColor();
+        Environment.Exit(0);
     }
 
     public static void STRING()

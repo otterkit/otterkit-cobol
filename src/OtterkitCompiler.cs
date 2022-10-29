@@ -9,6 +9,7 @@ public static class OtterkitCompiler
     {
         if (args.Length <= 1)
         {
+            OtterkitModule._HELLO_WORLD.procedure();
             DisplayHelpMessage();
             Environment.Exit(0);
         }

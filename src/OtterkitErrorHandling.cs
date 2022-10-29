@@ -6,12 +6,15 @@ public static class ErrorHandler
     {
         public static void Report(Token token, string error, params string[] expected)
         {
+            Console.ForegroundColor = ConsoleColor.Red;
             if (error == "choice")
             {
                 Choice(token, expected);
+                Console.ResetColor();
                 return;
             }
             Expected(token, expected);
+            Console.ResetColor();
             return;
         }
         

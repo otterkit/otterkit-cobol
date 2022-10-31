@@ -8,15 +8,18 @@ public class _HELLO_WORLD
     // 01 WS-CONST CONSTANT AS 5.
     static string _WS_ACCEPT = "";
 
+    static Decimal128 _WS_RESULT = Decimal128.Zero;
+
     // PROCEDURE DIVISION
     public static void procedure()
     {
-        // DISPLAY WITH NO ADVANCING.
-        Statements.DISPLAY("", false, "Test no advancing: ");
-        // ACCEPT WS-ACCEPT FROM COMMAND-LINE.
-        _WS_ACCEPT = Statements.ACCEPT("COMMAND-LINE");
-        // DISPLAY WS-ACCEPT.
-        Statements.DISPLAY("", true, "Result is: ", _WS_ACCEPT);
+        Statements.COMPUTE(() => 1 + 2 * 4 / (Decimal128)123, () => 
+        {
+            Statements.DISPLAY("", true, _WS_RESULT.ToString());
+        }, () => 
+        {
+            Statements.DISPLAY("", true, _WS_RESULT.ToString());
+        }, _WS_RESULT, _WS_RESULT);
         // STOP RUN.
         Statements.STOP(false);
     }

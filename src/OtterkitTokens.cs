@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Reflection;
-using System.IO;
 
 namespace Otterkit;
 
@@ -12,7 +11,8 @@ public enum TokenType
     Symbol,
     String,
     Numeric,
-    Identifier
+    Identifier,
+    EOF
 }
 
 public struct Token
@@ -37,6 +37,7 @@ public struct Token
         this.line = line;
         this.column = column;
     }
+
     public Token(
         string value,
         int line,
@@ -49,12 +50,14 @@ public struct Token
         this.line = line;
         this.column = column;
     }
-    public static TokenType FindType(string value,int line, int column){
+
+    public static TokenType FindType(string value){
         //get Otterkit.paringinfo.json from assembly
-        if(tokenJsonCache==null){
-            Assembly assembly = (Assembly)Assembly.GetEntryAssembly();
-            Stream stream = (Stream)assembly.GetManifestResourceStream("Otterkit.parsinginfo.json");
-            StreamReader reader = new System.IO.StreamReader(stream);
+        if(tokenJsonCache==null)
+        {
+            Assembly assembly = Assembly.GetCallingAssembly();
+            Stream? stream = assembly.GetManifestResourceStream("Otterkit.parsinginfo.json");
+            StreamReader reader = new System.IO.StreamReader(stream == null ? throw new ArgumentNullException() : stream);
             tokenJsonCache = JsonSerializer.Deserialize<JsonElement>(reader.ReadToEnd());
         }
         
@@ -69,7 +72,7 @@ public struct Token
         else if(tokenJson.GetProperty("intrinsicFunctions").EnumerateArray().Any(x=>x.GetString()==value))
             return TokenType.IntrinsicFunction;
         //check if the value is a symbol
-        else if(tokenJson.GetProperty("Symbols").EnumerateArray().Any(x=>x.GetString()==value))
+        else if(tokenJson.GetProperty("symbols").EnumerateArray().Any(x=>x.GetString()==value))
             return TokenType.Symbol;
         //check if the value is a string
         else if(value.StartsWith("\""))
@@ -77,25 +80,37 @@ public struct Token
         //check if the value is a numeric
         else if(value.All(Char.IsDigit))
             return TokenType.Numeric;
+        //check if the value is End Of File
+        else if(value == "EOF")
+            return TokenType.EOF;
         //if none of the above, it's an identifier
         else
             return TokenType.Identifier;
+    }
 
+    public static Token fromValue(string value,int line, int column)
+    {
+        return new Token(value,Token.FindType(value),"",line,column);
     }
-    public static Token fromValue(string value,int line, int column){
-        return new Token(value,Token.FindType(value,line,column),"",line,column);
-    }
-    public static List<Token> fromValue(List<Token> tokens){
+
+    public static List<Token> fromValue(List<Token> tokens)
+    {
         List<Token> newTokens = new List<Token>();
-        foreach(Token token in tokens){
+        foreach(Token token in tokens)
+        {
             newTokens.Add(Token.fromValue(token.value,token.line,token.column));
         }
+        newTokens.Add(Token.fromValue("EOF", -1, -1));
         return newTokens;
     }
-    public static IEnumerable<Token> fromValue(IEnumerable<Token> tokens){
+
+    public static IEnumerable<Token> fromValue(IEnumerable<Token> tokens)
+    {
         return Token.fromValue(tokens.ToList());
     }
-    public static Token[] fromValue(Token[] tokens){
+
+    public static Token[] fromValue(Token[] tokens)
+    {
         return Token.fromValue(tokens.ToList()).ToArray();
     }
     

@@ -35,7 +35,7 @@ public static class OtterkitLexer
             lineNumber += 1;
             foreach (Match token in Regex.Matches(line, allPatterns, RegexOptions.IgnoreCase))
             {
-                Token tokenized = new(token.Value, "", "", lineNumber, token.Index);
+                Token tokenized = new Token(token.Value, lineNumber, token.Index);
                 tokens.Add(tokenized);
             }
         }

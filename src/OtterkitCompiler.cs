@@ -16,7 +16,7 @@ public static class OtterkitCompiler
         ProcessArguments(args);
         List<string> sourceLines = ReadAndProcessFile(fileName, sourceFormat);
         List<Token> tokens = OtterkitLexer.Tokenize(sourceLines);
-        List<Token> classified = OtterkitClassifier.Classify(tokens);
+        List<Token> classified = Token.fromValue(tokens);
         foreach (var item in classified)
         {
             Console.WriteLine("{0,4} {1,4} {2,16} {3} {4}", item.line, item.column, item.value, item.type, item.scope);

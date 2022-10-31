@@ -1,16 +1,31 @@
+using System.Text.Json;
+using System.Reflection;
+using System.IO;
+
 namespace Otterkit;
+
+public enum TokenType
+{
+    ReservedKeyword,
+    FigurativeLiteral,
+    IntrinsicFunction,
+    Symbol,
+    String,
+    Numeric,
+    Identifier
+}
 
 public struct Token
 {
     public string value;
-    public string type;
-    public string scope;
+    public TokenType? type;
+    public string? scope;
     public int line;
     public int column;
-
+    private static JsonElement? tokenJsonCache=null;
     public Token(
         string value,
-        string type,
+        TokenType? type,
         string scope,
         int line,
         int column
@@ -22,589 +37,66 @@ public struct Token
         this.line = line;
         this.column = column;
     }
-}
-
-public static class ClassifiedTokens
-{
-    public static readonly List<string> reservedKeywords = new()
+    public Token(
+        string value,
+        int line,
+        int column
+        )
     {
-        // A
-        "ACCEPT",
-        "ACCESS",
-        "ACTIVE-CLASS",
-        "ADD",
-        "ADDRESS",
-        "ADVANCING",
-        "AFTER",
-        "ALIGNED",
-        "ALLOCATE",
-        "ALPHABET",
-        "ALPHABETIC",
-        "ALPHABETIC-LOWER",
-        "ALPHABETIC-UPPER",
-        "ALPHANUMERIC",
-        "ALPHANUMERIC-EDITED",
-        "ALSO",
-        "ALTERNATE",
-        "AND",
-        "ANY",
-        "ANYCASE",
-        "ARE",
-        "AREA",
-        "AREAS",
-        "AS",
-        "ASCENDING",
-        "ASSIGN",
-        "AT",
+        this.value = value;
+        this.type = null;
+        this.scope = null;
+        this.line = line;
+        this.column = column;
+    }
+    public static TokenType FindType(string value,int line, int column){
+        //get Otterkit.paringinfo.json from assembly
+        if(tokenJsonCache==null){
+            Assembly assembly = (Assembly)Assembly.GetEntryAssembly();
+            Stream stream = (Stream)assembly.GetManifestResourceStream("Otterkit.parsinginfo.json");
+            StreamReader reader = new System.IO.StreamReader(stream);
+            tokenJsonCache = JsonSerializer.Deserialize<JsonElement>(reader.ReadToEnd());
+        }
+        
+        JsonElement tokenJson = (JsonElement)tokenJsonCache;
+        //check if the value is a reserved keyword
+        if(tokenJson.GetProperty("reservedKeywords").EnumerateArray().Any(x=>x.GetString()==value))
+            return TokenType.ReservedKeyword;
+        //check if the value is a figurative literal
+        else if(tokenJson.GetProperty("figurativeLiteral").EnumerateArray().Any(x=>x.GetString()==value))
+            return TokenType.FigurativeLiteral;
+        //check if the value is an intrinsic function
+        else if(tokenJson.GetProperty("intrinsicFunctions").EnumerateArray().Any(x=>x.GetString()==value))
+            return TokenType.IntrinsicFunction;
+        //check if the value is a symbol
+        else if(tokenJson.GetProperty("Symbols").EnumerateArray().Any(x=>x.GetString()==value))
+            return TokenType.Symbol;
+        //check if the value is a string
+        else if(value.StartsWith("\""))
+            return TokenType.String;
+        //check if the value is a numeric
+        else if(value.All(Char.IsDigit))
+            return TokenType.Numeric;
+        //if none of the above, it's an identifier
+        else
+            return TokenType.Identifier;
 
-        // B
-        "B-AND",
-        "B-NOT",
-        "B-OR",
-        "B-SHIFT",
-        "B-SHIFT-LC",
-        "B-SHIFT-RC",
-        "BY",
-        "B-XOR",
-        "BASED",
-        "BEFORE",
-        "BINARY",
-        "BINARY-CHAR",
-        "BINARY-DOUBLE",
-        "BINARY-LONG",
-        "BINARY-SHORT",
-        "BIT",
-        "BLANK",
-        "BLOCK",
-        "BOOLEAN",
-        "BOTTOM",
-
-        // C    
-        "CALL",
-        "CANCEL",
-        "CF",
-        "CH",
-        "CHARACTER",
-        "CHARACTERS",
-        "CLASS",
-        "CLASS-ID",
-        "CLOSE",
-        "CODE",
-        "CODE-SET",
-        "COL",
-        "COLLATING",
-        "COLS",
-        "COLUMN",
-        "COLUMNS",
-        "COMMA",
-        "COMMIT",
-        "COMMON",
-        "COMP",
-        "COMPUTATIONAL",
-        "COMPUTE",
-        "CONFIGURATION",
-        "CONSTANT",
-        "CONTAINS",
-        "CONTENT",
-        "CONTINUE",
-        "CONTROL",
-        "CONTROLS",
-        "CONVERTING",
-        "COPY",
-        "CORR",
-        "CORRESPONDING",
-        "COUNT",
-        "CRT",
-        "CURRENCY",
-        "CURSOR",
-
-        // D
-        "DATA",
-        "DATA-POINTER",
-        "DATE",
-        "DAY",
-        "DAY-OF-WEEK",
-        "DE",
-        "DECIMAL-POINT",
-        "DECLARATIVES",
-        "DEFAULT",
-        "DELETE",
-        "DELIMITED",
-        "DELIMITER",
-        "DEPENDING",
-        "DESCENDING",
-        "DESTINATION",
-        "DETAIL",
-        "DISPLAY",
-        "DIVIDE",
-        "DIVISION",
-        "DOWN",
-        "DUPLICATES",
-        "DYNAMIC",
-
-        // E
-        "EC",
-        "EDITING",
-        "ELSE",
-        "EMI",
-        "END",
-        "END-ACCEPT",
-        "END-ADD",
-        "END-CALL",
-        "END-COMPUTE",
-        "END-DELETE",
-        "END-DISPLAY",
-        "END-DIVIDE",
-        "END-EVALUATE",
-        "END-IF",
-        "END-MULTIPLY",
-        "END-OF-PAGE",
-        "END-PERFORM",
-        "END-RECEIVE",
-        "END-READ",
-        "END-RETURN",
-        "END-REWRITE",
-        "END-SEARCH",
-        "END-START",
-        "END-STRING",
-        "END-SUBTRACT",
-        "END-UNSTRING",
-        "END-WRITE",
-        "ENVIRONMENT",
-        "EOL",
-        "EOP",
-        "EQUAL",
-        "ERROR",
-        "EVALUATE",
-        "EXCEPTION",
-        "EXCEPTION-OBJECT",
-        "EXCLUSIVE-OR",
-        "EXIT",
-        "EXTEND",
-        "EXTERNAL",
-
-        // F
-        "FACTORY",
-        "FARTHEST-FROM-ZERO",
-        "FALSE",
-        "FD",
-        "FILE",
-        "FILE-CONTROL",
-        "FILLER",
-        "FINAL",
-        "FINALLY",
-        "FIRST",
-        "FLOAT-BINARY-32",
-        "FLOAT-BINARY-64",
-        "FLOAT-BINARY-128",
-        "FLOAT-DECIMAL-16",
-        "FLOAT-DECIMAL-34",
-        "FLOAT-EXTENDED",
-        "FLOAT-INFINITY",
-        "FLOAT-LONG",
-        "FLOAT-NOT-A-NUMBER",
-        "FLOAT-NOT-A-NUMBER-QUIET",
-        "FLOAT-NOT-A-NUMBER-SIGNALING",
-        "FOOTING",
-        "FOR",
-        "FORMAT",
-        "FREE",
-        "FROM",
-        "FUNCTION",
-        "FUNCTION-ID",
-        "FUNCTION-POINTER",
-
-        // G
-        "GENERATE",
-        "GET",
-        "GIVING",
-        "GLOBAL",
-        "GO",
-        "GOBACK",
-        "GREATER",
-        "GROUP",
-        "GROUP-USAGE",
-
-        // H
-        "HEADING",
-
-        // I
-        "I-O",
-        "I-O-CONTROL",
-        "IDENTIFICATION",
-        "IF",
-        "IN",
-        "IN-ARITHMETIC-RANGE",
-        "INDEX",
-        "INDEXED",
-        "INDICATE",
-        "INHERITS",
-        "INITIAL",
-        "INITIALIZE",
-        "INITIATE",
-        "INPUT",
-        "INPUT-OUTPUT",
-        "INSPECT",
-        "INTERFACE",
-        "INTERFACE-ID",
-        "INTO",
-        "INVALID",
-        "INVOKE",
-        "IS",
-
-        // J&K
-        "JUST",
-        "JUSTIFIED",
-        "KEY",
-
-        // L
-        "LAST",
-        "LEADING",
-        "LEFT",
-        "LENGTH",
-        "LESS",
-        "LIMIT",
-        "LIMITS",
-        "LINAGE",
-        "LINAGE-COUNTER",
-        "LINE",
-        "LINE-COUNTER",
-        "LINES",
-        "LINKAGE",
-        "LOCAL-STORAGE",
-        "LOCALE",
-        "LOCATION",
-        "LOCK",
-
-        // M
-        "MERGE",
-        "MESSAGE-TAG",
-        "METHOD",
-        "METHOD-ID",
-        "MINUS",
-        "MODE",
-        "MOVE",
-        "MULTIPLY",
-
-        // N
-        "NATIONAL",
-        "NATIONAL-EDITED",
-        "NATIVE",
-        "NEAREST-TO-ZERO",
-        "NESTED",
-        "NEXT",
-        "NO",
-        "NOT",
-        "NULL",
-        "NUMBER",
-        "NUMERIC",
-        "NUMERIC-EDITED",
-
-        // O
-        "OBJECT",
-        "OBJECT-COMPUTER",
-        "OBJECT-REFERENCE",
-        "OCCURS",
-        "OF",
-        "OFF",
-        "OMITTED",
-        "ON",
-        "OPEN",
-        "OPTIONAL",
-        "OPTIONS",
-        "OR",
-        "ORDER",
-        "ORGANIZATION",
-        "OTHER",
-        "OUTPUT",
-        "OVERFLOW",
-        "OVERRIDE",
-
-        // P
-        "PACKED-DECIMAL",
-        "PAGE",
-        "PAGE-COUNTER",
-        "PERFORM",
-        "PF",
-        "PH",
-        "PIC",
-        "PICTURE",
-        "PLUS",
-        "POINTER",
-        "POSITIVE",
-        "PRESENT",
-        "PRINTING",
-        "PROCEDURE",
-        "PROGRAM",
-        "PROGRAM-ID",
-        "PROGRAM-POINTER",
-        "PROPERTY",
-        "PROTOTYPE",
-
-        // R
-        "RAISE",
-        "RAISING",
-        "RANDOM",
-        "RD",
-        "READ",
-        "RECEIVE",
-        "RECORD",
-        "RECORDS",
-        "REDEFINES",
-        "REEL",
-        "REF",
-        "REFERENCE",
-        "RELATIVE",
-        "RELEASE",
-        "REMAINDER",
-        "REMOVAL",
-        "RENAMES",
-        "REPLACE",
-        "REPLACING",
-        "REPORT",
-        "REPORTING",
-        "REPORTS",
-        "REPOSITORY",
-        "RESERVE",
-        "RESET",
-        "RESUME",
-        "RETRY",
-        "RETURN",
-        "RETURNING",
-        "REWIND",
-        "REWRITE",
-        "RF",
-        "RH",
-        "RIGHT",
-        "ROLLBACK",
-        "ROUNDED",
-        "RUN",
-
-        // S
-        "SAME",
-        "SCREEN",
-        "SD",
-        "SEARCH",
-        "SECTION",
-        "SELECT",
-        "SEND",
-        "SELF",
-        "SENTENCE",
-        "SEPARATE",
-        "SEQUENCE",
-        "SEQUENTIAL",
-        "SET",
-        "SHARING",
-        "SIGN",
-        "SIZE",
-        "SORT",
-        "SORT-MERGE",
-        "SOURCE",
-        "SOURCE-COMPUTER",
-        "SOURCES",
-        "SPECIAL-NAMES",
-        "STANDARD",
-        "STANDARD-1",
-        "STANDARD-2",
-        "START",
-        "STATUS",
-        "STOP",
-        "STRING",
-        "SUBTRACT",
-        "SUM",
-        "SUPER",
-        "SUPPRESS",
-        "SYMBOLIC",
-        "SYNC",
-        "SYNCHRONIZED",
-        "SYSTEM-DEFAULT",
-
-        // T
-        "TABLE",
-        "TALLYING",
-        "TERMINATE",
-        "TEST",
-        "THAN",
-        "THEN",
-        "THROUGH",
-        "THRU",
-        "TIME",
-        "TIMES",
-        "TO",
-        "TOP",
-        "TRAILING",
-        "TRUE",
-        "TYPE",
-        "TYPEDEF",
-
-        // U
-        "UNIT",
-        "UNIVERSAL",
-        "UNLOCK",
-        "UNSTRING",
-        "UNTIL",
-        "UP",
-        "UPON",
-        "USAGE",
-        "USE",
-        "USE",
-        "USER-DEFAULT",
-        "USING",
-
-        // V
-        "VAL-STATUS",
-        "VALID",
-        "VALIDATE",
-        "VALIDATE-STATUS",
-        "VALUE",
-        "VALUES",
-        "VARYING",
-
-        // W & X
-        "WHEN",
-        "WITH",
-        "WORKING-STORAGE",
-        "WRITE",
-        "XOR"
-    };
-
-    public static readonly List<string> figurativeLiteral = new()
-    {
-        "ZERO",
-        "ZEROES",
-        "ZEROS",
-        "SPACE",
-        "SPACES",
-        "HIGH-VALUE",
-        "HIGH-VALUES",
-        "LOW-VALUE",
-        "LOW-VALUES",
-        "QUOTE",
-        "QUOTES",
-        "ALL",
-    };
-
-    public static readonly List<string> Symbols = new()
-    {
-        "+",
-        "-",
-        "**",
-        "*",
-        "=",
-        "/",
-        "$",
-        ",",
-        ";",
-        "::",
-        ".",
-        "(",
-        ")",
-        ">>",
-        "<>",
-        ">=",
-        "<=",
-        ">",
-        "<",
-        "&",
-        "_",
-    };
-
-    public static readonly List<string> intrinsicFunctions = new()
-    {
-
-        "ABS",
-        "ACOS",
-        "ANNUITY",
-        "ASIN",
-        "ATAN",
-        "BASECONVERT",
-        "BOOLEAN-OF-INTEGER",
-        "BYTE-LENGTH",
-        "CHAR",
-        "CHAR-NATIONAL",
-        "COMBINED-DATETIME",
-        "CONCAT",
-        "CONVERT",
-        "COS",
-        "CURRENT-DATE",
-        "DATE-OF-INTEGER",
-        "DATE-TO-YYYYMMDD",
-        "DAY-OF-INTEGER",
-        "DAY-TO-YYYYDDD",
-        "DISPLAY-OF",
-        "E",
-        "EXCEPTION-FILE",
-        "EXCEPTION-FILE-N",
-        "EXCEPTION-LOCATION",
-        "EXCEPTION-LOCATION-N",
-        "EXCEPTION-STATEMENT",
-        "EXCEPTION-STATUS",
-        "EXP",
-        "EXP10",
-        "FACTORIAL",
-        "FIND-STRING",
-        "FORMATTED-CURRENT-DATE",
-        "FORMATTED-DATE",
-        "FORMATTED-DATETIME",
-        "FORMATTED-TIME",
-        "FRACTION-PART",
-        "HIGHEST-ALGEBRAIC",
-        "INTEGER",
-        "INTEGER-OF-BOOLEAN",
-        "INTEGER-OF-DATE",
-        "INTEGER-OF-DAY",
-        "INTEGER-OF-FORMATTED-DATE",
-        "INTEGER-PART",
-        "LENGTH",
-        "LOCALE-COMPARE",
-        "LOCALE-DATE",
-        "LOCALE-TIME",
-        "LOCALE-TIME-FROM-SECONDS",
-        "LOG",
-        "LOG10",
-        "LOWER-CASE",
-        "LOWEST-ALGEBRAIC",
-        "MAX",
-        "MEAN",
-        "MEDIAN",
-        "MIDRANGE",
-        "MIN",
-        "MOD",
-        "MODULE-NAME",
-        "NATIONAL-OF",
-        "NUMVAL",
-        "NUMVAL-C",
-        "NUMVAL-F",
-        "ORD",
-        "ORD-MAX",
-        "ORD-MIN",
-        "PI",
-        "PRESENT-VALUE",
-        "RANDOM",
-        "RANGE",
-        "REM",
-        "REVERSE",
-        "SECONDS-FROM-FORMATTED-TIME",
-        "SECONDS-PAST-MIDNIGHT",
-        "SIGN",
-        "SIN",
-        "SMALLEST-ALGEBRAIC",
-        "SQRT",
-        "STANDARD-COMPARE",
-        "STANDARD-DEVIATION",
-        "SUBSTITUTE",
-        "SUM",
-        "TAN",
-        "TEST-DATE-YYYYMMDD",
-        "TEST-DAY-YYYYDDD",
-        "TEST-FORMATTED-DATETIME",
-        "TEST-NUMVAL",
-        "TEST-NUMVAL-C",
-        "TEST-NUMVAL-F",
-        "TRIM",
-        "UPPER-CASE",
-        "VARIANCE",
-        "WHEN-COMPILED",
-        "YEAR-TO-YYYY",
-    };
+    }
+    public static Token fromValue(string value,int line, int column){
+        return new Token(value,Token.FindType(value,line,column),"",line,column);
+    }
+    public static List<Token> fromValue(List<Token> tokens){
+        List<Token> newTokens = new List<Token>();
+        foreach(Token token in tokens){
+            newTokens.Add(Token.fromValue(token.value,token.line,token.column));
+        }
+        return newTokens;
+    }
+    public static IEnumerable<Token> fromValue(IEnumerable<Token> tokens){
+        return Token.fromValue(tokens.ToList());
+    }
+    public static Token[] fromValue(Token[] tokens){
+        return Token.fromValue(tokens.ToList()).ToArray();
+    }
+    
 }

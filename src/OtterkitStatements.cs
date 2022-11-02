@@ -80,11 +80,29 @@ public static class Statements
         // TODO: Implement COMMIT
     }
 
-    public static void COMPUTE()
+    public static void COMPUTE(Func<Decimal128> compute, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
     {
-        // TODO: Implement COMPUTE
-        // Does C# allow arithmetic operations on method arguments?
-        // If not, might have to use templates to transfer them here
+        // Usage example:
+        // Will result in a "SIZE ERROR"
+        // Statements.COMPUTE(
+        //     () => 1000, 
+        //     () => Statements.DISPLAY("", true, "SIZE ERROR"), 
+        //     () => Statements.DISPLAY("", true, "NOT ERROR"), 
+        //     new Numeric(999, 3, 0, false)
+        // );
+
+        Decimal128 result = compute();
+        
+        foreach (Numeric variable in dataItems)
+        {
+            if(result > Functions.HIGHEST_ALGEBRAIC(variable))
+                OnSizeError();
+
+            if(result <= Functions.HIGHEST_ALGEBRAIC(variable))
+                NotSizeError();
+
+            variable.Value = result;
+        }
     }
     
     public static void CONTINUE(double seconds)

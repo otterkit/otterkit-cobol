@@ -271,7 +271,7 @@ public static class Functions
 
     public static Decimal128 HIGHEST_ALGEBRAIC(Numeric argument)
     {
-        int integer = argument.integerLength;
+        int integer = argument.length;
         int fraction = argument.fractionalLength;
         string isDecimal = fraction == 0 ? "" : "." + new String('9', fraction);
         return new Decimal128("+" + new String('9', integer) + isDecimal);
@@ -355,17 +355,17 @@ public static class Functions
 
     public static Alphanumeric LOWER_CASE(Alphanumeric argument, string? locale)
     {
-        return new Alphanumeric(argument.Value.ToLower(), argument.stringLength);
+        return new Alphanumeric(argument.Value.ToLower(), argument.length);
     }
 
     public static Alphabetic LOWER_CASE(Alphabetic argument, string? locale)
     {
-        return new Alphabetic(argument.Value.ToLower(), argument.stringLength);
+        return new Alphabetic(argument.Value.ToLower(), argument.length);
     }
 
     public static Decimal128 LOWEST_ALGEBRAIC(Numeric argument)
     {
-        int integer = argument.integerLength;
+        int integer = argument.length;
         int fraction = argument.fractionalLength;
         string isDecimal = fraction == 0 ? "" : "." + new String('9', fraction);
         bool isSigned = argument.isSigned;
@@ -597,7 +597,7 @@ public static class Functions
 
     public static Alphabetic UPPER_CASE(Alphabetic argument, string? locale)
     {
-        return new Alphabetic(argument.Value.ToUpper(), argument.stringLength);
+        return new Alphabetic(argument.Value.ToUpper(), argument.length);
     }
 
     public static void WHEN_COMPILED(Decimal128 argument)

@@ -64,6 +64,9 @@ public class Numeric : DataItem<Decimal128>, IDataItem<Decimal128>
 
     public string Formatted()
     {
+        if (!dataItem.Value.Contains('.') && fractionalLength != 0)
+            dataItem.Value += ".0";
+
         if (fractionalLength != 0)
         {
             // Split at decimal point if Numeric item has a fractional value
@@ -110,6 +113,23 @@ public class Numeric : DataItem<Decimal128>, IDataItem<Decimal128>
             }
 
             dataItem = value;
+        }
+    }
+    public string DisplayValue
+    {
+        get
+        {
+            if (isNegative && isSigned)
+            {
+                return String.Format("-{0}", Formatted());
+            }
+
+            if (!isNegative && isSigned)
+            {
+                return String.Format("+{0}", Formatted());
+            }
+
+            return Formatted();
         }
     }
 }

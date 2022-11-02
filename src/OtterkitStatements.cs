@@ -43,9 +43,45 @@ public static class Statements
         return value == null ? " " : value;
     }
     
-    public static void ADD()
+    public static void ADD(Decimal128[] values, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
     {
-        // TODO: Implement ADD
+        Decimal128 result = 0;
+        foreach (Decimal128 value in values)
+        {
+            result += value;
+            Console.WriteLine(result);
+        }
+        
+        foreach (Numeric variable in dataItems)
+        {
+            if(result + variable.Value > Functions.HIGHEST_ALGEBRAIC(variable))
+                OnSizeError();
+
+            if(result + variable.Value <= Functions.HIGHEST_ALGEBRAIC(variable))
+                NotSizeError();
+
+            variable.Value += result;
+        }
+    }
+
+    public static void ADD(Decimal128[] values, Numeric to, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
+    {
+        Decimal128 result = 0;
+        foreach (Decimal128 value in values)
+        {
+            result += value;
+        }
+        
+        foreach (Numeric variable in giving)
+        {
+            if(result + to.Value > Functions.HIGHEST_ALGEBRAIC(variable))
+                OnSizeError();
+
+            if(result + to.Value <= Functions.HIGHEST_ALGEBRAIC(variable))
+                NotSizeError();
+
+            variable.Value = result + to.Value;
+        }
     }
 
     public static void ALLOCATE() 

@@ -536,7 +536,7 @@ public static class Functions
         // Should be possible with String.Replace()
     }
 
-    public static Decimal128 SUM(Decimal128[] argument)
+    public static Decimal128 SUM(params Decimal128[] argument)
     {
         Decimal128 sum = 0;
         foreach (Decimal128 dec in argument)

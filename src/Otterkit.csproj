@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../libotterkit/src/OtterkitLibrary.csproj" />
+    <ProjectReference Include="../libotterkit/src/OtterkitLibrary.csproj" />
     <EmbeddedResource Include="parsinginfo.json" />
   </ItemGroup>
 </Project>

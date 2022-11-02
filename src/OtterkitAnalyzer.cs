@@ -6,8 +6,6 @@ public static class OtterkitAnalyzer
     {
         List<Token> analyzed = new();
         int index = 0;
-        Console.WriteLine(tokenList.Count);
-        Console.WriteLine(tokenList[index]);
 
         Source();
         return analyzed;

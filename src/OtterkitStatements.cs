@@ -4,7 +4,6 @@ namespace OtterkitLibrary;
 
 public static class Statements
 {
-            
     public static string ACCEPT(string from, string format = "")
     {
         // ACCEPT Statement devices: STANDARD-INPUT, COMMAND-LINE.
@@ -13,7 +12,7 @@ public static class Statements
         {
             case "STANDARD-INPUT":
                 value = Console.ReadLine();
-                return value == null ? "null" : value;
+                return value == null ? " " : value;
 
             case "COMMAND-LINE":
                 return Environment.CommandLine;
@@ -21,12 +20,10 @@ public static class Statements
             case "DATE":
                 if (format == "YYYYMMDD")
                 {
-                    value = DateTime.Now.ToString("yyyyMMdd");
-                    return value;
+                    return DateTime.Now.ToString("yyyyMMdd");
                 }
                 // Default DATE value:
-                value = DateTime.Now.ToString("yyMMdd");
-                return value;
+                return DateTime.Now.ToString("yyMMdd");;
 
             case "DAY":
                 value = DateTime.Now.Year.ToString() + DateTime.Now.DayOfYear.ToString();
@@ -36,16 +33,14 @@ public static class Statements
                 return value.Substring(2);
 
             case "DAY-OF-WEEK":
-                value = ((int)DateTime.Now.DayOfWeek).ToString();
-                return value;
+                return ((int)DateTime.Now.DayOfWeek).ToString();
 
             case "TIME":
-                value = DateTime.Now.ToString("HHmmssff");
-                return value;
+                return DateTime.Now.ToString("HHmmssff");
         }
 
         value = Console.ReadLine();
-        return value == null ? "null" : value;
+        return value == null ? " " : value;
     }
     
     public static void ADD()
@@ -120,15 +115,34 @@ public static class Statements
 
     public static void DISPLAY(string upon, bool advancing, params string[] strings)
     {
-        // TODO: Define Otterkit mnemonic device names.
-        // This is needed for the UPON keyword.
+        switch (upon)
+        {
+            case "STANDARD-OUTPUT":
+                if (advancing)
+                {
+                    Console.WriteLine(String.Join(String.Empty, strings));
+                    return;
+                }
+                Console.Write(String.Join(String.Empty, strings));
+                return;
+
+            case "STANDARD-ERROR":
+                if (advancing)
+                {
+                    Console.Error.WriteLine(String.Join(String.Empty, strings));
+                    return;
+                }
+                Console.Error.Write(String.Join(String.Empty, strings));
+                return;
+        }
         if (advancing)
         {
             Console.WriteLine(String.Join(String.Empty, strings));
             return;
         }
-        
         Console.Write(String.Join(String.Empty, strings));
+        return;
+        
     }
 
     public static void DIVIDE()

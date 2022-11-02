@@ -11,6 +11,9 @@
 # macOS DS_Store
 .DS_Store
 
+# VSCode Files
+.vscode/
+
 # User-specific files
 *.rsuser
 *.suo

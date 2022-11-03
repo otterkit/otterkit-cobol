@@ -83,11 +83,9 @@ public static class Statements
         }
     }
 
-    public static void ALLOCATE() 
+    public static void ALLOCATE()
     {
-        // TODO: Implement ALLOCATE
-        // Otterkit doesn't have manual memory allocation
-        // Must find a way to mimic behavior without using unsafe C#
+        DISPLAY("STANDARD-ERROR", true, "Error, Unsupported: Otterkit COBOL does not support manual memory management");
     }
 
     public static void CALL()
@@ -180,9 +178,72 @@ public static class Statements
         
     }
 
-    public static void DIVIDE()
+    public static void DIVIDE(Decimal128 value, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
     {
-        // TODO: Implement DIVIDE
+        foreach (Numeric variable in dataItems)
+        {
+            if(variable.Value / value > Functions.HIGHEST_ALGEBRAIC(variable))
+                OnSizeError();
+
+            if(variable.Value / value <= Functions.HIGHEST_ALGEBRAIC(variable))
+                NotSizeError();
+
+            variable.Value /= value;
+        }
+    }
+
+    public static void DIVIDE(bool by, Decimal128 value, Decimal128 into, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
+    {   
+        if (by)
+        {
+            foreach (Numeric variable in giving)
+            {
+                if(value / into > Functions.HIGHEST_ALGEBRAIC(variable))
+                    OnSizeError();
+
+                if(value / into <= Functions.HIGHEST_ALGEBRAIC(variable))
+                    NotSizeError();
+
+                variable.Value = value / into;
+            }
+            return;
+        }
+
+        foreach (Numeric variable in giving)
+        {
+            if(into / value > Functions.HIGHEST_ALGEBRAIC(variable))
+                OnSizeError();
+
+            if(into / value <= Functions.HIGHEST_ALGEBRAIC(variable))
+                NotSizeError();
+
+            variable.Value = into / value;
+        }
+    }
+
+    public static void DIVIDE(bool by, Decimal128 value, Decimal128 into, Numeric giving, Numeric remainder, Action OnSizeError, Action NotSizeError)
+    {   
+        if (by)
+        {
+            if(value / into > Functions.HIGHEST_ALGEBRAIC(giving))
+                OnSizeError();
+
+            if(value / into <= Functions.HIGHEST_ALGEBRAIC(giving))
+                NotSizeError();
+
+            giving.Value = value / into;
+            remainder.Value = Functions.REM(value, into);
+            return;
+        }
+
+        if(into / value > Functions.HIGHEST_ALGEBRAIC(giving))
+            OnSizeError();
+
+        if(into / value <= Functions.HIGHEST_ALGEBRAIC(giving))
+            NotSizeError();
+
+        giving.Value = into / value;
+        remainder.Value = Functions.REM(value, into);
     }
 
     public static void EVALUATE()
@@ -198,11 +259,7 @@ public static class Statements
 
     public static void FREE()
     {
-        // NOTE: COBOL FREE is similar to C free() with manual memory management
-        // Otterkit doesn't have manual memory management so this statement
-        // doesn't actually free allocated memory and doesn't do anything.
-        // BUT it is useful for it to exist for compatibility purposes.
-        return;
+        DISPLAY("STANDARD-ERROR", true, "Error, Unsupported: Otterkit COBOL does not support manual memory management");
     }
 
     public static void GENERATE()
@@ -265,9 +322,32 @@ public static class Statements
         // Move data between variables and assign values to variables
     }
 
-    public static void MULTIPLY()
+    public static void MULTIPLY(Decimal128 value, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
     {
-        // TODO: Implement MULTIPLY
+        foreach (Numeric variable in dataItems)
+        {
+            if(value * variable.Value > Functions.HIGHEST_ALGEBRAIC(variable))
+                OnSizeError();
+
+            if(value * variable.Value <= Functions.HIGHEST_ALGEBRAIC(variable))
+                NotSizeError();
+
+            variable.Value *= value;
+        }
+    }
+
+    public static void MULTIPLY(Decimal128 value, Decimal128 by, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
+    {   
+        foreach (Numeric variable in giving)
+        {
+            if(value * by > Functions.HIGHEST_ALGEBRAIC(variable))
+                OnSizeError();
+
+            if(value * by <= Functions.HIGHEST_ALGEBRAIC(variable))
+                NotSizeError();
+
+            variable.Value = value * by;
+        }
     }
 
     public static void OPEN()
@@ -358,6 +438,11 @@ public static class Statements
         // TODO: Implement START
     }
 
+    public static void STOP()
+    {
+        Environment.Exit(0);
+    }
+
     public static void STOP(bool error, string status = "0")
     {
         if (error)
@@ -365,13 +450,13 @@ public static class Statements
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.WriteLine("Error termination with status: {0}", status);
             Console.ResetColor();
-            Environment.Exit(1);
+            Environment.Exit(-1);
         }
 
         Console.ForegroundColor = ConsoleColor.Blue;
         Console.WriteLine("Normal termination with status: {0}", status);
         Console.ResetColor();
-        Environment.Exit(0);
+        Environment.Exit(1);
     }
 
     public static void STRING()

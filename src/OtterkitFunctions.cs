@@ -401,7 +401,7 @@ public static class Functions
 
     public static Decimal128 MOD(Decimal128 left, Decimal128 right)
     {
-        Decimal128 mod = left % right;
+        Decimal128 mod = REM(left, right);
         if (mod < 0) {
             mod = right < 0 ? mod - right : mod + right;
         }
@@ -473,7 +473,10 @@ public static class Functions
 
     public static Decimal128 REM(Decimal128 left, Decimal128 right)
     {
-        return left % right;
+        // The COBOL standard suggested this calculation:
+        string subsidiaryQuotient = (left / right).Value;
+        subsidiaryQuotient = subsidiaryQuotient.Remove(subsidiaryQuotient.Length - 1) + "0";
+        return (left - (subsidiaryQuotient * right));
     }
 
     public static string REVERSE(string argument)

@@ -67,6 +67,12 @@ public class Numeric : DataItem<Decimal128>, IDataItem<Decimal128>
         if (!dataItem.Value.Contains('.') && fractionalLength != 0)
             dataItem.Value += ".0";
 
+        if (dataItem.Value.Contains('.') && fractionalLength == 0)
+        {
+            int indexOfDecimal = dataItem.Value.IndexOf(".");
+            dataItem.Value = dataItem.Value.Substring(0, indexOfDecimal);
+        }
+
         if (fractionalLength != 0)
         {
             // Split at decimal point if Numeric item has a fractional value
@@ -80,8 +86,9 @@ public class Numeric : DataItem<Decimal128>, IDataItem<Decimal128>
             return new String(padLeft.Substring(padLeft.Length - length) + "." + padRight.Substring(0, fractionalLength));
         }
         
+        string padInt = dataItem.Value.PadLeft(length, '0');
         // If Numeric item doesn't have a fractional value, pad missing zeros and remove overflow
-        return dataItem.Value.PadLeft(length, '0').Substring(dataItem.Value.Length - length);
+        return padInt.Substring(padInt.Length - length);
     }
 
     public Decimal128 Value

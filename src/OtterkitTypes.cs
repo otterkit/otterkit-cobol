@@ -112,7 +112,7 @@ public class Numeric : DataItem<Decimal128>, IDataItem<Decimal128>
                 isNegative = false;
             }
 
-            dataItem = value;
+            dataItem = value.Value.Replace('-', '0');
         }
     }
     public string DisplayValue

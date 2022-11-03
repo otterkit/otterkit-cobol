@@ -49,7 +49,6 @@ public static class Statements
         foreach (Decimal128 value in values)
         {
             result += value;
-            Console.WriteLine(result);
         }
         
         foreach (Numeric variable in dataItems)
@@ -64,7 +63,7 @@ public static class Statements
         }
     }
 
-    public static void ADD(Decimal128[] values, Numeric to, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
+    public static void ADD(Decimal128[] values, Decimal128 to, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
     {
         Decimal128 result = 0;
         foreach (Decimal128 value in values)
@@ -74,13 +73,13 @@ public static class Statements
         
         foreach (Numeric variable in giving)
         {
-            if(result + to.Value > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result + to > Functions.HIGHEST_ALGEBRAIC(variable))
                 OnSizeError();
 
-            if(result + to.Value <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result + to <= Functions.HIGHEST_ALGEBRAIC(variable))
                 NotSizeError();
 
-            variable.Value = result + to.Value;
+            variable.Value = result + to;
         }
     }
 
@@ -382,9 +381,44 @@ public static class Statements
         // Similar to String.Join()
     }
 
-    public static void SUBTRACT()
+    public static void SUBTRACT(Decimal128[] values, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
     {
-        // TODO: Implement SUBTRACT
+        Decimal128 result = 0;
+        foreach (Decimal128 value in values)
+        {
+            result += value;
+        }
+        
+        foreach (Numeric variable in dataItems)
+        {
+            if(result - variable.Value > Functions.HIGHEST_ALGEBRAIC(variable))
+                OnSizeError();
+
+            if(result - variable.Value <= Functions.HIGHEST_ALGEBRAIC(variable))
+                NotSizeError();
+
+            variable.Value -= result;
+        }
+    }
+
+    public static void SUBTRACT(Decimal128[] values, Decimal128 from, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
+    {
+        Decimal128 result = 0;
+        foreach (Decimal128 value in values)
+        {
+            result += value;
+        }
+        
+        foreach (Numeric variable in giving)
+        {
+            if(result - from > Functions.HIGHEST_ALGEBRAIC(variable))
+                OnSizeError();
+
+            if(result - from <= Functions.HIGHEST_ALGEBRAIC(variable))
+                NotSizeError();
+
+            variable.Value = from - result;
+        }
     }
 
     public static void SUPPRESS()

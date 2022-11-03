@@ -58,7 +58,6 @@ public static class Functions
 
     public static string CHAR_NATIONAL(Decimal128 argument)
     {
-        // TODO: Might not work properly, need test with NATIONAL types
         int parseInt = int.Parse(argument.Value);
         return ((char)parseInt).ToString();
     }
@@ -106,7 +105,10 @@ public static class Functions
 
     public static void DATE_OF_INTEGER(Decimal128 date)
     {
-        // TODO: implement DATE-OF-INTEGER
+        DateTime Y1600 = new(1600, 12, 31);
+        int intValue = int.Parse(date.Value);
+
+        DateTime dateOfInteger = Y1600.AddDays(intValue);
     }
 
     public static void DATE_TO_YYYYMMDD(Decimal128 date)
@@ -255,7 +257,7 @@ public static class Functions
         // TODO: Implement FORMATTED-DATETIME
     }
 
-    public static void FORMATTED_TIME(Alphanumeric format, Decimal128 seconds, int offset)
+    public static void FORMATTED_TIME(string format, Decimal128 seconds, int offset)
     {
         // TODO: Implement FORMATTED-TIME
     }
@@ -277,29 +279,31 @@ public static class Functions
         return new Decimal128("+" + new String('9', integer) + isDecimal);
     }
 
-    public static void INTEGER_OF_BOOLEAN(int argument)
+    public static Decimal128 INTEGER_OF_BOOLEAN(Boolean argument)
     {
-        // TODO: Implement COBOL boolean type
+        return Convert.ToInt64(argument.Value, 2);
     }
 
-    public static int INTEGER_OF_DATE(int argument)
+    public static int INTEGER_OF_DATE(Decimal128 argument)
     {
         DateTime Y1600 = new(1600, 12, 31);
+        int intValue = int.Parse(argument.Value);
         // Datetime constructor => Year, Month, Day
         // Calculations below are to remove the appropriate parts from the argument
         // It Just Works™
-        DateTime current = new((argument / 10000),(argument / 100) - (argument / 10000 * 100),argument - (argument / 100 * 100));
+        DateTime current = new((intValue / 10000),(intValue / 100) - (intValue / 10000 * 100),intValue - (intValue / 100 * 100));
         return (current.Date - Y1600.Date).Days;
     }
 
-    public static int INTEGER_OF_DAY(int argument)
+    public static int INTEGER_OF_DAY(Decimal128 argument)
     {
         DateTime Y1600 = new(1600, 12, 31);
+        int intValue = int.Parse(argument.Value);
         // Datetime constructor => Year, Month, Day
         // Same idea as the INTEGER_OF_DATE function, but from Julian date form
         // It Just Works™
-        DateTime fromJulianYear = new((argument - argument % 1000) / 1000, 1, 1);
-        DateTime fromJulianDays = fromJulianYear.AddDays(argument % 1000 - 1);
+        DateTime fromJulianYear = new((intValue - intValue % 1000) / 1000, 1, 1);
+        DateTime fromJulianDays = fromJulianYear.AddDays(intValue % 1000 - 1);
         return (fromJulianDays.Date - Y1600.Date).Days;
     }
 
@@ -317,10 +321,10 @@ public static class Functions
         return new Decimal128(IntegerPart);
     }
 
-    public static int LENGTH(Alphanumeric argument)
+    public static int LENGTH(string argument)
     {
         // Does not cover all LENGTH functionality
-        return argument.Value.Length;
+        return argument.Length;
     }
 
     public static void LOCALE_COMPARE(Alphanumeric argument)
@@ -353,14 +357,9 @@ public static class Functions
         return Decimal128.Log10(argument.Value);
     }
 
-    public static Alphanumeric LOWER_CASE(Alphanumeric argument, string? locale)
+    public static string LOWER_CASE(string argument, string? locale)
     {
-        return new Alphanumeric(argument.Value.ToLower(), argument.length);
-    }
-
-    public static Alphabetic LOWER_CASE(Alphabetic argument, string? locale)
-    {
-        return new Alphabetic(argument.Value.ToLower(), argument.length);
+        return argument.ToLower();
     }
 
     public static Decimal128 LOWEST_ALGEBRAIC(Numeric argument)
@@ -498,9 +497,9 @@ public static class Functions
         return timeNow.TimeOfDay.TotalSeconds;
     }
 
-    public static int SIGN(Decimal128 argument)
+    public static int SIGN(Numeric argument)
     {
-        if (argument.Value.StartsWith("-"))
+        if (argument.Value < Decimal128.Zero)
             return -1;
 
         if (argument.Value == Decimal128.Zero)
@@ -585,30 +584,27 @@ public static class Functions
         // TODO: Implement TEST-NUMVAL-F
     }
 
-    public static string TRIM(string argument, bool leading, bool trailing, char character = ' ')
+    public static string TRIM(string argument, string operation, char character = ' ')
     {
-        if (leading && trailing)
-            return argument.Trim(character);
-
-        if (leading && !trailing)
+        if (operation == "LEADING")
             return argument.TrimStart(character);
 
-        if (trailing && !leading)
-            return argument.TrimEnd(character);
+        if (operation == "TRAILING")
+            return argument.TrimEnd(character);    
 
         return argument.Trim(character);
     }
 
-    public static Alphabetic UPPER_CASE(Alphabetic argument, string? locale)
+    public static string UPPER_CASE(string argument, string? locale)
     {
-        return new Alphabetic(argument.Value.ToUpper(), argument.length);
+        return argument.ToUpper();
     }
 
-    public static void WHEN_COMPILED(Decimal128 argument)
+    public static string WHEN_COMPILED(string argument)
     {
-        // TODO: Implement WHEN-COMPILED
         // This is a compile time function instead of a runtime function
         // Might have to set a constant at compile time for this
+        return argument;
     }
 
     public static void YEAR_TO_YYYY(Decimal128 argument)

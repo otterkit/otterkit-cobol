@@ -475,7 +475,8 @@ public static class Functions
     {
         // The COBOL standard suggested this calculation:
         string subsidiaryQuotient = (left / right).Value;
-        subsidiaryQuotient = subsidiaryQuotient.Remove(subsidiaryQuotient.Length - 1) + "0";
+        if (subsidiaryQuotient.Contains('.'))
+            subsidiaryQuotient = subsidiaryQuotient.Remove(subsidiaryQuotient.Length - 1) + "0";
         return (left - (subsidiaryQuotient * right));
     }
 

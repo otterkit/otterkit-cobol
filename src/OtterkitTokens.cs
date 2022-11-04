@@ -12,6 +12,7 @@ public enum TokenType
     String,
     Numeric,
     Identifier,
+    Device,
     EOF
 }
 

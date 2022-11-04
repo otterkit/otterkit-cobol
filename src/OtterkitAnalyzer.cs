@@ -111,6 +111,37 @@ public static class OtterkitAnalyzer
             {
                 case "DISPLAY":
                     DISPLAY();
+                    Statement();
+                    break;
+
+                case "ACCEPT":
+                    ACCEPT();
+                    Statement();
+                    break;
+
+                case "COMPUTE":
+                    DISPLAY();
+                    Statement();
+                    break;
+
+                case "ADD":
+                    DISPLAY();
+                    Statement();
+                    break;
+
+                case "SUBTRACT":
+                    DISPLAY();
+                    Statement();
+                    break;
+
+                case "DIVIDE":
+                    DISPLAY();
+                    Statement();
+                    break;
+
+                case "MULTIPLY":
+                    DISPLAY();
+                    Statement();
                     break;
 
             }
@@ -128,13 +159,83 @@ public static class OtterkitAnalyzer
                 case TokenType.Numeric:
                     Number();
                     break;
+                case TokenType.String:
+                    String();
+                    break;
                 default:
                     ErrorHandler.Parser.Report(Current(), "expected", "identifier or literal");
                     break;
             }
+
+            while (Current().type == TokenType.Identifier 
+                || Current().type == TokenType.Numeric
+                || Current().type == TokenType.String
+            )
+            {
+                if (Current().type == TokenType.Identifier)
+                    Identifier();
+
+                if (Current().type == TokenType.Numeric)
+                    Number();
+
+                if (Current().type == TokenType.String)
+                    String();
+            }
+
+            if (Current().value == "UPON")
+            {
+                Expected("UPON");
+                Choice(TokenType.Device, "STANDARD-OUTPUT", "STANDARD-ERROR");
+            }
+
+            if (Current().value == "WITH" || Current().value == "NO")
+            {
+                Optional("WITH");
+                Expected("NO");
+                Expected("ADVANCING");
+            }
+
+            Optional("END-DISPLAY");
             Expected(".", "separator period");
         }
 
+        void ACCEPT()
+        {
+            Expected("ACCEPT");
+            Identifier();
+            if (Current().value == "FROM")
+            {
+                Expected("FROM");
+                switch (Current().value)
+                {
+                    case "STANDARD-INPUT":
+                    case "COMMAND-LINE":
+                        Choice(TokenType.Device, "STANDARD-INPUT", "COMMAND-LINE");
+                        break;
+
+                    case "DATE":
+                        Expected("DATE");
+                        Optional("YYYYMMDD");
+                        break;
+
+                    case "DAY":
+                        Expected("DAY");
+                        Optional("YYYYDDD");
+                        break;
+
+                    case "DAY-OF-WEEK":
+                        Expected("DAY-OF-WEEK");
+                        break;
+
+                    case "TIME":
+                        Expected("TIME");
+                        break;
+                }
+            }
+
+            Optional("END-ACCEPT");
+            Expected(".", "separator period");
+        }
 
         // Parser helper methods.
         string LookAhead(int amount)
@@ -153,13 +254,15 @@ public static class OtterkitAnalyzer
             return tokenList[index];
         }
 
-        void Choice(params string[] choices)
+        void Choice(TokenType? type, params string[] choices)
         {
             Token current = Current();
             foreach(string choice in choices)
             {
                 if (current.value == choice)
                 {
+                    if (type != null)
+                        current.type = type;
                     analyzed.Add(current);
                     Continue();
                     return;
@@ -217,6 +320,20 @@ public static class OtterkitAnalyzer
             if (current.type != TokenType.Numeric)
             {
                 ErrorHandler.Parser.Report(Current(), "expected", "numberic literal");
+                Continue();
+                return;
+            }
+            analyzed.Add(current);
+            Continue();
+            return;
+        }
+
+        void String()
+        {
+            Token current = Current();
+            if (current.type != TokenType.String)
+            {
+                ErrorHandler.Parser.Report(Current(), "expected", "string literal");
                 Continue();
                 return;
             }

@@ -144,6 +144,11 @@ public static class OtterkitAnalyzer
                     Statement();
                     break;
 
+                case "STOP":
+                    STOP();
+                    Statement();
+                    break;
+
             }
         }
 
@@ -234,6 +239,34 @@ public static class OtterkitAnalyzer
             }
 
             Optional("END-ACCEPT");
+            Expected(".", "separator period");
+        }
+
+        void STOP()
+        {
+            Expected("STOP");
+            Expected("RUN");
+            if (Current().value == "WITH" 
+             || Current().value == "NORMAL" 
+             || Current().value == "ERROR"
+            )
+            {
+                Optional("WITH");
+                Choice(null, "NORMAL", "ERROR");
+                Optional("STATUS");
+                switch (Current().type)
+                {
+                    case TokenType.Identifier:
+                        Identifier();
+                        break;
+                    case TokenType.Numeric:
+                        Number();
+                        break;
+                    case TokenType.String:
+                        String();
+                        break;
+                }
+            }
             Expected(".", "separator period");
         }
 

@@ -64,13 +64,13 @@ public struct Token
         
         JsonElement tokenJson = (JsonElement)tokenJsonCache;
         //check if the value is a reserved keyword
-        if(tokenJson.GetProperty("reservedKeywords").EnumerateArray().Any(x=>x.GetString()==value))
+        if(tokenJson.GetProperty("reservedKeywords").EnumerateArray().Any(x=>x.GetString()==value.ToUpper()))
             return TokenType.ReservedKeyword;
         //check if the value is a figurative literal
-        else if(tokenJson.GetProperty("figurativeLiteral").EnumerateArray().Any(x=>x.GetString()==value))
+        else if(tokenJson.GetProperty("figurativeLiteral").EnumerateArray().Any(x=>x.GetString()==value.ToUpper()))
             return TokenType.FigurativeLiteral;
         //check if the value is an intrinsic function
-        else if(tokenJson.GetProperty("intrinsicFunctions").EnumerateArray().Any(x=>x.GetString()==value))
+        else if(tokenJson.GetProperty("intrinsicFunctions").EnumerateArray().Any(x=>x.GetString()==value.ToUpper()))
             return TokenType.IntrinsicFunction;
         //check if the value is a symbol
         else if(tokenJson.GetProperty("symbols").EnumerateArray().Any(x=>x.GetString()==value))
@@ -91,7 +91,7 @@ public struct Token
 
     public static Token fromValue(string value,int line, int column)
     {
-        return new Token(value,Token.FindType(value),"",line,column);
+        return new Token(value.ToUpper(),Token.FindType(value),"",line,column);
     }
 
     public static List<Token> fromValue(List<Token> tokens)

@@ -25,7 +25,7 @@ public static class OtterkitAnalyzer
                     Source();
                     break;
 
-                case "ENVIRONMENT": 
+                case "ENVIRONMENT":
                     ENVIRONMENT();
                     Source();
                     break;
@@ -39,7 +39,7 @@ public static class OtterkitAnalyzer
                     PROCEDURE();
                     Source();
                     break;
-                
+
                 default:
                     ErrorHandler.Parser.Report(Current(), "expected", "IDENTIFICATION, ENVIRONMENT, DATA or PROCEDURE");
                     Environment.Exit(1);
@@ -61,7 +61,6 @@ public static class OtterkitAnalyzer
             Expected(".", "separator period");
             Identifier();
             Expected(".", "separator period");
-
         }
 
         void ENVIRONMENT()
@@ -128,7 +127,7 @@ public static class OtterkitAnalyzer
                     break;
 
                 case "ADD":
-                    DISPLAY();
+                    ADD();
                     ScopeTerminator(isNested);
                     Statement(isNested);
                     break;
@@ -156,7 +155,6 @@ public static class OtterkitAnalyzer
                     ScopeTerminator(isNested);
                     Statement(isNested);
                     break;
-
             }
         }
 
@@ -165,9 +163,11 @@ public static class OtterkitAnalyzer
             if (isNested)
                 return;
 
-            if(!isNested)
+            if (!isNested)
+            {
                 Expected(".", "separator period");
                 return;
+            }
         }
 
         // Statement parsing section:
@@ -190,7 +190,7 @@ public static class OtterkitAnalyzer
                     break;
             }
 
-            while (Current().type == TokenType.Identifier 
+            while (Current().type == TokenType.Identifier
                 || Current().type == TokenType.Numeric
                 || Current().type == TokenType.String
             )
@@ -269,7 +269,7 @@ public static class OtterkitAnalyzer
             }
 
             Expected("=");
-            while(Current().type == TokenType.Identifier 
+            while (Current().type == TokenType.Identifier
                || Current().type == TokenType.Numeric
                || Current().type == TokenType.Symbol
             )
@@ -282,7 +282,7 @@ public static class OtterkitAnalyzer
 
                 if (Current().type == TokenType.Symbol)
                 {
-                    switch(Current().value)
+                    switch (Current().value)
                     {
                         case "+":
                         case "-":
@@ -302,35 +302,75 @@ public static class OtterkitAnalyzer
                 }
             }
 
-            if (Current().value == "ON" || Current().value == "SIZE")
-            {
-                isConditional = true;
-                Optional("ON");
-                Expected("SIZE");
-                Expected("ERROR");
-                Statement(true);
-            }
+            SizeError(ref isConditional);
 
-            if (Current().value == "NOT")
-            {
-                isConditional = true;
-                Expected("NOT");
-                Optional("ON");
-                Expected("SIZE");
-                Expected("ERROR");
-                Statement(true);
-            }
-            
             if (isConditional)
                 Expected("END-COMPUTE");
+        }
+
+        void ADD()
+        {
+            bool isConditional = false;
+
+            Expected("ADD");
+            while (Current().type == TokenType.Identifier
+                || Current().type == TokenType.Numeric
+            )
+            {
+                if (Current().type == TokenType.Identifier)
+                    Identifier();
+
+                if (Current().type == TokenType.Numeric)
+                    Number();
+            }
+
+            if(Current().value == "TO" && LookAhead(2).value == "GIVING")
+            {
+                Optional("TO");
+                switch (Current().type)
+                {
+                    case TokenType.Identifier:
+                        Identifier();
+                        break;
+
+                    case TokenType.Numeric:
+                        Number();
+                        break;
+
+                    default:
+                        ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                        break;
+                }
+
+                Expected("GIVING");
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            } 
+            else if (Current().value == "GIVING")
+            {
+                Expected("GIVING");
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+            else if (Current().value == "TO")
+            {
+                Expected("TO");
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+
+            SizeError(ref isConditional);
+
+            if (isConditional)
+                Expected("END-ADD");
         }
 
         void STOP()
         {
             Expected("STOP");
             Expected("RUN");
-            if (Current().value == "WITH" 
-             || Current().value == "NORMAL" 
+            if (Current().value == "WITH"
+             || Current().value == "NORMAL"
              || Current().value == "ERROR"
             )
             {
@@ -353,9 +393,9 @@ public static class OtterkitAnalyzer
         }
 
         // Parser helper methods.
-        string LookAhead(int amount)
+        Token LookAhead(int amount)
         {
-            return tokenList[index + amount].value;
+            return tokenList[index + amount];
         }
 
         void Continue()
@@ -372,7 +412,7 @@ public static class OtterkitAnalyzer
         void Choice(TokenType? type, params string[] choices)
         {
             Token current = Current();
-            foreach(string choice in choices)
+            foreach (string choice in choices)
             {
                 if (current.value == choice)
                 {
@@ -394,13 +434,13 @@ public static class OtterkitAnalyzer
             Token current = Current();
             if (current.value != optional)
                 return;
-            
+
             current.scope = scope;
             analyzed.Add(current);
             Continue();
             return;
         }
-        
+
         void Expected(string expected, string scope = "")
         {
             Token current = Current();
@@ -414,6 +454,28 @@ public static class OtterkitAnalyzer
             analyzed.Add(current);
             Continue();
             return;
+        }
+
+        void SizeError(ref bool isConditional)
+        {
+            if (Current().value == "ON" || Current().value == "SIZE")
+            {
+                isConditional = true;
+                Optional("ON");
+                Expected("SIZE");
+                Expected("ERROR");
+                Statement(true);
+            }
+
+            if (Current().value == "NOT")
+            {
+                isConditional = true;
+                Expected("NOT");
+                Optional("ON");
+                Expected("SIZE");
+                Expected("ERROR");
+                Statement(true);
+            }
         }
 
         void Identifier()

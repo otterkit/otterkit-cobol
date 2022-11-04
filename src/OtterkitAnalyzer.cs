@@ -294,6 +294,9 @@ public static class OtterkitAnalyzer
                             Symbol();
                             break;
 
+                        case ".":
+                            return;
+
                         default:
                             ErrorHandler.Parser.Report(Current(), "expected", "+, -, *, /, **, ( or )");
                             Continue();

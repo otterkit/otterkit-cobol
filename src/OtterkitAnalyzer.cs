@@ -105,51 +105,69 @@ public static class OtterkitAnalyzer
             Statement();
         }
 
-        void Statement()
+        void Statement(bool isNested = false)
         {
             switch (Current().value)
             {
                 case "DISPLAY":
                     DISPLAY();
-                    Statement();
+                    ScopeTerminator(isNested);
+                    Statement(isNested);
                     break;
 
                 case "ACCEPT":
                     ACCEPT();
-                    Statement();
+                    ScopeTerminator(isNested);
+                    Statement(isNested);
                     break;
 
                 case "COMPUTE":
-                    DISPLAY();
-                    Statement();
+                    COMPUTE();
+                    ScopeTerminator(isNested);
+                    Statement(isNested);
                     break;
 
                 case "ADD":
                     DISPLAY();
-                    Statement();
+                    ScopeTerminator(isNested);
+                    Statement(isNested);
                     break;
 
                 case "SUBTRACT":
                     DISPLAY();
-                    Statement();
+                    ScopeTerminator(isNested);
+                    Statement(isNested);
                     break;
 
                 case "DIVIDE":
                     DISPLAY();
-                    Statement();
+                    ScopeTerminator(isNested);
+                    Statement(isNested);
                     break;
 
                 case "MULTIPLY":
                     DISPLAY();
-                    Statement();
+                    ScopeTerminator(isNested);
+                    Statement(isNested);
                     break;
 
                 case "STOP":
                     STOP();
-                    Statement();
+                    ScopeTerminator(isNested);
+                    Statement(isNested);
                     break;
 
             }
+        }
+
+        void ScopeTerminator(bool isNested)
+        {
+            if (isNested)
+                return;
+
+            if(!isNested)
+                Expected(".", "separator period");
+                return;
         }
 
         // Statement parsing section:
@@ -201,7 +219,6 @@ public static class OtterkitAnalyzer
             }
 
             Optional("END-DISPLAY");
-            Expected(".", "separator period");
         }
 
         void ACCEPT()
@@ -239,7 +256,73 @@ public static class OtterkitAnalyzer
             }
 
             Optional("END-ACCEPT");
-            Expected(".", "separator period");
+        }
+
+        void COMPUTE()
+        {
+            bool isConditional = false;
+
+            Expected("COMPUTE");
+            while (Current().type == TokenType.Identifier)
+            {
+                Identifier();
+            }
+
+            Expected("=");
+            while(Current().type == TokenType.Identifier 
+               || Current().type == TokenType.Numeric
+               || Current().type == TokenType.Symbol
+            )
+            {
+                if (Current().type == TokenType.Identifier)
+                    Identifier();
+
+                if (Current().type == TokenType.Numeric)
+                    Number();
+
+                if (Current().type == TokenType.Symbol)
+                {
+                    switch(Current().value)
+                    {
+                        case "+":
+                        case "-":
+                        case "*":
+                        case "/":
+                        case "**":
+                        case "(":
+                        case ")":
+                            Symbol();
+                            break;
+
+                        default:
+                            ErrorHandler.Parser.Report(Current(), "expected", "+, -, *, /, **, ( or )");
+                            Continue();
+                            break;
+                    }
+                }
+            }
+
+            if (Current().value == "ON" || Current().value == "SIZE")
+            {
+                isConditional = true;
+                Optional("ON");
+                Expected("SIZE");
+                Expected("ERROR");
+                Statement(true);
+            }
+
+            if (Current().value == "NOT")
+            {
+                isConditional = true;
+                Expected("NOT");
+                Optional("ON");
+                Expected("SIZE");
+                Expected("ERROR");
+                Statement(true);
+            }
+            
+            if (isConditional)
+                Expected("END-COMPUTE");
         }
 
         void STOP()
@@ -267,7 +350,6 @@ public static class OtterkitAnalyzer
                         break;
                 }
             }
-            Expected(".", "separator period");
         }
 
         // Parser helper methods.
@@ -307,12 +389,13 @@ public static class OtterkitAnalyzer
             return;
         }
 
-        void Optional(string optional)
+        void Optional(string optional, string scope = "")
         {
             Token current = Current();
             if (current.value != optional)
                 return;
             
+            current.scope = scope;
             analyzed.Add(current);
             Continue();
             return;
@@ -367,6 +450,20 @@ public static class OtterkitAnalyzer
             if (current.type != TokenType.String)
             {
                 ErrorHandler.Parser.Report(Current(), "expected", "string literal");
+                Continue();
+                return;
+            }
+            analyzed.Add(current);
+            Continue();
+            return;
+        }
+
+        void Symbol()
+        {
+            Token current = Current();
+            if (current.type != TokenType.Symbol)
+            {
+                ErrorHandler.Parser.Report(Current(), "expected", "symbol");
                 Continue();
                 return;
             }

@@ -91,7 +91,10 @@ public struct Token
 
     public static Token fromValue(string value,int line, int column)
     {
-        return new Token(value.ToUpper(),Token.FindType(value),"",line,column);
+        if (Token.FindType(value) == TokenType.String)
+            return new Token(value, Token.FindType(value), "",line,column);
+
+        return new Token(value.ToUpper(), Token.FindType(value), "",line,column);
     }
 
     public static List<Token> fromValue(List<Token> tokens)
@@ -99,7 +102,7 @@ public struct Token
         List<Token> newTokens = new List<Token>();
         foreach(Token token in tokens)
         {
-            newTokens.Add(Token.fromValue(token.value,token.line,token.column));
+            newTokens.Add(Token.fromValue(token.value, token.line, token.column));
         }
         newTokens.Add(Token.fromValue("EOF", -1, -1));
         return newTokens;

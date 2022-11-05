@@ -2,6 +2,16 @@ namespace Otterkit;
 
 public static class ErrorHandler
 {
+    public static class Compiler
+    {
+        public static void Report(string error)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(error);
+            Console.ResetColor();
+        }
+    }
+
     public static class Parser
     {
         public static void Report(Token token, string error, params string[] expected)

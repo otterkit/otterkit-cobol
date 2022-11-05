@@ -65,6 +65,13 @@ public static class OtterkitCompiler
     }
     private static List<string> ReadAndProcessFile(string fileName, string sourceFormat)
     {
+        if (!File.Exists(fileName))
+        {
+            ErrorHandler.Compiler.Report("Otterkit compiler error: File Not Found");
+            ErrorHandler.Compiler.Report($"The compiler was not able not find the file: {fileName}");
+            Environment.Exit(1);
+        }
+
         string[] readLines = File.ReadAllLines(fileName);
         List<string> processedLines = new();
         foreach (string line in readLines)

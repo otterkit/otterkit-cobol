@@ -88,12 +88,58 @@ public static class OtterkitAnalyzer
 
         void ConstantEntry()
         {
+            if (Current().value != "01" && Current().value != "1")
+                ErrorHandler.Parser.Report(Current(), " ", "Constant entry must have a level number of 1 or 01");
+
             Number();
             Identifier();
             Expected("CONSTANT");
-            Expected("AS");
-            Number();
-            Expected(".", "separator period");
+            if (Current().value == "IS" || Current().value == "GLOBAL")
+            {
+                Optional("IS");
+                Expected("GLOBAL");
+            }
+
+            if (Current().value == "FROM")
+            {
+                Expected("FROM");
+                Identifier();
+                Expected(".", "separator period");
+            }
+            else
+            {
+                Optional("AS");
+                switch (Current().type)
+                {
+                    case TokenType.String:
+                        String();
+                        break;
+                    
+                    case TokenType.Numeric:
+                        Number();
+                        break;
+
+                    case TokenType.FigurativeLiteral:
+                        FigurativeLiteral();
+                        break;
+                }
+
+                if (Current().value == "LENGTH")
+                {
+                    Expected("LENGTH");
+                    Optional("OF");
+                    Identifier();
+                }
+
+                if (Current().value == "BYTE-LENGTH")
+                {
+                    Expected("BYTE-LENGTH");
+                    Optional("OF");
+                    Identifier();
+                }
+
+                Expected(".", "separator period");
+            }
         }
 
         void PROCEDURE()
@@ -133,19 +179,19 @@ public static class OtterkitAnalyzer
                     break;
 
                 case "SUBTRACT":
-                    DISPLAY();
+                    SUBTRACT();
                     ScopeTerminator(isNested);
                     Statement(isNested);
                     break;
 
                 case "DIVIDE":
-                    DISPLAY();
+                    DIVIDE();
                     ScopeTerminator(isNested);
                     Statement(isNested);
                     break;
 
                 case "MULTIPLY":
-                    DISPLAY();
+                    MULTIPLY();
                     ScopeTerminator(isNested);
                     Statement(isNested);
                     break;
@@ -263,12 +309,20 @@ public static class OtterkitAnalyzer
             bool isConditional = false;
 
             Expected("COMPUTE");
+            if (Current().type != TokenType.Identifier)
+                ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+
             while (Current().type == TokenType.Identifier)
             {
                 Identifier();
             }
 
             Expected("=");
+            if (Current().type != TokenType.Identifier 
+             && Current().type != TokenType.Numeric
+             && Current().type != TokenType.Symbol)
+                ErrorHandler.Parser.Report(Current(), "expected", "identifier, numeric literal or arithmetic symbol");
+
             while (Current().type == TokenType.Identifier
                || Current().type == TokenType.Numeric
                || Current().type == TokenType.Symbol
@@ -316,6 +370,9 @@ public static class OtterkitAnalyzer
             bool isConditional = false;
 
             Expected("ADD");
+            if (Current().type != TokenType.Identifier && Current().type != TokenType.Numeric)
+                ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+
             while (Current().type == TokenType.Identifier
                 || Current().type == TokenType.Numeric
             )
@@ -346,26 +403,260 @@ public static class OtterkitAnalyzer
                 }
 
                 Expected("GIVING");
+                if (Current().type != TokenType.Identifier)
+                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             } 
             else if (Current().value == "GIVING")
             {
                 Expected("GIVING");
+                if (Current().type != TokenType.Identifier)
+                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             }
             else if (Current().value == "TO")
             {
                 Expected("TO");
+                if (Current().type != TokenType.Identifier)
+                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+
                 while (Current().type == TokenType.Identifier)
                     Identifier();
+            }
+            else
+            {
+                ErrorHandler.Parser.Report(Current(), "expected", "TO or GIVING");
             }
 
             SizeError(ref isConditional);
 
             if (isConditional)
                 Expected("END-ADD");
+        }
+
+        void SUBTRACT()
+        {
+            bool isConditional = false;
+
+            Expected("SUBTRACT");
+            if (Current().type != TokenType.Identifier && Current().type != TokenType.Numeric)
+                ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+
+            while (Current().type == TokenType.Identifier
+                || Current().type == TokenType.Numeric
+            )
+            {
+                if (Current().type == TokenType.Identifier)
+                    Identifier();
+
+                if (Current().type == TokenType.Numeric)
+                    Number();
+            }
+
+            if(Current().value == "FROM" && LookAhead(2).value == "GIVING")
+            {
+                Optional("FROM");
+                switch (Current().type)
+                {
+                    case TokenType.Identifier:
+                        Identifier();
+                        break;
+
+                    case TokenType.Numeric:
+                        Number();
+                        break;
+
+                    default:
+                        ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                        break;
+                }
+
+                Expected("GIVING");
+                if (Current().type != TokenType.Identifier)
+                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+            else if (Current().value == "FROM")
+            {
+                Expected("FROM");
+                if (Current().type != TokenType.Identifier)
+                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+            else
+            {
+                ErrorHandler.Parser.Report(Current(), "expected", "FROM");
+            }
+
+            SizeError(ref isConditional);
+
+            if (isConditional)
+                Expected("END-SUBTRACT");
+        }
+
+        void MULTIPLY()
+        {
+            bool isConditional = false;
+
+            Expected("MULTIPLY");
+            switch (Current().type)
+            {
+                case TokenType.Identifier:
+                    Identifier();
+                    break;
+
+                case TokenType.Numeric:
+                    Number();
+                    break;
+
+                default:
+                    ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                    break;
+            }
+
+            if(Current().value == "BY" && LookAhead(2).value == "GIVING")
+            {
+                Optional("BY");
+                switch (Current().type)
+                {
+                    case TokenType.Identifier:
+                        Identifier();
+                        break;
+
+                    case TokenType.Numeric:
+                        Number();
+                        break;
+
+                    default:
+                        ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                        break;
+                }
+
+                Expected("GIVING");
+                if (Current().type != TokenType.Identifier)
+                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+            else if (Current().value == "BY")
+            {
+                Expected("BY");
+                if (Current().type != TokenType.Identifier)
+                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+            else
+            {
+                ErrorHandler.Parser.Report(Current(), "expected", "BY");
+            }
+
+            SizeError(ref isConditional);
+
+            if (isConditional)
+                Expected("END-MULTIPLY");
+        }
+
+        void DIVIDE()
+        {
+            bool isConditional = false;
+
+            Expected("DIVIDE");
+            switch (Current().type)
+            {
+                case TokenType.Identifier:
+                    Identifier();
+                    break;
+
+                case TokenType.Numeric:
+                    Number();
+                    break;
+
+                default:
+                    ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                    break;
+            }
+
+            if((Current().value == "BY" || Current().value == "INTO") 
+                && LookAhead(2).value == "GIVING" && LookAhead(4).value != "REMAINDER"
+            )
+            {
+                Choice(null, "BY", "INTO");
+                switch (Current().type)
+                {
+                    case TokenType.Identifier:
+                        Identifier();
+                        break;
+
+                    case TokenType.Numeric:
+                        Number();
+                        break;
+
+                    default:
+                        ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                        break;
+                }
+
+                Expected("GIVING");
+                if (Current().type != TokenType.Identifier)
+                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+            else if((Current().value == "BY" || Current().value == "INTO") 
+                && LookAhead(2).value == "GIVING" && LookAhead(4).value == "REMAINDER"
+            )
+            {
+                Choice(null, "BY", "INTO");
+                switch (Current().type)
+                {
+                    case TokenType.Identifier:
+                        Identifier();
+                        break;
+
+                    case TokenType.Numeric:
+                        Number();
+                        break;
+
+                    default:
+                        ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                        break;
+                }
+
+                Expected("GIVING");
+                Identifier();
+                Expected("REMAINDER");
+                Identifier();
+            }
+            else if (Current().value == "INTO")
+            {
+                Expected("INTO");
+                if (Current().type != TokenType.Identifier)
+                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+            else
+            {
+                ErrorHandler.Parser.Report(Current(), "expected", "BY or INTO");
+            }
+
+            SizeError(ref isConditional);
+
+            if (isConditional)
+                Expected("END-MULTIPLY");
         }
 
         void STOP()
@@ -515,6 +806,20 @@ public static class OtterkitAnalyzer
             if (current.type != TokenType.String)
             {
                 ErrorHandler.Parser.Report(Current(), "expected", "string literal");
+                Continue();
+                return;
+            }
+            analyzed.Add(current);
+            Continue();
+            return;
+        }
+
+        void FigurativeLiteral()
+        {
+            Token current = Current();
+            if (current.type != TokenType.FigurativeLiteral)
+            {
+                ErrorHandler.Parser.Report(Current(), "expected", "figurative literal");
                 Continue();
                 return;
             }

@@ -21,11 +21,26 @@ public static class ErrorHandler
             {
                 Choice(token, expected);
                 Console.ResetColor();
-                return;
+                Environment.Exit(1);
             }
-            Expected(token, expected);
+
+            if (error == "expected")
+            {
+                Expected(token, expected);
+                Console.ResetColor();
+                Environment.Exit(1);
+            }
+
+            General(token, expected);
             Console.ResetColor();
-            return;
+            Environment.Exit(1);
+        }
+
+        static void General(Token token, string[] expected)
+        {
+            Console.Error.WriteLine("Otterkit parsing error: Line {0}, Column {1}", token.line, token.column);
+            Console.Error.WriteLine("Unexpected token: {0}", expected[0]);
+            Console.WriteLine();
         }
         
         static void Choice(Token token, string[] expected)

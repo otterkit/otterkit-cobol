@@ -53,13 +53,13 @@ public static class Statements
         
         foreach (Numeric variable in dataItems)
         {
-            if(result + variable.Value > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result + variable.dataItem > Functions.HIGHEST_ALGEBRAIC(variable))
                 OnSizeError();
 
-            if(result + variable.Value <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result + variable.dataItem <= Functions.HIGHEST_ALGEBRAIC(variable))
                 NotSizeError();
 
-            variable.Value += result;
+            variable.dataItem += result;
         }
     }
 
@@ -79,7 +79,7 @@ public static class Statements
             if(result + to <= Functions.HIGHEST_ALGEBRAIC(variable))
                 NotSizeError();
 
-            variable.Value = result + to;
+            variable.dataItem = result + to;
         }
     }
 
@@ -129,7 +129,7 @@ public static class Statements
             if(result <= Functions.HIGHEST_ALGEBRAIC(variable))
                 NotSizeError();
 
-            variable.Value = result;
+            variable.dataItem = result;
         }
     }
     
@@ -182,13 +182,13 @@ public static class Statements
     {
         foreach (Numeric variable in dataItems)
         {
-            if(variable.Value / value > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(variable.dataItem / value > Functions.HIGHEST_ALGEBRAIC(variable))
                 OnSizeError();
 
-            if(variable.Value / value <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(variable.dataItem / value <= Functions.HIGHEST_ALGEBRAIC(variable))
                 NotSizeError();
 
-            variable.Value /= value;
+            variable.dataItem /= value;
         }
     }
 
@@ -204,7 +204,7 @@ public static class Statements
                 if(value / into <= Functions.HIGHEST_ALGEBRAIC(variable))
                     NotSizeError();
 
-                variable.Value = value / into;
+                variable.dataItem = value / into;
             }
             return;
         }
@@ -217,7 +217,7 @@ public static class Statements
             if(into / value <= Functions.HIGHEST_ALGEBRAIC(variable))
                 NotSizeError();
 
-            variable.Value = into / value;
+            variable.dataItem = into / value;
         }
     }
 
@@ -231,8 +231,8 @@ public static class Statements
             if(value / into <= Functions.HIGHEST_ALGEBRAIC(giving))
                 NotSizeError();
 
-            giving.Value = value / into;
-            remainder.Value = Functions.REM(value, into);
+            giving.dataItem = value / into;
+            remainder.dataItem = Functions.REM(value, into);
             return;
         }
 
@@ -242,8 +242,8 @@ public static class Statements
         if(into / value <= Functions.HIGHEST_ALGEBRAIC(giving))
             NotSizeError();
 
-        giving.Value = into / value;
-        remainder.Value = Functions.REM(value, into);
+        giving.dataItem = into / value;
+        remainder.dataItem = Functions.REM(value, into);
     }
 
     public static void EVALUATE()
@@ -326,13 +326,13 @@ public static class Statements
     {
         foreach (Numeric variable in dataItems)
         {
-            if(value * variable.Value > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(value * variable.dataItem > Functions.HIGHEST_ALGEBRAIC(variable))
                 OnSizeError();
 
-            if(value * variable.Value <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(value * variable.dataItem <= Functions.HIGHEST_ALGEBRAIC(variable))
                 NotSizeError();
 
-            variable.Value *= value;
+            variable.dataItem *= value;
         }
     }
 
@@ -346,7 +346,7 @@ public static class Statements
             if(value * by <= Functions.HIGHEST_ALGEBRAIC(variable))
                 NotSizeError();
 
-            variable.Value = value * by;
+            variable.dataItem = value * by;
         }
     }
 
@@ -476,13 +476,13 @@ public static class Statements
         
         foreach (Numeric variable in dataItems)
         {
-            if(result - variable.Value > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result - variable.dataItem > Functions.HIGHEST_ALGEBRAIC(variable))
                 OnSizeError();
 
-            if(result - variable.Value <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result - variable.dataItem <= Functions.HIGHEST_ALGEBRAIC(variable))
                 NotSizeError();
 
-            variable.Value -= result;
+            variable.dataItem -= result;
         }
     }
 
@@ -502,7 +502,7 @@ public static class Statements
             if(result - from <= Functions.HIGHEST_ALGEBRAIC(variable))
                 NotSizeError();
 
-            variable.Value = from - result;
+            variable.dataItem = from - result;
         }
     }
 

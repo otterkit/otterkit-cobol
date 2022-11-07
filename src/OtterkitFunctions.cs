@@ -499,10 +499,10 @@ public static class Functions
 
     public static int SIGN(Numeric argument)
     {
-        if (argument.Value < Decimal128.Zero)
+        if (argument.dataItem < Decimal128.Zero)
             return -1;
 
-        if (argument.Value == Decimal128.Zero)
+        if (argument.dataItem == Decimal128.Zero)
             return 0;
 
         return 1;

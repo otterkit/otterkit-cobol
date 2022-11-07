@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace OtterkitLibrary;
 
-interface IDataItem<Type>
+interface IDataItem<TItemType>
 {
     bool isNumeric();
     bool isAlphanumeric();
@@ -12,28 +12,23 @@ interface IDataItem<Type>
     string Formatted();
 }
 
-public abstract class DataItem<Type>
+public abstract class DataItem<TItemType>
 {
-    public Type? dataItem;
     public int length;
 }
 
 public class Numeric : DataItem<Decimal128>, IDataItem<Decimal128>
 {
+    public Decimal128 dataItem;
     public int fractionalLength;
     public bool isSigned = false;
-    private bool isNegative = false;
 
-    public Numeric(Decimal128 value, int length, int fractionalLength, bool signed)
+    public Numeric(string value, int length, int fractionalLength, bool signed)
     {
-        this.dataItem = value;
+        this.dataItem = new Decimal128(value);
         this.length = length;
         this.fractionalLength = fractionalLength;
         this.isSigned = signed;
-        if (value < 0 && isSigned)
-        {
-            isNegative = true;
-        }
     }
 
     public bool isNumeric()
@@ -64,76 +59,48 @@ public class Numeric : DataItem<Decimal128>, IDataItem<Decimal128>
 
     public string Formatted()
     {
-        if (!dataItem.Value.Contains('.') && fractionalLength != 0)
-            dataItem.Value += ".0";
+        string abs = Decimal128.Abs(dataItem).Value;
+        int indexOfDecimal = abs.IndexOf('.');
 
-        if (dataItem.Value.Contains('.') && fractionalLength == 0)
+        if (indexOfDecimal < 0 && fractionalLength != 0)
+            abs += ".0";
+
+        if (indexOfDecimal >= 0 && fractionalLength == 0)
         {
-            int indexOfDecimal = dataItem.Value.IndexOf(".");
             dataItem.Value = dataItem.Value.Substring(0, indexOfDecimal);
         }
 
         if (fractionalLength != 0)
         {
-            // Split at decimal point if Numeric item has a fractional value
-            string[] splitDecimal = dataItem.Value.Split(".");
-
-            // Fill both sides missing spaces with zeros 
-            string padLeft = splitDecimal[0].PadLeft(length, '0');
-            string padRight = splitDecimal[1].PadRight(fractionalLength, '0');
-
-            // Remove overflow from both sides and contatenate with the decimal point in between
-            return new String(padLeft.Substring(padLeft.Length - length) + "." + padRight.Substring(0, fractionalLength));
+            int startIndex = (indexOfDecimal - length) < 0 ? 0 : indexOfDecimal - length;
+            int endIndex = Math.Min(abs.Length, indexOfDecimal + fractionalLength + 1 - startIndex);
+            int offset = length - indexOfDecimal < 0 ? 0 : length - indexOfDecimal;
+            
+            return String.Create(length + fractionalLength + 1, abs, (span, value) =>
+            {
+                ReadOnlySpan<char> temporary = value.AsSpan(startIndex, endIndex);
+                span.Fill('0');
+                temporary.CopyTo(span.Slice(offset));
+            });
         }
-        
-        string padInt = dataItem.Value.PadLeft(length, '0');
+
+        string padInt = abs.PadLeft(length, '0');
         // If Numeric item doesn't have a fractional value, pad missing zeros and remove overflow
         return padInt.Substring(padInt.Length - length);
     }
 
-    public Decimal128 Value
-    {
-        get
-        {
-            if (isNegative && isSigned)
-            {
-                return String.Format("-{0}", Formatted());
-            }
-
-            if (!isNegative && isSigned)
-            {
-                return String.Format("+{0}", Formatted());
-            }
-
-            return Formatted();
-        }
-        set
-        {
-            if (value < 0 && isSigned)
-            {
-                isNegative = true;
-            }
-
-            if (value >= 0 && isSigned)
-            {
-                isNegative = false;
-            }
-
-            dataItem = value.Value.Replace('-', '0');
-        }
-    }
     public string DisplayValue
     {
         get
         {
-            if (isNegative && isSigned)
+            if (dataItem < 0 && isSigned)
             {
-                return String.Format("-{0}", Formatted());
+                return "-" + Formatted();
             }
 
-            if (!isNegative && isSigned)
+            if (dataItem >= 0 && isSigned)
             {
-                return String.Format("+{0}", Formatted());
+                return "+" + Formatted();
             }
 
             return Formatted();
@@ -143,10 +110,11 @@ public class Numeric : DataItem<Decimal128>, IDataItem<Decimal128>
 
 public class Alphanumeric : DataItem<String>, IDataItem<String>
 {
+    string dataItem;
     public Alphanumeric(string value, int length)
     {
         this.length = length;
-        this.dataItem = value;
+        this.dataItem = value == string.Empty ? " " : value;
     }
 
     public bool isNumeric()
@@ -176,9 +144,12 @@ public class Alphanumeric : DataItem<String>, IDataItem<String>
 
     public string Formatted()
     {
-        return String.IsNullOrEmpty(dataItem) 
-            ? " ".PadRight(length).Substring(0, length)
-            : dataItem.PadRight(length).Substring(0, length);
+        return String.Create(length, dataItem, (span, value) =>
+        {
+            int MaxSize = dataItem.Length < length ? dataItem.Length : length;
+            value.AsSpan(0, MaxSize).CopyTo(span);
+            span[MaxSize..].Fill(' ');
+        });
     }
 
     public string Value
@@ -189,7 +160,7 @@ public class Alphanumeric : DataItem<String>, IDataItem<String>
         }
         set
         {
-            dataItem = String.IsNullOrEmpty(value) ? " " : value;
+            dataItem = value == string.Empty ? " " : value;
         }
     }
 
@@ -197,6 +168,7 @@ public class Alphanumeric : DataItem<String>, IDataItem<String>
 
 public class Alphabetic : DataItem<String>, IDataItem<String>
 {
+    public string dataItem;
     public Alphabetic(string value, int length)
     {
         if (value.Any(char.IsDigit))
@@ -204,7 +176,7 @@ public class Alphabetic : DataItem<String>, IDataItem<String>
             throw new ArgumentException("Alphabetic type cannot contain numeric values", value);
         }
         this.length = length;
-        this.dataItem = value;
+        this.dataItem = value == string.Empty ? " " : value;
     }
 
     public bool isNumeric()
@@ -234,9 +206,12 @@ public class Alphabetic : DataItem<String>, IDataItem<String>
 
     public string Formatted()
     {
-        return String.IsNullOrEmpty(dataItem) 
-            ? " ".PadRight(length).Substring(0, length)
-            : dataItem.PadRight(length).Substring(0, length);
+        return String.Create(length, dataItem, (span, value) =>
+        {
+            int MaxSize = dataItem.Length < length ? dataItem.Length : length;
+            value.AsSpan(0, MaxSize).CopyTo(span);
+            span[MaxSize..].Fill(' ');
+        });
     }
 
     public string Value
@@ -251,7 +226,7 @@ public class Alphabetic : DataItem<String>, IDataItem<String>
             {
                 throw new ArgumentException("Alphabetic type cannot contain numeric values", value);
             }
-            dataItem = String.IsNullOrEmpty(value) ? " " : value;
+            dataItem = value == string.Empty ? " " : value;
         }
     }
 
@@ -259,10 +234,11 @@ public class Alphabetic : DataItem<String>, IDataItem<String>
 
 public class National : DataItem<String>, IDataItem<String>
 {
+    public string dataItem;
     public National(string value, int length)
     {
         this.length = length;
-        this.dataItem = value;
+        this.dataItem = value == string.Empty ? " " : value;
     }
 
     public bool isNumeric()
@@ -292,9 +268,12 @@ public class National : DataItem<String>, IDataItem<String>
 
     public string Formatted()
     {
-        return String.IsNullOrEmpty(dataItem) 
-            ? " ".PadRight(length).Substring(0, length)
-            : dataItem.PadRight(length).Substring(0, length);
+        return String.Create(length, dataItem, (span, value) =>
+        {
+            int MaxSize = dataItem.Length < length ? dataItem.Length : length;
+            value.AsSpan(0, MaxSize).CopyTo(span);
+            span[MaxSize..].Fill(' ');
+        });
     }
 
     public string Value
@@ -305,7 +284,7 @@ public class National : DataItem<String>, IDataItem<String>
         }
         set
         {
-            dataItem = String.IsNullOrEmpty(value) ? " " : value;
+            dataItem = value == string.Empty ? " " : value;
         }
     }
 
@@ -313,6 +292,7 @@ public class National : DataItem<String>, IDataItem<String>
 
 public class Boolean : DataItem<String>, IDataItem<String>
 {
+    public string dataItem;
     public Boolean(string value, int length)
     {
         if (!Regex.IsMatch(value, @"^([01]+)$", RegexOptions.Compiled | RegexOptions.NonBacktracking))
@@ -320,7 +300,7 @@ public class Boolean : DataItem<String>, IDataItem<String>
             throw new ArgumentException("Boolean type can only contain 1s and 0s", value);
         }
         this.length = length;
-        this.dataItem = value;
+        this.dataItem = value == string.Empty ? "0" : value;
     }
 
     public bool isNumeric()
@@ -350,9 +330,12 @@ public class Boolean : DataItem<String>, IDataItem<String>
 
     public string Formatted()
     {
-        return String.IsNullOrEmpty(dataItem) 
-            ? "0".PadRight(length, '0').Substring(0, length)
-            : dataItem.PadRight(length, '0').Substring(0, length);
+        return String.Create(length, dataItem, (span, value) =>
+        {
+            int MaxSize = dataItem.Length < length ? dataItem.Length : length;
+            value.AsSpan(0, MaxSize).CopyTo(span);
+            span[MaxSize..].Fill('0');
+        });
     }
 
     public string Value
@@ -367,7 +350,7 @@ public class Boolean : DataItem<String>, IDataItem<String>
             {
                 throw new ArgumentException("Boolean type can only contain 1s and 0s", value);
             }
-            dataItem = String.IsNullOrEmpty(value) ? "0" : value;
+            dataItem = value == string.Empty ? "0" : value;
         }
     }
 

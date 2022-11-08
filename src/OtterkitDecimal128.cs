@@ -25,6 +25,11 @@ public struct Decimal128:
 
     public static Decimal128 Zero => new Decimal128("0");
 
+    static Decimal128()
+    {
+        Decimal128 WarmUp = new Decimal128("5") + new Decimal128("5");
+    }
+
     public Decimal128(string value)
     {
         this.Value = value;

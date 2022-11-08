@@ -6,6 +6,11 @@
     <Nullable>enable</Nullable>
     <Optimize>true</Optimize>
     <Deterministic>true</Deterministic>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
-
+  <ItemGroup>
+    <Content Include="Decimal128.*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

@@ -79,9 +79,27 @@ public static class Functions
         // TODO: Need to implement other COBOL data types first
     }
 
-    public static void COS(Decimal128 date)
+    public static Decimal128 COS(Decimal128 radians)
     {
-        // TODO: implement COS
+        // Implemented by TriAttack/Tetrakarn. Decided to use Decimal128 for consistency and to avoid bringing a new dependency
+
+        Decimal128 result = new Decimal128(0);
+        Decimal128 exponent;
+        Decimal128 numerator;
+        Int128 denominator;
+
+        //during prototyping, I found 200 to be a sweet spot for speed and accuracy
+        for (int i = 200; i <= 200; i++)
+        {
+            exponent = new Decimal128(2 * i);
+            numerator = Math.Pow(-1, i) * Decimal128.Pow(radians.Value, exponent.Value);
+            denominator = FACTORIAL(i);
+            result = result + (numerator / denominator);
+        }
+
+        return result;
+
+
     }
 
     public static string CURRENT_DATE()
@@ -508,9 +526,25 @@ public static class Functions
         return 1;
     }
 
-    public static void SIN()
+    public static Decimal128 SIN(Decimal128 radians)
     {
-        // TODO: Implement SIN
+        // Implemented by TriAttack/Tetrakarn. Decided to use Decimal128 for consistency and to avoid bringing a new dependency
+        
+        Decimal128 result = new Decimal128(0);
+        Decimal128 exponent;
+        Decimal128 numerator;
+        Int128 denominator;
+
+        //during prototyping, I found 200 to be a sweet spot for speed and accuracy
+        for(int i = 200; i<=200; i++){
+            exponent = new Decimal128(2*i + 1);
+            numerator = Math.Pow(-1, i)*Decimal128.Pow(radians.Value, exponent.Value);
+            denominator = FACTORIAL(i);
+            result = result + (numerator/denominator);
+        }
+
+        return result;
+
     }
 
     public static void SMALLEST_ALGEBRAIC()

@@ -89,8 +89,8 @@ public static class Functions
         Decimal128 numerator;
         Int128 denominator;
 
-        //during prototyping, I found 34 to be a sweet spot for speed and accuracy
-        for (int i = 0; i <= 34; i++)
+        //during prototyping, I found 6 to be a sweet spot for speed and accuracy
+        for (int i = 0; i <= 6; i++)
 
         {
             int_exponent = 2*i;
@@ -537,7 +537,7 @@ public static class Functions
         Decimal128 numerator;
         Int128 denominator;
 
-        for(int i = 0; i<=34; i++){
+        for(int i = 0; i<=6; i++){
             int_exponent = 2*i +1;
             exponent = new Decimal128(int_exponent);
             numerator = Math.Pow(-1, i)*Decimal128.Pow(radians.Value, exponent.Value);

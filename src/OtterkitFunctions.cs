@@ -84,16 +84,19 @@ public static class Functions
         // Implemented by TriAttack/Tetrakarn. Decided to use Decimal128 for consistency and to avoid bringing a new dependency
 
         Decimal128 result = new Decimal128(0);
+        int int_exponent;
         Decimal128 exponent;
         Decimal128 numerator;
         Int128 denominator;
 
-        //during prototyping, I found 200 to be a sweet spot for speed and accuracy
-        for (int i = 200; i <= 200; i++)
+        //during prototyping, I found 34 to be a sweet spot for speed and accuracy
+        for (int i = 0; i <= 34; i++)
+
         {
-            exponent = new Decimal128(2 * i);
+            int_exponent = 2*i;
+            exponent = new Decimal128(int_exponent);
             numerator = Math.Pow(-1, i) * Decimal128.Pow(radians.Value, exponent.Value);
-            denominator = FACTORIAL(i);
+            denominator = FACTORIAL(int_exponent);
             result = result + (numerator / denominator);
         }
 
@@ -529,15 +532,16 @@ public static class Functions
         // Implemented by TriAttack/Tetrakarn. Decided to use Decimal128 for consistency and to avoid bringing a new dependency
         
         Decimal128 result = new Decimal128(0);
+        int int_exponent;
         Decimal128 exponent;
         Decimal128 numerator;
         Int128 denominator;
 
-        //during prototyping, I found 200 to be a sweet spot for speed and accuracy
-        for(int i = 200; i<=200; i++){
-            exponent = new Decimal128(2*i + 1);
+        for(int i = 0; i<=34; i++){
+            int_exponent = 2*i +1;
+            exponent = new Decimal128(int_exponent);
             numerator = Math.Pow(-1, i)*Decimal128.Pow(radians.Value, exponent.Value);
-            denominator = FACTORIAL(i);
+            denominator = FACTORIAL(int_exponent);
             result = result + (numerator/denominator);
         }
 

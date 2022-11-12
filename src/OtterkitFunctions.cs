@@ -206,16 +206,14 @@ public static class Functions
             return 2;
         }
 
-		int factorial = 0;
-		while (argument > 0)
-		{
-			factorial = argument;
-			for (int i = factorial - 1; i > 0; i--)
-			{
-				factorial *= i;
-			}
-			argument--;
-		}
+		int factorial = argument;
+        for (int i = factorial - 1; i > 0; i--)
+        {
+            factorial *= i;
+        }
+        
+        argument--;
+
 
         return factorial;
     }

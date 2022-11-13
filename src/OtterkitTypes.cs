@@ -1,4 +1,6 @@
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace OtterkitLibrary;
 
@@ -17,9 +19,10 @@ public abstract class DataItem<TItemType>
     public int length;
 }
 
-public class Numeric : DataItem<Decimal128>, IDataItem<Decimal128>
+public class Numeric
 {
     public Decimal128 dataItem;
+    public int length;
     public int fractionalLength;
     public bool isSigned = false;
 
@@ -75,7 +78,7 @@ public class Numeric : DataItem<Decimal128>, IDataItem<Decimal128>
             int startIndex = (indexOfDecimal - length) < 0 ? 0 : indexOfDecimal - length;
             int endIndex = Math.Min(abs.Length, indexOfDecimal + fractionalLength + 1 - startIndex);
             int offset = length - indexOfDecimal < 0 ? 0 : length - indexOfDecimal;
-            
+
             return String.Create(length + fractionalLength + 1, abs, (span, value) =>
             {
                 ReadOnlySpan<char> temporary = value.AsSpan(startIndex, endIndex);
@@ -108,67 +111,75 @@ public class Numeric : DataItem<Decimal128>, IDataItem<Decimal128>
     }
 }
 
-public class Alphanumeric : DataItem<String>, IDataItem<String>
+public sealed class Alphanumeric
 {
-    string dataItem;
-    public Alphanumeric(string value, int length)
+    public Memory<byte> Bytes { get; set; }
+    public int Length { get; init; }
+    Encoding encoding = Encoding.UTF8;
+
+    public Alphanumeric(ReadOnlySpan<char> value, int length)
     {
-        this.length = length;
-        this.dataItem = value == string.Empty ? " " : value;
+        this.Bytes = new Memory<byte>(new byte[length]);
+        this.Length = length;
+        Bytes.Span.Fill(32);
+
+        int limitLength = Length < value.Length
+        ? Length
+        : value.Length;
+
+        encoding.GetBytes(value.Slice(0, limitLength), Bytes.Span);
     }
 
-    public bool isNumeric()
-    {
-        return false;
-    }
-
-    public bool isAlphanumeric()
-    {
-        return true;
-    }
-
-    public bool isAlphabetic()
-    {
-        return !Formatted().Any(char.IsDigit);
-    }
-
-    public bool isNational()
-    {
-        return true;
-    }
-
-    public bool isBoolean()
-    {
-        return false;
-    }
-
-    public string Formatted()
-    {
-        return String.Create(length, dataItem, (span, value) =>
-        {
-            int MaxSize = dataItem.Length < length ? dataItem.Length : length;
-            value.AsSpan(0, MaxSize).CopyTo(span);
-            span[MaxSize..].Fill(' ');
-        });
-    }
-
-    public string Value
+    public ReadOnlySpan<char> CharValue
     {
         get
         {
-            return Formatted();
+            return MemoryMarshal.Cast<byte, char>(Bytes.Span);
         }
         set
         {
-            dataItem = value == string.Empty ? " " : value;
+            Bytes.Span.Fill(32);
+
+            int limitLength = Length < value.Length
+            ? Length
+            : value.Length;
+
+            encoding.GetBytes(value.Slice(0, limitLength), Bytes.Span);
+        }
+    }
+
+    public ReadOnlySpan<byte> ByteValue
+    {
+        get
+        {
+            return Bytes.Span;
+        }
+        set
+        {
+            Bytes.Span.Fill(32);
+            
+            int limitLength = Length < value.Length
+            ? Length
+            : value.Length;
+
+            value.Slice(0, limitLength).CopyTo(Bytes.Span);
+        }
+    }
+
+    public string DisplayValue
+    {
+        get
+        {
+            return encoding.GetString(Bytes.Span);
         }
     }
 
 }
 
-public class Alphabetic : DataItem<String>, IDataItem<String>
+public class Alphabetic
 {
     public string dataItem;
+    public int length;
     public Alphabetic(string value, int length)
     {
         if (value.Any(char.IsDigit))
@@ -232,9 +243,10 @@ public class Alphabetic : DataItem<String>, IDataItem<String>
 
 }
 
-public class National : DataItem<String>, IDataItem<String>
+public class National
 {
     public string dataItem;
+    public int length;
     public National(string value, int length)
     {
         this.length = length;
@@ -290,9 +302,10 @@ public class National : DataItem<String>, IDataItem<String>
 
 }
 
-public class Boolean : DataItem<String>, IDataItem<String>
+public class Boolean
 {
     public string dataItem;
+    public int length;
     public Boolean(string value, int length)
     {
         if (!Regex.IsMatch(value, @"^([01]+)$", RegexOptions.Compiled | RegexOptions.NonBacktracking))

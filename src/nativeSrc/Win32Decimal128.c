@@ -8,7 +8,7 @@
 #endif
 
 // Build command for windows
-// cl.exe /D_USRDLL /D_WINDLL Decimal128.c /MT /link /DLL /OUT:Decimal128.dll
+// cl.exe /D_USRDLL /D_WINDLL Decimal128.c /MT /Ox /link /DLL /OUT:Decimal128.dll
 
 DLLEXPORT char * Decimal128Pow(char *value, char *exponent)
 {

@@ -418,7 +418,7 @@ public static class Functions
     {
         // Needs further testing, might not work properly
         // and doesn't implement all NUMVAL functionality
-        return new Decimal128(argument.Value);
+        return new Decimal128(argument.Bytes.ToString());
     }
 
     public static void NUMVAL_C(Alphanumeric argument)

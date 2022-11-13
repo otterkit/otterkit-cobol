@@ -81,30 +81,7 @@ public static class Functions
 
     public static Decimal128 COS(Decimal128 radians)
     {
-        // Implemented by TriAttack/Tetrakarn. Decided to use Decimal128 for consistency and to avoid bringing a new dependency
-
-        radians = (radians % (2 * Math.PI)) * 2 * Math.PI;
-
-        Decimal128 result = new Decimal128(0);
-        int int_exponent;
-        Decimal128 exponent;
-        Decimal128 numerator;
-        Int128 denominator;
-
-        //during prototyping, I found 6 to be a sweet spot for speed and accuracy
-        for (int i = 0; i <= 6; i++)
-
-        {
-            int_exponent = 2*i;
-            exponent = new Decimal128(int_exponent);
-            numerator = Math.Pow(-1, i) * Decimal128.Pow(radians.Value, exponent.Value);
-            denominator = FACTORIAL(int_exponent);
-            result = result + (numerator / denominator);
-        }
-
-        return result;
-
-
+        return SIN(PI() / 2 - radians);
     }
 
     public static string CURRENT_DATE()
@@ -199,7 +176,7 @@ public static class Functions
         return Decimal128.Pow("10", exponent.Value);
     }
 
-    public static int FACTORIAL(int argument)
+    public static Int128 FACTORIAL(Int128 argument)
     {
         if (argument == 0 || argument == 1)
         {
@@ -211,14 +188,13 @@ public static class Functions
             return 2;
         }
 
-		int factorial = argument;
-        for (int i = factorial - 1; i > 0; i--)
+		Int128 factorial = argument;
+        for (Int128 i = factorial - 1; i > 0; i--)
         {
             factorial *= i;
         }
         
         argument--;
-
 
         return factorial;
     }
@@ -531,26 +507,36 @@ public static class Functions
 
     public static Decimal128 SIN(Decimal128 radians)
     {
-        // Implemented by TriAttack/Tetrakarn. Decided to use Decimal128 for consistency and to avoid bringing a new dependency
-        
-        radians = (radians%(2*Math.PI))*2*Math.PI;
+        Decimal128 Pie = PI();
+        radians = radians % (Pie * 2);
 
-        Decimal128 result = new Decimal128(0);
-        int int_exponent;
-        Decimal128 exponent;
-        Decimal128 numerator;
-        Int128 denominator;
+        if (radians < 0)
+            radians = 2 * Pie - radians;
 
-        for(int i = 0; i<=6; i++){
-            int_exponent = 2*i +1;
-            exponent = new Decimal128(int_exponent);
-            numerator = Math.Pow(-1, i)*Decimal128.Pow(radians.Value, exponent.Value);
-            denominator = FACTORIAL(int_exponent);
-            result = result + (numerator/denominator);
+        sbyte sign = 1;
+        if (radians > Pie)
+        {
+            radians -= Pie;
+            sign = -1;
         }
 
-        return result;
+        Decimal128 result = radians;
+        int coefficient = 3;
 
+        for (int i = 0; i < 10; i++)
+        {
+            Decimal128 power = Decimal128.Pow(radians.Value, coefficient.ToString());
+            Int128 factorial = FACTORIAL(coefficient);
+
+            if(i % 2 == 0)
+                result -= power / factorial;
+            else
+                result += power / factorial;
+
+            coefficient += 2;
+        }
+
+        return sign * result;
     }
 
     public static void SMALLEST_ALGEBRAIC()

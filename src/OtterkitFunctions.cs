@@ -83,6 +83,8 @@ public static class Functions
     {
         // Implemented by TriAttack/Tetrakarn. Decided to use Decimal128 for consistency and to avoid bringing a new dependency
 
+        radians = (radians % (2 * Math.PI)) * 2 * Math.PI;
+
         Decimal128 result = new Decimal128(0);
         int int_exponent;
         Decimal128 exponent;
@@ -531,6 +533,8 @@ public static class Functions
     {
         // Implemented by TriAttack/Tetrakarn. Decided to use Decimal128 for consistency and to avoid bringing a new dependency
         
+        radians = (radians%(2*Math.PI))*2*Math.PI;
+
         Decimal128 result = new Decimal128(0);
         int int_exponent;
         Decimal128 exponent;

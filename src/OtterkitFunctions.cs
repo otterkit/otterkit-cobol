@@ -8,9 +8,13 @@ public static class Functions
         return Decimal128.Abs(argument);
     }
 
-    public static void ACOS(Decimal128 argument)
+    public static Decimal128 ACOS(Decimal128 radians)
     {
-        // TODO ACOS
+        if (radians < -1 || radians > 1)
+            throw new ArgumentException($"The argument of ACOS must be >= -1 and <= to +1. Argument received was: {radians}");
+
+        Decimal128 param = (1 - radians * radians);
+        return ATAN(Decimal128.Sqrt(param.Value) / (radians + 1)) * 2;
     }
 
     public static Decimal128 ANNUITY(Decimal128 interest, Decimal128 periods)
@@ -23,14 +27,36 @@ public static class Functions
         return interest / (1 - Decimal128.Pow((1 + interest.Value), (-periods).Value));
     }
 
-    public static void ASIN(Decimal128 argument)
+    public static Decimal128 ASIN(Decimal128 radians)
     {
-        // TODO ASIN
+        if (radians < -1 || radians > 1)
+            throw new ArgumentException($"The argument of ASIN must be >= -1 and <= to +1. Argument received was: {radians}");
+
+        Decimal128 param = (1 - radians * radians);
+        return ATAN(radians / (Decimal128.Sqrt(param.Value) + 1)) * 2;
     }
 
-    public static void ATAN(Decimal128 argument)
+    public static Decimal128 ATAN(Decimal128 radians)
     {
-        // TODO ATAN
+        if (radians < -1)
+            return -(PI() / 2) - ATAN(1 / radians);
+
+        if (radians > 1)
+            return PI() / 2 - ATAN(1 / radians);
+
+        int coefficient = 2;
+        Decimal128 iteration = radians / (radians * radians + 1);
+        Decimal128 result = iteration;
+
+        for (int i = 0; i < 64; i++)
+        {
+            iteration *= (radians * radians / (radians * radians + 1) * coefficient / (coefficient + 1));
+
+            result += iteration;
+            coefficient += 2;
+        }
+
+        return result;
     }
 
     public static void BASE_CONVERT(Decimal128 input, Decimal128 current, Decimal128 target)
@@ -530,6 +556,7 @@ public static class Functions
 
             if(i % 2 == 0)
                 result -= power / factorial;
+
             else
                 result += power / factorial;
 
@@ -575,9 +602,9 @@ public static class Functions
         return sum;
     }
 
-    public static void TAN(Decimal128 argument)
+    public static Decimal128 TAN(Decimal128 argument)
     {
-        // TODO: Implement TAN
+        return SIN(argument) / COS(argument);
     }
 
     public static void TEST_DATE_YYYYMMDD(Decimal128 argument)

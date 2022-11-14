@@ -45,12 +45,12 @@ public static class Functions
             return PI() / 2 - ATAN(1 / ratio);
 
         int coefficient = 2;
-        Decimal128 iteration = ratio / (ratio * ratio + 1);
+        Decimal128 iteration = Decimal128.Arithmetic($"{ratio} {ratio} {ratio} * 1 + /");
         Decimal128 result = iteration;
 
         for (int i = 0; i < 64; i++)
         {
-            iteration *= (ratio * ratio / (ratio * ratio + 1) * coefficient / (coefficient + 1));
+            iteration = Decimal128.Arithmetic($"{iteration} {ratio} {ratio} * {ratio} {ratio} * 1 + / {coefficient} * {coefficient} 1 + / *");
 
             result += iteration;
             coefficient += 2;

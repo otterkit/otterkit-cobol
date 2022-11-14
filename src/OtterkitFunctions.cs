@@ -8,13 +8,13 @@ public static class Functions
         return Decimal128.Abs(argument);
     }
 
-    public static Decimal128 ACOS(Decimal128 radians)
+    public static Decimal128 ACOS(Decimal128 ratio)
     {
-        if (radians < -1 || radians > 1)
-            throw new ArgumentException($"The argument of ACOS must be >= -1 and <= to +1. Argument received was: {radians}");
+        if (ratio < -1 || ratio > 1)
+            throw new ArgumentException($"The argument of ACOS must be >= -1 and <= to +1. Argument received was: {ratio}");
 
-        Decimal128 param = (1 - radians * radians);
-        return ATAN(Decimal128.Sqrt(param.Value) / (radians + 1)) * 2;
+        Decimal128 param = (1 - ratio * ratio);
+        return ATAN(Decimal128.Sqrt(param.Value) / (ratio + 1)) * 2;
     }
 
     public static Decimal128 ANNUITY(Decimal128 interest, Decimal128 periods)
@@ -27,30 +27,30 @@ public static class Functions
         return interest / (1 - Decimal128.Pow((1 + interest.Value), (-periods).Value));
     }
 
-    public static Decimal128 ASIN(Decimal128 radians)
+    public static Decimal128 ASIN(Decimal128 ratio)
     {
-        if (radians < -1 || radians > 1)
-            throw new ArgumentException($"The argument of ASIN must be >= -1 and <= to +1. Argument received was: {radians}");
+        if (ratio < -1 || ratio > 1)
+            throw new ArgumentException($"The argument of ASIN must be >= -1 and <= to +1. Argument received was: {ratio}");
 
-        Decimal128 param = (1 - radians * radians);
-        return ATAN(radians / (Decimal128.Sqrt(param.Value) + 1)) * 2;
+        Decimal128 param = (1 - ratio * ratio);
+        return ATAN(ratio / (Decimal128.Sqrt(param.Value) + 1)) * 2;
     }
 
-    public static Decimal128 ATAN(Decimal128 radians)
+    public static Decimal128 ATAN(Decimal128 ratio)
     {
-        if (radians < -1)
-            return -(PI() / 2) - ATAN(1 / radians);
+        if (ratio < -1)
+            return -(PI() / 2) - ATAN(1 / ratio);
 
-        if (radians > 1)
-            return PI() / 2 - ATAN(1 / radians);
+        if (ratio > 1)
+            return PI() / 2 - ATAN(1 / ratio);
 
         int coefficient = 2;
-        Decimal128 iteration = radians / (radians * radians + 1);
+        Decimal128 iteration = ratio / (ratio * ratio + 1);
         Decimal128 result = iteration;
 
         for (int i = 0; i < 64; i++)
         {
-            iteration *= (radians * radians / (radians * radians + 1) * coefficient / (coefficient + 1));
+            iteration *= (ratio * ratio / (ratio * ratio + 1) * coefficient / (coefficient + 1));
 
             result += iteration;
             coefficient += 2;

@@ -167,6 +167,9 @@ public struct Decimal128:
 
     public static Decimal128 operator /(Decimal128 left, Decimal128 right)
     {
+        if (right == 0)
+            throw new DivideByZeroException("Otterkit COBOL Exception: EC-SIZE-ZERO-DIVIDE, cannot divide a number by 0");
+
         return Decimal128Div(left.Value, right.Value);
     }
 

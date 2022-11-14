@@ -90,10 +90,16 @@ public struct Decimal128:
         return new Decimal128(value);
     }
 
-    public static Decimal128 Pow(string value, string exponent)
+    public static Decimal128 Arithmetic(string expression)
     {
-        return Decimal128Pow(value, exponent);
+        return OtterkitArithmetic(expression);
     }
+
+    public static Decimal128 Pow(string argument, string exponent)
+    {
+        return OtterkitArithmetic($"{argument} {exponent} ^");
+    }
+    
 
     public static Decimal128 Sqrt(string value)
     {
@@ -132,7 +138,7 @@ public struct Decimal128:
 
     public static Decimal128 operator +(Decimal128 left, Decimal128 right)
     {
-        return Decimal128Add(left.Value, right.Value);
+        return OtterkitArithmetic($"{left.Value} {right.Value} +");
     }
 
     public static Decimal128 operator +(Decimal128 argument)
@@ -142,12 +148,12 @@ public struct Decimal128:
 
     public static Decimal128 operator ++(Decimal128 argument)
     {
-        return Decimal128Add(argument.Value, "1");
+        return OtterkitArithmetic($"{argument.Value} 1 +");
     }
 
     public static Decimal128 operator -(Decimal128 left, Decimal128 right)
     {
-        return Decimal128Sub(left.Value, right.Value);
+        return OtterkitArithmetic($"{left.Value} {right.Value} -");
     }
 
     public static Decimal128 operator -(Decimal128 value)
@@ -157,12 +163,12 @@ public struct Decimal128:
 
     public static Decimal128 operator --(Decimal128 argument)
     {
-        return Decimal128Sub(argument.Value, "1");
+        return OtterkitArithmetic($"{argument.Value} 1 -");
     }
 
     public static Decimal128 operator *(Decimal128 left, Decimal128 right)
     {
-        return Decimal128Mul(left.Value, right.Value);
+        return OtterkitArithmetic($"{left.Value} {right.Value} *");
     }
 
     public static Decimal128 operator /(Decimal128 left, Decimal128 right)
@@ -170,7 +176,7 @@ public struct Decimal128:
         if (right == 0)
             throw new DivideByZeroException("Otterkit COBOL Exception: EC-SIZE-ZERO-DIVIDE, cannot divide a number by 0");
 
-        return Decimal128Div(left.Value, right.Value);
+        return OtterkitArithmetic($"{left.Value} {right.Value} /");
     }
 
     public static Decimal128 operator %(Decimal128 left, Decimal128 right)
@@ -282,70 +288,52 @@ public struct Decimal128:
     }
 
     // Import native C code from libmpdec
-    [DllImport("Decimal128")]
-    static extern string Decimal128Pow(string value, string exponent);
+    [DllImport("OtterkitMath/Decimal128")]
+    static extern string OtterkitArithmetic(string value);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Exp(string value);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Sqrt(string value);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Ln(string value);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Log10(string value);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Abs(string value);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Plus(string value);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Minus(string value);
 
-    [DllImport("Decimal128")]
-    static extern string Decimal128Add(string left, string right);
-   
-    [DllImport("Decimal128")]
-    static extern string Decimal128Sub(string value, string exponent);
-
-    [DllImport("Decimal128")]
-    static extern string Decimal128Div(string left, string right);
-
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Rem(string left, string right);
 
-    [DllImport("Decimal128")]
-    static extern string Decimal128Mul(string left, string right);
-
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Compare(string left, string right);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Max(string left, string right);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Min(string left, string right);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Shift(string left, string right);
 
-    [DllImport("Decimal128")]
-    static extern string Decimal128Rotate(string left, string right);
-
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128And(string left, string right);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Or(string left, string right);
 
-    [DllImport("Decimal128")]
+    [DllImport("OtterkitMath/Decimal128")]
     static extern string Decimal128Xor(string left, string right);
-
-    [DllImport("Decimal128")]
-    static extern string Decimal128Invert(string value);
 }
 

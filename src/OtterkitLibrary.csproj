@@ -9,8 +9,9 @@
     <PublishAot>true</PublishAot>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="Decimal128.*">
+    <Content Include="OtterkitMath/Decimal128.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Remove="OtterkitMath/Decimal128.c"></Content>
   </ItemGroup>
 </Project>

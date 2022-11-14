@@ -105,6 +105,7 @@ char *OtterkitArithmetic(char *expression)
 	right = mpd_new(&context);
 
 	int index = 0;
+	count = 0;
 	// Evaluate postfix expression until end of string
 	while (expression[index] != '\0')
 	{
@@ -118,6 +119,12 @@ char *OtterkitArithmetic(char *expression)
 		}
 
 		if (current == '-' && isdigit(next))
+		{
+			// Append '-' to string stack for negative numbers
+			stringAppend(current);
+		}
+
+		if (current == 'E' && (next == '-' || next == '+'))
 		{
 			// Append '-' to string stack for negative numbers
 			stringAppend(current);

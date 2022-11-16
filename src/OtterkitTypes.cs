@@ -123,24 +123,13 @@ public sealed class Alphanumeric
         this.Length = length;
         Bytes.Span.Fill(32);
 
-        int byteDifference = (encoding.GetByteCount(value) - value.Length) * 2;
-        int byteLength;
+        int byteDifference = (encoding.GetByteCount(value) - value.Length);
 
-        if (byteDifference == 0)
-        {
-            byteLength = Length < value.Length
-            ? Length
+        int byteLength = Length < value.Length + byteDifference
+            ? Length - byteDifference
             : value.Length;
-            encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
-        }
 
-        if (byteDifference != 0)
-        {
-            byteLength = Length < value.Length - (byteDifference + 2)
-            ? Length
-            : value.Length - (byteDifference + 2);
-            encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
-        }
+        encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
     }
 
     public ReadOnlySpan<char> CharValue
@@ -153,24 +142,13 @@ public sealed class Alphanumeric
         {
             Bytes.Span.Fill(32);
 
-            int byteDifference = (encoding.GetByteCount(value) - value.Length) * 2;
-            int byteLength;
-
-            if (byteDifference == 0)
-            {
-                byteLength = Length < value.Length
-                ? Length
+            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+            
+            int byteLength = Length < value.Length + byteDifference
+                ? Length - byteDifference
                 : value.Length;
-                encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
-            }
 
-            if (byteDifference != 0)
-            {
-                byteLength = Length < value.Length - (byteDifference + 2)
-                ? Length
-                : value.Length - (byteDifference + 2);
-                encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
-            }
+            encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
         }
     }
 

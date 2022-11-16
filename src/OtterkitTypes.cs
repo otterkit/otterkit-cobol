@@ -113,21 +113,34 @@ public class Numeric
 
 public sealed class Alphanumeric
 {
-    public Memory<byte> Bytes { get; set; }
+    public Memory<byte> Bytes { get; init; }
     public int Length { get; init; }
     Encoding encoding = Encoding.UTF8;
 
-    public Alphanumeric(ReadOnlySpan<char> value, int length)
+    public Alphanumeric(ReadOnlySpan<char> value, int length, Memory<byte> memory)
     {
-        this.Bytes = new Memory<byte>(new byte[length]);
+        this.Bytes = memory;
         this.Length = length;
         Bytes.Span.Fill(32);
 
-        int limitLength = Length < value.Length
-        ? Length
-        : value.Length;
+        int byteDifference = (encoding.GetByteCount(value) - value.Length) * 2;
+        int byteLength;
 
-        encoding.GetBytes(value.Slice(0, limitLength), Bytes.Span);
+        if (byteDifference == 0)
+        {
+            byteLength = Length < value.Length
+            ? Length
+            : value.Length;
+            encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
+        }
+
+        if (byteDifference != 0)
+        {
+            byteLength = Length < value.Length - (byteDifference + 2)
+            ? Length
+            : value.Length - (byteDifference + 2);
+            encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
+        }
     }
 
     public ReadOnlySpan<char> CharValue
@@ -140,11 +153,24 @@ public sealed class Alphanumeric
         {
             Bytes.Span.Fill(32);
 
-            int limitLength = Length < value.Length
-            ? Length
-            : value.Length;
+            int byteDifference = (encoding.GetByteCount(value) - value.Length) * 2;
+            int byteLength;
 
-            encoding.GetBytes(value.Slice(0, limitLength), Bytes.Span);
+            if (byteDifference == 0)
+            {
+                byteLength = Length < value.Length
+                ? Length
+                : value.Length;
+                encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
+            }
+
+            if (byteDifference != 0)
+            {
+                byteLength = Length < value.Length - (byteDifference + 2)
+                ? Length
+                : value.Length - (byteDifference + 2);
+                encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
+            }
         }
     }
 
@@ -173,7 +199,6 @@ public sealed class Alphanumeric
             return encoding.GetString(Bytes.Span);
         }
     }
-
 }
 
 public class Alphabetic

@@ -116,15 +116,15 @@ public sealed class Numeric
 
 public sealed class Alphanumeric
 {
-    public Memory<byte> Bytes { get; init; }
+    public Memory<byte> Memory { get; init; }
     public int Length { get; init; }
     Encoding encoding = Encoding.UTF8;
 
     public Alphanumeric(ReadOnlySpan<char> value, int length, Memory<byte> memory)
     {
-        this.Bytes = memory;
+        this.Memory = memory;
         this.Length = length;
-        Bytes.Span.Fill(32);
+        Memory.Span.Fill(32);
 
         int byteDifference = (encoding.GetByteCount(value) - value.Length);
 
@@ -132,18 +132,18 @@ public sealed class Alphanumeric
             ? Length - byteDifference
             : value.Length;
 
-        encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
+        encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
     }
 
-    public ReadOnlySpan<char> CharValue
+    public ReadOnlySpan<char> Chars
     {
         get
         {
-            return MemoryMarshal.Cast<byte, char>(Bytes.Span);
+            return MemoryMarshal.Cast<byte, char>(Memory.Span);
         }
         set
         {
-            Bytes.Span.Fill(32);
+            Memory.Span.Fill(32);
 
             int byteDifference = (encoding.GetByteCount(value) - value.Length);
             
@@ -151,33 +151,33 @@ public sealed class Alphanumeric
                 ? Length - byteDifference
                 : value.Length;
 
-            encoding.GetBytes(value.Slice(0, byteLength), Bytes.Span);
+            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
         }
     }
 
-    public ReadOnlySpan<byte> ByteValue
+    public ReadOnlySpan<byte> Bytes
     {
         get
         {
-            return Bytes.Span;
+            return Memory.Span;
         }
         set
         {
-            Bytes.Span.Fill(32);
+            Memory.Span.Fill(32);
             
-            int byteLength = Length < value.Length
+            int length = Length < value.Length
             ? Length
             : value.Length;
 
-            value.Slice(0, byteLength).CopyTo(Bytes.Span);
+            value.Slice(0, length).CopyTo(Memory.Span);
         }
     }
 
-    public string DisplayValue
+    public string Display
     {
         get
         {
-            return encoding.GetString(Bytes.Span);
+            return encoding.GetString(Memory.Span);
         }
     }
 }

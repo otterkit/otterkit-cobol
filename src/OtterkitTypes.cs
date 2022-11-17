@@ -8,6 +8,7 @@ public sealed class GroupDataItem
 {
     public Memory<byte> Memory { get; init; }
     public int Length { get; init; }
+    Encoding encoding = Encoding.UTF8;
 
     public GroupDataItem(int length)
     {
@@ -19,6 +20,52 @@ public sealed class GroupDataItem
     {
         this.Length = length;
         this.Memory = memory;
+    }
+
+    public ReadOnlySpan<char> Chars
+    {
+        get
+        {
+            return MemoryMarshal.Cast<byte, char>(Memory.Span);
+        }
+        set
+        {
+            Memory.Span.Fill(32);
+
+            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+            
+            int byteLength = Length < value.Length + byteDifference
+                ? Length - byteDifference
+                : value.Length;
+
+            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
+        }
+    }
+
+    public ReadOnlySpan<byte> Bytes
+    {
+        get
+        {
+            return Memory.Span;
+        }
+        set
+        {
+            Memory.Span.Fill(32);
+            
+            int length = Length < value.Length
+            ? Length
+            : value.Length;
+
+            value.Slice(0, length).CopyTo(Memory.Span);
+        }
+    }
+
+    public string Display
+    {
+        get
+        {
+            return encoding.GetString(Memory.Span);
+        }
     }
 }
 

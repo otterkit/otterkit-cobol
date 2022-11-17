@@ -4,22 +4,25 @@ using System.Text;
 
 namespace OtterkitLibrary;
 
-interface IDataItem<TItemType>
+public sealed class GroupDataItem
 {
-    bool isNumeric();
-    bool isAlphanumeric();
-    bool isAlphabetic();
-    bool isNational();
-    bool isBoolean();
-    string Formatted();
+    public Memory<byte> Memory { get; init; }
+    public int Length { get; init; }
+
+    public GroupDataItem(int length)
+    {
+        this.Length = length;
+        this.Memory = new byte[length];
+    }
+
+    public GroupDataItem(int length, Memory<byte> memory)
+    {
+        this.Length = length;
+        this.Memory = memory;
+    }
 }
 
-public abstract class DataItem<TItemType>
-{
-    public int length;
-}
-
-public class Numeric
+public sealed class Numeric
 {
     public Decimal128 dataItem;
     public int length;
@@ -162,11 +165,11 @@ public sealed class Alphanumeric
         {
             Bytes.Span.Fill(32);
             
-            int limitLength = Length < value.Length
+            int byteLength = Length < value.Length
             ? Length
             : value.Length;
 
-            value.Slice(0, limitLength).CopyTo(Bytes.Span);
+            value.Slice(0, byteLength).CopyTo(Bytes.Span);
         }
     }
 
@@ -179,7 +182,7 @@ public sealed class Alphanumeric
     }
 }
 
-public class Alphabetic
+public sealed class Alphabetic
 {
     public string dataItem;
     public int length;
@@ -246,7 +249,7 @@ public class Alphabetic
 
 }
 
-public class National
+public sealed class National
 {
     public string dataItem;
     public int length;
@@ -305,7 +308,7 @@ public class National
 
 }
 
-public class Boolean
+public sealed class Boolean
 {
     public string dataItem;
     public int length;

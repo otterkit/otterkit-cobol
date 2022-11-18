@@ -1,8 +1,57 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Text;
+using System.Buffers;
 
 namespace OtterkitLibrary;
+
+public sealed unsafe class OtterkitNativeMemory<TBytes> 
+    : MemoryManager<TBytes>
+    where TBytes : unmanaged
+{
+    private TBytes *Pointer { get; set; }
+    private int Length { get; init; }
+    private bool Disposed = false;
+
+    public OtterkitNativeMemory(TBytes *pointer, int length)
+    {
+        if (length <= 0)
+            throw new ArgumentOutOfRangeException("Otterkit Memory Management: Cannot allocate less than 1 byte of memory");
+
+        this.Pointer = pointer;
+        this.Length = length;
+    }
+
+    public override Span<TBytes> GetSpan() => new Span<TBytes>(Pointer, Length);
+
+    public override MemoryHandle Pin(int index = 0)
+    {
+        if (index < 0 || index >= Length)
+            throw new ArgumentOutOfRangeException(nameof(index), "Otterkit Memory Management: Tried to access an index out of range of an unmanaged memory block");
+
+        return new MemoryHandle(Pointer + index);
+    }
+
+    public override void Unpin()
+    {
+        Console.WriteLine("Otterkit Memory Management: Cannot unpin manualy allocated memory block");
+    }
+
+    public void Dispose() => Dispose(true);
+
+    protected override void Dispose(bool disposing)
+    {
+        if (!Disposed)
+        {
+            if (disposing)
+                this.Memory.Span.Clear();
+            
+            NativeMemory.Free(Pointer);
+            Pointer = null;
+            Disposed = true;
+        }
+    }
+}
 
 public sealed class GroupDataItem
 {
@@ -237,7 +286,7 @@ public sealed class Alphabetic
     {
         if (value.Any(char.IsDigit))
         {
-            throw new ArgumentException("Alphabetic type cannot contain numeric values", value);
+            throw new ArgumentOutOfRangeException(value, "Otterkit Type Error: Alphabetic type cannot contain numeric values");
         }
         this.length = length;
         this.dataItem = value == string.Empty ? " " : value;

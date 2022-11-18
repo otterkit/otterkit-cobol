@@ -1,4 +1,4 @@
-using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace OtterkitLibrary;
 
@@ -83,9 +83,11 @@ public static class Statements
         }
     }
 
-    public static void ALLOCATE()
+    public static unsafe OtterkitNativeMemory<byte> ALLOCATE(int bytes, GroupDataItem basedDataItem)
     {
-        DISPLAY("STANDARD-ERROR", true, "Error, Unsupported: Otterkit COBOL does not support manual memory management");
+        OtterkitNativeMemory<byte> malloc = new((byte *)NativeMemory.Alloc((nuint)bytes), bytes);
+        basedDataItem = new(bytes, malloc.Memory);
+        return malloc;
     }
 
     public static void CALL()
@@ -257,9 +259,12 @@ public static class Statements
         // TODO: Implement EXIT
     }
 
-    public static void FREE()
+    public static void FREE(params OtterkitNativeMemory<byte>[] pointers)
     {
-        DISPLAY("STANDARD-ERROR", true, "Error, Unsupported: Otterkit COBOL does not support manual memory management");
+        foreach (OtterkitNativeMemory<byte> pointer in pointers)
+        {
+            pointer.Dispose();
+        }
     }
 
     public static void GENERATE()

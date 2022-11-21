@@ -527,6 +527,78 @@ public sealed class Alphabetic
     }
 }
 
+public sealed class BasedAlphabetic
+{
+    public BasedDataItem Parent { get; init; }
+    public int Offset { get; init; }
+    public int Length { get; init; }
+    private readonly Encoding encoding = Encoding.UTF8;
+
+    public BasedAlphabetic(int offset, int length, BasedDataItem parent)
+    {
+        this.Parent = parent;
+        this.Offset = offset;
+        this.Length = length;
+    }
+
+    public ReadOnlySpan<char> Chars
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return MemoryMarshal.Cast<byte, char>(MemoryOffset);
+        }
+        set
+        {
+            if(value.IndexOfAny("1234567890") > -1)
+                throw new ArgumentOutOfRangeException("value" ,"Alphabetic type cannot contain numberic values");
+
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            MemoryOffset.Fill(32);
+
+            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+
+            int byteLength = Length < value.Length + byteDifference
+                ? Length - byteDifference
+                : value.Length;
+
+            encoding.GetBytes(value.Slice(0, byteLength), MemoryOffset);
+        }
+    }
+
+    public ReadOnlySpan<byte> Bytes
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return MemoryOffset;
+        }
+        set
+        {
+            if(value.IndexOfAny("1234567890"u8) > -1)
+                throw new ArgumentOutOfRangeException("value" ,"Alphabetic type cannot contain numberic values");
+
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            MemoryOffset.Fill(32);
+
+            int length = Length < value.Length
+            ? Length
+            : value.Length;
+
+            value.Slice(0, length).CopyTo(MemoryOffset);
+        }
+    }
+
+    public string Display
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return encoding.GetString(MemoryOffset);
+        }
+    }
+}
+
 public sealed class National
 {
     public Memory<byte> Memory { get; init; }
@@ -597,6 +669,72 @@ public sealed class National
     }
 }
 
+public sealed class BasedNational
+{
+    public BasedDataItem Parent { get; init; }
+    public int Offset { get; init; }
+    public int Length { get; init; }
+    private readonly Encoding encoding = Encoding.UTF8;
+
+    public BasedNational(int offset, int length, BasedDataItem parent)
+    {
+        this.Parent = parent;
+        this.Offset = offset;
+        this.Length = length;
+    }
+
+    public ReadOnlySpan<char> Chars
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return MemoryMarshal.Cast<byte, char>(MemoryOffset);
+        }
+        set
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            MemoryOffset.Fill(32);
+
+            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+
+            int byteLength = Length < value.Length + byteDifference
+                ? Length - byteDifference
+                : value.Length;
+
+            encoding.GetBytes(value.Slice(0, byteLength), MemoryOffset);
+        }
+    }
+
+    public ReadOnlySpan<byte> Bytes
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return MemoryOffset;
+        }
+        set
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            MemoryOffset.Fill(32);
+
+            int length = Length < value.Length
+            ? Length
+            : value.Length;
+
+            value.Slice(0, length).CopyTo(MemoryOffset);
+        }
+    }
+
+    public string Display
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return encoding.GetString(MemoryOffset);
+        }
+    }
+}
+
 public sealed class Boolean
 {
     public Memory<byte> Memory { get; init; }
@@ -612,7 +750,7 @@ public sealed class Boolean
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
-        Memory.Span.Fill(32);
+        Memory.Span.Fill(48);
 
         int byteDifference = (encoding.GetByteCount(value) - value.Length);
 
@@ -634,7 +772,7 @@ public sealed class Boolean
             if(value.IndexOfAny("01") > -1)
                 throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
 
-            Memory.Span.Fill(32);
+            Memory.Span.Fill(48);
 
             int byteDifference = (encoding.GetByteCount(value) - value.Length);
 
@@ -657,7 +795,7 @@ public sealed class Boolean
             if(value.IndexOfAny("01"u8) > -1)
                 throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
                 
-            Memory.Span.Fill(32);
+            Memory.Span.Fill(48);
 
             int length = Length < value.Length
             ? Length
@@ -676,3 +814,74 @@ public sealed class Boolean
     }
 }
 
+public sealed class BasedBoolean
+{
+    public BasedDataItem Parent { get; init; }
+    public int Offset { get; init; }
+    public int Length { get; init; }
+    private readonly Encoding encoding = Encoding.UTF8;
+
+    public BasedBoolean(int offset, int length, BasedDataItem parent)
+    {
+        this.Parent = parent;
+        this.Offset = offset;
+        this.Length = length;
+    }
+
+    public ReadOnlySpan<char> Chars
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return MemoryMarshal.Cast<byte, char>(MemoryOffset);
+        }
+        set
+        {
+            if(value.IndexOfAny("01") > -1)
+                throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
+
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            MemoryOffset.Fill(48);
+
+            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+
+            int byteLength = Length < value.Length + byteDifference
+                ? Length - byteDifference
+                : value.Length;
+
+            encoding.GetBytes(value.Slice(0, byteLength), MemoryOffset);
+        }
+    }
+
+    public ReadOnlySpan<byte> Bytes
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return MemoryOffset;
+        }
+        set
+        {
+            if(value.IndexOfAny("01"u8) > -1)
+                throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
+
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            MemoryOffset.Fill(48);
+
+            int length = Length < value.Length
+            ? Length
+            : value.Length;
+
+            value.Slice(0, length).CopyTo(MemoryOffset);
+        }
+    }
+
+    public string Display
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return encoding.GetString(MemoryOffset);
+        }
+    }
+}

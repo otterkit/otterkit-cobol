@@ -165,7 +165,7 @@ public sealed unsafe class BasedDataItem
     public void NullCheck()
     {
         if (this.Memory.Span == null)
-            throw new NullReferenceException("EcDataPtrNull Exception");
+            throw new EcDataPtrNull();
     }
 
     public ReadOnlySpan<char> Chars

@@ -304,7 +304,7 @@ public static class Functions
 
     public static Decimal128 INTEGER_OF_BOOLEAN(Boolean argument)
     {
-        return Convert.ToInt64(argument.Value, 2);
+        return Convert.ToInt64(argument.Display, 2);
     }
 
     public static int INTEGER_OF_DATE(Decimal128 argument)

@@ -315,13 +315,15 @@ public sealed class Numeric
 public sealed class Alphanumeric
 {
     public Memory<byte> Memory { get; init; }
+    public int Offset { get; init; }
     public int Length { get; init; }
-    Encoding encoding = Encoding.UTF8;
+    private readonly Encoding encoding = Encoding.UTF8;
 
-    public Alphanumeric(ReadOnlySpan<char> value, int length, Memory<byte> memory)
+    public Alphanumeric(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
     {
-        this.Memory = memory;
+        this.Offset = offset;
         this.Length = length;
+        this.Memory = memory.Slice(offset, length);
         Memory.Span.Fill(32);
 
         int byteDifference = (encoding.GetByteCount(value) - value.Length);

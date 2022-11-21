@@ -450,193 +450,229 @@ public sealed class BasedAlphanumeric
 
 public sealed class Alphabetic
 {
-    public string dataItem;
-    public int length;
-    public Alphabetic(string value, int length)
+    public Memory<byte> Memory { get; init; }
+    public int Offset { get; init; }
+    public int Length { get; init; }
+    private readonly Encoding encoding = Encoding.UTF8;
+
+    public Alphabetic(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
     {
-        if (value.Any(char.IsDigit))
-        {
-            throw new ArgumentOutOfRangeException(value, "Otterkit Type Error: Alphabetic type cannot contain numeric values");
-        }
-        this.length = length;
-        this.dataItem = value == string.Empty ? " " : value;
+        if(value.IndexOfAny("1234567890") > -1)
+            throw new ArgumentOutOfRangeException("value" ,"Alphabetic type cannot contain numberic values");
+
+        this.Offset = offset;
+        this.Length = length;
+        this.Memory = memory.Slice(offset, length);
+        Memory.Span.Fill(32);
+
+        int byteDifference = (encoding.GetByteCount(value) - value.Length);
+
+        int byteLength = Length < value.Length + byteDifference
+            ? Length - byteDifference
+            : value.Length;
+
+        encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
     }
 
-    public bool isNumeric()
-    {
-        return false;
-    }
-
-    public bool isAlphanumeric()
-    {
-        return false;
-    }
-
-    public bool isAlphabetic()
-    {
-        return true;
-    }
-
-    public bool isNational()
-    {
-        return false;
-    }
-
-    public bool isBoolean()
-    {
-        return false;
-    }
-
-    public string Formatted()
-    {
-        return String.Create(length, dataItem, (span, value) =>
-        {
-            int MaxSize = dataItem.Length < length ? dataItem.Length : length;
-            value.AsSpan(0, MaxSize).CopyTo(span);
-            span[MaxSize..].Fill(' ');
-        });
-    }
-
-    public string Value
+    public ReadOnlySpan<char> Chars
     {
         get
         {
-            return Formatted();
+            return MemoryMarshal.Cast<byte, char>(Memory.Span);
         }
         set
         {
-            if (value.Any(char.IsDigit))
-            {
-                throw new ArgumentException("Alphabetic type cannot contain numeric values", value);
-            }
-            dataItem = value == string.Empty ? " " : value;
+            if(value.IndexOfAny("1234567890") > -1)
+                throw new ArgumentOutOfRangeException("value" ,"Alphabetic type cannot contain numberic values");
+
+            Memory.Span.Fill(32);
+
+            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+
+            int byteLength = Length < value.Length + byteDifference
+                ? Length - byteDifference
+                : value.Length;
+
+            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
         }
     }
 
+    public ReadOnlySpan<byte> Bytes
+    {
+        get
+        {
+            return Memory.Span;
+        }
+        set
+        {
+            if(value.IndexOfAny("1234567890"u8) > -1)
+                throw new ArgumentOutOfRangeException("value" ,"Alphabetic type cannot contain numberic values");
+                
+            Memory.Span.Fill(32);
+
+            int length = Length < value.Length
+            ? Length
+            : value.Length;
+
+            value.Slice(0, length).CopyTo(Memory.Span);
+        }
+    }
+
+    public string Display
+    {
+        get
+        {
+            return encoding.GetString(Memory.Span);
+        }
+    }
 }
 
 public sealed class National
 {
-    public string dataItem;
-    public int length;
-    public National(string value, int length)
+    public Memory<byte> Memory { get; init; }
+    public int Offset { get; init; }
+    public int Length { get; init; }
+    private readonly Encoding encoding = Encoding.UTF8;
+
+    public National(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
     {
-        this.length = length;
-        this.dataItem = value == string.Empty ? " " : value;
+        this.Offset = offset;
+        this.Length = length;
+        this.Memory = memory.Slice(offset, length);
+        Memory.Span.Fill(32);
+
+        int byteDifference = (encoding.GetByteCount(value) - value.Length);
+
+        int byteLength = Length < value.Length + byteDifference
+            ? Length - byteDifference
+            : value.Length;
+
+        encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
     }
 
-    public bool isNumeric()
-    {
-        return false;
-    }
-
-    public bool isAlphanumeric()
-    {
-        return true;
-    }
-
-    public bool isAlphabetic()
-    {
-        return !Formatted().Any(char.IsDigit);
-    }
-
-    public bool isNational()
-    {
-        return true;
-    }
-
-    public bool isBoolean()
-    {
-        return false;
-    }
-
-    public string Formatted()
-    {
-        return String.Create(length, dataItem, (span, value) =>
-        {
-            int MaxSize = dataItem.Length < length ? dataItem.Length : length;
-            value.AsSpan(0, MaxSize).CopyTo(span);
-            span[MaxSize..].Fill(' ');
-        });
-    }
-
-    public string Value
+    public ReadOnlySpan<char> Chars
     {
         get
         {
-            return Formatted();
+            return MemoryMarshal.Cast<byte, char>(Memory.Span);
         }
         set
         {
-            dataItem = value == string.Empty ? " " : value;
+            Memory.Span.Fill(32);
+
+            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+
+            int byteLength = Length < value.Length + byteDifference
+                ? Length - byteDifference
+                : value.Length;
+
+            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
         }
     }
 
+    public ReadOnlySpan<byte> Bytes
+    {
+        get
+        {
+            return Memory.Span;
+        }
+        set
+        {
+            Memory.Span.Fill(32);
+
+            int length = Length < value.Length
+            ? Length
+            : value.Length;
+
+            value.Slice(0, length).CopyTo(Memory.Span);
+        }
+    }
+
+    public string Display
+    {
+        get
+        {
+            return encoding.GetString(Memory.Span);
+        }
+    }
 }
 
 public sealed class Boolean
 {
-    public string dataItem;
-    public int length;
-    public Boolean(string value, int length)
+    public Memory<byte> Memory { get; init; }
+    public int Offset { get; init; }
+    public int Length { get; init; }
+    private readonly Encoding encoding = Encoding.UTF8;
+
+    public Boolean(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
     {
-        if (!Regex.IsMatch(value, @"^([01]+)$", RegexOptions.Compiled | RegexOptions.NonBacktracking))
-        {
-            throw new ArgumentException("Boolean type can only contain 1s and 0s", value);
-        }
-        this.length = length;
-        this.dataItem = value == string.Empty ? "0" : value;
+        if(value.IndexOfAny("01") > -1)
+            throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
+
+        this.Offset = offset;
+        this.Length = length;
+        this.Memory = memory.Slice(offset, length);
+        Memory.Span.Fill(32);
+
+        int byteDifference = (encoding.GetByteCount(value) - value.Length);
+
+        int byteLength = Length < value.Length + byteDifference
+            ? Length - byteDifference
+            : value.Length;
+
+        encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
     }
 
-    public bool isNumeric()
-    {
-        return false;
-    }
-
-    public bool isAlphanumeric()
-    {
-        return true;
-    }
-
-    public bool isAlphabetic()
-    {
-        return false;
-    }
-
-    public bool isNational()
-    {
-        return true;
-    }
-
-    public bool isBoolean()
-    {
-        return true;
-    }
-
-    public string Formatted()
-    {
-        return String.Create(length, dataItem, (span, value) =>
-        {
-            int MaxSize = dataItem.Length < length ? dataItem.Length : length;
-            value.AsSpan(0, MaxSize).CopyTo(span);
-            span[MaxSize..].Fill('0');
-        });
-    }
-
-    public string Value
+    public ReadOnlySpan<char> Chars
     {
         get
         {
-            return Formatted();
+            return MemoryMarshal.Cast<byte, char>(Memory.Span);
         }
         set
         {
-            if (!Regex.IsMatch(value, @"^([01]+)$", RegexOptions.Compiled | RegexOptions.NonBacktracking))
-            {
-                throw new ArgumentException("Boolean type can only contain 1s and 0s", value);
-            }
-            dataItem = value == string.Empty ? "0" : value;
+            if(value.IndexOfAny("01") > -1)
+                throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
+
+            Memory.Span.Fill(32);
+
+            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+
+            int byteLength = Length < value.Length + byteDifference
+                ? Length - byteDifference
+                : value.Length;
+
+            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
         }
     }
 
+    public ReadOnlySpan<byte> Bytes
+    {
+        get
+        {
+            return Memory.Span;
+        }
+        set
+        {
+            if(value.IndexOfAny("01"u8) > -1)
+                throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
+                
+            Memory.Span.Fill(32);
+
+            int length = Length < value.Length
+            ? Length
+            : value.Length;
+
+            value.Slice(0, length).CopyTo(Memory.Span);
+        }
+    }
+
+    public string Display
+    {
+        get
+        {
+            return encoding.GetString(Memory.Span);
+        }
+    }
 }
+

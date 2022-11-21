@@ -5,18 +5,18 @@ using System.Buffers;
 
 namespace OtterkitLibrary;
 
-public sealed unsafe class OtterkitNativeMemory<TBytes> 
+public sealed unsafe class OtterkitNativeMemory<TBytes>
     : MemoryManager<TBytes>
     where TBytes : unmanaged
 {
-    private TBytes *Pointer { get; set; }
+    private TBytes* Pointer { get; set; }
     private int Length { get; init; }
     private bool Disposed = false;
 
-    public OtterkitNativeMemory(TBytes *pointer, int length)
+    public OtterkitNativeMemory(TBytes* pointer, int length)
     {
-        if (length <= 0)
-            throw new ArgumentOutOfRangeException("Otterkit Memory Management: Cannot allocate less than 1 byte of memory");
+        if (length < 0)
+            throw new ArgumentOutOfRangeException("Otterkit Memory Management: Cannot allocate negative bytes of memory");
 
         this.Pointer = pointer;
         this.Length = length;
@@ -45,7 +45,7 @@ public sealed unsafe class OtterkitNativeMemory<TBytes>
         {
             if (disposing)
                 this.Memory.Span.Clear();
-            
+
             NativeMemory.Free(Pointer);
             Pointer = null;
             Disposed = true;
@@ -53,19 +53,19 @@ public sealed unsafe class OtterkitNativeMemory<TBytes>
     }
 }
 
-public sealed class GroupDataItem
+public sealed class DataItem
 {
     public Memory<byte> Memory { get; init; }
     public int Length { get; init; }
-    Encoding encoding = Encoding.UTF8;
+    private readonly Encoding encoding = Encoding.UTF8;
 
-    public GroupDataItem(int length)
+    public DataItem(int length)
     {
         this.Length = length;
         this.Memory = new byte[length];
     }
 
-    public GroupDataItem(int length, Memory<byte> memory)
+    public DataItem(int length, Memory<byte> memory)
     {
         this.Length = length;
         this.Memory = memory;
@@ -82,7 +82,7 @@ public sealed class GroupDataItem
             Memory.Span.Fill(32);
 
             int byteDifference = (encoding.GetByteCount(value) - value.Length);
-            
+
             int byteLength = Length < value.Length + byteDifference
                 ? Length - byteDifference
                 : value.Length;
@@ -100,7 +100,7 @@ public sealed class GroupDataItem
         set
         {
             Memory.Span.Fill(32);
-            
+
             int length = Length < value.Length
             ? Length
             : value.Length;
@@ -113,6 +113,108 @@ public sealed class GroupDataItem
     {
         get
         {
+            return encoding.GetString(Memory.Span);
+        }
+    }
+}
+
+public sealed unsafe class BasedDataItem
+{
+    public Memory<byte> Memory { get; private set; }
+    public OtterkitNativeMemory<byte> UnsafeMemory { get; private set; }
+    public int Length { get; private set; }
+    private readonly Encoding encoding = Encoding.UTF8;
+
+    public BasedDataItem()
+    {
+        this.Length = 0;
+        this.Memory = null;
+        this.UnsafeMemory = new(null, 0);
+    }
+
+    public void Allocate(int length, bool initialized)
+    {
+        this.Length = length;
+        byte* Pointer;
+
+        if (initialized)
+        {
+            Pointer = (byte*)NativeMemory.AllocZeroed((nuint)length);
+            this.UnsafeMemory = new(Pointer, length);
+            Pointer = null;
+        }
+
+        if (!initialized)
+        {
+            Pointer = (byte*)NativeMemory.Alloc((nuint)length);
+            this.UnsafeMemory = new(Pointer, length);
+            Pointer = null;
+        }
+
+        this.Memory = UnsafeMemory.Memory;
+    }
+
+    public void Free()
+    {
+        UnsafeMemory.Dispose();
+        this.Length = 0;
+        this.Memory = null;
+        this.UnsafeMemory = new(null, 0);
+    }
+
+    public void NullCheck()
+    {
+        if (this.Memory.Span == null)
+            throw new NullReferenceException("EcDataPtrNull Exception");
+    }
+
+    public ReadOnlySpan<char> Chars
+    {
+        get
+        {
+            NullCheck();
+            return MemoryMarshal.Cast<byte, char>(Memory.Span);
+        }
+        set
+        {
+            NullCheck();
+            Memory.Span.Fill(32);
+
+            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+
+            int byteLength = Length < value.Length + byteDifference
+                ? Length - byteDifference
+                : value.Length;
+
+            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
+        }
+    }
+
+    public ReadOnlySpan<byte> Bytes
+    {
+        get
+        {
+            NullCheck();
+            return Memory.Span;
+        }
+        set
+        {
+            NullCheck();
+            Memory.Span.Fill(32);
+
+            int length = Length < value.Length
+            ? Length
+            : value.Length;
+
+            value.Slice(0, length).CopyTo(Memory.Span);
+        }
+    }
+
+    public string Display
+    {
+        get
+        {
+            NullCheck();
             return encoding.GetString(Memory.Span);
         }
     }
@@ -242,7 +344,7 @@ public sealed class Alphanumeric
             Memory.Span.Fill(32);
 
             int byteDifference = (encoding.GetByteCount(value) - value.Length);
-            
+
             int byteLength = Length < value.Length + byteDifference
                 ? Length - byteDifference
                 : value.Length;
@@ -260,7 +362,7 @@ public sealed class Alphanumeric
         set
         {
             Memory.Span.Fill(32);
-            
+
             int length = Length < value.Length
             ? Length
             : value.Length;
@@ -274,6 +376,72 @@ public sealed class Alphanumeric
         get
         {
             return encoding.GetString(Memory.Span);
+        }
+    }
+}
+
+public sealed class BasedAlphanumeric
+{
+    public BasedDataItem Parent { get; init; }
+    public int Offset { get; init; }
+    public int Length { get; init; }
+    private readonly Encoding encoding = Encoding.UTF8;
+
+    public BasedAlphanumeric(int offset, int length, BasedDataItem parent)
+    {
+        this.Parent = parent;
+        this.Offset = offset;
+        this.Length = length;
+    }
+
+    public ReadOnlySpan<char> Chars
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return MemoryMarshal.Cast<byte, char>(MemoryOffset);
+        }
+        set
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            MemoryOffset.Fill(32);
+
+            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+
+            int byteLength = Length < value.Length + byteDifference
+                ? Length - byteDifference
+                : value.Length;
+
+            encoding.GetBytes(value.Slice(0, byteLength), MemoryOffset);
+        }
+    }
+
+    public ReadOnlySpan<byte> Bytes
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return MemoryOffset;
+        }
+        set
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            MemoryOffset.Fill(32);
+
+            int length = Length < value.Length
+            ? Length
+            : value.Length;
+
+            value.Slice(0, length).CopyTo(MemoryOffset);
+        }
+    }
+
+    public string Display
+    {
+        get
+        {
+            Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
+            return encoding.GetString(MemoryOffset);
         }
     }
 }

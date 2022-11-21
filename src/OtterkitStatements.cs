@@ -83,11 +83,10 @@ public static class Statements
         }
     }
 
-    public static unsafe OtterkitNativeMemory<byte> ALLOCATE(int bytes, GroupDataItem basedDataItem)
+    public static OtterkitNativeMemory<byte> ALLOCATE(int bytes, BasedDataItem dataItem)
     {
-        OtterkitNativeMemory<byte> malloc = new((byte *)NativeMemory.Alloc((nuint)bytes), bytes);
-        basedDataItem = new(bytes, malloc.Memory);
-        return malloc;
+        dataItem.Allocate(bytes, false);
+        return dataItem.UnsafeMemory;
     }
 
     public static void CALL()
@@ -259,11 +258,11 @@ public static class Statements
         // TODO: Implement EXIT
     }
 
-    public static void FREE(params OtterkitNativeMemory<byte>[] pointers)
+    public static void FREE(params BasedDataItem[] dataItems)
     {
-        foreach (OtterkitNativeMemory<byte> pointer in pointers)
+        foreach (BasedDataItem dataItem in dataItems)
         {
-            pointer.Dispose();
+            dataItem.Free();
         }
     }
 

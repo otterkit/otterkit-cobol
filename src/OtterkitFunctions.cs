@@ -1,94 +1,103 @@
 ﻿using System.Text.RegularExpressions;
+using System.Text;
 namespace OtterkitLibrary;
 
 public static class Functions
 {
-    public static Decimal128 ABS(Decimal128 argument)
+    public static DecimalHolder ABS(DecimalHolder argument)
     {
-        return Decimal128.Abs(argument);
+        return DecimalMath.Abs(argument.Bytes);
     }
 
-    public static Decimal128 ACOS(Decimal128 ratio)
+    public static DecimalHolder ACOS(DecimalHolder ratio)
     {
-        if (ratio < -1 || ratio > 1)
-            throw new ArgumentException($"The argument of ACOS must be >= -1 and <= to +1. Argument received was: {ratio}");
+        if (ratio < "-1"u8 || ratio > "1"u8)
+            throw new ArgumentException($"The argument of ACOS must be >= -1 and <= to +1");
 
-        Decimal128 param = (1 - ratio * ratio);
-        return ATAN(Decimal128.Sqrt(param.Value) / (ratio + 1)) * 2;
+        DecimalHolder param = ("1"u8 - ratio * ratio);
+        return ATAN(DecimalMath.Sqrt(param.Bytes) / (ratio + "1"u8)) * "2"u8;
     }
 
-    public static Decimal128 ANNUITY(Decimal128 interest, Decimal128 periods)
+    public static DecimalHolder ANNUITY(DecimalHolder interest, DecimalHolder periods)
     {
-        if (interest == Decimal128.Zero)
+        if (interest == "0"u8)
         {
-            return 1 / periods;
+            return "1"u8 / periods;
         }
         // (argument-1 / (1 – (1 + argument-1)** (– (argument-2))))
-        return interest / (1 - Decimal128.Pow((1 + interest.Value), (-periods).Value));
+        return interest / (new DecimalHolder("1"u8) - DecimalMath.Pow(("1"u8 + interest).Bytes, (-periods).Bytes));
     }
 
-    public static Decimal128 ASIN(Decimal128 ratio)
+    public static DecimalHolder ASIN(DecimalHolder ratio)
     {
-        if (ratio < -1 || ratio > 1)
-            throw new ArgumentException($"The argument of ASIN must be >= -1 and <= to +1. Argument received was: {ratio}");
+        if (ratio < "-1"u8 || ratio > "1"u8)
+            throw new ArgumentException($"The argument of ASIN must be >= -1 and <= to +1");
 
-        Decimal128 param = (1 - ratio * ratio);
-        return ATAN(ratio / (Decimal128.Sqrt(param.Value) + 1)) * 2;
+        DecimalHolder param = ("1"u8 - ratio * ratio);
+        return ATAN(ratio / (DecimalMath.Sqrt(param.Bytes) + new DecimalHolder("1"u8))) * "2"u8;
     }
 
-    public static Decimal128 ATAN(Decimal128 ratio)
+    public static DecimalHolder ATAN(DecimalHolder ratio)
     {
-        if (ratio < -1)
-            return -(PI() / 2) - ATAN(1 / ratio);
+        if (ratio < "-1"u8)
+            return -(PI() / "2"u8) - ATAN("1"u8 / ratio);
 
-        if (ratio > 1)
-            return PI() / 2 - ATAN(1 / ratio);
+        if (ratio > "1"u8)
+            return PI() / "2"u8 - ATAN("1"u8 / ratio);
 
-        int coefficient = 2;
-        Decimal128 iteration = Decimal128.Arithmetic($"{ratio} {ratio} {ratio} * 1 + /");
-        Decimal128 result = iteration;
+        DecimalHolder coefficient = "2"u8;
+        DecimalHolder iteration = ratio / (ratio * ratio + "1"u8);
+        DecimalHolder result = iteration;
 
         for (int i = 0; i < 64; i++)
         {
-            iteration = Decimal128.Arithmetic($"{iteration} {ratio} {ratio} * {ratio} {ratio} * 1 + / {coefficient} * {coefficient} 1 + / *");
+            iteration *= (ratio * ratio / (ratio * ratio + "1"u8) * coefficient / (coefficient + "1"u8));
 
             result += iteration;
-            coefficient += 2;
+            coefficient += "2"u8;
         }
 
         return result;
     }
 
-    public static void BASE_CONVERT(Decimal128 input, Decimal128 current, Decimal128 target)
+    public static void BASE_CONVERT(DecimalHolder input, DecimalHolder current, DecimalHolder target)
     {
         // TODO BASE-CONVERT
     }
 
-    public static void BOOLEAN_OF_INTEGER(Decimal128 argument)
+    public static void BOOLEAN_OF_INTEGER(DecimalHolder argument)
     {
         // TODO BOOLEAN-OF-INTEGER
         // Need to implement usage bit first
     }
 
-    public static Decimal128 BYTE_LENGTH(Decimal128 argument)
+    public static DecimalHolder BYTE_LENGTH(DecimalHolder argument)
     {
         // Does not cover all BYTE-LENGTH functionality
-        return argument.Value.Length;
+        DecimalHolder byteLength = "0"u8;
+        foreach (var bytes in argument.Bytes)
+        {
+            byteLength++;
+        }
+        return byteLength;
     }
 
-    public static string CHAR(Decimal128 argument)
+    public static Alphanumeric CHAR(Numeric argument)
     {
-        int parseInt = int.Parse(argument.Value);
+        ReadOnlySpan<byte> bytes = argument.Bytes;
+        int parseInt = int.Parse(Encoding.UTF8.GetString(bytes));
+        ReadOnlySpan<byte> charAsByte = new(((byte)parseInt));
+
+        return new Alphanumeric(charAsByte, 0, 1, new byte[1]);
+    }
+
+    public static string CHAR_NATIONAL(Numeric argument)
+    {
+        int parseInt = int.Parse(argument.Display);
         return ((char)parseInt).ToString();
     }
 
-    public static string CHAR_NATIONAL(Decimal128 argument)
-    {
-        int parseInt = int.Parse(argument.Value);
-        return ((char)parseInt).ToString();
-    }
-
-    public static Decimal128 COMBINED_DATETIME(Decimal128 date, Decimal128 time)
+    public static DecimalHolder COMBINED_DATETIME(DecimalHolder date, DecimalHolder time)
     {
         // TODO: implement other date time intrinsic functions
         return date;
@@ -100,14 +109,14 @@ public static class Functions
         return concat;
     }
 
-    public static void CONVERT(Decimal128 value, Decimal128 source, Decimal128 target)
+    public static void CONVERT(DecimalHolder value, DecimalHolder source, DecimalHolder target)
     {
         // TODO: Need to implement other COBOL data types first
     }
 
-    public static Decimal128 COS(Decimal128 radians)
+    public static DecimalHolder COS(DecimalHolder radians)
     {
-        return SIN(PI() / 2 - radians);
+        return SIN(PI() / "2"u8 - radians);
     }
 
     public static string CURRENT_DATE()
@@ -129,37 +138,37 @@ public static class Functions
         return DatePlusOffset;
     }
 
-    public static void DATE_OF_INTEGER(Decimal128 date)
+    public static void DATE_OF_INTEGER(Numeric date)
     {
         DateTime Y1600 = new(1600, 12, 31);
-        int intValue = int.Parse(date.Value);
+        int intValue = int.Parse(date.Display);
 
         DateTime dateOfInteger = Y1600.AddDays(intValue);
     }
 
-    public static void DATE_TO_YYYYMMDD(Decimal128 date)
+    public static void DATE_TO_YYYYMMDD(DecimalHolder date)
     {
         // TODO: implement DATE-TO-YYYYMMDD
     }
 
-    public static void DAY_OF_INTEGER(Decimal128 date)
+    public static void DAY_OF_INTEGER(DecimalHolder date)
     {
         // TODO: implement DAY-OF-INTEGER
     }
 
-    public static void DAY_TO_YYYYDDD(Decimal128 date)
+    public static void DAY_TO_YYYYDDD(DecimalHolder date)
     {
         // TODO: implement DAY-TO-YYYYDDD
     }
 
-    public static void DISPLAY_OF(Decimal128 date)
+    public static void DISPLAY_OF(DecimalHolder date)
     {
         // TODO: implement National type
     }
 
-    public static Decimal128 E()
+    public static DecimalHolder E()
     {
-        return new Decimal128("2.718281828459045235360287471352662");
+        return new DecimalHolder("2.718281828459045235360287471352662"u8);
     }
 
     public static void EXCEPTION_FILE(string? filename)
@@ -192,14 +201,20 @@ public static class Functions
         // Implement COBOL exceptions
     }
 
-    public static Decimal128 EXP(Decimal128 exponent)
+    public static Numeric EXP(Numeric exponent)
     {
-        return Decimal128.Exp(exponent.Value);
+        DecimalHolder result = DecimalMath.Exp(exponent.Bytes);
+        int PositionOfDecimal = result.Bytes.IndexOf("."u8);
+        Numeric temporary = new(result.Bytes, 0, 32, 2, new byte[34]);
+        return temporary;
     }
 
-    public static Decimal128 EXP10(Decimal128 exponent)
+    public static Numeric EXP10(Numeric exponent)
     {
-        return Decimal128.Pow("10", exponent.Value);
+        DecimalHolder result = DecimalMath.Pow("10"u8, exponent.Bytes);
+        int PositionOfDecimal = result.Bytes.IndexOf("."u8);
+        Numeric temporary = new(result.Bytes, 0, 32, 2, new byte[34]);
+        return temporary;
     }
 
     public static Int128 FACTORIAL(Int128 argument)
@@ -224,6 +239,71 @@ public static class Functions
 
         return factorial;
     }
+
+    public static DecimalHolder FACTORIAL(DecimalHolder argument)
+    {
+        // These two variables (FirstInteger and SecondInteger)
+        // convert the bytes value from the DecimalHolder argument
+        // into an int value that can be used for the switch statement
+        // 48 is the position of 0 in UTF-8 encoded bytes
+
+        int FirstInteger = argument.Bytes.Length == 2 ? ((argument.Bytes[0] - 48) * 10) : argument.Bytes[0] - 48;
+        int SecondInteger = argument.Bytes.Length == 2 ? argument.Bytes[1] - 48 : 0;
+
+        int IntegerOfDecimal = FirstInteger + SecondInteger;
+
+        DecimalHolder factorial = "0"u8;
+        switch (IntegerOfDecimal)
+        {
+            // Does this switch statement look horrible? YES!
+            // But is it a lot faster than the loop version,
+            // and does it return the factorial in constant time?
+            // ABSOLUTELY!
+
+            // "But why not use an array to hold the values?"
+            // Using a switch statement avoids having to allocate an array
+
+            // "Why does the switch statement end at 31 factorial?"
+            // 31! has 34 digits which is the maximum number of digits
+            // that the IEEE754 DecimalHolder can hold, 32! has 36 digits
+
+            case 0: factorial = new("1"u8); break;
+            case 1: factorial = new("1"u8); break;
+            case 2: factorial = new("2"u8); break;
+            case 3: factorial = new("6"u8); break;
+            case 4: factorial = new("24"u8); break;
+            case 5: factorial = new("120"u8); break;
+            case 6: factorial = new("720"u8); break;
+            case 7: factorial = new("5040"u8); break;
+            case 8: factorial = new("40320"u8); break;
+            case 9: factorial = new("362880"u8); break;
+            case 10: factorial = new("3628800"u8); break;
+            case 11: factorial = new("39916800"u8); break;
+            case 12: factorial = new("479001600"u8); break;
+            case 13: factorial = new("6227020800"u8); break;
+            case 14: factorial = new("87178291200"u8); break;
+            case 15: factorial = new("1307674368000"u8); break;
+            case 16: factorial = new("20922789888000"u8); break;
+            case 17: factorial = new("355687428096000"u8); break;
+            case 18: factorial = new("6402373705728000"u8); break;
+            case 19: factorial = new("121645100408832000"u8); break;
+            case 20: factorial = new("2432902008176640000"u8); break;
+            case 21: factorial = new("51090942171709440000"u8); break;
+            case 22: factorial = new("1124000727777607680000"u8); break;
+            case 23: factorial = new("25852016738884976640000"u8); break;
+            case 24: factorial = new("620448401733239439360000"u8); break;
+            case 25: factorial = new("15511210043330985984000000"u8); break;
+            case 26: factorial = new("403291461126605635584000000"u8); break;
+            case 27: factorial = new("10888869450418352160768000000"u8); break;
+            case 28: factorial = new("304888344611713860501504000000"u8); break;
+            case 29: factorial = new("8841761993739701954543616000000"u8); break;
+            case 30: factorial = new("265252859812191058636308480000000"u8); break;
+            case 31: factorial = new("8222838654177922817725562880000000"u8); break;
+        }
+
+        return factorial;
+    }
+
 
     public static int FIND_STRING(string argument, string substring, int ignore, bool last, bool anycase)
     {
@@ -280,54 +360,78 @@ public static class Functions
         // TODO: Implement FORMATTED-DATETIME
     }
 
-    public static void FORMATTED_TIME(string format, Decimal128 seconds, int offset)
+    public static void FORMATTED_TIME(string format, DecimalHolder seconds, int offset)
     {
         // TODO: Implement FORMATTED-TIME
     }
 
-    public static Decimal128 FRACTION_PART(Decimal128 argument)
+    public static Numeric FRACTION_PART(Numeric argument)
     {
-        int indexOfDecimal = argument.Value.IndexOf(".");
-        string fractionPart = indexOfDecimal > 0 
-            ? argument.Value.Substring(indexOfDecimal + 1)
-            : "0";
-        return new Decimal128(new String("0." + fractionPart));
+        Span<byte> FractionPart = stackalloc byte[2 + argument.FractionalLength];
+        "0."u8.CopyTo(FractionPart);
+
+        int indexOfDecimal = argument.Bytes.IndexOf("."u8);
+        if (indexOfDecimal == -1)
+            return new Numeric("0.0"u8, 0, 1, 1, new byte[2]);
+        
+        argument.Bytes.Slice(indexOfDecimal + 1).CopyTo(FractionPart.Slice(2));
+        return new Numeric(FractionPart, 0, 1, argument.FractionalLength, new byte[2 + argument.FractionalLength]);
     }
 
-    public static Decimal128 HIGHEST_ALGEBRAIC(Numeric argument)
+    public static Numeric HIGHEST_ALGEBRAIC(Numeric argument)
     {
-        int integer = argument.length;
-        int fraction = argument.fractionalLength;
-        string isDecimal = fraction == 0 ? "" : "." + new String('9', fraction);
-        return new Decimal128("+" + new String('9', integer) + isDecimal);
+        int integer = argument.Length;
+        int fraction = argument.FractionalLength;
+        Span<byte> LowestAlgebraic = stackalloc byte[2 + integer + fraction];
+        LowestAlgebraic[0] = 43;
+        LowestAlgebraic.Slice(1, integer).Fill(57);
+
+        if (fraction > 0)
+        {
+            LowestAlgebraic[integer + 1] = 46;
+            LowestAlgebraic.Slice(integer + 2).Fill(57);
+        }
+
+        return new Numeric(LowestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 1]);
     }
 
-    public static Decimal128 INTEGER_OF_BOOLEAN(Boolean argument)
+    public static Numeric INTEGER_OF_BOOLEAN(Boolean argument)
     {
-        return Convert.ToInt64(argument.Display, 2);
+        string str = Convert.ToInt64(argument.Display, 2).ToString();
+        ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(str);
+
+        return new Numeric(bytes, 0, bytes.Length, 0, new byte[bytes.Length]);
     }
 
-    public static int INTEGER_OF_DATE(Decimal128 argument)
+    public static Numeric INTEGER_OF_DATE(Numeric argument)
     {
         DateTime Y1600 = new(1600, 12, 31);
-        int intValue = int.Parse(argument.Value);
+        int intValue = int.Parse(argument.Display);
         // Datetime constructor => Year, Month, Day
         // Calculations below are to remove the appropriate parts from the argument
         // It Just Works™
         DateTime current = new((intValue / 10000),(intValue / 100) - (intValue / 10000 * 100),intValue - (intValue / 100 * 100));
-        return (current.Date - Y1600.Date).Days;
+        string str = (current.Date - Y1600.Date).Days.ToString();
+        ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(str);
+
+        return new Numeric(bytes, 0, bytes.Length, 0, new byte[bytes.Length]);
     }
 
-    public static int INTEGER_OF_DAY(Decimal128 argument)
+    public static Numeric INTEGER_OF_DAY(Numeric argument)
     {
         DateTime Y1600 = new(1600, 12, 31);
-        int intValue = int.Parse(argument.Value);
+        int intValue = int.Parse(argument.Display);
         // Datetime constructor => Year, Month, Day
         // Same idea as the INTEGER_OF_DATE function, but from Julian date form
         // It Just Works™
         DateTime fromJulianYear = new((intValue - intValue % 1000) / 1000, 1, 1);
         DateTime fromJulianDays = fromJulianYear.AddDays(intValue % 1000 - 1);
-        return (fromJulianDays.Date - Y1600.Date).Days;
+
+        string str = (fromJulianDays.Date - Y1600.Date).Days.ToString();
+        ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(str);
+
+
+        return new Numeric(bytes, 0, bytes.Length, 0, new byte[bytes.Length]);
     }
 
     public static void INTEGER_OF_FORMATTED_DATE(int argument)
@@ -335,13 +439,14 @@ public static class Functions
         // TODO: Implement INTEGER-OF-FORMATTED-DATE
     }
 
-    public static Decimal128 INTEGER_PART(Decimal128 argument)
+    public static Numeric INTEGER_PART(Numeric argument)
     {
-        int indexOfDecimal = argument.Value.IndexOf(".");
-        string IntegerPart = indexOfDecimal > 0 
-            ? argument.Value.Substring(0, indexOfDecimal)
-            : argument.Value;
-        return new Decimal128(IntegerPart);
+        int indexOfDecimal = argument.Bytes.IndexOf("."u8);
+        ReadOnlySpan<byte> IntegerPart = indexOfDecimal > 0 
+            ? argument.Bytes.Slice(0, indexOfDecimal)
+            : argument.Bytes;
+
+        return new Numeric(IntegerPart, 0, argument.Length, 0, new byte[argument.Length]);
     }
 
     public static int LENGTH(string argument)
@@ -370,14 +475,14 @@ public static class Functions
         // TODO: Implement COBOL locale functionality
     }
 
-    public static Decimal128 LOG(Decimal128 argument)
+    public static DecimalHolder LOG(DecimalHolder argument)
     {
-        return Decimal128.NaturalLog(argument.Value);
+        return DecimalMath.Ln(argument);
     }
 
-    public static Decimal128 LOG10(Decimal128 argument)
+    public static DecimalHolder LOG10(DecimalHolder argument)
     {
-        return Decimal128.Log10(argument.Value);
+        return DecimalMath.Log10(argument);
     }
 
     public static string LOWER_CASE(string argument, string? locale)
@@ -385,47 +490,57 @@ public static class Functions
         return argument.ToLower();
     }
 
-    public static Decimal128 LOWEST_ALGEBRAIC(Numeric argument)
+    public static Numeric LOWEST_ALGEBRAIC(Numeric argument)
     {
-        int integer = argument.length;
-        int fraction = argument.fractionalLength;
-        string isDecimal = fraction == 0 ? "" : "." + new String('9', fraction);
-        bool isSigned = argument.isSigned;
-        if (!isSigned) return new Decimal128("0");
+        int integer = argument.Length;
+        int fraction = argument.FractionalLength;
+        Span<byte> LowestAlgebraic = stackalloc byte[2 + integer + fraction];
+        LowestAlgebraic[0] = 45;
+        LowestAlgebraic.Slice(1, integer).Fill(57);
 
-        return new Decimal128("-" + new String('9', integer) + isDecimal);
+        if (fraction > 0)
+        {
+            LowestAlgebraic[integer + 1] = 46;
+            LowestAlgebraic.Slice(integer + 2).Fill(57);
+        }
+
+        bool isSigned = argument.isSigned;
+        if (!isSigned) return new Numeric("0"u8, 0, 1, 0, new byte[1]);
+
+
+        return new Numeric(LowestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 1]);
     }
 
-    public static void MAX(Decimal128[] argument)
+    public static void MAX(Numeric[] argument)
     {
         // TODO: Implement MAX
     }
 
-    public static void MEAN(Decimal128[] argument)
+    public static void MEAN(Numeric[] argument)
     {
         // TODO: Implement MEAN
     }
 
-    public static void MEDIAN(Decimal128[] argument)
+    public static void MEDIAN(Numeric[] argument)
     {
         // TODO: Implement MEDIAN
     }
 
-    public static void MIDRANGE(Decimal128[] argument)
+    public static void MIDRANGE(Numeric[] argument)
     {
         // TODO: Implement MIDRANGE
     }
     
-    public static void MIN(Decimal128[] argument)
+    public static void MIN(Numeric[] argument)
     {
         // TODO: Implement MIN
     }
 
-    public static Decimal128 MOD(Decimal128 left, Decimal128 right)
+    public static DecimalHolder MOD(Numeric left, Numeric right)
     {
-        Decimal128 mod = REM(left, right);
-        if (mod < 0) {
-            mod = right < 0 ? mod - right : mod + right;
+        DecimalHolder mod = REM(left, right);
+        if (mod < "0"u8) {
+            mod = right.Bytes < new DecimalHolder("0"u8) ? mod - right.Bytes : mod + right.Bytes;
         }
         return mod;
     }
@@ -440,11 +555,11 @@ public static class Functions
         // TODO: Implement NATIONAL types
     }
 
-    public static Decimal128 NUMVAL(Alphanumeric argument)
+    public static DecimalHolder NUMVAL(Alphanumeric argument)
     {
         // Needs further testing, might not work properly
         // and doesn't implement all NUMVAL functionality
-        return new Decimal128(argument.Bytes.ToString());
+        return new DecimalHolder(argument.Bytes);
     }
 
     public static void NUMVAL_C(Alphanumeric argument)
@@ -472,9 +587,9 @@ public static class Functions
         // TODO: Implement ORD-MIN
     }
 
-    public static Decimal128 PI()
+    public static DecimalHolder PI()
     {
-        return new Decimal128("3.141592653589793238462643383279503");
+        return new DecimalHolder("3.141592653589793238462643383279503"u8);
     }
 
     public static void PRESENT_VALUE()
@@ -482,24 +597,24 @@ public static class Functions
         // TODO: Implement PRESENT-VALUE
     }
 
-    public static void RANDOM(Decimal128? argument)
+    public static void RANDOM(Numeric? argument)
     {
         // TODO: Implement RANDOM
     }
 
-    public static void RANGE(Decimal128? argument)
+    public static void RANGE(Numeric? argument)
     {
         // TODO: Implement RANGE
         // This function depends on the functionality of MAX and MIN
     }
 
-    public static Decimal128 REM(Decimal128 left, Decimal128 right)
+    public static DecimalHolder REM(Numeric left, Numeric right)
     {
         // The COBOL standard suggested this calculation:
-        string subsidiaryQuotient = (left / right).Value;
-        if (subsidiaryQuotient.Contains('.'))
-            subsidiaryQuotient = subsidiaryQuotient.Remove(subsidiaryQuotient.Length - 1) + "0";
-        return (left - (subsidiaryQuotient * right));
+        DecimalHolder subsidiaryQuotient = (new DecimalHolder(left.Bytes) / right.Bytes);
+        if (subsidiaryQuotient.Bytes.IndexOf("."u8) > -1)
+            subsidiaryQuotient = subsidiaryQuotient.Bytes.Slice(0, subsidiaryQuotient.Bytes.Length - 1);
+        return (left.Bytes - (subsidiaryQuotient * right.Bytes));
     }
 
     public static string REVERSE(string argument)
@@ -514,66 +629,79 @@ public static class Functions
         // TODO: Implement SECONDS-FROM-FORMATTED-TIME
     }
 
-    public static Decimal128 SECONDS_PAST_MIDNIGHT()
+    public static Numeric SECONDS_PAST_MIDNIGHT()
     {
         DateTime timeNow = DateTime.Now;
-        return timeNow.TimeOfDay.TotalSeconds;
+        string TotalSeconds = timeNow.TimeOfDay.TotalSeconds.ToString();
+        ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(TotalSeconds);
+        return new Numeric(bytes, 0, bytes.Length, 0, new byte[bytes.Length]);
     }
 
     public static int SIGN(Numeric argument)
     {
-        if (argument.dataItem < Decimal128.Zero)
+        DecimalHolder temporary = argument.Bytes;
+        if (temporary < "0"u8)
             return -1;
 
-        if (argument.dataItem == Decimal128.Zero)
+        if (temporary == "0"u8)
             return 0;
 
         return 1;
     }
 
-    public static Decimal128 SIN(Decimal128 radians)
+    public static DecimalHolder SIN(DecimalHolder radians)
     {
-        Decimal128 Pie = PI();
-        radians = radians % (Pie * 2);
+        DecimalHolder Pie = PI();
+        radians = radians % (Pie * "2"u8);
 
-        if (radians < 0)
-            radians = 2 * Pie - radians;
+        if (radians < "0"u8)
+            radians = "2"u8 * Pie - radians;
 
-        sbyte sign = 1;
+        DecimalHolder sign = "1"u8;
         if (radians > Pie)
         {
             radians -= Pie;
-            sign = -1;
+            sign = "-1"u8;
         }
 
-        Decimal128 result = radians;
-        int coefficient = 3;
+        DecimalHolder result = radians;
+        DecimalHolder coefficient = "3"u8;
 
         for (int i = 0; i < 10; i++)
         {
-            Decimal128 power = Decimal128.Pow(radians.Value, coefficient.ToString());
-            Int128 factorial = FACTORIAL(coefficient);
+            DecimalHolder power = DecimalMath.Pow(radians.Bytes, coefficient.Bytes);
+            DecimalHolder factorial = FACTORIAL(coefficient);
 
             if(i % 2 == 0)
-                result -= power / factorial;
+                result = result - power / factorial;
 
             else
-                result += power / factorial;
+                result = result + power / factorial;
 
-            coefficient += 2;
+
+            coefficient = coefficient + "2"u8;
         }
 
         return sign * result;
     }
+
 
     public static void SMALLEST_ALGEBRAIC()
     {
         // TODO: Implement SMALLEST-ALGEBRAIC
     }
 
-    public static Decimal128 SQRT(Decimal128 argument)
+    public static Numeric SQRT(Numeric argument)
     {
-        return Decimal128.Sqrt(argument.Value);
+        DecimalHolder temporary = DecimalMath.Sqrt(argument.Bytes);
+
+        int indexOfDecimal = temporary.Bytes.IndexOf("."u8);
+        if (indexOfDecimal == -1)
+        {
+            return new Numeric(temporary.Bytes, 0, 34, 0, new byte[34]);
+        }
+
+        return new Numeric(temporary.Bytes, 0, indexOfDecimal, 34 - indexOfDecimal + 1, new byte[34]);
     }
 
     public static void STANDARD_COMPARE(Alphanumeric argument)
@@ -592,47 +720,54 @@ public static class Functions
         // Should be possible with String.Replace()
     }
 
-    public static Decimal128 SUM(params Decimal128[] argument)
+    public static Numeric SUM(params Numeric[] argument)
     {
-        Decimal128 sum = 0;
-        foreach (Decimal128 dec in argument)
+        DecimalHolder sum = "0"u8;
+        foreach (Numeric dec in argument)
         {
-            sum += dec;
+            sum += dec.Bytes;
         }
-        return sum;
+
+        int indexOfDecimal = sum.Bytes.IndexOf("."u8);
+        if (indexOfDecimal == -1)
+        {
+            return new Numeric(sum.Bytes, 0, 34, 0, new byte[34]);
+        }
+
+        return new Numeric(sum.Bytes, 0, indexOfDecimal, 34 - indexOfDecimal + 1, new byte[34]);
     }
 
-    public static Decimal128 TAN(Decimal128 argument)
+    public static DecimalHolder TAN(DecimalHolder argument)
     {
         return SIN(argument) / COS(argument);
     }
 
-    public static void TEST_DATE_YYYYMMDD(Decimal128 argument)
+    public static void TEST_DATE_YYYYMMDD(DecimalHolder argument)
     {
         // TODO: Implement TEST-DATE-YYYYMMDD
     }
 
-    public static void TEST_DAY_YYYYDDD(Decimal128 argument)
+    public static void TEST_DAY_YYYYDDD(DecimalHolder argument)
     {
         // TODO: Implement TEST-DAY-YYYYDDD
     }
 
-    public static void TEST_FORMATTED_DATETIME(Decimal128 argument)
+    public static void TEST_FORMATTED_DATETIME(DecimalHolder argument)
     {
         // TODO: Implement TEST-FORMATTED-DATETIME
     }
 
-    public static void TEST_NUMVAL(Decimal128 argument)
+    public static void TEST_NUMVAL(DecimalHolder argument)
     {
         // TODO: Implement TEST-NUMVAL
     }
 
-    public static void TEST_NUMVAL_C(Decimal128 argument)
+    public static void TEST_NUMVAL_C(DecimalHolder argument)
     {
         // TODO: Implement TEST-NUMVAL-c
     }
 
-    public static void TEST_NUMVAL_F(Decimal128 argument)
+    public static void TEST_NUMVAL_F(DecimalHolder argument)
     {
         // TODO: Implement TEST-NUMVAL-F
     }
@@ -660,7 +795,7 @@ public static class Functions
         return argument;
     }
 
-    public static void YEAR_TO_YYYY(Decimal128 argument)
+    public static void YEAR_TO_YYYY(DecimalHolder argument)
     {
         // TODO: Implement YEAR-TO-YYYY
     }

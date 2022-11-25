@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Text;
 using System.Buffers;
 
@@ -222,92 +221,81 @@ public sealed unsafe class BasedDataItem
 
 public sealed class Numeric
 {
-    public Decimal128 dataItem;
-    public int length;
-    public int fractionalLength;
-    public bool isSigned = false;
+    public Memory<byte> Memory { get; init; }
+    public int Offset { get; init; }
+    public int Length { get; init; }
+    public int FractionalLength { get; init; }
+    public bool isSigned { get; private set; }
+    public bool isNegative { get; private set; }
+    private readonly Encoding encoding = Encoding.UTF8;
 
-    public Numeric(string value, int length, int fractionalLength, bool signed)
+    public Numeric(ReadOnlySpan<byte> value, int offset, int length, int fractionalLength, Memory<byte> memory)
     {
-        this.dataItem = new Decimal128(value);
-        this.length = length;
-        this.fractionalLength = fractionalLength;
-        this.isSigned = signed;
+        this.Offset = offset;
+        this.Length = length;
+        this.FractionalLength = fractionalLength;
+        if (fractionalLength == 0)
+            this.Memory = memory.Slice(offset, length);
+
+        if (fractionalLength > 0)
+            this.Memory = memory.Slice(offset, length + fractionalLength + 1);
+
+        Memory.Span.Fill(48);
+
+        Format(value);
     }
 
-    public bool isNumeric()
+    private void Format(ReadOnlySpan<byte> bytes)
     {
-        // return Regex.IsMatch(dataItem.Value, @"^([+-]?)(\.\d|\d\.|\d)(\d+)*$", RegexOptions.Compiled | RegexOptions.NonBacktracking);
-        return true;
+        int isDecimal = Math.Min(FractionalLength, 1);
+        Span<byte> formatted = stackalloc byte[Length + FractionalLength + isDecimal];
+        formatted.Fill(48);
+        
+        int indexOfDecimal = bytes.IndexOf("."u8);
+
+        int offset = Math.Max(0, Length - indexOfDecimal);
+        if (indexOfDecimal < 0) offset = 0;
+        
+        int startIndex = Math.Max(0, indexOfDecimal - Length);
+        int endIndex = Math.Min(bytes.Length - startIndex, Length + FractionalLength - offset + isDecimal);
+
+        ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex);
+        temporary.CopyTo(formatted.Slice(offset));
+
+        formatted.CopyTo(Memory.Span);
     }
 
-    public bool isAlphanumeric()
-    {
-        return true;
-    }
-
-    public bool isAlphabetic()
-    {
-        return false;
-    }
-
-    public bool isNational()
-    {
-        return true;
-    }
-
-    public bool isBoolean()
-    {
-        return Regex.IsMatch(dataItem.Value, @"^([01]+)$", RegexOptions.Compiled | RegexOptions.NonBacktracking);
-    }
-
-    public string Formatted()
-    {
-        string abs = Decimal128.Abs(dataItem).Value;
-        int indexOfDecimal = abs.IndexOf('.');
-
-        if (indexOfDecimal < 0 && fractionalLength != 0)
-            abs += ".0";
-
-        if (indexOfDecimal >= 0 && fractionalLength == 0)
-        {
-            dataItem.Value = dataItem.Value.Substring(0, indexOfDecimal);
-        }
-
-        if (fractionalLength != 0)
-        {
-            int startIndex = (indexOfDecimal - length) < 0 ? 0 : indexOfDecimal - length;
-            int endIndex = Math.Min(abs.Length, indexOfDecimal + fractionalLength + 1 - startIndex);
-            int offset = length - indexOfDecimal < 0 ? 0 : length - indexOfDecimal;
-
-            return String.Create(length + fractionalLength + 1, abs, (span, value) =>
-            {
-                ReadOnlySpan<char> temporary = value.AsSpan(startIndex, endIndex);
-                span.Fill('0');
-                temporary.CopyTo(span.Slice(offset));
-            });
-        }
-
-        string padInt = abs.PadLeft(length, '0');
-        // If Numeric item doesn't have a fractional value, pad missing zeros and remove overflow
-        return padInt.Substring(padInt.Length - length);
-    }
-
-    public string DisplayValue
+    public ReadOnlySpan<char> Chars
     {
         get
         {
-            if (dataItem < 0 && isSigned)
-            {
-                return "-" + Formatted();
-            }
+            return MemoryMarshal.Cast<byte, char>(Memory.Span);
+        }
+        set
+        {
+            Span<byte> bytes = stackalloc byte[value.Length];
+            encoding.GetBytes(value, Memory.Span);
+            Format(bytes);
+        }
+    }
 
-            if (dataItem >= 0 && isSigned)
-            {
-                return "+" + Formatted();
-            }
+    public ReadOnlySpan<byte> Bytes
+    {
+        get
+        {
+            return Memory.Span;
+        }
+        set
+        {
+            Format(value);
+        }
+    }
 
-            return Formatted();
+    public string Display
+    {
+        get
+        {
+            return encoding.GetString(Memory.Span);
         }
     }
 }
@@ -319,20 +307,18 @@ public sealed class Alphanumeric
     public int Length { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
 
-    public Alphanumeric(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
+    public Alphanumeric(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
     {
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
         Memory.Span.Fill(32);
 
-        int byteDifference = (encoding.GetByteCount(value) - value.Length);
-
-        int byteLength = Length < value.Length + byteDifference
-            ? Length - byteDifference
+        int byteLength = Length < value.Length
+            ? Length
             : value.Length;
 
-        encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
+        value.Slice(0, byteLength).CopyTo(Memory.Span);
     }
 
     public ReadOnlySpan<char> Chars

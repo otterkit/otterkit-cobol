@@ -1,85 +1,111 @@
-using System.Runtime.InteropServices;
+using System.Text;
 
 namespace OtterkitLibrary;
 
 public static class Statements
 {
-    public static string ACCEPT(string from, string format = "")
+    public static void ACCEPT(Alphanumeric dataItem, string from, string format = "")
     {
         // ACCEPT Statement devices: STANDARD-INPUT, COMMAND-LINE.
-        string? value;
+        Encoding encoding = Encoding.UTF8;
+        Span<byte> bytes = new();
+
         switch (from)
         {
             case "STANDARD-INPUT":
-                value = Console.ReadLine();
-                return value == null ? " " : value;
+                string? value = Console.ReadLine();
+                bytes = encoding.GetBytes(value == null ? " " : value);
+                dataItem.Bytes = bytes;
+                return;
 
             case "COMMAND-LINE":
-                return Environment.CommandLine;
+                string CommandLine =  Environment.CommandLine;
+                bytes = encoding.GetBytes(CommandLine);
+                dataItem.Bytes = bytes;
+                return;
 
             case "DATE":
                 if (format == "YYYYMMDD")
                 {
-                    return DateTime.Now.ToString("yyyyMMdd");
+                    string YYYYMMDD = DateTime.Now.ToString("yyyyMMdd");
+                    bytes = encoding.GetBytes(YYYYMMDD);
+                    dataItem.Bytes = bytes;
+                    return;
                 }
                 // Default DATE value:
-                return DateTime.Now.ToString("yyMMdd");;
+                string YYMMDD = DateTime.Now.ToString("yyyyMMdd");
+                bytes = encoding.GetBytes(YYMMDD);
+                dataItem.Bytes = bytes;
+                return;
 
             case "DAY":
-                value = DateTime.Now.Year.ToString() + DateTime.Now.DayOfYear.ToString();
+                string day = DateTime.Now.Year.ToString() + DateTime.Now.DayOfYear.ToString();
                 if (format == "YYYYDDD")
-                    return value;
+                {
+                    bytes = encoding.GetBytes(day);
+                    dataItem.Bytes = bytes;
+                    return;
+                }
                 // Default DAY value:
-                return value.Substring(2);
+                bytes = encoding.GetBytes(day);
+                dataItem.Bytes = bytes.Slice(2);
+                return;
 
             case "DAY-OF-WEEK":
-                return ((int)DateTime.Now.DayOfWeek).ToString();
+                string DayOfWeek = ((int)DateTime.Now.DayOfWeek).ToString();
+                bytes = encoding.GetBytes(DayOfWeek);
+                dataItem.Bytes = bytes;
+                return;
 
             case "TIME":
-                return DateTime.Now.ToString("HHmmssff");
+                string time = DateTime.Now.ToString("HHmmssff");
+                bytes = encoding.GetBytes(time);
+                dataItem.Bytes = bytes;
+                return;
         }
 
-        value = Console.ReadLine();
-        return value == null ? " " : value;
+        string? _default = Console.ReadLine();
+        bytes = encoding.GetBytes(_default == null ? " " : _default);
+        dataItem.Bytes = bytes;
     }
     
-    public static void ADD(Decimal128[] values, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
+    public static void ADD(Numeric[] values, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
     {
-        Decimal128 result = 0;
-        foreach (Decimal128 value in values)
+        DecimalHolder result = "0"u8;
+        foreach (Numeric value in values)
         {
-            result += value;
+            result += value.Bytes;
         }
         
         foreach (Numeric variable in dataItems)
         {
-            if(result + variable.dataItem > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result + variable.Bytes > Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 OnSizeError();
 
-            if(result + variable.dataItem <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result + variable.Bytes <= Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 NotSizeError();
 
-            variable.dataItem += result;
+            variable.Bytes = (variable.Bytes + result).Bytes;
         }
     }
 
-    public static void ADD(Decimal128[] values, Decimal128 to, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
+    public static void ADD(Numeric[] values, Numeric to, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
     {
-        Decimal128 result = 0;
-        foreach (Decimal128 value in values)
+        DecimalHolder result = "0"u8;
+        foreach (Numeric value in values)
         {
-            result += value;
+            result += value.Bytes;
         }
         
         foreach (Numeric variable in giving)
         {
-            if(result + to > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result + to.Bytes > Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 OnSizeError();
 
-            if(result + to <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result + to.Bytes <= Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 NotSizeError();
 
-            variable.dataItem = result + to;
+            variable.Bytes = (result + to.Bytes).Bytes;
         }
     }
 
@@ -109,28 +135,19 @@ public static class Statements
         // TODO: Implement COMMIT
     }
 
-    public static void COMPUTE(Func<Decimal128> compute, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
+    public static void COMPUTE(ReadOnlySpan<byte> compute, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
     {
-        // Usage example:
-        // Will result in a "SIZE ERROR"
-        // Statements.COMPUTE(
-        //     () => 1000, 
-        //     () => Statements.DISPLAY("", true, "SIZE ERROR"), 
-        //     () => Statements.DISPLAY("", true, "NOT ERROR"), 
-        //     new Numeric(999, 3, 0, false)
-        // );
-
-        Decimal128 result = compute();
+        DecimalHolder result = DecimalMath.Arithmetic(compute);
         
         foreach (Numeric variable in dataItems)
         {
-            if(result > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result > Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 OnSizeError();
 
-            if(result <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result <= Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 NotSizeError();
 
-            variable.dataItem = result;
+            variable.Bytes = result.Bytes;
         }
     }
     
@@ -179,72 +196,72 @@ public static class Statements
         
     }
 
-    public static void DIVIDE(Decimal128 value, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
+    public static void DIVIDE(Numeric value, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
     {
         foreach (Numeric variable in dataItems)
         {
-            if(variable.dataItem / value > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(new DecimalHolder(variable.Bytes) / value.Bytes > Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 OnSizeError();
 
-            if(variable.dataItem / value <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(new DecimalHolder(variable.Bytes) / value.Bytes <= Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 NotSizeError();
 
-            variable.dataItem /= value;
+            variable.Bytes = (new DecimalHolder(variable.Bytes) / value.Bytes).Bytes;
         }
     }
 
-    public static void DIVIDE(bool by, Decimal128 value, Decimal128 into, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
+    public static void DIVIDE(bool by, Numeric value, Numeric into, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
     {   
         if (by)
         {
             foreach (Numeric variable in giving)
             {
-                if(value / into > Functions.HIGHEST_ALGEBRAIC(variable))
+                if(new DecimalHolder(value.Bytes) / into.Bytes > Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                     OnSizeError();
 
-                if(value / into <= Functions.HIGHEST_ALGEBRAIC(variable))
+                if(new DecimalHolder(value.Bytes) / into.Bytes <= Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                     NotSizeError();
 
-                variable.dataItem = value / into;
+                variable.Bytes = (new DecimalHolder(value.Bytes) / into.Bytes).Bytes;
             }
             return;
         }
 
         foreach (Numeric variable in giving)
         {
-            if(into / value > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(new DecimalHolder(into.Bytes) / value.Bytes > Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 OnSizeError();
 
-            if(into / value <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(new DecimalHolder(into.Bytes) / value.Bytes <= Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 NotSizeError();
 
-            variable.dataItem = into / value;
+            variable.Bytes = (new DecimalHolder(into.Bytes) / value.Bytes).Bytes;
         }
     }
 
-    public static void DIVIDE(bool by, Decimal128 value, Decimal128 into, Numeric giving, Numeric remainder, Action OnSizeError, Action NotSizeError)
+    public static void DIVIDE(bool by, Numeric value, Numeric into, Numeric giving, Numeric remainder, Action OnSizeError, Action NotSizeError)
     {   
         if (by)
         {
-            if(value / into > Functions.HIGHEST_ALGEBRAIC(giving))
+            if(new DecimalHolder(value.Bytes) / into.Bytes > Functions.HIGHEST_ALGEBRAIC(giving).Bytes)
                 OnSizeError();
 
-            if(value / into <= Functions.HIGHEST_ALGEBRAIC(giving))
+            if(new DecimalHolder(value.Bytes) / into.Bytes <= Functions.HIGHEST_ALGEBRAIC(giving).Bytes)
                 NotSizeError();
 
-            giving.dataItem = value / into;
-            remainder.dataItem = Functions.REM(value, into);
+            giving.Bytes = (new DecimalHolder(value.Bytes) / into.Bytes).Bytes;
+            remainder.Bytes = Functions.REM(value, into).Bytes;
             return;
         }
 
-        if(into / value > Functions.HIGHEST_ALGEBRAIC(giving))
+        if(new DecimalHolder(into.Bytes) / value.Bytes > Functions.HIGHEST_ALGEBRAIC(giving).Bytes)
             OnSizeError();
 
-        if(into / value <= Functions.HIGHEST_ALGEBRAIC(giving))
+        if(new DecimalHolder(into.Bytes) / value.Bytes <= Functions.HIGHEST_ALGEBRAIC(giving).Bytes)
             NotSizeError();
 
-        giving.dataItem = into / value;
-        remainder.dataItem = Functions.REM(value, into);
+        giving.Bytes = (new DecimalHolder(into.Bytes) / value.Bytes).Bytes;
+        remainder.Bytes = Functions.REM(value, into).Bytes;
     }
 
     public static void EVALUATE()
@@ -326,31 +343,31 @@ public static class Statements
         // Move data between variables and assign values to variables
     }
 
-    public static void MULTIPLY(Decimal128 value, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
+    public static void MULTIPLY(Numeric value, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
     {
         foreach (Numeric variable in dataItems)
         {
-            if(value * variable.dataItem > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(new DecimalHolder(value.Bytes) * variable.Bytes > Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 OnSizeError();
 
-            if(value * variable.dataItem <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(new DecimalHolder(value.Bytes) * variable.Bytes <= Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 NotSizeError();
 
-            variable.dataItem *= value;
+            variable.Bytes = (new DecimalHolder(value.Bytes) * variable.Bytes).Bytes;
         }
     }
 
-    public static void MULTIPLY(Decimal128 value, Decimal128 by, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
+    public static void MULTIPLY(Numeric value, Numeric by, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
     {   
         foreach (Numeric variable in giving)
         {
-            if(value * by > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(new DecimalHolder(value.Bytes) * by.Bytes > Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 OnSizeError();
 
-            if(value * by <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(new DecimalHolder(value.Bytes) * by.Bytes <= Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 NotSizeError();
 
-            variable.dataItem = value * by;
+            variable.Bytes = (new DecimalHolder(value.Bytes) * by.Bytes).Bytes;
         }
     }
 
@@ -470,43 +487,43 @@ public static class Statements
         // Similar to String.Join()
     }
 
-    public static void SUBTRACT(Decimal128[] values, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
+    public static void SUBTRACT(Numeric[] values, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
     {
-        Decimal128 result = 0;
-        foreach (Decimal128 value in values)
+        DecimalHolder result = "0"u8;
+        foreach (Numeric value in values)
         {
-            result += value;
+            result += value.Bytes;
         }
         
         foreach (Numeric variable in dataItems)
         {
-            if(result - variable.dataItem > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result - variable.Bytes > Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 OnSizeError();
 
-            if(result - variable.dataItem <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result - variable.Bytes <= Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 NotSizeError();
 
-            variable.dataItem -= result;
+            variable.Bytes = (new DecimalHolder(variable.Bytes) - result).Bytes;
         }
     }
 
-    public static void SUBTRACT(Decimal128[] values, Decimal128 from, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
+    public static void SUBTRACT(Numeric[] values, Numeric from, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
     {
-        Decimal128 result = 0;
-        foreach (Decimal128 value in values)
+        DecimalHolder result = "0"u8;
+        foreach (Numeric value in values)
         {
-            result += value;
+            result += value.Bytes;
         }
         
         foreach (Numeric variable in giving)
         {
-            if(result - from > Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result - from.Bytes > Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 OnSizeError();
 
-            if(result - from <= Functions.HIGHEST_ALGEBRAIC(variable))
+            if(result - from.Bytes <= Functions.HIGHEST_ALGEBRAIC(variable).Bytes)
                 NotSizeError();
 
-            variable.dataItem = from - result;
+            variable.Bytes = (new DecimalHolder(from.Bytes) - result).Bytes;
         }
     }
 

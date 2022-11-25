@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Otterkit;
 
 public static class OtterkitAnalyzer
@@ -83,7 +85,84 @@ public static class OtterkitAnalyzer
             Expected("WORKING-STORAGE", "working-storage section");
             Expected("SECTION");
             Expected(".", "separator period");
-            ConstantEntry();
+            while (Current().type == TokenType.Numeric)
+                Entries();
+        }
+
+        void Entries()
+        {
+            if(Current().value == "77")
+                SevenSevenEntry();
+
+            if (LookAhead(2).value == "CONSTANT")
+                ConstantEntry();
+        }
+
+        void SevenSevenEntry()
+        {
+            string datatype = string.Empty;
+            Number();
+            Identifier();
+            Choice(null, "PIC", "PICTURE");
+            Optional("IS");
+            datatype = Current().value switch
+            {
+                "S9" => "Signed Numeric",
+                "9" => "Numeric",
+                "X" => "Alphanumeric",
+                "A" => "Alphabetic",
+                "N" => "National",
+                "1" => "Boolean",
+                _ => "Error"
+            };
+            if (datatype == "Error")
+            {
+                ErrorHandler.Parser.Report(Current(), " ", "Unrecognized type, expected S9, 9, X, A, N or 1");
+
+            }
+
+            Choice(null, "S9", "9", "X", "A", "N", "1");
+            Expected("(");
+            Number();
+            Expected(")");
+            if(Current().value == "V9" && (datatype != "Signed Numeric" && (datatype != "Numeric")))
+                ErrorHandler.Parser.Report(Current(), " ", "V9 cannot be used with non-numeric types");
+        
+            if(Current().value == "V9")
+            {
+                Expected("V9");
+                Expected("(");
+                Number();
+                Expected(")");
+            }
+
+            if(Current().value == "VALUE")
+            {
+                Expected("VALUE");
+                switch (datatype)
+                {
+                    case "Signed Numeric":
+                    case "Numeric":
+                    case "Boolean":
+                        Number();
+                        break;
+                    
+                    case "Alphanumeric":
+                    case "Alphabetic":
+                    case "National":
+                        String();
+                        break;
+
+                    case "Error":
+                        ErrorHandler.Parser.Report(Current(), " ", "Unable to determine the correct literal type due to the previous type error");
+                        break;
+
+                    default:
+                        throw new UnreachableException("Unrecognized type has already been checked above. This should be unreachable.");
+                }
+            }
+
+            Expected(".", "separator period");
         }
 
         void ConstantEntry()

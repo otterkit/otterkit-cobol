@@ -135,7 +135,7 @@ public static class OtterkitAnalyzer
                 Number();
                 Expected(")");
             }
-
+            
             if(Current().value == "VALUE")
             {
                 Expected("VALUE");

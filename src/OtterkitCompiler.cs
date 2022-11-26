@@ -10,7 +10,7 @@ public static class OtterkitCompiler
         if (args.Length <= 1)
         {
             DisplayHelpMessage();
-            Environment.Exit(0);
+            return;
         }
 
         ProcessArguments(args);
@@ -18,10 +18,7 @@ public static class OtterkitCompiler
         List<Token> tokens = OtterkitLexer.Tokenize(sourceLines);
         List<Token> classified = Token.fromValue(tokens);
         List<Token> analized = OtterkitAnalyzer.Analyze(classified);
-        foreach (var item in analized)
-        {
-            Console.WriteLine("{0,4} {1,4} {2,16} {3} {4}", item.line, item.column, item.value, item.type, item.scope);
-        }
+        OtterkitCodegen.Generate(analized);
     }
 
     private static void ProcessArguments(string[] args)
@@ -36,16 +33,19 @@ public static class OtterkitCompiler
             switch (argument)
             {
                 // -H meaning Help
-                case "-H":
+                case "-h":
+                case "--Help":
                     DisplayHelpMessage();
                     Environment.Exit(0);
                     break;
-                // -F meaning File
-                case "-F":
+
+                case "-f":
+                case "--File":
                     fileName = args[index];
                     break;
-                // -CL meaning Column Length
-                case "-CL":
+
+                case "-cl":
+                case "--Columns":
                     maxColumnLength = int.Parse(args[index]);
                     break;
                 // --Fixed meaning Fixed Format
@@ -114,15 +114,17 @@ public static class OtterkitCompiler
 
     private static void DisplayHelpMessage()
     {
-        Console.WriteLine("\nOtterkit COBOL Compiler                   ");
-        Console.WriteLine("<Copyright 2022 Otterkit Project>           ");
-        Console.WriteLine("<Apache 2.0 license>                      \n");
-        Console.WriteLine("Command line options:                     \n");
-        Console.WriteLine("  -H           : Displays this message      ");
-        Console.WriteLine("  -F filename  : Compile specified file     ");
-        Console.WriteLine("  -CL integer  : Specify max column length  ");
-        Console.WriteLine("  --Fixed      : Use fixed source format    ");
-        Console.WriteLine("  --Free       : Use free source format     ");
+        Console.WriteLine("\nOtterkit COBOL Compiler           ");
+        Console.WriteLine("<Copyright 2022 Otterkit Project>   ");
+        Console.WriteLine("<Apache 2.0 license>              \n");
+        Console.WriteLine("Command line options:             \n");
+        
+        Console.WriteLine("  -h --Help      : Displays this message      ");
+        Console.WriteLine("  -f --File      : Compile specified file     ");
+        Console.WriteLine("  -cl --Columns  : Specify max column length  ");
+        Console.WriteLine("  --Fixed        : Use fixed source format    ");
+        Console.WriteLine("  --Free         : Use free source format     ");
+
         Console.WriteLine("\n");
     }
 }

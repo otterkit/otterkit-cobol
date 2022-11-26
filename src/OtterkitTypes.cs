@@ -219,6 +219,48 @@ public sealed unsafe class BasedDataItem
     }
 }
 
+public sealed class Constant 
+{
+    public Memory<byte> Memory { get; init; }
+    private readonly Encoding encoding = Encoding.UTF8;
+
+    public Constant(ReadOnlySpan<byte> bytes)
+    {
+        this.Memory = new byte[bytes.Length];
+        bytes.CopyTo(Memory.Span);
+    }
+
+    public Constant(string bytes)
+    {
+        this.Memory = new byte[encoding.GetByteCount(bytes)];
+        encoding.GetBytes(bytes, Memory.Span);
+    }
+
+    public ReadOnlySpan<char> Chars
+    {
+        get
+        {
+            return MemoryMarshal.Cast<byte, char>(Memory.Span);
+        }
+    }
+
+    public ReadOnlySpan<byte> Bytes
+    {
+        get
+        {
+            return Memory.Span;
+        }
+    }
+
+    public string Display
+    {
+        get
+        {
+            return encoding.GetString(Memory.Span);
+        }
+    }
+}
+
 public sealed class Numeric
 {
     public Memory<byte> Memory { get; init; }

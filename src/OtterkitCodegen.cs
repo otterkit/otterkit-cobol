@@ -10,25 +10,34 @@ public static class OtterkitCodegen
         while (Current().value != "DATA")
         {
             if (Current().value == "PROGRAM-ID")
-                compiled.DefineIdentification(LookAhead(1).value);
+                compiled.DefineIdentification(LookAhead(2).value);
 
             Continue();
         }
 
         while (Current().value != "PROCEDURE")
         {
-
             if (Current().type == TokenType.Numeric && LookAhead(2).value == "CONSTANT")
             {
-                string Identifier;
-                string value;
-                Continue();
-                Identifier = Current().value;
-                
+                DataItemBuilder Constant = new(compiled, Continue, Current, LookAhead);
+                Constant.BuildDataItem();
+            }
+
+            if (Current().type == TokenType.Numeric && Current().value == "77")
+            {
+                DataItemBuilder SevenSeven = new(compiled, Continue, Current, LookAhead);
+                SevenSeven.BuildDataItem();
             }
 
             Continue();
         }
+
+        compiled.CompileHeader();
+        compiled.CompileIdentification();
+        compiled.CompileWorkingStorage();
+        compiled.CompileProcedure();
+
+        File.WriteAllText("Compiled.cs", compiled.ExportCompiled());
 
         // Generator helper methods.
         Token LookAhead(int amount)

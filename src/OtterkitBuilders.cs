@@ -207,18 +207,64 @@ public class DataItemBuilder
 
     private void BuildSevenSeven()
     {
-        while (Lookahead(1).value != "X")
+        string dataTypes(Token current) => current.value switch
         {
+            "X" => "Alphanumeric",
+            "A" => "Alphabetic",
+            "N" => "National",
+            "1" => "Boolean",
+            "9" => "Numeric",
+            "S9" => "Signed Numeric",
+            _ => "Error"
+        };
+
+        while (Current().value != ".")
+        {
+            if (Current().value == "PIC" || Current().value == "PICTURE")
+            {
+                Continue();
+                if (Current().value == "IS") Continue();
+
+                this.DataType = dataTypes(Current());
+
+                Continue();
+                Continue();
+
+                if (this.DataType == "Alphanumeric")
+                    this.Length = Current().value;
+
+                if (this.DataType == "Alphabetic")
+                    this.Length = Current().value;
+
+                if (this.DataType == "National")
+                    this.Length = Current().value;
+            }
+
+            if (Current().value == "VALUE")
+            {
+                Continue();
+                this.DataValue = Current().value;
+            }
+
             Continue();
         }
 
-        Length = Lookahead(3).value;
-        CompiledDataItem += "private static Alphanumeric " + Identifier + " = ";
-        CompiledDataItem += "new(\" \"u8, 0, " + Length +", new byte[" + Length +"]);";
+        CompiledDataItem += $"private static {DataType} {Identifier} = ";
+
+        switch (DataType)
+        {
+            case "Alphanumeric":
+            case "Alphabetic":
+            case "National":
+            string value = DataValue == String.Empty ? "\" \"" : this.DataValue;
+            CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);";
+            break;
+        }
 
         ExportDataItem();
         return;
     }
+
     private void FormatIdentifier()
     {
         string FormattedIdentifier = this.Identifier;

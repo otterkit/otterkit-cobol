@@ -483,9 +483,9 @@ public sealed class Alphabetic
     public int Length { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
 
-    public Alphabetic(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
+    public Alphabetic(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
     {
-        if(value.IndexOfAny("1234567890") > -1)
+        if(value.IndexOfAny("1234567890"u8) > -1)
             throw new ArgumentOutOfRangeException("value" ,"Alphabetic type cannot contain numberic values");
 
         this.Offset = offset;
@@ -493,13 +493,11 @@ public sealed class Alphabetic
         this.Memory = memory.Slice(offset, length);
         Memory.Span.Fill(32);
 
-        int byteDifference = (encoding.GetByteCount(value) - value.Length);
-
-        int byteLength = Length < value.Length + byteDifference
-            ? Length - byteDifference
+        int byteLength = Length < value.Length
+            ? Length
             : value.Length;
 
-        encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
+        value.Slice(0, byteLength).CopyTo(Memory.Span);
     }
 
     public ReadOnlySpan<char> Chars
@@ -634,20 +632,18 @@ public sealed class National
     public int Length { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
 
-    public National(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
+    public National(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
     {
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
         Memory.Span.Fill(32);
 
-        int byteDifference = (encoding.GetByteCount(value) - value.Length);
-
-        int byteLength = Length < value.Length + byteDifference
-            ? Length - byteDifference
+        int byteLength = Length < value.Length
+            ? Length
             : value.Length;
 
-        encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
+        value.Slice(0, byteLength).CopyTo(Memory.Span);
     }
 
     public ReadOnlySpan<char> Chars

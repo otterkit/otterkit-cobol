@@ -219,7 +219,7 @@ public sealed unsafe class BasedDataItem
     }
 }
 
-public sealed class Constant 
+public sealed class Constant
 {
     public Memory<byte> Memory { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
@@ -304,19 +304,19 @@ public sealed class Numeric
     {
         Span<byte> formatted = stackalloc byte[Memory.Length];
         formatted.Fill(48);
-        
+
         int indexOfDecimal = bytes.IndexOf("."u8);
 
         int offset = Math.Max(0, Length - indexOfDecimal);
         if (indexOfDecimal < 0) offset = 0;
-        
-        int isDecimal = isSigned ? Math.Min(FractionalLength, 1) : Math.Min(FractionalLength, 1) + 1;
+
+        int isDecimal = Math.Min(FractionalLength, 1);
         int startIndex = Math.Max(0, indexOfDecimal - Length);
         int endIndex = Math.Min(bytes.Length - startIndex, Length + FractionalLength - offset + isDecimal);
 
         ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex);
 
-        if (isSigned) 
+        if (isSigned)
             offset += 1;
 
         temporary.CopyTo(formatted.Slice(offset));
@@ -382,7 +382,7 @@ public sealed class Numeric
                 FormatSigned(value);
                 return;
             }
-            
+
             Format(value);
         }
     }
@@ -539,8 +539,8 @@ public sealed class Alphabetic
 
     public Alphabetic(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
     {
-        if(value.IndexOfAny("1234567890"u8) > -1)
-            throw new ArgumentOutOfRangeException("value" ,"Alphabetic type cannot contain numberic values");
+        if (value.IndexOfAny("1234567890"u8) > -1)
+            throw new ArgumentOutOfRangeException("value", "Alphabetic type cannot contain numberic values");
 
         this.Offset = offset;
         this.Length = length;
@@ -562,8 +562,8 @@ public sealed class Alphabetic
         }
         set
         {
-            if(value.IndexOfAny("1234567890") > -1)
-                throw new ArgumentOutOfRangeException("value" ,"Alphabetic type cannot contain numberic values");
+            if (value.IndexOfAny("1234567890") > -1)
+                throw new ArgumentOutOfRangeException("value", "Alphabetic type cannot contain numberic values");
 
             Memory.Span.Fill(32);
 
@@ -585,9 +585,9 @@ public sealed class Alphabetic
         }
         set
         {
-            if(value.IndexOfAny("1234567890"u8) > -1)
-                throw new ArgumentOutOfRangeException("value" ,"Alphabetic type cannot contain numberic values");
-                
+            if (value.IndexOfAny("1234567890"u8) > -1)
+                throw new ArgumentOutOfRangeException("value", "Alphabetic type cannot contain numberic values");
+
             Memory.Span.Fill(32);
 
             int length = Length < value.Length
@@ -630,8 +630,8 @@ public sealed class BasedAlphabetic
         }
         set
         {
-            if(value.IndexOfAny("1234567890") > -1)
-                throw new ArgumentOutOfRangeException("value" ,"Alphabetic type cannot contain numberic values");
+            if (value.IndexOfAny("1234567890") > -1)
+                throw new ArgumentOutOfRangeException("value", "Alphabetic type cannot contain numberic values");
 
             Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
             MemoryOffset.Fill(32);
@@ -655,8 +655,8 @@ public sealed class BasedAlphabetic
         }
         set
         {
-            if(value.IndexOfAny("1234567890"u8) > -1)
-                throw new ArgumentOutOfRangeException("value" ,"Alphabetic type cannot contain numberic values");
+            if (value.IndexOfAny("1234567890"u8) > -1)
+                throw new ArgumentOutOfRangeException("value", "Alphabetic type cannot contain numberic values");
 
             Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
             MemoryOffset.Fill(32);
@@ -822,8 +822,8 @@ public sealed class Boolean
 
     public Boolean(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
     {
-        if(value.IndexOfAny("01") > -1)
-            throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
+        if (value.IndexOfAny("01") > -1)
+            throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
 
         this.Offset = offset;
         this.Length = length;
@@ -847,8 +847,8 @@ public sealed class Boolean
         }
         set
         {
-            if(value.IndexOfAny("01") > -1)
-                throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
+            if (value.IndexOfAny("01") > -1)
+                throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
 
             Memory.Span.Fill(48);
 
@@ -870,9 +870,9 @@ public sealed class Boolean
         }
         set
         {
-            if(value.IndexOfAny("01"u8) > -1)
-                throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
-                
+            if (value.IndexOfAny("01"u8) > -1)
+                throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
+
             Memory.Span.Fill(48);
 
             int length = Length < value.Length
@@ -915,8 +915,8 @@ public sealed class BasedBoolean
         }
         set
         {
-            if(value.IndexOfAny("01") > -1)
-                throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
+            if (value.IndexOfAny("01") > -1)
+                throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
 
             Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
             MemoryOffset.Fill(48);
@@ -940,8 +940,8 @@ public sealed class BasedBoolean
         }
         set
         {
-            if(value.IndexOfAny("01"u8) > -1)
-                throw new ArgumentOutOfRangeException("value" ,"Boolean type can only contain 1s and 0s");
+            if (value.IndexOfAny("01"u8) > -1)
+                throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
 
             Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
             MemoryOffset.Fill(48);

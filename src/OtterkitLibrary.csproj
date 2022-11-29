@@ -7,7 +7,6 @@
     <Nullable>enable</Nullable>
     <Optimize>true</Optimize>
     <Deterministic>true</Deterministic>
-    <PublishAot>true</PublishAot>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="OtterkitMath/Decimal128.*">

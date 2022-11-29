@@ -110,7 +110,7 @@ public class DataItemBuilder
     private string Identifier = string.Empty;
     private string DataType = string.Empty;
     private string Length = string.Empty;
-    private string FractionalLength = string.Empty;
+    private string FractionalLength = "0";
     private string DataValue = string.Empty;
     private ProgramBuilder ProgramBuilder;
     private Action Continue;
@@ -238,6 +238,13 @@ public class DataItemBuilder
 
                 if (this.DataType == "National")
                     this.Length = Current().value;
+
+                if (this.DataType == "Numeric")
+                {
+                    this.Length = Current().value;
+                    if(Lookahead(2).value == "V9")
+                        this.FractionalLength = Lookahead(4).value;
+                }
             }
 
             if (Current().value == "VALUE")
@@ -253,11 +260,19 @@ public class DataItemBuilder
 
         switch (DataType)
         {
+            
             case "Alphanumeric":
             case "Alphabetic":
             case "National":
-            string value = DataValue == String.Empty ? "\" \"" : this.DataValue;
-            CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);";
+                string value = DataValue == String.Empty ? "\" \"" : this.DataValue;
+                CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);";
+            break;
+
+            case "Numeric":
+                value = DataValue == String.Empty ? "\"0\"" : $"\"{DataValue}\"";
+                string Decimal = (int.Parse(Length) + int.Parse(FractionalLength) + 1).ToString();
+                string TotalLength = FractionalLength == "0" ? Length : Decimal;  
+                CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
             break;
         }
 

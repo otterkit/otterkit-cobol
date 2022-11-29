@@ -382,17 +382,17 @@ public static class Functions
     {
         int integer = argument.Length;
         int fraction = argument.FractionalLength;
-        Span<byte> LowestAlgebraic = stackalloc byte[2 + integer + fraction];
-        LowestAlgebraic[0] = 43;
-        LowestAlgebraic.Slice(1, integer).Fill(57);
+        Span<byte> HighestAlgebraic = stackalloc byte[integer + fraction + 2];
+        HighestAlgebraic[0] = 43;
+        HighestAlgebraic.Slice(1, integer).Fill(57);
 
         if (fraction > 0)
         {
-            LowestAlgebraic[integer + 1] = 46;
-            LowestAlgebraic.Slice(integer + 2).Fill(57);
+            HighestAlgebraic[integer + 1] = 46;
+            HighestAlgebraic.Slice(integer + 2).Fill(57);
         }
 
-        return new Numeric(LowestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 1]);
+        return new Numeric(HighestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 2]);
     }
 
     public static Numeric INTEGER_OF_BOOLEAN(Boolean argument)
@@ -494,7 +494,7 @@ public static class Functions
     {
         int integer = argument.Length;
         int fraction = argument.FractionalLength;
-        Span<byte> LowestAlgebraic = stackalloc byte[2 + integer + fraction];
+        Span<byte> LowestAlgebraic = stackalloc byte[integer + fraction + 2];
         LowestAlgebraic[0] = 45;
         LowestAlgebraic.Slice(1, integer).Fill(57);
 
@@ -507,8 +507,7 @@ public static class Functions
         bool isSigned = argument.isSigned;
         if (!isSigned) return new Numeric("0"u8, 0, 1, 0, new byte[1]);
 
-
-        return new Numeric(LowestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 1]);
+        return new Numeric(LowestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 2]);
     }
 
     public static void MAX(Numeric[] argument)

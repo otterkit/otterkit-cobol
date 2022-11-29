@@ -109,8 +109,8 @@ public class DataItemBuilder
     private string LevelNumber = string.Empty;
     private string Identifier = string.Empty;
     private string DataType = string.Empty;
-    private string Length = string.Empty;
-    private string FractionalLength = "0";
+    private int Length = 0;
+    private int FractionalLength = 0;
     private string DataValue = string.Empty;
     private ProgramBuilder ProgramBuilder;
     private Action Continue;
@@ -207,6 +207,7 @@ public class DataItemBuilder
 
     private void BuildSevenSeven()
     {
+        bool isSigned = false;
         string dataTypes(Token current) => current.value switch
         {
             "X" => "Alphanumeric",
@@ -214,7 +215,7 @@ public class DataItemBuilder
             "N" => "National",
             "1" => "Boolean",
             "9" => "Numeric",
-            "S9" => "Signed Numeric",
+            "S9" => "Numeric",
             _ => "Error"
         };
 
@@ -226,24 +227,26 @@ public class DataItemBuilder
                 if (Current().value == "IS") Continue();
 
                 this.DataType = dataTypes(Current());
+                if (Current().value == "S9")
+                    isSigned = true;
 
                 Continue();
                 Continue();
 
                 if (this.DataType == "Alphanumeric")
-                    this.Length = Current().value;
+                    this.Length = int.Parse(Current().value);
 
                 if (this.DataType == "Alphabetic")
-                    this.Length = Current().value;
+                    this.Length = int.Parse(Current().value);
 
                 if (this.DataType == "National")
-                    this.Length = Current().value;
+                    this.Length = int.Parse(Current().value);
 
                 if (this.DataType == "Numeric")
                 {
-                    this.Length = Current().value;
+                    this.Length = int.Parse(Current().value);
                     if(Lookahead(2).value == "V9")
-                        this.FractionalLength = Lookahead(4).value;
+                        this.FractionalLength = int.Parse(Lookahead(4).value);
                 }
             }
 
@@ -270,10 +273,20 @@ public class DataItemBuilder
 
             case "Numeric":
                 value = DataValue == String.Empty ? "\"0\"" : $"\"{DataValue}\"";
-                string Decimal = (int.Parse(Length) + int.Parse(FractionalLength) + 1).ToString();
-                string TotalLength = FractionalLength == "0" ? Length : Decimal;  
+                int TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 1;
+
+                if (isSigned)
+                {
+                    if (value.IndexOfAny(new char[] {'+', '-'}) != 0) 
+                        value = value.Insert(1, "+");
+                    
+                    TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 2;
+                    CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
+                    break;
+                }
+
                 CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
-            break;
+                break;
         }
 
         ExportDataItem();

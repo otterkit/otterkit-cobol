@@ -277,7 +277,9 @@ public class DataItemBuilder
 
                 if (isSigned)
                 {
-                    if (value.IndexOfAny(new char[] {'+', '-'}) != 0) 
+                    Console.WriteLine(value.IndexOf('+'));
+                    Console.WriteLine(value.IndexOf('-'));
+                    if (value.IndexOf('+') != 1 && value.IndexOf('-') != 1) 
                         value = value.Insert(1, "+");
                     
                     TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 2;

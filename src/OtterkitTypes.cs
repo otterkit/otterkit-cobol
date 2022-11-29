@@ -277,17 +277,17 @@ public sealed class Numeric
         this.Offset = offset;
         this.Length = length;
         this.FractionalLength = fractionalLength;
-        if (fractionalLength == 0 && !isSigned)
-            this.Memory = memory.Slice(offset, length);
+        if (fractionalLength == 0)
+        {
+            int signedSpace = isSigned ? 1 : 0;
+            this.Memory = memory.Slice(offset, length + signedSpace);
+        }
 
-        if (fractionalLength > 0 && !isSigned)
-            this.Memory = memory.Slice(offset, length + fractionalLength + 1);
-
-        if (fractionalLength == 0 && isSigned)
-            this.Memory = memory.Slice(offset, length + 1);
-
-        if (fractionalLength > 0 && isSigned)
-            this.Memory = memory.Slice(offset, length + fractionalLength + 2);
+        if (fractionalLength > 0)
+        {
+            int signedSpace = isSigned ? 2 : 1;
+            this.Memory = memory.Slice(offset, length + fractionalLength + signedSpace);
+        }
 
         Memory.Span.Fill(48);
 
@@ -302,40 +302,34 @@ public sealed class Numeric
 
     private void Format(ReadOnlySpan<byte> bytes, bool isSigned = false)
     {
-        int isDecimal = Math.Min(FractionalLength, 1);
-        if (isSigned) isDecimal += 1;
-
-        Span<byte> formatted = stackalloc byte[Length + FractionalLength + isDecimal];
+        Span<byte> formatted = stackalloc byte[Memory.Length];
         formatted.Fill(48);
         
         int indexOfDecimal = bytes.IndexOf("."u8);
 
         int offset = Math.Max(0, Length - indexOfDecimal);
         if (indexOfDecimal < 0) offset = 0;
-
+        
+        int isDecimal = isSigned ? Math.Min(FractionalLength, 1) : Math.Min(FractionalLength, 1) + 1;
         int startIndex = Math.Max(0, indexOfDecimal - Length);
         int endIndex = Math.Min(bytes.Length - startIndex, Length + FractionalLength - offset + isDecimal);
 
         ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex);
 
-        if (isSigned) offset += 1;
+        if (isSigned) 
+            offset += 1;
+
         temporary.CopyTo(formatted.Slice(offset));
 
         int indexOfSign = formatted.IndexOfAny("+-"u8);
         if (indexOfSign > -1)
             formatted[indexOfSign] = 48;
 
-        if (isSigned && isNegative)
+        if (isSigned)
         {
             formatted.CopyTo(Memory.Span);
-            Memory.Span[0] = 45;
-            return;
-        }
-
-        if (isSigned && !isNegative)
-        {
-            formatted.CopyTo(Memory.Span);
-            Memory.Span[0] = 43;
+            byte sign = (byte)(isNegative ? 45 : 43);
+            Memory.Span[0] = sign;
             return;
         }
 
@@ -365,6 +359,12 @@ public sealed class Numeric
         {
             Span<byte> bytes = stackalloc byte[value.Length];
             encoding.GetBytes(value, bytes);
+            if (isSigned)
+            {
+                FormatSigned(bytes);
+                return;
+            }
+
             Format(bytes);
         }
     }

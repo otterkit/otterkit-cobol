@@ -112,6 +112,7 @@ public class DataItemBuilder
     private int Length = 0;
     private int FractionalLength = 0;
     private string DataValue = string.Empty;
+    private string Section = string.Empty;
     private ProgramBuilder ProgramBuilder;
     private Action Continue;
     private Func<Token> Current;
@@ -128,11 +129,16 @@ public class DataItemBuilder
 
     public void ExportDataItem()
     {
-        ProgramBuilder.AppendWorkingStorage(CompiledDataItem);
+        if (Section == "WORKING-STORAGE")
+            ProgramBuilder.AppendWorkingStorage(CompiledDataItem);
+
+        if (Section == "LOCAL-STORAGE")
+            ProgramBuilder.AppendLocalStorage(CompiledDataItem);
     }
 
-    public void BuildDataItem()
+    public void BuildDataItem(string section = "WORKING-STORAGE")
     {
+        this.Section = section;
         if (Current().type != TokenType.Numeric)
             throw new ArgumentException("Unexpected Input: Data Item Builder has to start with a level number");
 
@@ -277,8 +283,6 @@ public class DataItemBuilder
 
                 if (isSigned)
                 {
-                    Console.WriteLine(value.IndexOf('+'));
-                    Console.WriteLine(value.IndexOf('-'));
                     if (value.IndexOf('+') != 1 && value.IndexOf('-') != 1) 
                         value = value.Insert(1, "+");
                     

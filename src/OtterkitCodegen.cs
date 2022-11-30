@@ -38,7 +38,7 @@ public static class OtterkitCodegen
 
         compiled.CompileHeader();
         compiled.CompileIdentification();
-        compiled.CompileWorkingStorage();
+        compiled.CompileData();
         compiled.CompileProcedure();
 
         File.WriteAllText("Compiled.cs", compiled.ExportCompiled());

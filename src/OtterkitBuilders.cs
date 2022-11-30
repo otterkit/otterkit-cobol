@@ -2,11 +2,12 @@ namespace Otterkit;
 
 public class ProgramBuilder
 {
-    static readonly string Tab = "    ";
+    static readonly string Tab = "   ";
     private string Compiled { get; set; }
     private string Identification { get; set; }
     private string WorkingStorage { get; set; }
     private string LocalStorage { get; set; }
+    private string LocalStorageValues { get; set; }
     private string Statements { get; set; }
 
     public ProgramBuilder()
@@ -15,6 +16,7 @@ public class ProgramBuilder
         this.Identification = string.Empty;
         this.WorkingStorage = string.Empty;
         this.LocalStorage = string.Empty;
+        this.LocalStorageValues = string.Empty;
         this.Statements = string.Empty;
     }
 
@@ -32,12 +34,18 @@ public class ProgramBuilder
 
     public void AppendWorkingStorage(string dataItem)
     {
-        WorkingStorage += String.Concat(Tab, dataItem, "\n");
+        WorkingStorage += $"{Tab} {dataItem} \n";
     }
 
-    public void AppendLocalStorage(string dataItem)
+    public void AppendLocalStorage(string dataItem, string dataItemName, string initialValue)
     {
-        LocalStorage += String.Concat(Tab, Tab, dataItem, "\n");
+        LocalStorage += $"{Tab} {dataItem} \n";
+
+        if (initialValue.StartsWith('"') && !dataItem.Contains("Constant"))
+            LocalStorageValues += $"{Tab}{Tab} {dataItemName}.Bytes = {initialValue}u8;\n";
+
+        if (!initialValue.StartsWith('"') && !dataItem.Contains("Constant"))
+            LocalStorageValues += $"{Tab}{Tab} {dataItemName}.Bytes = \"{initialValue}\"u8;\n";
     }
 
     public void AppendStatement(string statement)
@@ -70,13 +78,14 @@ public class ProgramBuilder
         Compiled += ID;
     }
 
-    public void CompileWorkingStorage()
+    public void CompileData()
     {
         string WS = $$"""
 
             // WORKING-STORAGE SECTION.
         {{WorkingStorage}}
-
+            // LOCAL-STORAGE SECTION.
+        {{LocalStorage}}
         """;
 
         Compiled += WS;
@@ -89,9 +98,8 @@ public class ProgramBuilder
         // PROCEDURE DIVISION.
         public void Procedure()
         {
-            // LOCAL-STORAGE SECTION.
-    {{LocalStorage}}
-
+            // RESET LOCAL-STORAGE.
+    {{LocalStorageValues}}
             // PROCEDURE STATEMENTS.
     {{Statements}}
         }
@@ -133,7 +141,7 @@ public class DataItemBuilder
             ProgramBuilder.AppendWorkingStorage(CompiledDataItem);
 
         if (Section == "LOCAL-STORAGE")
-            ProgramBuilder.AppendLocalStorage(CompiledDataItem);
+            ProgramBuilder.AppendLocalStorage(CompiledDataItem, Identifier, DataValue);
     }
 
     public void BuildDataItem(string section = "WORKING-STORAGE")
@@ -161,13 +169,10 @@ public class DataItemBuilder
     private void BuildConstant()
     {
         if (Lookahead(1).value.Equals("GLOBAL") || Lookahead(2).value.Equals("GLOBAL"))
-            CompiledDataItem += $"public static readonly Constant {Identifier} = ";
+            CompiledDataItem = $"public static readonly Constant {Identifier} = ";
 
-        if (!Lookahead(1).value.Equals("GLOBAL") && !Lookahead(2).value.Equals("GLOBAL") && Section.Equals("WORKING-STORAGE"))
-            CompiledDataItem += $"private static readonly Constant {Identifier} = ";
-
-        if (Section.Equals("LOCAL-STORAGE"))
-            CompiledDataItem += $"Constant {Identifier} = ";
+        if (!Lookahead(1).value.Equals("GLOBAL") && !Lookahead(2).value.Equals("GLOBAL"))
+            CompiledDataItem = $"private static readonly Constant {Identifier} = ";
 
         while (Current().value != "AS")
         {
@@ -266,11 +271,7 @@ public class DataItemBuilder
             Continue();
         }
 
-        if (Section.Equals("WORKING-STORAGE"))
-            CompiledDataItem += $"private static {DataType} {Identifier} = ";
-
-        if (Section.Equals("LOCAL-STORAGE"))
-            CompiledDataItem += $"{DataType} {Identifier} = ";
+        CompiledDataItem = $"private static {DataType} {Identifier} = ";
 
         switch (DataType)
         {

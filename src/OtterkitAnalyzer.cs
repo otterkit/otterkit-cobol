@@ -4,8 +4,9 @@ namespace Otterkit;
 
 public static class OtterkitAnalyzer
 {
-    public static List<Token> Analyze(List<Token> tokenList)
+    public static List<Token> Analyze(List<Token> tokenList, string fileName)
     {
+        string FileName = fileName;
         List<Token> analyzed = new();
         int index = 0;
 
@@ -43,7 +44,8 @@ public static class OtterkitAnalyzer
                     break;
 
                 default:
-                    ErrorHandler.Parser.Report(Current(), "expected", "IDENTIFICATION, ENVIRONMENT, DATA or PROCEDURE");
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "IDENTIFICATION, ENVIRONMENT, DATA or PROCEDURE");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
                     Environment.Exit(1);
                     break;
             }
@@ -77,12 +79,46 @@ public static class OtterkitAnalyzer
             Expected("DATA", "data division");
             Expected("DIVISION");
             Expected(".", "separator period");
-            WorkingStorage();
+            DataSections();
+        }
+
+        void DataSections()
+        {
+            while(Current().value != "PROCEDURE")
+            {
+                if (Current().value.Equals("WORKING-STORAGE"))
+                    WorkingStorage();
+
+                if(Current().value.Equals("LOCAL-STORAGE"))
+                    LocalStorage();
+
+                switch(Current().value)
+                {
+                    case "WORKING-STORAGE":
+                    case "LOCAL-STORAGE":
+                    case "PROCEDURE":
+                        break;
+
+                    default:
+                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "Data Division data items and sections");
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
+                        break;
+                }
+            }
         }
 
         void WorkingStorage()
         {
             Expected("WORKING-STORAGE", "working-storage section");
+            Expected("SECTION");
+            Expected(".", "separator period");
+            while (Current().type == TokenType.Numeric)
+                Entries();
+        }
+
+        void LocalStorage()
+        {
+            Expected("LOCAL-STORAGE", "local-storage section");
             Expected("SECTION");
             Expected(".", "separator period");
             while (Current().type == TokenType.Numeric)
@@ -117,8 +153,8 @@ public static class OtterkitAnalyzer
             };
             if (datatype == "Error")
             {
-                ErrorHandler.Parser.Report(Current(), " ", "Unrecognized type, expected S9, 9, X, A, N or 1");
-
+                ErrorHandler.Parser.Report(fileName, Current(), " ", "Unrecognized type, expected S9, 9, X, A, N or 1");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
             Choice(null, "S9", "9", "X", "A", "N", "1");
@@ -126,7 +162,10 @@ public static class OtterkitAnalyzer
             Number();
             Expected(")");
             if(Current().value == "V9" && (datatype != "Signed Numeric" && (datatype != "Numeric")))
-                ErrorHandler.Parser.Report(Current(), " ", "V9 cannot be used with non-numeric types");
+            {
+                ErrorHandler.Parser.Report(fileName, Current(), " ", "V9 cannot be used with non-numeric types");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
         
             if(Current().value == "V9")
             {
@@ -154,7 +193,8 @@ public static class OtterkitAnalyzer
                         break;
 
                     case "Error":
-                        ErrorHandler.Parser.Report(Current(), " ", "Unable to determine the correct literal type due to the previous type error");
+                        ErrorHandler.Parser.Report(fileName, Current(), " ", "Unable to determine the correct literal type due to the previous type error");
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
                         break;
 
                     default:
@@ -168,7 +208,10 @@ public static class OtterkitAnalyzer
         void ConstantEntry()
         {
             if (Current().value != "01" && Current().value != "1")
-                ErrorHandler.Parser.Report(Current(), " ", "Constant entry must have a level number of 1 or 01");
+            {
+                ErrorHandler.Parser.Report(fileName, Current(), " ", "Constant entry must have a level number of 1 or 01");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
 
             Number();
             Identifier();
@@ -311,7 +354,8 @@ public static class OtterkitAnalyzer
                     String();
                     break;
                 default:
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier or literal");
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or literal");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
                     break;
             }
 
@@ -389,7 +433,10 @@ public static class OtterkitAnalyzer
 
             Expected("COMPUTE");
             if (Current().type != TokenType.Identifier)
-                ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+            {
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
 
             while (Current().type == TokenType.Identifier)
             {
@@ -400,7 +447,7 @@ public static class OtterkitAnalyzer
             if (Current().type != TokenType.Identifier 
              && Current().type != TokenType.Numeric
              && Current().type != TokenType.Symbol)
-                ErrorHandler.Parser.Report(Current(), "expected", "identifier, numeric literal or arithmetic symbol");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier, numeric literal or arithmetic symbol");
 
             while (Current().type == TokenType.Identifier
                || Current().type == TokenType.Numeric
@@ -431,7 +478,8 @@ public static class OtterkitAnalyzer
                             return;
 
                         default:
-                            ErrorHandler.Parser.Report(Current(), "expected", "+, -, *, /, **, ( or )");
+                            ErrorHandler.Parser.Report(fileName, Current(), "expected", "+, -, *, /, **, ( or )");
+                            ErrorHandler.Parser.PrettyError(fileName, Current());
                             Continue();
                             break;
                     }
@@ -450,7 +498,7 @@ public static class OtterkitAnalyzer
 
             Expected("ADD");
             if (Current().type != TokenType.Identifier && Current().type != TokenType.Numeric)
-                ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
 
             while (Current().type == TokenType.Identifier
                 || Current().type == TokenType.Numeric
@@ -477,13 +525,17 @@ public static class OtterkitAnalyzer
                         break;
 
                     default:
-                        ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
                         break;
                 }
 
                 Expected("GIVING");
                 if (Current().type != TokenType.Identifier)
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
 
                 while (Current().type == TokenType.Identifier)
                     Identifier();
@@ -492,7 +544,10 @@ public static class OtterkitAnalyzer
             {
                 Expected("GIVING");
                 if (Current().type != TokenType.Identifier)
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
 
                 while (Current().type == TokenType.Identifier)
                     Identifier();
@@ -501,14 +556,18 @@ public static class OtterkitAnalyzer
             {
                 Expected("TO");
                 if (Current().type != TokenType.Identifier)
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
 
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             }
             else
             {
-                ErrorHandler.Parser.Report(Current(), "expected", "TO or GIVING");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "TO or GIVING");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
             SizeError(ref isConditional);
@@ -523,7 +582,10 @@ public static class OtterkitAnalyzer
 
             Expected("SUBTRACT");
             if (Current().type != TokenType.Identifier && Current().type != TokenType.Numeric)
-                ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+            {
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
 
             while (Current().type == TokenType.Identifier
                 || Current().type == TokenType.Numeric
@@ -550,13 +612,17 @@ public static class OtterkitAnalyzer
                         break;
 
                     default:
-                        ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
                         break;
                 }
 
                 Expected("GIVING");
                 if (Current().type != TokenType.Identifier)
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
 
                 while (Current().type == TokenType.Identifier)
                     Identifier();
@@ -565,14 +631,18 @@ public static class OtterkitAnalyzer
             {
                 Expected("FROM");
                 if (Current().type != TokenType.Identifier)
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
 
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             }
             else
             {
-                ErrorHandler.Parser.Report(Current(), "expected", "FROM");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "FROM");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
             SizeError(ref isConditional);
@@ -597,7 +667,8 @@ public static class OtterkitAnalyzer
                     break;
 
                 default:
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
                     break;
             }
 
@@ -615,13 +686,17 @@ public static class OtterkitAnalyzer
                         break;
 
                     default:
-                        ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
                         break;
                 }
 
                 Expected("GIVING");
                 if (Current().type != TokenType.Identifier)
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
 
                 while (Current().type == TokenType.Identifier)
                     Identifier();
@@ -630,14 +705,18 @@ public static class OtterkitAnalyzer
             {
                 Expected("BY");
                 if (Current().type != TokenType.Identifier)
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
 
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             }
             else
             {
-                ErrorHandler.Parser.Report(Current(), "expected", "BY");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "BY");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
             SizeError(ref isConditional);
@@ -662,7 +741,8 @@ public static class OtterkitAnalyzer
                     break;
 
                 default:
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
                     break;
             }
 
@@ -682,13 +762,17 @@ public static class OtterkitAnalyzer
                         break;
 
                     default:
-                        ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
                         break;
                 }
 
                 Expected("GIVING");
                 if (Current().type != TokenType.Identifier)
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
 
                 while (Current().type == TokenType.Identifier)
                     Identifier();
@@ -709,7 +793,8 @@ public static class OtterkitAnalyzer
                         break;
 
                     default:
-                        ErrorHandler.Parser.Report(Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
                         break;
                 }
 
@@ -722,14 +807,18 @@ public static class OtterkitAnalyzer
             {
                 Expected("INTO");
                 if (Current().type != TokenType.Identifier)
-                    ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
 
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             }
             else
             {
-                ErrorHandler.Parser.Report(Current(), "expected", "BY or INTO");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "BY or INTO");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
             SizeError(ref isConditional);
@@ -787,7 +876,7 @@ public static class OtterkitAnalyzer
             Token current = Current();
             foreach (string choice in choices)
             {
-                if (current.value == choice)
+                if (current.value.Equals(choice))
                 {
                     if (type != null)
                         current.type = type;
@@ -797,7 +886,8 @@ public static class OtterkitAnalyzer
                 }
             }
 
-            ErrorHandler.Parser.Report(Current(), "choice", choices);
+            ErrorHandler.Parser.Report(fileName, Current(), "choice", choices);
+            ErrorHandler.Parser.PrettyError(fileName, Current());
             Continue();
             return;
         }
@@ -805,7 +895,7 @@ public static class OtterkitAnalyzer
         void Optional(string optional, string scope = "")
         {
             Token current = Current();
-            if (current.value != optional)
+            if (!current.value.Equals(optional))
                 return;
 
             current.scope = scope;
@@ -817,9 +907,10 @@ public static class OtterkitAnalyzer
         void Expected(string expected, string scope = "")
         {
             Token current = Current();
-            if (current.value != expected)
+            if (!current.value.Equals(expected))
             {
-                ErrorHandler.Parser.Report(Current(), "expected", expected);
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", expected);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
                 return;
             }
@@ -831,7 +922,7 @@ public static class OtterkitAnalyzer
 
         void SizeError(ref bool isConditional)
         {
-            if (Current().value == "ON" || Current().value == "SIZE")
+            if (Current().value.Equals("ON") || Current().value.Equals("SIZE"))
             {
                 isConditional = true;
                 Optional("ON");
@@ -840,7 +931,7 @@ public static class OtterkitAnalyzer
                 Statement(true);
             }
 
-            if (Current().value == "NOT")
+            if (Current().value.Equals("NOT"))
             {
                 isConditional = true;
                 Expected("NOT");
@@ -856,7 +947,8 @@ public static class OtterkitAnalyzer
             Token current = Current();
             if (current.type != TokenType.Identifier)
             {
-                ErrorHandler.Parser.Report(Current(), "expected", "identifier");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
                 return;
             }
@@ -870,7 +962,8 @@ public static class OtterkitAnalyzer
             Token current = Current();
             if (current.type != TokenType.Numeric)
             {
-                ErrorHandler.Parser.Report(Current(), "expected", "numberic literal");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "numberic literal");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
                 return;
             }
@@ -884,7 +977,8 @@ public static class OtterkitAnalyzer
             Token current = Current();
             if (current.type != TokenType.String)
             {
-                ErrorHandler.Parser.Report(Current(), "expected", "string literal");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "string literal");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
                 return;
             }
@@ -898,7 +992,8 @@ public static class OtterkitAnalyzer
             Token current = Current();
             if (current.type != TokenType.FigurativeLiteral)
             {
-                ErrorHandler.Parser.Report(Current(), "expected", "figurative literal");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "figurative literal");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
                 return;
             }
@@ -912,7 +1007,8 @@ public static class OtterkitAnalyzer
             Token current = Current();
             if (current.type != TokenType.Symbol)
             {
-                ErrorHandler.Parser.Report(Current(), "expected", "symbol");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "symbol");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
                 return;
             }

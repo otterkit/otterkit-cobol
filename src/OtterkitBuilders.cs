@@ -60,8 +60,8 @@ public class ProgramBuilder
     {
         string ID = $$"""
 
-        // PROGRAM-ID. {{this.Identification}}.
-        public class {{this.Identification}}
+        // PROGRAM-ID. {{Identification}}.
+        public class {{Identification}}
         {
             private static readonly Encoding encoding = Encoding.UTF8;
         
@@ -75,7 +75,7 @@ public class ProgramBuilder
         string WS = $$"""
 
             // WORKING-STORAGE SECTION.
-        {{this.WorkingStorage}}
+        {{WorkingStorage}}
 
         """;
 
@@ -90,10 +90,10 @@ public class ProgramBuilder
         public void Procedure()
         {
             // LOCAL-STORAGE SECTION.
-    {{this.LocalStorage}}
+    {{LocalStorage}}
 
             // PROCEDURE STATEMENTS.
-    {{this.Statements}}
+    {{Statements}}
         }
     }
     
@@ -138,18 +138,18 @@ public class DataItemBuilder
 
     public void BuildDataItem(string section = "WORKING-STORAGE")
     {
-        this.Section = section;
+        Section = section;
         if (Current().type != TokenType.Numeric)
             throw new ArgumentException("Unexpected Input: Data Item Builder has to start with a level number");
 
-        this.LevelNumber = Current().value;
+        LevelNumber = Current().value;
         Continue();
 
-        this.Identifier = Current().value;
+        Identifier = Current().value;
         FormatIdentifier();
         Continue();
 
-        if (this.LevelNumber == "77")
+        if (LevelNumber == "77")
             BuildSevenSeven();
 
         if (Current().value == "CONSTANT")
@@ -160,11 +160,14 @@ public class DataItemBuilder
 
     private void BuildConstant()
     {
-        if (Lookahead(1).value == "GLOBAL" || Lookahead(2).value == "GLOBAL")
-            CompiledDataItem += "public static readonly Constant " + this.Identifier + " = ";
+        if (Lookahead(1).value.Equals("GLOBAL") || Lookahead(2).value.Equals("GLOBAL"))
+            CompiledDataItem += $"public static readonly Constant {Identifier} = ";
 
-        if (Lookahead(1).value != "GLOBAL" && Lookahead(2).value != "GLOBAL")
-            CompiledDataItem += "private static readonly Constant " + this.Identifier + " = ";
+        if (!Lookahead(1).value.Equals("GLOBAL") && !Lookahead(2).value.Equals("GLOBAL") && Section.Equals("WORKING-STORAGE"))
+            CompiledDataItem += $"private static readonly Constant {Identifier} = ";
+
+        if (Section.Equals("LOCAL-STORAGE"))
+            CompiledDataItem += $"Constant {Identifier} = ";
 
         while (Current().value != "AS")
         {
@@ -173,38 +176,36 @@ public class DataItemBuilder
 
         Continue();
 
-        if (Current().value == "LENGTH")
+        if (Current().value.Equals("LENGTH"))
         {
             Continue();
-            if (Current().value == "OF")
+            if (Current().value.Equals("OF"))
                 Continue();
 
             // new(encoding.GetBytes(_WS_FIRST_NAME.Bytes.Length.ToString()), 0, _WS_FIRST_NAME.Bytes.Length, 0, new byte[_WS_FIRST_NAME.Bytes.Length]);
             string FormattedValue = FormatIdentifier(Current().value);
-            CompiledDataItem += "new(encoding.GetBytes(" + FormattedValue;
-            CompiledDataItem += ".Length.ToString()));";
+            CompiledDataItem += $"new(encoding.GetBytes({FormattedValue}.Length.ToString()));";
         }
 
-        if (Current().value == "BYTE-LENGTH")
+        if (Current().value.Equals("BYTE-LENGTH"))
         {
             Continue();
-            if (Current().value == "OF")
+            if (Current().value.Equals("OF"))
                 Continue();
 
             string FormattedValue = FormatIdentifier(Current().value);
-            CompiledDataItem += "new(encoding.GetBytes(" + FormattedValue;
-            CompiledDataItem += ".Bytes.Length.ToString()));";
+            CompiledDataItem += $"new(encoding.GetBytes({FormattedValue}.Bytes.Length.ToString()));";
         }
 
         if (Current().type == TokenType.String)
-            CompiledDataItem += "new(" + Current().value + "u8);";
+            CompiledDataItem += $"new({Current().value}u8);";
 
         if (Current().type == TokenType.Numeric)
-            CompiledDataItem += "new(\"" + Current().value + "\"u8);";
+            CompiledDataItem += $"new(\"{Current().value}\"u8);";
 
         Continue();
 
-        if (Current().value != ".")
+        if (!Current().value.Equals("."))
             throw new ArgumentException("Unexpected Input: Constant must end with a separator period");
 
         ExportDataItem();
@@ -225,47 +226,51 @@ public class DataItemBuilder
             _ => "Error"
         };
 
-        while (Current().value != ".")
+        while (!Current().value.Equals("."))
         {
-            if (Current().value == "PIC" || Current().value == "PICTURE")
+            if (Current().value.Equals("PIC") || Current().value.Equals("PICTURE"))
             {
                 Continue();
-                if (Current().value == "IS") Continue();
+                if (Current().value.Equals("IS")) Continue();
 
-                this.DataType = dataTypes(Current());
-                if (Current().value == "S9")
+                DataType = dataTypes(Current());
+                if (Current().value.Equals("S9"))
                     isSigned = true;
 
                 Continue();
                 Continue();
 
-                if (this.DataType == "Alphanumeric")
-                    this.Length = int.Parse(Current().value);
+                if (DataType.Equals("Alphanumeric"))
+                    Length = int.Parse(Current().value);
 
-                if (this.DataType == "Alphabetic")
-                    this.Length = int.Parse(Current().value);
+                if (DataType.Equals("Alphabetic"))
+                    Length = int.Parse(Current().value);
 
-                if (this.DataType == "National")
-                    this.Length = int.Parse(Current().value);
+                if (DataType.Equals("National"))
+                    Length = int.Parse(Current().value);
 
-                if (this.DataType == "Numeric")
+                if (DataType.Equals("Numeric"))
                 {
-                    this.Length = int.Parse(Current().value);
+                    Length = int.Parse(Current().value);
                     if(Lookahead(2).value == "V9")
-                        this.FractionalLength = int.Parse(Lookahead(4).value);
+                        FractionalLength = int.Parse(Lookahead(4).value);
                 }
             }
 
-            if (Current().value == "VALUE")
+            if (Current().value.Equals("VALUE"))
             {
                 Continue();
-                this.DataValue = Current().value;
+                DataValue = Current().value;
             }
 
             Continue();
         }
 
-        CompiledDataItem += $"private static {DataType} {Identifier} = ";
+        if (Section.Equals("WORKING-STORAGE"))
+            CompiledDataItem += $"private static {DataType} {Identifier} = ";
+
+        if (Section.Equals("LOCAL-STORAGE"))
+            CompiledDataItem += $"{DataType} {Identifier} = ";
 
         switch (DataType)
         {
@@ -273,17 +278,17 @@ public class DataItemBuilder
             case "Alphanumeric":
             case "Alphabetic":
             case "National":
-                string value = DataValue == String.Empty ? "\" \"" : this.DataValue;
+                string value = DataValue.Equals(String.Empty) ? "\" \"" : DataValue;
                 CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);";
             break;
 
             case "Numeric":
-                value = DataValue == String.Empty ? "\"0\"" : $"\"{DataValue}\"";
+                value = DataValue.Equals(String.Empty) ? "\"0\"" : $"\"{DataValue}\"";
                 int TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 1;
 
                 if (isSigned)
                 {
-                    if (value.IndexOf('+') != 1 && value.IndexOf('-') != 1) 
+                    if (value.IndexOfAny(new char[] { '+', '-' }) != 1) 
                         value = value.Insert(1, "+");
                     
                     TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 2;
@@ -301,9 +306,9 @@ public class DataItemBuilder
 
     private void FormatIdentifier()
     {
-        string FormattedIdentifier = this.Identifier;
+        string FormattedIdentifier = Identifier;
         FormattedIdentifier = "_" + FormattedIdentifier.Replace("-", "_");
-        this.Identifier = FormattedIdentifier;
+        Identifier = FormattedIdentifier;
     }
 
     private string FormatIdentifier(string Identifier)

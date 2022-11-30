@@ -17,7 +17,7 @@ public static class OtterkitCompiler
         List<string> sourceLines = ReadAndProcessFile(fileName, sourceFormat);
         List<Token> tokens = OtterkitLexer.Tokenize(sourceLines);
         List<Token> classified = Token.fromValue(tokens);
-        List<Token> analized = OtterkitAnalyzer.Analyze(classified);
+        List<Token> analized = OtterkitAnalyzer.Analyze(classified, fileName);
         OtterkitCodegen.Generate(analized);
     }
 

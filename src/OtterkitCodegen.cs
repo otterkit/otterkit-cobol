@@ -15,18 +15,22 @@ public static class OtterkitCodegen
             Continue();
         }
 
+        string scope = string.Empty;
         while (Current().value != "PROCEDURE")
         {
+            if (Current().value == "WORKING-STORAGE" || Current().value == "LOCAL-STORAGE") 
+                scope = Current().value;
+
             if (Current().type == TokenType.Numeric && LookAhead(2).value == "CONSTANT")
             {
                 DataItemBuilder Constant = new(compiled, Continue, Current, LookAhead);
-                Constant.BuildDataItem();
+                Constant.BuildDataItem(scope);
             }
 
             if (Current().type == TokenType.Numeric && Current().value == "77")
             {
                 DataItemBuilder SevenSeven = new(compiled, Continue, Current, LookAhead);
-                SevenSeven.BuildDataItem();
+                SevenSeven.BuildDataItem(scope);
             }
 
             Continue();

@@ -182,13 +182,13 @@ public static class OtterkitAnalyzer
                 {
                     case "Signed Numeric":
                     case "Numeric":
-                    case "Boolean":
                         Number();
                         break;
                     
                     case "Alphanumeric":
                     case "Alphabetic":
                     case "National":
+                    case "Boolean":
                         String();
                         break;
 

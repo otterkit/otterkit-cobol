@@ -225,7 +225,7 @@ public class DataItemBuilder
             "X" => "Alphanumeric",
             "A" => "Alphabetic",
             "N" => "National",
-            "1" => "Boolean",
+            "1" => "OtterkitBoolean",
             "9" => "Numeric",
             "S9" => "Numeric",
             _ => "Error"
@@ -254,6 +254,9 @@ public class DataItemBuilder
                 if (DataType.Equals("National"))
                     Length = int.Parse(Current().value);
 
+                if (DataType.Equals("OtterkitBoolean"))
+                    Length = int.Parse(Current().value);
+
                 if (DataType.Equals("Numeric"))
                 {
                     Length = int.Parse(Current().value);
@@ -279,6 +282,7 @@ public class DataItemBuilder
             case "Alphanumeric":
             case "Alphabetic":
             case "National":
+            case "OtterkitBoolean":
                 string value = DataValue.Equals(String.Empty) ? "\" \"" : DataValue;
                 CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);";
             break;

@@ -18,14 +18,13 @@ public static class ErrorHandler
         {
             string line = File.ReadLines(fileName).Skip(token.line - 1).Take(token.line).First();
             string error = new String(' ', line.Length - token.value.Length);
-            error = error.Insert(token.column, new String('~', token.value.Length));
-
+            error = error.Insert(token.column, new String('^', token.value.Length));
             
             Console.WriteLine($"{" ",5}|");
-            Console.WriteLine($"{token.line,4} |  {line.TrimStart()}");
-            Console.Write($"{" ",5}| ");
+            Console.WriteLine($"{token.line,4} | {line.TrimStart()}");
+            Console.Write($"{" ",5}|");
 
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"{error}\n");
             Console.ResetColor();
 

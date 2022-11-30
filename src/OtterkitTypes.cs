@@ -813,14 +813,31 @@ public sealed class BasedNational
     }
 }
 
-public sealed class Boolean
+public sealed class OtterkitBoolean
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }
     public int Length { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
 
-    public Boolean(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
+    public OtterkitBoolean(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
+    {
+        if (value.IndexOfAny("01"u8) > -1)
+            throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
+        
+        this.Offset = offset;
+        this.Length = length;
+        this.Memory = memory.Slice(offset, length);
+        Memory.Span.Fill(32);
+
+        int byteLength = Length < value.Length
+            ? Length
+            : value.Length;
+
+        value.Slice(0, byteLength).CopyTo(Memory.Span);
+    }
+
+    public OtterkitBoolean(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
     {
         if (value.IndexOfAny("01") > -1)
             throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
@@ -892,14 +909,14 @@ public sealed class Boolean
     }
 }
 
-public sealed class BasedBoolean
+public sealed class BasedOtterkitBoolean
 {
     public BasedDataItem Parent { get; init; }
     public int Offset { get; init; }
     public int Length { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
 
-    public BasedBoolean(int offset, int length, BasedDataItem parent)
+    public BasedOtterkitBoolean(int offset, int length, BasedDataItem parent)
     {
         this.Parent = parent;
         this.Offset = offset;

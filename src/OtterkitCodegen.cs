@@ -2,8 +2,9 @@ namespace Otterkit;
 
 public static class OtterkitCodegen
 {
-    public static void Generate(List<Token> tokens)
+    public static void Generate(List<Token> tokens, string fileName)
     {
+        string file = fileName.Replace("cob", "cs");
         ProgramBuilder compiled = new();
         int index = 0;
 
@@ -41,7 +42,8 @@ public static class OtterkitCodegen
         compiled.CompileData();
         compiled.CompileProcedure();
 
-        File.WriteAllText("Compiled.cs", compiled.ExportCompiled());
+        Directory.CreateDirectory(".otterkit");
+        File.WriteAllText($".otterkit/{file}", compiled.ExportCompiled());
 
         // Generator helper methods.
         Token LookAhead(int amount)

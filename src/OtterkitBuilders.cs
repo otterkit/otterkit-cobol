@@ -1,8 +1,11 @@
+using System.Diagnostics;
+using OtterkitLibrary;
+
 namespace Otterkit;
 
 public class ProgramBuilder
 {
-    static readonly string Tab = "   ";
+    static readonly string Tab = "    ";
     private string Compiled { get; set; }
     private string Identification { get; set; }
     private string WorkingStorage { get; set; }
@@ -34,23 +37,23 @@ public class ProgramBuilder
 
     public void AppendWorkingStorage(string dataItem)
     {
-        WorkingStorage += $"{Tab} {dataItem} \n";
+        WorkingStorage += $"{Tab}{dataItem}\n";
     }
 
     public void AppendLocalStorage(string dataItem, string dataItemName, string initialValue)
     {
-        LocalStorage += $"{Tab} {dataItem} \n";
+        LocalStorage += $"{Tab}{dataItem}\n";
 
         if (initialValue.StartsWith('"') && !dataItem.Contains("Constant"))
-            LocalStorageValues += $"{Tab}{Tab} {dataItemName}.Bytes = {initialValue}u8;\n";
+            LocalStorageValues += $"{Tab}{Tab}{dataItemName}.Bytes = {initialValue}u8;\n";
 
         if (!initialValue.StartsWith('"') && !dataItem.Contains("Constant"))
-            LocalStorageValues += $"{Tab}{Tab} {dataItemName}.Bytes = \"{initialValue}\"u8;\n";
+            LocalStorageValues += $"{Tab}{Tab}{dataItemName}.Bytes = \"{initialValue}\"u8;\n";
     }
 
     public void AppendStatement(string statement)
     {
-        Statements += String.Concat(Tab, Tab, statement, "\n");
+        Statements += $"{Tab}{Tab}{statement}\n";
     }
 
 
@@ -314,6 +317,209 @@ public class DataItemBuilder
         string FormattedIdentifier = Identifier;
         FormattedIdentifier = "_" + FormattedIdentifier.Replace("-", "_");
         Identifier = FormattedIdentifier;
+    }
+
+    private string FormatIdentifier(string Identifier)
+    {
+        string FormattedIdentifier = Identifier;
+        FormattedIdentifier = "_" + FormattedIdentifier.Replace("-", "_");
+        return FormattedIdentifier;
+    }
+}
+
+public class StatementBuilder
+{
+    private string CompiledStatement = string.Empty;
+    private ProgramBuilder ProgramBuilder;
+    private Action Continue;
+    private Func<Token> Current;
+    private Func<int, Token> Lookahead;
+
+
+    public StatementBuilder(ProgramBuilder ProgramBuilder, Action Continue, Func<Token> Current, Func<int, Token> Lookahead)
+    {
+        this.ProgramBuilder = ProgramBuilder;
+        this.Current = Current;
+        this.Continue = Continue;
+        this.Lookahead = Lookahead;
+    }
+
+    public void ExportStatement()
+    {
+        ProgramBuilder.AppendStatement(CompiledStatement);
+    }
+
+    public void BuildStatement()
+    {
+        Statement();
+    }
+
+    private void Statement()
+    {
+        switch (Current().value)
+        {
+            case "DISPLAY":
+                DISPLAY();
+                break;
+
+            case "ACCEPT":
+                ACCEPT();
+                break;
+
+            case "STOP":
+                STOP();
+                break;
+        }
+    }
+
+    private void DISPLAY()
+    {
+        CompiledStatement += "Statements.DISPLAY(";
+        string displayStrings = string.Empty;
+        Continue();
+
+        while (Current().type == TokenType.Identifier
+            || Current().type == TokenType.Numeric
+            || Current().type == TokenType.String
+        )
+        {
+            string identifier;
+            if (Current().type == TokenType.Identifier)
+            {
+                identifier = FormatIdentifier(Current().value);
+                displayStrings += $"{identifier}.Display, ";
+            }
+
+            if (Current().type == TokenType.Numeric)
+                displayStrings += $"\"{Current().value}\", ";
+
+            if (Current().type == TokenType.String)
+                displayStrings += $"{Current().value}, ";
+
+            Continue();
+        }
+
+        Continue();
+        if (Current().value.Equals("UPON"))
+        {
+            Continue();
+            if(Current().value.Equals("STANDARD-OUTPUT"))
+                CompiledStatement += $"\"{Current().value}\", ";
+
+            if(Current().value.Equals("STANDARD-ERROR"))
+                CompiledStatement += $"\"{Current().value}\", ";
+        }
+
+        if (!Current().value.Equals("UPON"))
+            CompiledStatement += $"\" \", ";
+
+        Continue();
+        if (Current().value.Equals("WITH") || Current().value.Equals("NO"))
+            CompiledStatement += "false, ";
+
+        if (!Current().value.Equals("WITH") && !Current().value.Equals("NO"))
+            CompiledStatement += "true, ";
+
+        CompiledStatement += $"{displayStrings}String.Empty);";
+        ExportStatement();
+    }
+
+    private void ACCEPT()
+    {
+        CompiledStatement += "Statements.ACCEPT(";
+        // Statements.ACCEPT(dataItem, from, format)
+        Continue();
+        CompiledStatement += $"{FormatIdentifier(Current().value)}, ";
+        Continue();
+
+        if (!Current().value.Equals("FROM"))
+            CompiledStatement += "\"STANDARD-INPUT\");";
+
+        if (Current().value.Equals("FROM"))
+        {
+            Continue();
+            switch (Current().value)
+            {
+                case "STANDARD-INPUT":
+                case "COMMAND-LINE":
+                    CompiledStatement += $"\"{Current().value}\");";
+                    break;
+
+                case "DATE":
+                    CompiledStatement += $"\"{Current().value}\"";
+                    if(Lookahead(1).value.Equals("YYYYMMDD"))
+                        CompiledStatement += $", \"{Lookahead(1).value}\");";
+
+                    if(!Lookahead(1).value.Equals("YYYYMMDD"))
+                        CompiledStatement += ");";
+                    break;
+
+                case "DAY":
+                    CompiledStatement += $"\"{Current().value}\"";
+                    if(Lookahead(1).value.Equals("YYYYDDD"))
+                        CompiledStatement += $", \"{Lookahead(1).value}\");";
+
+                    if(!Lookahead(1).value.Equals("YYYYDDD"))
+                        CompiledStatement += ");";
+                    break;
+
+                case "DAY-OF-WEEK":
+                    CompiledStatement += $"\"{Current().value}\");";
+                    break;
+
+                case "TIME":
+                    CompiledStatement += $"\"{Current().value}\");";
+                    break;
+            }
+        }
+        ExportStatement();
+    }
+
+    private void STOP()
+    {
+        // Statements.STOP();
+        // Statements.STOP(error, status);
+        CompiledStatement += "Statements.STOP(";
+        Continue();
+        Continue();
+        
+        if (Current().value.Equals("."))
+        {
+            CompiledStatement += ");";
+            ExportStatement();
+            return;
+        }
+
+        if (Current().value.Equals("WITH"))
+            Continue();
+
+        if (Current().value.Equals("NORMAL"))
+            CompiledStatement += "false, ";
+
+        if (Current().value.Equals("ERROR"))
+            CompiledStatement += "true, ";
+
+        if (Current().value.Equals("."))
+        {
+            CompiledStatement += "\"0\");";
+            ExportStatement();
+            return;
+        }
+
+        Continue();
+        switch (Current().type)
+        {
+            case TokenType.Identifier:
+                CompiledStatement += $"{FormatIdentifier(Current().value)}.Display);";
+                break;
+            case TokenType.Numeric:
+                CompiledStatement += $"\"{Current().value}\");";
+                break;
+            case TokenType.String:
+                CompiledStatement += $"{Current().value});";
+                break;
+        }
+        ExportStatement();
     }
 
     private string FormatIdentifier(string Identifier)

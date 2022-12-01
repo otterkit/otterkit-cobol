@@ -37,6 +37,15 @@ public static class OtterkitCodegen
             Continue();
         }
 
+        while (Current().value != "EOF")
+        {
+            StatementBuilder statement = new(compiled, Continue, Current, LookAhead);
+            statement.BuildStatement();
+
+            Continue();
+        }
+
+
         compiled.CompileHeader();
         compiled.CompileIdentification();
         compiled.CompileData();

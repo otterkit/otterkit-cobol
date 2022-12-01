@@ -18,9 +18,6 @@ public class _HELLO_WORLD
     // PROCEDURE DIVISION.
     public void Procedure()
     {
-        // RESET LOCAL-STORAGE.
-        _WS_NAME_LOCAL.Bytes = ""u8;
-
         // PROCEDURE STATEMENTS.
         Statements.ACCEPT(_WS_NAME, "DATE", "YYYYMMDD");
         Statements.DISPLAY(" ", true, _WS_NAME.Display, String.Empty);

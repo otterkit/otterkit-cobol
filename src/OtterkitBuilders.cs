@@ -7,7 +7,6 @@ public class ProgramBuilder
     private string Identification { get; set; }
     private string WorkingStorage { get; set; }
     private string LocalStorage { get; set; }
-    private string LocalStorageValues { get; set; }
     private string Statements { get; set; }
 
     public ProgramBuilder()
@@ -16,7 +15,6 @@ public class ProgramBuilder
         this.Identification = string.Empty;
         this.WorkingStorage = string.Empty;
         this.LocalStorage = string.Empty;
-        this.LocalStorageValues = string.Empty;
         this.Statements = string.Empty;
     }
 
@@ -37,15 +35,9 @@ public class ProgramBuilder
         WorkingStorage += $"{Tab}{dataItem}\n";
     }
 
-    public void AppendLocalStorage(string dataItem, string dataItemName, string initialValue)
+    public void AppendLocalStorage(string dataItem)
     {
         LocalStorage += $"{Tab}{dataItem}\n";
-
-        if (initialValue.StartsWith('"') && !dataItem.Contains("Constant"))
-            LocalStorageValues += $"{Tab}{Tab}{dataItemName}.Bytes = {initialValue}u8;\n";
-
-        if (!initialValue.StartsWith('"') && !dataItem.Contains("Constant"))
-            LocalStorageValues += $"{Tab}{Tab}{dataItemName}.Bytes = \"{initialValue}\"u8;\n";
     }
 
     public void AppendStatement(string statement)
@@ -98,8 +90,6 @@ public class ProgramBuilder
         // PROCEDURE DIVISION.
         public void Procedure()
         {
-            // RESET LOCAL-STORAGE.
-    {{LocalStorageValues}}
             // PROCEDURE STATEMENTS.
     {{Statements}}
         }
@@ -141,7 +131,7 @@ public class DataItemBuilder
             ProgramBuilder.AppendWorkingStorage(CompiledDataItem);
 
         if (Section == "LOCAL-STORAGE")
-            ProgramBuilder.AppendLocalStorage(CompiledDataItem, Identifier, DataValue);
+            ProgramBuilder.AppendLocalStorage(CompiledDataItem);
     }
 
     public void BuildDataItem(string section = "WORKING-STORAGE")

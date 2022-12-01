@@ -12,8 +12,8 @@ public class _HELLO_WORLD
     private static Alphanumeric _WS_NAME = new(" "u8, 0, 20, new byte[20]);
 
     // LOCAL-STORAGE SECTION.
-    private static readonly Constant _WS_CONST_LOCAL = new("Constant"u8);
-    private static National _WS_NAME_LOCAL = new(" "u8, 0, 20, new byte[20]);
+    private readonly Constant _WS_CONST_LOCAL = new("Constant"u8);
+    private National _WS_NAME_LOCAL = new(" "u8, 0, 20, new byte[20]);
 
     // PROCEDURE DIVISION.
     public void Procedure()

@@ -168,11 +168,13 @@ public class DataItemBuilder
 
     private void BuildConstant()
     {
-        if (Lookahead(1).value.Equals("GLOBAL") || Lookahead(2).value.Equals("GLOBAL"))
-            CompiledDataItem = $"public static readonly Constant {Identifier} = ";
+        string sectionAccessModifier = string.Empty;
 
-        if (!Lookahead(1).value.Equals("GLOBAL") && !Lookahead(2).value.Equals("GLOBAL"))
+        if (Section.Equals("WORKING-STORAGE"))
             CompiledDataItem = $"private static readonly Constant {Identifier} = ";
+
+        if (Section.Equals("LOCAL-STORAGE"))
+            CompiledDataItem = $"private readonly Constant {Identifier} = ";
 
         while (Current().value != "AS")
         {
@@ -274,7 +276,11 @@ public class DataItemBuilder
             Continue();
         }
 
-        CompiledDataItem = $"private static {DataType} {Identifier} = ";
+        if (Section.Equals("WORKING-STORAGE"))
+            CompiledDataItem = $"private static {DataType} {Identifier} = ";
+
+        if (Section.Equals("LOCAL-STORAGE"))
+            CompiledDataItem = $"private {DataType} {Identifier} = ";
 
         switch (DataType)
         {

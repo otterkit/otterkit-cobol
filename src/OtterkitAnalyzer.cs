@@ -962,7 +962,7 @@ public static class OtterkitAnalyzer
             Token current = Current();
             if (current.type != TokenType.Numeric)
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "numberic literal");
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "numeric literal");
                 ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
                 return;

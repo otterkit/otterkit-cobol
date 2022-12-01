@@ -1,6 +1,3 @@
-using System.Diagnostics;
-using OtterkitLibrary;
-
 namespace Otterkit;
 
 public class ProgramBuilder
@@ -499,6 +496,7 @@ public class StatementBuilder
         if (Current().value.Equals("ERROR"))
             CompiledStatement += "true, ";
 
+        Continue();
         if (Current().value.Equals("."))
         {
             CompiledStatement += "\"0\");";

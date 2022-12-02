@@ -369,7 +369,7 @@ public sealed class Numeric
         }
     }
 
-    public unsafe ReadOnlySpan<byte> Bytes
+    public ReadOnlySpan<byte> Bytes
     {
         get
         {
@@ -822,9 +822,6 @@ public sealed class OtterkitBoolean
 
     public OtterkitBoolean(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
     {
-        if (value.IndexOfAny("01"u8) > -1)
-            throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
-        
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
@@ -839,9 +836,6 @@ public sealed class OtterkitBoolean
 
     public OtterkitBoolean(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
     {
-        if (value.IndexOfAny("01") > -1)
-            throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
-
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
@@ -864,9 +858,6 @@ public sealed class OtterkitBoolean
         }
         set
         {
-            if (value.IndexOfAny("01") > -1)
-                throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
-
             Memory.Span.Fill(48);
 
             int byteDifference = (encoding.GetByteCount(value) - value.Length);
@@ -887,9 +878,6 @@ public sealed class OtterkitBoolean
         }
         set
         {
-            if (value.IndexOfAny("01"u8) > -1)
-                throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
-
             Memory.Span.Fill(48);
 
             int length = Length < value.Length

@@ -1,13 +1,22 @@
 ﻿using System.Diagnostics;
-using System.Text.Json;
-using System.IO;
+using System.Text;
+using OtterkitLibrary;
 
 namespace Otterkit;
-
 public static class OtterkitCompiler
 {
+    static Encoding encoding = Encoding.UTF8;
+    static Memory<byte> _EXT_TEST = External.Resolver("EXT-TEST", 10);
+    static Memory<byte> _EXT_TEST_2 = External.Resolver("EXT-TEST", 10);
+    static Memory<byte> _EXT_TEST_NEW = External.Resolver("EXT-TEST-NEW", 20);
+    static Memory<byte> _EXT_TEST_NEW_2 = External.Resolver("EXT-TEST-NEW", 20);
+
     public static void Main(string[] args)
     {
+        "TEST1"u8.CopyTo(_EXT_TEST.Span);
+        Console.WriteLine(encoding.GetString(_EXT_TEST_2.Span));
+
+
         if (args.Length <= 1 || (args[0].Equals("-h") || args[0].Equals("--help")))
         {
             DisplayHelpMessage();

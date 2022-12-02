@@ -11,7 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="../libotterkit/src/OtterkitLibrary.csproj" />
     <EmbeddedResource Include="parsinginfo.json" />
-    <Content Include="OtterkitTemplates/*">
+    <Content Include="../OtterkitTemplates/*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

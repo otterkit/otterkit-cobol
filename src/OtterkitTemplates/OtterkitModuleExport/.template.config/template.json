@@ -9,7 +9,7 @@
     "defaultName": "OtterkitModuleExport",
     "sourceName": "OtterkitModuleExport",
     "preferNameDirectory": false,
-    "thirdPartyNotices": "https://github.com/otterkit/otterkit/blob/main/THIRD-PARTY-LICENSES",
+    "thirdPartyNotices": "https://github.com/otterkit/otterkit/",
     "tags": {
         "language": "C#",
         "type": "project"

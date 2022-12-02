@@ -33,7 +33,7 @@ public static class ErrorHandler
 
         public static void Report(string fileName, Token token, string error, params string[] expected)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Red;
             if (error == "choice")
             {
                 Choice(token, expected, fileName);
@@ -58,7 +58,7 @@ public static class ErrorHandler
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Error.WriteLine("In {0} at line {1}, column {2}", fileName, token.line, token.column);
 
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Unexpected token: ");
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine("{0}\n", expected[0]);
@@ -70,7 +70,7 @@ public static class ErrorHandler
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Error.WriteLine("In {0} at line {1}, column {2}", fileName, token.line, token.column);
 
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Unexpected token: ");
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine("Expected {0} or {1}, instead of {2}\n", expected[0], expected[1], token.value);
@@ -83,7 +83,7 @@ public static class ErrorHandler
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Error.WriteLine("In {0} at line {1}, column {2}", fileName, token.line, token.column);
 
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Unexpected token: ");
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine("Expected {0}, instead of {1}\n", expected[0], token.value);

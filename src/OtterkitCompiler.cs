@@ -1,8 +1,10 @@
-﻿namespace Otterkit;
+﻿using System.Diagnostics;
+
+namespace Otterkit;
 
 public static class OtterkitCompiler
 {
-    private static string fileName = "main.cob";
+    private static string entryPoint = "main.cob";
     private static string sourceFormat = "fixed";
     private static int maxColumnLength = 80;
     public static void Main(string[] args)
@@ -13,56 +15,134 @@ public static class OtterkitCompiler
             return;
         }
 
-        ProcessArguments(args);
-        List<string> sourceLines = ReadAndProcessFile(fileName, sourceFormat);
+        if (args[0].Equals("new"))
+        {
+            CommandLineArguments(args);
+            return;
+        }
+
+        CommandLineArguments(args);
+        List<string> sourceLines = ReadAndProcessFile(entryPoint, sourceFormat);
         List<Token> tokens = OtterkitLexer.Tokenize(sourceLines);
         List<Token> classified = Token.fromValue(tokens);
-        List<Token> analized = OtterkitAnalyzer.Analyze(classified, fileName);
-        OtterkitCodegen.Generate(analized, fileName);
+        List<Token> analized = OtterkitAnalyzer.Analyze(classified, entryPoint);
+        OtterkitCodegen.Generate(analized, entryPoint);
     }
 
-    private static void ProcessArguments(string[] args)
+    private static void CommandLineArguments(string[] args)
     {
-        // Index is always +1 the true index:
-        // This makes it easier to get the next item,
-        // after the command line argument, like the filename.
-        var index = 0;
-        foreach (string argument in args)
+        // Index should always be +1 the true index:
+        // This makes it easier to get the next item after
+        // the command line argument, like the entry point file.
+        if (args[0].Equals("new"))
         {
-            index += 1;
-            switch (argument)
+            int index = 0;
+            string type = "app";
+            string name = "OtterkitExport";
+            string directory = ".otterkit";
+            foreach (string argument in args)
             {
-                // -H meaning Help
-                case "-h":
-                case "--Help":
-                    DisplayHelpMessage();
-                    Environment.Exit(0);
-                    break;
+                index++;
+                switch (argument)
+                {
+                    case "app":
+                    case "application":
+                        type = "app";
+                        break;
 
-                case "-f":
-                case "--File":
-                    fileName = args[index];
-                    break;
+                    case "mod":
+                    case "module":
+                        type = "mod";
+                        break;
 
-                case "-cl":
-                case "--Columns":
-                    maxColumnLength = int.Parse(args[index]);
-                    break;
-                // --Fixed meaning Fixed Format
-                case "--Fixed":
-                    sourceFormat = "fixed";
-                    break;
-                // --Free meaning Free Format
-                case "--Free":
-                    sourceFormat = "free";
-                    break;
-                default:
-                    break;
+                    case "-d":
+                    case "--directory":
+                        directory = argument;
+                        break;
+                    
+                    case "-n":
+                    case "--name":
+                        name = argument;
+                        break;
+                }
             }
 
+            CallDotNetCompiler(args[0], type, name, directory);
         }
-        return;
     }
+
+    private static void CallDotNetCompiler(string operation, params string[] options)
+    {
+        string arguments = "";
+        if (operation.Equals("new"))
+        {
+            string type = options[0] switch
+            {
+                "app" => "otterkit-export",
+                "mod" => "otterkit-module-export",
+                _ => "app"
+            };
+
+            arguments = $"new {type} -n {options[1]} -o {options[2]}";
+        }
+
+        using (Process dotnet = new Process())
+        {
+            dotnet.StartInfo.FileName = "dotnet";
+            dotnet.StartInfo.Arguments = arguments;
+            dotnet.StartInfo.UseShellExecute = false;
+            dotnet.StartInfo.RedirectStandardOutput = true;
+            dotnet.Start();
+
+            Console.WriteLine(dotnet.StandardOutput.ReadToEnd());
+
+            dotnet.WaitForExit();
+        }
+    }
+
+    // private static void ProcessArguments(string[] args)
+    // {
+    //     // Index is always +1 the true index:
+    //     // This makes it easier to get the next item,
+    //     // after the command line argument, like the filename.
+    //     var index = 0;
+    //     foreach (string argument in args)
+    //     {
+    //         index += 1;
+    //         switch (argument)
+    //         {
+    //             // -H meaning Help
+    //             case "-h":
+    //             case "--Help":
+    //                 DisplayHelpMessage();
+    //                 Environment.Exit(0);
+    //                 break;
+
+    //             case "-f":
+    //             case "--File":
+    //                 fileName = args[index];
+    //                 break;
+
+    //             case "-cl":
+    //             case "--Columns":
+    //                 maxColumnLength = int.Parse(args[index]);
+    //                 break;
+    //             // --Fixed meaning Fixed Format
+    //             case "--Fixed":
+    //                 sourceFormat = "fixed";
+    //                 break;
+    //             // --Free meaning Free Format
+    //             case "--Free":
+    //                 sourceFormat = "free";
+    //                 break;
+    //             default:
+    //                 break;
+    //         }
+
+    //     }
+    //     return;
+    // }
+
     private static List<string> ReadAndProcessFile(string fileName, string sourceFormat)
     {
         if (!File.Exists(fileName))

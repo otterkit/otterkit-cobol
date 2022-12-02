@@ -1,0 +1,64 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "properties": {
+      "author": {
+        "description": "The author of this COBOL project.",
+        "type": "string"
+      },
+      "description": {
+        "type": "string",
+        "description": "A short description of this COBOL project's purpose."
+      },
+      "tags": {
+        "description": "Zero or more tags that describe this COBOL project's purpose and functionality.",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+    },
+    "name": {
+      "description": "The name of this COBOL project.",
+      "type": "string",
+      "minLength": 1
+    },
+    "id": {
+        "description": "A unique id for this COBOL project, in a Company.ProjectName format.",
+        "type": "string",
+        "minLength": 1
+    },
+      "metadata": {
+        "description": "Project information required by the Otterkit COBOL compiler to be able to compile correctly.",
+        "type": "object",
+        "required": ["entryPoint", "type"],
+        "properties": {
+          "entryPoint": {
+            "description": "This COBOL project's entry point, in a file#program-id format (example main.cob#main).",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of COBOL project: application or module.",
+            "enum": ["application", "module"]
+          }
+        }
+      },
+      "license": {
+        "description": "An URL for a document containing the license for this COBOL project.",
+        "type": "string"
+      },
+      "thirdPartyLicenses": {
+        "description": "An URL for a document containing the third-party licenses used by this COBOL project.",
+        "type": "string"
+      }
+    },
+    "required": [
+      "author",
+      "description",
+      "name",
+      "id",
+      "metadata",
+      "license"
+    ],
+    "title": "JSON schema Otterkit COBOL compiler configuration (OtterkitConfig.json).",
+    "type": "object"
+  }

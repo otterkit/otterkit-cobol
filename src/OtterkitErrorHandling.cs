@@ -19,7 +19,7 @@ public static class ErrorHandler
             string line = File.ReadLines(fileName).Skip(token.line - 1).Take(token.line).First();
             string error = new String(' ', line.Length - token.value.Length);
             error = error.Insert(token.column, new String('^', token.value.Length));
-            
+
             Console.WriteLine($"{" ",5}|");
             Console.WriteLine($"{token.line,4} | {line.TrimStart()}");
             Console.Write($"{" ",5}|");
@@ -30,9 +30,10 @@ public static class ErrorHandler
 
             Environment.Exit(1);
         }
+
         public static void Report(string fileName, Token token, string error, params string[] expected)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.Yellow;
             if (error == "choice")
             {
                 Choice(token, expected, fileName);
@@ -53,25 +54,41 @@ public static class ErrorHandler
 
         private static void General(Token token, string[] expected, string fileName)
         {
-            Console.Error.WriteLine("Otterkit parsing error: In {0} at Line {1}, Column {2}", fileName, token.line, token.column);
-            Console.Error.WriteLine("Unexpected token: {0}", expected[0]);
-            Console.WriteLine();
+            Console.Error.Write("Otterkit parsing error: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Error.WriteLine("In {0} at line {1}, column {2}", fileName, token.line, token.column);
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Error.Write("Unexpected token: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("{0}\n", expected[0]);
         }
-        
+
         private static void Choice(Token token, string[] expected, string fileName)
         {
-            Console.Error.WriteLine("Otterkit parsing error: In {0} at Line {1}, Column {2}", fileName, token.line, token.column);
-            Console.Error.WriteLine("Unexpected token: Expected {0} or {1}, instead of {2}", expected[0], expected[1], token.value);
-            Console.WriteLine();
+            Console.Error.Write("Otterkit parsing error: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Error.WriteLine("In {0} at line {1}, column {2}", fileName, token.line, token.column);
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Error.Write("Unexpected token: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("Expected {0} or {1}, instead of {2}\n", expected[0], expected[1], token.value);
         }
 
         private static void Expected(Token token, string[] expected, string fileName)
         {
-            Console.Error.WriteLine("Otterkit parsing error: In {0} at Line {1}, Column {2}", fileName, token.line, token.column);
-            Console.Error.WriteLine("Unexpected token: Expected {0}, instead of {1}", expected[0], token.value);
-            Console.WriteLine();
+
+            Console.Error.Write("Otterkit parsing error: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Error.WriteLine("In {0} at line {1}, column {2}", fileName, token.line, token.column);
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Error.Write("Unexpected token: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("Expected {0}, instead of {1}\n", expected[0], token.value);
         }
 
     }
-    
+
 }

@@ -13,6 +13,9 @@
     <Reference Include="OtterkitLibrary">
       <HintPath>OtterkitLibrary.dll</HintPath>
     </Reference>
+    <Content Include="OtterkitMath/Decimal128.*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

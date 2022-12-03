@@ -1,18 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Optimize>true</Optimize>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
+
   <ItemGroup>
-    <ProjectReference Include="../libotterkit/src/OtterkitLibrary.csproj" />
-    <EmbeddedResource Include="parsinginfo.json" />
-    <Content Include="../OtterkitTemplates/*">
+    <Reference Include="OtterkitLibrary">
+      <HintPath>OtterkitLibrary.dll</HintPath>
+    </Reference>
+    <Content Include="OtterkitMath/Decimal128.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
 </Project>

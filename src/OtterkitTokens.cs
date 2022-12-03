@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Otterkit;
 
@@ -79,7 +80,7 @@ public struct Token
         else if(value.StartsWith("\""))
             return TokenType.String;
         //check if the value is a numeric
-        else if(value.All(Char.IsDigit))
+        else if(Regex.IsMatch(value, @"^(\+|-)?\.?[0-9]\d*(\.\d+)?"))
             return TokenType.Numeric;
         //check if the value is End Of File
         else if(value == "EOF")

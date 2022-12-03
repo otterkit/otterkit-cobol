@@ -1,69 +1,164 @@
-﻿namespace Otterkit;
+﻿using System.Diagnostics;
 
+namespace Otterkit;
 public static class OtterkitCompiler
 {
-    private static string fileName = "main.cob";
-    private static string sourceFormat = "fixed";
-    private static int maxColumnLength = 80;
     public static void Main(string[] args)
     {
-        if (args.Length <= 1)
+        if (args.Length <= 1 || (args[0].Equals("-h") || args[0].Equals("--help")))
         {
             DisplayHelpMessage();
-            Environment.Exit(0);
+            return;
         }
 
-        ProcessArguments(args);
-        List<string> sourceLines = ReadAndProcessFile(fileName, sourceFormat);
-        List<Token> tokens = OtterkitLexer.Tokenize(sourceLines);
-        List<Token> classified = Token.fromValue(tokens);
-        List<Token> analized = OtterkitAnalyzer.Analyze(classified);
-        foreach (var item in analized)
+        if (args[0].Equals("new"))
         {
-            Console.WriteLine("{0,4} {1,4} {2,16} {3} {4}", item.line, item.column, item.value, item.type, item.scope);
+            CommandLineArguments(args);
+            return;
         }
+
+        if (args[0].Equals("build"))
+        {
+            CommandLineArguments(args);
+            return;
+        }
+
+        CommandLineArguments(args);
     }
 
-    private static void ProcessArguments(string[] args)
+    private static void CommandLineArguments(string[] args)
     {
-        // Index is always +1 the true index:
-        // This makes it easier to get the next item,
-        // after the command line argument, like the filename.
-        var index = 0;
-        foreach (string argument in args)
+        // Index should always be +1 the true index:
+        // This makes it easier to get the next item after
+        // the command line argument, like the entry point file.
+        if (args[0].Equals("new"))
         {
-            index += 1;
-            switch (argument)
+            int index = 0;
+            string type = "app";
+            string name = "OtterkitExport";
+            foreach (string argument in args)
             {
-                // -H meaning Help
-                case "-H":
-                    DisplayHelpMessage();
-                    Environment.Exit(0);
-                    break;
-                // -F meaning File
-                case "-F":
-                    fileName = args[index];
-                    break;
-                // -CL meaning Column Length
-                case "-CL":
-                    maxColumnLength = int.Parse(args[index]);
-                    break;
-                // --Fixed meaning Fixed Format
-                case "--Fixed":
-                    sourceFormat = "fixed";
-                    break;
-                // --Free meaning Free Format
-                case "--Free":
-                    sourceFormat = "free";
-                    break;
-                default:
-                    break;
+                index++;
+                switch (argument)
+                {
+                    case "app":
+                    case "application":
+                        type = "app";
+                        break;
+
+                    case "mod":
+                    case "module":
+                        type = "mod";
+                        break;
+                    
+                    case "-n":
+                    case "--name":
+                        name = argument;
+                        break;
+                }
             }
 
+            CallDotNetCompiler(args[0], type, name);
         }
-        return;
+
+        if (args[0].Equals("build"))
+        {
+            int index = 0;
+            string entryPoint = "main.cob";
+            string sourceFormat = "fixed";
+            int columnLength = 80;
+
+            foreach (string argument in args)
+            {
+                index++;
+                switch (argument)
+                {
+                    case "-h":
+                    case "--Help":
+                        DisplayHelpMessage();
+                        Environment.Exit(0);
+                        break;
+
+                    case "-e":
+                    case "--Entry":
+                        entryPoint = args[index];
+                        break;
+
+                    case "-cl":
+                    case "--Columns":
+                        columnLength = int.Parse(args[index]);
+                        break;
+                    // --Fixed meaning Fixed Format
+                    case "--Fixed":
+                        sourceFormat = "fixed";
+                        break;
+                    // --Free meaning Free Format
+                    case "--Free":
+                        sourceFormat = "free";
+                        break;
+                }
+            }
+
+            List<string> sourceLines = ReadAndProcessFile(entryPoint, sourceFormat, columnLength);
+            List<Token> tokens = OtterkitLexer.Tokenize(sourceLines);
+            List<Token> classified = Token.fromValue(tokens);
+            List<Token> analized = OtterkitAnalyzer.Analyze(classified, entryPoint);
+            OtterkitCodegen.Generate(analized, entryPoint);
+        }
     }
-    private static List<string> ReadAndProcessFile(string fileName, string sourceFormat)
+
+    private static void CallDotNetCompiler(string operation, params string[] options)
+    {
+        string arguments = "";
+        if (operation.Equals("new"))
+        {
+            string type = options[0] switch
+            {
+                "app" => "otterkit-export",
+                "mod" => "otterkit-module-export",
+                _ => "app"
+            };
+
+            string OtterkitConfig = $$"""
+            {
+                "$schema": "https://raw.githubusercontent.com/otterkit/otterkit/unfinished-codegen/src/schema.json",
+                "author": "Project Author",
+                "name": "{{options[1]}}",
+                "id": "MyCompany.{{options[1]}}",
+                "description": "Description of the project's purpose",
+                "tags": ["COBOL"],
+                "metadata": {
+                    "entryPoint": "main.cob#main",
+                    "type": "{{(options[0].Equals("app")?"application":"module")}}"
+                },
+                "license": "License URL"
+            }
+            """;
+
+            Directory.CreateDirectory(".otterkit");
+            Directory.SetCurrentDirectory(".otterkit");
+
+            File.WriteAllText("OtterkitConfig.json", OtterkitConfig);
+            arguments = $"new {type} -n {options[1]} --force";
+        }
+
+        using (Process dotnet = new Process())
+        {
+            dotnet.StartInfo.FileName = "dotnet";
+            dotnet.StartInfo.Arguments = arguments;
+            dotnet.StartInfo.UseShellExecute = false;
+            dotnet.StartInfo.RedirectStandardOutput = true;
+            dotnet.Start();
+
+            Console.Write(dotnet.StandardOutput.ReadToEnd());
+
+            dotnet.WaitForExit();
+        }
+
+        Directory.SetCurrentDirectory("..");
+    }
+
+    private static List<string> ReadAndProcessFile(string fileName, string sourceFormat, int columnLength)
     {
         if (!File.Exists(fileName))
         {
@@ -79,10 +174,10 @@ public static class OtterkitCompiler
             if (sourceFormat == "fixed")
             {
                 string currentLine = line;
-                if (currentLine.Length >= maxColumnLength)
+                if (currentLine.Length >= columnLength)
                 {
                     // Removes everything after the max column length
-                    currentLine = currentLine.Substring(0, maxColumnLength);
+                    currentLine = currentLine.Substring(0, columnLength);
                 }
 
                 // Removes the sequence number area
@@ -114,15 +209,36 @@ public static class OtterkitCompiler
 
     private static void DisplayHelpMessage()
     {
-        Console.WriteLine("\nOtterkit COBOL Compiler                   ");
-        Console.WriteLine("<Copyright 2022 Otterkit Project>           ");
-        Console.WriteLine("<Apache 2.0 license>                      \n");
-        Console.WriteLine("Command line options:                     \n");
-        Console.WriteLine("  -H           : Displays this message      ");
-        Console.WriteLine("  -F filename  : Compile specified file     ");
-        Console.WriteLine("  -CL integer  : Specify max column length  ");
-        Console.WriteLine("  --Fixed      : Use fixed source format    ");
-        Console.WriteLine("  --Free       : Use free source format     ");
-        Console.WriteLine("\n");
+        string helpMessage = """
+
+        Otterkit COBOL Compiler
+        Copyright Otterkit Project 2022
+        Licensed under Apache 2.0
+
+        Command line options:
+            -h --Help           : Displays this help message
+
+        New command usage:
+            otterkit new <options>
+
+        New command options:
+            app application     : Create a new executable COBOL application
+            mod module          : Create a new COBOL module library
+            -n --Name           : Specify the name for the project 
+                                    (default is OtterkitExport)
+
+        Build command usage:
+            otterkit build <options>
+
+        Build command options:
+            -e --Entry          : Specify the entry point for the project
+            -cl --Columns       : Specify the max column length (default is 80)
+            --Fixed             : Use fixed source format
+            --Free              : Use free source format 
+                                    (-cl has no effect on free format)
+
+        """;
+
+        Console.WriteLine(helpMessage);
     }
 }

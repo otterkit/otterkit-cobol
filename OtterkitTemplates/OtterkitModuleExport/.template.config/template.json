@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json.schemastore.org/template",
+    "author": "KTSnowy <KTSnowy@outlook.com>",
+    "classifications": ["COBOL", "Runtime Module"],
+    "identity": "OtterkitModuleExport",
+    "name": "Otterkit COBOL Module",
+    "description": "Used by the Otterkit COBOL compiler to generate a new COBOL module",
+    "shortName": "otterkit-module-export",
+    "defaultName": "OtterkitModuleExport",
+    "sourceName": "OtterkitModuleExport",
+    "preferNameDirectory": false,
+    "thirdPartyNotices": "https://github.com/otterkit/otterkit/",
+    "tags": {
+        "language": "C#",
+        "type": "project"
+    }
+}

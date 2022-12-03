@@ -24,7 +24,7 @@ public static class OtterkitLexer
         */
 
         int lineNumber = 0;
-        string wordsPattern =  @"[a-zA-Z]+([-|_]*[\w0-9]+)*|[0-9]+([-|_][\w0-9]+)+|\w+";
+        string wordsPattern =  @"[a-zA-Z]+([-|_]*[\w0-9]+)*|[0-9]+([-|_][\w0-9]+)+";
         string stringPattern = "|(\")(.*?)(\"|$)|(\')(.*?)(\'|$)";
         string numberPattern = @"|(\+|-)?\.?[0-9]\d*(\.\d+)?";
         string symbolPattern = @"|(\+|\-|\*\*|\*|=|\/|\$|,|;|::|\.|\(|\)|>>|<>|>=|<=|>|<|&|_)";

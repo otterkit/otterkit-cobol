@@ -64,6 +64,12 @@ public sealed class DataItem
         this.Memory = new byte[length];
     }
 
+    public DataItem(Memory<byte> memory)
+    {
+        this.Length = memory.Length;
+        this.Memory = memory;
+    }
+
     public DataItem(int length, Memory<byte> memory)
     {
         this.Length = length;
@@ -221,19 +227,17 @@ public sealed unsafe class BasedDataItem
 
 public sealed class Constant
 {
-    public Memory<byte> Memory { get; init; }
+    public ReadOnlyMemory<byte> Memory { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
 
     public Constant(ReadOnlySpan<byte> bytes)
     {
-        this.Memory = new byte[bytes.Length];
-        bytes.CopyTo(Memory.Span);
+        this.Memory = bytes.ToArray();
     }
 
     public Constant(string bytes)
     {
-        this.Memory = new byte[encoding.GetByteCount(bytes)];
-        encoding.GetBytes(bytes, Memory.Span);
+        this.Memory = encoding.GetBytes(bytes);
     }
 
     public ReadOnlySpan<char> Chars
@@ -298,6 +302,26 @@ public sealed class Numeric
         }
 
         Format(value);
+    }
+
+    public Numeric(Memory<byte> memory, int offset, int length, int fractionalLength, bool isSigned)
+    {
+        this.Offset = offset;
+        this.Length = length;
+        this.FractionalLength = fractionalLength;
+        this.isSigned = isSigned;
+
+        if (fractionalLength == 0)
+        {
+            int signedSpace = isSigned ? 1 : 0;
+            this.Memory = memory.Slice(offset, length + signedSpace);
+        }
+
+        if (fractionalLength > 0)
+        {
+            int signedSpace = isSigned ? 2 : 1;
+            this.Memory = memory.Slice(offset, length + fractionalLength + signedSpace);
+        }
     }
 
     private void Format(ReadOnlySpan<byte> bytes, bool isSigned = false)
@@ -415,6 +439,13 @@ public sealed class Alphanumeric
             : value.Length;
 
         value.Slice(0, byteLength).CopyTo(Memory.Span);
+    }
+
+    public Alphanumeric(Memory<byte> memory, int offset, int length)
+    {
+        this.Offset = offset;
+        this.Length = length;
+        this.Memory = memory.Slice(offset, length);
     }
 
     public ReadOnlySpan<char> Chars
@@ -552,6 +583,13 @@ public sealed class Alphabetic
             : value.Length;
 
         value.Slice(0, byteLength).CopyTo(Memory.Span);
+    }
+
+    public Alphabetic(Memory<byte> memory, int offset, int length)
+    {
+        this.Offset = offset;
+        this.Length = length;
+        this.Memory = memory.Slice(offset, length);
     }
 
     public ReadOnlySpan<char> Chars
@@ -700,6 +738,13 @@ public sealed class National
         value.Slice(0, byteLength).CopyTo(Memory.Span);
     }
 
+    public National(Memory<byte> memory, int offset, int length)
+    {
+        this.Offset = offset;
+        this.Length = length;
+        this.Memory = memory.Slice(offset, length);
+    }
+
     public ReadOnlySpan<char> Chars
     {
         get
@@ -822,6 +867,12 @@ public sealed class OtterkitBoolean
 
     public OtterkitBoolean(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
     {
+        foreach (byte bytes in value)
+        {
+            if (!bytes.Equals(0) || !bytes.Equals(1))
+                throw new ArgumentException("Boolean data type can only contain 0s and 1s");
+        }
+
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
@@ -834,20 +885,11 @@ public sealed class OtterkitBoolean
         value.Slice(0, byteLength).CopyTo(Memory.Span);
     }
 
-    public OtterkitBoolean(ReadOnlySpan<char> value, int offset, int length, Memory<byte> memory)
+    public OtterkitBoolean(Memory<byte> memory, int offset, int length)
     {
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
-        Memory.Span.Fill(48);
-
-        int byteDifference = (encoding.GetByteCount(value) - value.Length);
-
-        int byteLength = Length < value.Length + byteDifference
-            ? Length - byteDifference
-            : value.Length;
-
-        encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
     }
 
     public ReadOnlySpan<char> Chars
@@ -858,6 +900,11 @@ public sealed class OtterkitBoolean
         }
         set
         {
+            foreach (char chars in value)
+            {
+                if (!chars.Equals('0') || !chars.Equals('1'))
+                    throw new ArgumentException("Boolean data type can only contain 0s and 1s");
+            }
             Memory.Span.Fill(48);
 
             int byteDifference = (encoding.GetByteCount(value) - value.Length);
@@ -878,6 +925,11 @@ public sealed class OtterkitBoolean
         }
         set
         {
+            foreach (byte bytes in value)
+            {
+                if (!bytes.Equals(0) || !bytes.Equals(1))
+                    throw new ArgumentException("Boolean data type can only contain 0s and 1s");
+            }
             Memory.Span.Fill(48);
 
             int length = Length < value.Length
@@ -920,8 +972,11 @@ public sealed class BasedOtterkitBoolean
         }
         set
         {
-            if (value.IndexOfAny("01") > -1)
-                throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
+            foreach (char chars in value)
+            {
+                if (!chars.Equals('0') || !chars.Equals('1'))
+                    throw new ArgumentException("Boolean data type can only contain 0s and 1s");
+            }
 
             Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
             MemoryOffset.Fill(48);
@@ -945,8 +1000,11 @@ public sealed class BasedOtterkitBoolean
         }
         set
         {
-            if (value.IndexOfAny("01"u8) > -1)
-                throw new ArgumentOutOfRangeException("value", "Boolean type can only contain 1s and 0s");
+            foreach (byte bytes in value)
+            {
+                if (!bytes.Equals(0) || !bytes.Equals(1))
+                    throw new ArgumentException("Boolean data type can only contain 0s and 1s");
+            }
 
             Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
             MemoryOffset.Fill(48);

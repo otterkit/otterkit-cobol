@@ -112,6 +112,12 @@ char *OtterkitArithmetic(char *expression)
 		char current = expression[index];
 		char previous = expression[index - 1];
 		char next = expression[index + 1];
+
+		if (isalpha(current))
+		{
+			return "NaN";
+		}
+
 		if (isdigit(current))
 		{
 			// Append character to string stack

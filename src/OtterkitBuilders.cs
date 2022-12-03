@@ -257,6 +257,22 @@ public class DataItemBuilder
                 }
             }
 
+            if (Current().value.Equals("IS"))
+            {
+                Continue();
+                if (Current().value.Equals("EXTERNAL"))
+                {
+                    string externalizedName = Identifier;
+
+                    Continue();
+                    if (Current().value.Equals("AS"))
+                    {
+                        Continue();
+                        externalizedName = FormatIdentifier(Current().value.Substring(1, Current().value.Length - 2));
+                    }
+                }
+            }
+
             if (Current().value.Equals("VALUE"))
             {
                 Continue();

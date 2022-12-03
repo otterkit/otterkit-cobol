@@ -84,15 +84,15 @@ public static class OtterkitAnalyzer
 
         void DataSections()
         {
-            while(Current().value != "PROCEDURE")
+            while (Current().value != "PROCEDURE")
             {
                 if (Current().value.Equals("WORKING-STORAGE"))
                     WorkingStorage();
 
-                if(Current().value.Equals("LOCAL-STORAGE"))
+                if (Current().value.Equals("LOCAL-STORAGE"))
                     LocalStorage();
 
-                switch(Current().value)
+                switch (Current().value)
                 {
                     case "WORKING-STORAGE":
                     case "LOCAL-STORAGE":
@@ -127,7 +127,7 @@ public static class OtterkitAnalyzer
 
         void Entries()
         {
-            if(Current().value == "77")
+            if (Current().value == "77")
                 SevenSevenEntry();
 
             if (LookAhead(2).value == "CONSTANT")
@@ -139,70 +139,106 @@ public static class OtterkitAnalyzer
             string datatype = string.Empty;
             Number();
             Identifier();
-            Choice(null, "PIC", "PICTURE");
-            Optional("IS");
-            datatype = Current().value switch
-            {
-                "S9" => "Signed Numeric",
-                "9" => "Numeric",
-                "X" => "Alphanumeric",
-                "A" => "Alphabetic",
-                "N" => "National",
-                "1" => "Boolean",
-                _ => "Error"
-            };
-            if (datatype == "Error")
-            {
-                ErrorHandler.Parser.Report(fileName, Current(), " ", "Unrecognized type, expected S9, 9, X, A, N or 1");
-                ErrorHandler.Parser.PrettyError(fileName, Current());
-            }
 
-            Choice(null, "S9", "9", "X", "A", "N", "1");
-            Expected("(");
-            Number();
-            Expected(")");
-            if(Current().value == "V9" && (datatype != "Signed Numeric" && (datatype != "Numeric")))
+            while (Current().type == TokenType.ReservedKeyword)
             {
-                ErrorHandler.Parser.Report(fileName, Current(), " ", "V9 cannot be used with non-numeric types");
-                ErrorHandler.Parser.PrettyError(fileName, Current());
-            }
-        
-            if(Current().value == "V9")
-            {
-                Expected("V9");
-                Expected("(");
-                Number();
-                Expected(")");
-            }
-            
-            if(Current().value == "VALUE")
-            {
-                Expected("VALUE");
-                switch (datatype)
+                if (Current().value.Equals("IS") && !(LookAhead(1).value.Equals("EXTERNAL") || (LookAhead(1).value.Equals("GLOBAL")) || (LookAhead(1).value.Equals("TYPEDEF"))))
                 {
-                    case "Signed Numeric":
-                    case "Numeric":
-                        Number();
-                        break;
-                    
-                    case "Alphanumeric":
-                    case "Alphabetic":
-                    case "National":
-                    case "Boolean":
-                        String();
-                        break;
+                    string Externalerror = """
+                    Missing clause or possible clause mismatch, in this context the "IS" word must be followed by the EXTERNAL, GLOBAL or TYPEDEF clauses only (IS TYPEDEF), or must be in the middle of the PICTURE clause (PIC IS ...) 
+                    """;
 
-                    case "Error":
-                        ErrorHandler.Parser.Report(fileName, Current(), " ", "Unable to determine the correct literal type due to the previous type error");
-                        ErrorHandler.Parser.PrettyError(fileName, Current());
-                        break;
-
-                    default:
-                        throw new UnreachableException("Unrecognized type has already been checked above. This should be unreachable.");
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", Externalerror);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
+
+                if ((Current().value.Equals("IS") && LookAhead(1).value.Equals("EXTERNAL")) || (Current().value.Equals("EXTERNAL")))
+                {
+                    Optional("IS");
+                    Expected("EXTERNAL");
+                    if (Current().value.Equals("AS"))
+                    {
+                        string externalizedNameError = """
+                        Missing externalized name, the "AS" word on the EXTERNAL clause must be followed by an alphanumeric or national literal
+                        """;
+                        Expected("AS");
+                        String(externalizedNameError, -1);
+                    }
+                }
+
+                if (Current().value.Equals("PIC") || Current().value.Equals("PICTURE"))
+                {
+                    Choice(null, "PIC", "PICTURE");
+                    Optional("IS");
+                    datatype = Current().value switch
+                    {
+                        "S9" => "Signed Numeric",
+                        "9" => "Numeric",
+                        "X" => "Alphanumeric",
+                        "A" => "Alphabetic",
+                        "N" => "National",
+                        "1" => "Boolean",
+                        _ => "Error"
+                    };
+
+                    if (datatype == "Error")
+                    {
+                        ErrorHandler.Parser.Report(fileName, Current(), " ", "Unrecognized type, expected S9, 9, X, A, N or 1");
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
+                    }
+
+                    Choice(null, "S9", "9", "X", "A", "N", "1");
+                    Expected("(");
+                    Number();
+                    Expected(")");
+                    if (Current().value == "V9" && (datatype != "Signed Numeric" && (datatype != "Numeric")))
+                    {
+                        ErrorHandler.Parser.Report(fileName, Current(), " ", "V9 cannot be used with non-numeric types");
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
+                    }
+
+                    if (Current().value == "V9")
+                    {
+                        Expected("V9");
+                        Expected("(");
+                        Number();
+                        Expected(")");
+                    }
+                }
+
+                if (Current().value == "VALUE")
+                {
+                    Expected("VALUE");
+                    switch (datatype)
+                    {
+                        case "Signed Numeric":
+                        case "Numeric":
+                            Number();
+                            break;
+
+                        case "Alphanumeric":
+                        case "Alphabetic":
+                        case "National":
+                        case "Boolean":
+                            String();
+                            break;
+
+                        case "Error":
+                            ErrorHandler.Parser.Report(fileName, Current(), " ", "Unable to determine the correct literal type due to the previous type error");
+                            ErrorHandler.Parser.PrettyError(fileName, Current());
+                            break;
+
+                        default:
+                            throw new UnreachableException("Unrecognized type has already been checked above. This should be unreachable.");
+                    }
+                }
+
             }
 
-            Expected(".", "separator period");
+            string separatorPeriodError = """
+            Missing separator period at the end of this data item definition, each data item must end with a separator period
+            """;
+            Expected(".", separatorPeriodError, -1, "separator period");
         }
 
         void ConstantEntry()
@@ -236,7 +272,7 @@ public static class OtterkitAnalyzer
                     case TokenType.String:
                         String();
                         break;
-                    
+
                     case TokenType.Numeric:
                         Number();
                         break;
@@ -444,7 +480,7 @@ public static class OtterkitAnalyzer
             }
 
             Expected("=");
-            if (Current().type != TokenType.Identifier 
+            if (Current().type != TokenType.Identifier
              && Current().type != TokenType.Numeric
              && Current().type != TokenType.Symbol)
                 ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier, numeric literal or arithmetic symbol");
@@ -511,7 +547,7 @@ public static class OtterkitAnalyzer
                     Number();
             }
 
-            if(Current().value == "TO" && LookAhead(2).value == "GIVING")
+            if (Current().value == "TO" && LookAhead(2).value == "GIVING")
             {
                 Optional("TO");
                 switch (Current().type)
@@ -539,7 +575,7 @@ public static class OtterkitAnalyzer
 
                 while (Current().type == TokenType.Identifier)
                     Identifier();
-            } 
+            }
             else if (Current().value == "GIVING")
             {
                 Expected("GIVING");
@@ -598,7 +634,7 @@ public static class OtterkitAnalyzer
                     Number();
             }
 
-            if(Current().value == "FROM" && LookAhead(2).value == "GIVING")
+            if (Current().value == "FROM" && LookAhead(2).value == "GIVING")
             {
                 Optional("FROM");
                 switch (Current().type)
@@ -672,7 +708,7 @@ public static class OtterkitAnalyzer
                     break;
             }
 
-            if(Current().value == "BY" && LookAhead(2).value == "GIVING")
+            if (Current().value == "BY" && LookAhead(2).value == "GIVING")
             {
                 Optional("BY");
                 switch (Current().type)
@@ -746,7 +782,7 @@ public static class OtterkitAnalyzer
                     break;
             }
 
-            if((Current().value == "BY" || Current().value == "INTO") 
+            if ((Current().value == "BY" || Current().value == "INTO")
                 && LookAhead(2).value == "GIVING" && LookAhead(4).value != "REMAINDER"
             )
             {
@@ -777,7 +813,7 @@ public static class OtterkitAnalyzer
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             }
-            else if((Current().value == "BY" || Current().value == "INTO") 
+            else if ((Current().value == "BY" || Current().value == "INTO")
                 && LookAhead(2).value == "GIVING" && LookAhead(4).value == "REMAINDER"
             )
             {
@@ -904,13 +940,25 @@ public static class OtterkitAnalyzer
             return;
         }
 
-        void Expected(string expected, string scope = "")
+        void Expected(string expected, string custom = "expected", int position = 0, string scope = "")
         {
+            string errorMessage = expected;
+            string errorType = "expected";
+            Token token = Current();
+            if (!custom.Equals("expected"))
+            {
+                errorMessage = custom;
+                errorType = "general";
+            }
+
+            if (position != 0)
+                token = LookAhead(position);
+
             Token current = Current();
             if (!current.value.Equals(expected))
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", expected);
-                ErrorHandler.Parser.PrettyError(fileName, Current());
+                ErrorHandler.Parser.Report(fileName, token, errorType, errorMessage);
+                ErrorHandler.Parser.PrettyError(fileName, token);
                 Continue();
                 return;
             }
@@ -957,13 +1005,25 @@ public static class OtterkitAnalyzer
             return;
         }
 
-        void Number()
+        void Number(string custom = "expected", int position = 0)
         {
+            string errorMessage = "string literal";
+            string errorType = "expected";
+            Token token = Current();
+            if (!custom.Equals("expected"))
+            {
+                errorMessage = custom;
+                errorType = "general";
+            }
+
+            if (position != 0)
+                token = LookAhead(position);
+
             Token current = Current();
             if (current.type != TokenType.Numeric)
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "numeric literal");
-                ErrorHandler.Parser.PrettyError(fileName, Current());
+                ErrorHandler.Parser.Report(fileName, token, errorType, errorMessage);
+                ErrorHandler.Parser.PrettyError(fileName, token);
                 Continue();
                 return;
             }
@@ -972,13 +1032,25 @@ public static class OtterkitAnalyzer
             return;
         }
 
-        void String()
+        void String(string custom = "expected", int position = 0)
         {
+            string errorMessage = "string literal";
+            string errorType = "expected";
+            Token token = Current();
+            if (!custom.Equals("expected"))
+            {
+                errorMessage = custom;
+                errorType = "general";
+            }
+
+            if (position != 0)
+                token = LookAhead(position);
+
             Token current = Current();
             if (current.type != TokenType.String)
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "string literal");
-                ErrorHandler.Parser.PrettyError(fileName, Current());
+                ErrorHandler.Parser.Report(fileName, token, errorType, errorMessage);
+                ErrorHandler.Parser.PrettyError(fileName, token);
                 Continue();
                 return;
             }
@@ -1002,13 +1074,25 @@ public static class OtterkitAnalyzer
             return;
         }
 
-        void Symbol()
+        void Symbol(string custom = "expected", int position = 0)
         {
+            string errorMessage = "string literal";
+            string errorType = "expected";
+            Token token = Current();
+            if (!custom.Equals("expected"))
+            {
+                errorMessage = custom;
+                errorType = "general";
+            }
+
+            if (position != 0)
+                token = LookAhead(position);
+
             Token current = Current();
             if (current.type != TokenType.Symbol)
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "symbol");
-                ErrorHandler.Parser.PrettyError(fileName, Current());
+                ErrorHandler.Parser.Report(fileName, token, errorType, errorMessage);
+                ErrorHandler.Parser.PrettyError(fileName, token);
                 Continue();
                 return;
             }

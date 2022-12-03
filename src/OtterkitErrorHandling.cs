@@ -48,6 +48,13 @@ public static class ErrorHandler
                 return;
             }
 
+            if (error == "general")
+            {
+                General(token, expected, fileName);
+                Console.ResetColor();
+                return;
+            }
+
             General(token, expected, fileName);
             Console.ResetColor();
         }

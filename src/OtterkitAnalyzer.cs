@@ -127,14 +127,22 @@ public static class OtterkitAnalyzer
 
         void Entries()
         {
-            if (Current().value == "77")
-                SevenSevenEntry();
+            if (Current().value.Equals("77"))
+                BaseEntry();
 
-            if (LookAhead(2).value == "CONSTANT")
+            if ((Current().value.Equals("01") || Current().value.Equals("1")) && !LookAhead(2).value.Equals("CONSTANT"))
+                DataDescriptionEntry();
+
+            if (LookAhead(2).value.Equals("CONSTANT"))
                 ConstantEntry();
         }
 
-        void SevenSevenEntry()
+        void DataDescriptionEntry()
+        {
+            BaseEntry();
+        }
+
+        void BaseEntry()
         {
             string datatype = string.Empty;
             Number();
@@ -306,6 +314,18 @@ public static class OtterkitAnalyzer
             Expected("DIVISION");
             Expected(".", "separator period");
             Statement();
+
+            if(Current().value.Equals("END") && LookAhead(1).value.Equals("PROGRAM"))
+            {
+                Expected("END");
+                Expected("PROGRAM");
+                Identifier();
+                Expected(".", "separator period");
+                if (Current().value.Equals("IDENTIFICATION"))
+                {
+                    Source();
+                }
+            }
         }
 
         void Statement(bool isNested = false)
@@ -326,6 +346,12 @@ public static class OtterkitAnalyzer
 
                 case "COMPUTE":
                     COMPUTE();
+                    ScopeTerminator(isNested);
+                    Statement(isNested);
+                    break;
+
+                case "CALL":
+                    CALL();
                     ScopeTerminator(isNested);
                     Statement(isNested);
                     break;
@@ -526,6 +552,13 @@ public static class OtterkitAnalyzer
 
             if (isConditional)
                 Expected("END-COMPUTE");
+        }
+
+        void CALL()
+        {
+            Expected("CALL");
+            String();
+            Optional("END-CALL");
         }
 
         void ADD()

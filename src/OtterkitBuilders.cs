@@ -8,6 +8,7 @@ public class ProgramBuilder
     private string WorkingStorage { get; set; }
     private string LocalStorage { get; set; }
     private string Statements { get; set; }
+    public string UnformattedID { get; set; }
 
     public ProgramBuilder()
     {
@@ -16,6 +17,7 @@ public class ProgramBuilder
         this.WorkingStorage = string.Empty;
         this.LocalStorage = string.Empty;
         this.Statements = string.Empty;
+        this.UnformattedID = string.Empty;
     }
 
     public string ExportCompiled()
@@ -26,6 +28,7 @@ public class ProgramBuilder
     public void DefineIdentification(string Identification)
     {
         string FormattedID = Identification;
+        UnformattedID = Identification;
         FormattedID = "_" + FormattedID.Replace("-", "_");
         this.Identification = FormattedID;
     }
@@ -60,7 +63,7 @@ public class ProgramBuilder
     {
         string ID = $$"""
 
-        // PROGRAM-ID. {{Identification}}.
+        // PROGRAM-ID. {{UnformattedID}}.
         public class {{Identification}}
         {
             private static readonly Encoding encoding = Encoding.UTF8;
@@ -145,16 +148,169 @@ public class DataItemBuilder
         Continue();
 
         Identifier = Current().value;
-        FormatIdentifier();
         Continue();
 
-        if (LevelNumber == "77")
+        if (LevelNumber.Equals("77"))
+        {
             BuildSevenSeven();
+            ExportDataItem();
+            return;
+        }
 
-        if (Current().value == "CONSTANT")
+        if (Current().value.Equals("CONSTANT"))
+        {
             BuildConstant();
+            ExportDataItem();
+            return;
+        }
 
-        return;
+        if (!Current().value.Equals("CONSTANT") && LevelNumber.Equals("01") || LevelNumber.Equals("1"))
+        {
+            BuildDataDescriptionEntry();
+            ExportDataItem();
+            return;
+        }
+    }
+
+    private void BuildDataDescriptionEntry()
+    {
+        bool isElementary = false;
+        bool isExternal = false;
+        bool isSigned = false;
+        bool isLevelOne = (LevelNumber.Equals("01") || LevelNumber.Equals("1"));
+
+        while (!Current().value.Equals("."))
+        {
+            if (Current().value.Equals("PIC") || Current().value.Equals("PICTURE"))
+            {
+                isElementary = true;
+                Continue();
+                if (Current().value.Equals("IS")) Continue();
+
+                DataType = Current().value;
+                if (Current().value.Equals("S9"))
+                    isSigned = true;
+
+                Continue();
+                Continue();
+
+                Length = int.Parse(Current().value);
+
+                if((DataType.Equals("9") || DataType.Equals("S9")) && Lookahead(2).value == "V9")
+                    FractionalLength = int.Parse(Lookahead(4).value);
+            }
+
+            if ((Current().value.Equals("IS") && Lookahead(1).value.Equals("EXTERNAL")) || (Current().value.Equals("EXTERNAL")))
+            {
+                string externalizedName = Identifier;
+                isExternal = true;
+
+                if (Current().value.Equals("IS"))
+                    Continue();
+
+                if (Lookahead(1).value.Equals("AS"))
+                {
+                    Continue();
+                    Continue();
+                    externalizedName = FormatIdentifier(Current().value.Substring(1, Current().value.Length - 2));
+                }
+
+                ExternalName = externalizedName;
+            }
+
+            if (Current().value.Equals("VALUE"))
+            {
+                Continue();
+                DataValue = Current().value;
+            }
+
+            Continue();
+        }
+
+        string ConvertType(string current) => current switch
+        {
+            "X" => "Alphanumeric",
+            "A" => "Alphabetic",
+            "N" => "National",
+            "1" => "OtterkitBoolean",
+            "9" => "Numeric",
+            "S9" => "Numeric",
+            _ => "Error"
+        };
+
+        if (Section.Equals("WORKING-STORAGE") && isElementary)
+            CompiledDataItem = $"\n    private static {ConvertType(DataType)} {FormatIdentifier(Identifier)} = ";
+
+        if (Section.Equals("LOCAL-STORAGE") && isElementary)
+            CompiledDataItem = $"\n    private {ConvertType(DataType)} {FormatIdentifier(Identifier)} = ";
+
+        string value;
+        int TotalLength = 0;
+        switch (DataType)
+        {
+            case "X":
+            case "A":
+            case "N":
+            case "1":
+                value = DataValue.Equals(String.Empty) ? "\" \"" : DataValue;
+                TotalLength = Length;
+
+                if (isElementary && isExternal)
+                    CompiledDataItem += $"new(_{FormatIdentifier(Identifier)}.Memory, 0, {Length});";
+
+                if (isElementary && !isExternal)
+                    CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);";
+                break;
+
+            case "9":
+            case "S9":
+                value = DataValue.Equals(String.Empty) ? "\"0\"" : $"\"{DataValue}\"";
+
+                if (isSigned)
+                {
+                    TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 2;
+                    if (value.IndexOfAny(new char[] { '+', '-' }) != 1) 
+                        value = value.Insert(1, "+");
+                    
+                    if (isElementary && isExternal)
+                        CompiledDataItem += $"new(_{FormatIdentifier(Identifier)}.Memory, 0, {Length}, {FractionalLength}, {isSigned.ToString().ToLower()});";
+
+                    if (isElementary && !isExternal)
+                        CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
+
+                    break;
+                }
+
+                TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 1;
+
+                if (isElementary && isExternal)
+                    CompiledDataItem += $"new(_{FormatIdentifier(Identifier)}.Memory, 0, {Length}, {FractionalLength}, {isSigned.ToString().ToLower()});";
+
+                if (isElementary && !isExternal)
+                    CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
+                break;
+        }
+
+        if (Section.Equals("WORKING-STORAGE") && isLevelOne && isExternal)
+            CompiledDataItem = $"""
+            private static DataItem _{FormatIdentifier(Identifier)} = new(External.Resolver("{Identifier}", {TotalLength}));{CompiledDataItem}
+            """;
+
+        if (Section.Equals("LOCAL-STORAGE") && isLevelOne && isExternal)
+            CompiledDataItem = $"""
+            private DataItem _{FormatIdentifier(Identifier)} = new(External.Resolver("{Identifier}", {TotalLength}));{CompiledDataItem}
+            """;
+
+        if (Section.Equals("WORKING-STORAGE") && isLevelOne && !isExternal)
+            CompiledDataItem = $"""
+            private static DataItem _{FormatIdentifier(Identifier)} = new({TotalLength});{CompiledDataItem}
+            """;
+
+        if (Section.Equals("LOCAL-STORAGE") && isLevelOne && !isExternal)
+            CompiledDataItem = $"""
+            private DataItem _{FormatIdentifier(Identifier)} = new({TotalLength});{CompiledDataItem}
+            """;
+
     }
 
     private void BuildConstant()
@@ -206,7 +362,6 @@ public class DataItemBuilder
         if (!Current().value.Equals("."))
             throw new ArgumentException("Unexpected Input: Constant must end with a separator period");
 
-        ExportDataItem();
         return;
     }
 
@@ -258,24 +413,6 @@ public class DataItemBuilder
                 }
             }
 
-            if (Current().value.Equals("IS"))
-            {
-                Continue();
-                if (Current().value.Equals("EXTERNAL"))
-                {
-                    string externalizedName = Identifier;
-
-                    Continue();
-                    if (Current().value.Equals("AS"))
-                    {
-                        Continue();
-                        externalizedName = FormatIdentifier(Current().value.Substring(1, Current().value.Length - 2));
-                    }
-
-                    ExternalName = externalizedName;
-                }
-            }
-
             if (Current().value.Equals("VALUE"))
             {
                 Continue();
@@ -299,12 +436,6 @@ public class DataItemBuilder
             case "OtterkitBoolean":
                 string value = DataValue.Equals(String.Empty) ? "\" \"" : DataValue;
 
-                if (!ExternalName.Equals(string.Empty))
-                {
-                    CompiledDataItem += $"new(External.Resolver(\"{ExternalName}\", {Length}, {value}), 0, {Length});";
-                    break;
-                }
-
                 CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);";
                 break;
 
@@ -318,19 +449,8 @@ public class DataItemBuilder
                         value = value.Insert(1, "+");
                     
                     TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 2;
-                    if (!ExternalName.Equals(string.Empty))
-                    {
-                        CompiledDataItem += $"new(External.Resolver(\"{ExternalName}\", {TotalLength}, {value}), 0, {Length}, {FractionalLength});";
-                        break;
-                    }
 
                     CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
-                    break;
-                }
-
-                if (!ExternalName.Equals(string.Empty))
-                {
-                    CompiledDataItem += $"new(External.Resolver(\"{ExternalName}\", {TotalLength}, {value}), 0, {Length}, {FractionalLength});";
                     break;
                 }
 
@@ -338,7 +458,6 @@ public class DataItemBuilder
                 break;
         }
 
-        ExportDataItem();
         return;
     }
 
@@ -390,6 +509,10 @@ public class StatementBuilder
         {
             case "DISPLAY":
                 DISPLAY();
+                break;
+
+            case "CALL":
+                CALL();
                 break;
 
             case "ACCEPT":
@@ -451,6 +574,16 @@ public class StatementBuilder
             CompiledStatement += "true, ";
 
         CompiledStatement += $"{displayStrings}String.Empty);";
+        ExportStatement();
+    }
+
+    private void CALL()
+    {
+        Continue();
+        string ProgramName = $"{FormatIdentifier(Current().value.Substring(1, Current().value.Length - 2))}";
+        CompiledStatement += $"{ProgramName} {ProgramName} = new();";
+        CompiledStatement += "\n        Statements.CALL(";
+        CompiledStatement += $"() => {ProgramName}.Procedure());";
         ExportStatement();
     }
 

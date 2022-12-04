@@ -1,0 +1,13 @@
+{
+    "$schema": "https://raw.githubusercontent.com/otterkit/otterkit/main/src/schema.json",
+    "author": "Project Author",
+    "name": "OtterkitExport",
+    "id": "MyCompany.OtterkitExport",
+    "description": "Description of the project's purpose",
+    "tags": ["COBOL"],
+    "metadata": {
+        "entryPoint": "main.cob#main",
+        "type": "application"
+    },
+    "license": "License URL"
+}

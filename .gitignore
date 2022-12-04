@@ -4,8 +4,8 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # Otterkit compiler files
-.otterkit/
-OtterkitConfig.json
+# .otterkit/
+# OtterkitConfig.json
 
 # COBOL source files
 *.cob

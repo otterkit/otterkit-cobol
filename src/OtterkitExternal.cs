@@ -2,31 +2,41 @@ using System.Text;
 
 namespace OtterkitLibrary;
 
+struct ExternalDataItem
+{
+    public readonly Memory<byte> ExternalMemory;
+    public readonly string ExternalDefault;
+    public readonly int Length;
+
+    public ExternalDataItem(Memory<byte> memory, int length)
+    {
+        this.ExternalMemory = memory;
+        this.Length = length;
+        this.ExternalDefault = string.Empty;
+    }
+}
+
 public sealed class External
 {
-    private static List<Memory<byte>> ExternalSpace = new();
-    private static List<string> ExternalDataItems = new();
-    private static List<int> ExternalItemsLength = new();
-    private static List<string> ExternalDefaultValues = new();
+    private static Dictionary<string, ExternalDataItem> ExternalMetadata = new();
 
-    public static Memory<byte> Resolver(string dataItemName, int bytes, string defaultValue)
+    public static Memory<byte> Resolver(string dataItemName, int bytes)
     {
-        int IndexOfDataItem = ExternalDataItems.IndexOf(dataItemName);
+        ExternalDataItem ExternalDataItem;
+        bool AlreadyExists = ExternalMetadata.TryGetValue(dataItemName, out ExternalDataItem);
 
-        if (IndexOfDataItem > -1 && ExternalItemsLength[IndexOfDataItem] == bytes && ExternalDefaultValues[IndexOfDataItem] == defaultValue)
-            return ExternalSpace[IndexOfDataItem];
+        if (AlreadyExists && ExternalDataItem.Length == bytes)
+            return ExternalDataItem.ExternalMemory;
 
-        if (IndexOfDataItem == -1)
+        if (!AlreadyExists)
         {
-            ExternalSpace.Add(new byte[bytes]);
-            ExternalDataItems.Add(dataItemName);
-            ExternalItemsLength.Add(bytes);
-            ExternalDefaultValues.Add(defaultValue);
-            Encoding.UTF8.GetBytes(defaultValue).CopyTo(ExternalSpace[ExternalSpace.Count].Span);
+            ExternalDataItem NewExternalItem = new(new byte[bytes], bytes);
+            ExternalMetadata.Add(dataItemName, NewExternalItem);
 
-            return Resolver(dataItemName, bytes, defaultValue);
+            return Resolver(dataItemName, bytes);
         }
 
-        throw new ArgumentException("Name of external data item exists, but the byte length does not match");
+        throw new EcExternalFormatConflict();
     }
+
 }

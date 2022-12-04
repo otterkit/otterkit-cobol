@@ -35,3 +35,22 @@ public sealed class EcBoundPtr : Exception
     private EcBoundPtr(SerializationInfo info, StreamingContext context)
         : base(info, context) { }
 }
+
+[Serializable]
+public sealed class EcExternalFormatConflict : Exception
+{
+    static readonly string defaultError = """
+    EC-EXTERNAL-FORMAT-CONFLICT: Current external definitions are no compatible with each other. External definitions that share the same name must also have the same byte length and same default value
+    """;
+    public EcExternalFormatConflict()
+        : base(defaultError) { }
+
+    public EcExternalFormatConflict(string message)
+        : base(message) { }
+
+    public EcExternalFormatConflict(string message, Exception inner)
+        : base(message, inner) { }
+
+    private EcExternalFormatConflict(SerializationInfo info, StreamingContext context)
+        : base(info, context) { }
+}

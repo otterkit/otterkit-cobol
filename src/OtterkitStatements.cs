@@ -115,9 +115,9 @@ public static class Statements
         return dataItem.UnsafeMemory;
     }
 
-    public static void CALL()
+    public static void CALL(Action procedure)
     {
-        // TODO: Implement CALL
+        procedure();
     }
 
     public static void CANCEL()

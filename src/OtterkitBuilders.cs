@@ -106,6 +106,7 @@ public class DataItemBuilder
     private string CompiledDataItem = string.Empty;
     private string LevelNumber = string.Empty;
     private string Identifier = string.Empty;
+    private string ExternalName = string.Empty;
     private string DataType = string.Empty;
     private int Length = 0;
     private int FractionalLength = 0;
@@ -270,6 +271,8 @@ public class DataItemBuilder
                         Continue();
                         externalizedName = FormatIdentifier(Current().value.Substring(1, Current().value.Length - 2));
                     }
+
+                    ExternalName = externalizedName;
                 }
             }
 
@@ -290,14 +293,20 @@ public class DataItemBuilder
 
         switch (DataType)
         {
-            
             case "Alphanumeric":
             case "Alphabetic":
             case "National":
             case "OtterkitBoolean":
                 string value = DataValue.Equals(String.Empty) ? "\" \"" : DataValue;
+
+                if (!ExternalName.Equals(string.Empty))
+                {
+                    CompiledDataItem += $"new(External.Resolver(\"{ExternalName}\", {Length}, {value}), 0, {Length});";
+                    break;
+                }
+
                 CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);";
-            break;
+                break;
 
             case "Numeric":
                 value = DataValue.Equals(String.Empty) ? "\"0\"" : $"\"{DataValue}\"";
@@ -309,7 +318,19 @@ public class DataItemBuilder
                         value = value.Insert(1, "+");
                     
                     TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 2;
+                    if (!ExternalName.Equals(string.Empty))
+                    {
+                        CompiledDataItem += $"new(External.Resolver(\"{ExternalName}\", {TotalLength}, {value}), 0, {Length}, {FractionalLength});";
+                        break;
+                    }
+
                     CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
+                    break;
+                }
+
+                if (!ExternalName.Equals(string.Empty))
+                {
+                    CompiledDataItem += $"new(External.Resolver(\"{ExternalName}\", {TotalLength}, {value}), 0, {Length}, {FractionalLength});";
                     break;
                 }
 

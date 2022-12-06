@@ -58,7 +58,7 @@ public static class OtterkitCompiler
                 }
             }
 
-            CallDotNetCompiler(args[0], type, name);
+            CallDotnetCompiler(args[0], type, name);
         }
 
         if (args[0].Equals("build"))
@@ -100,14 +100,14 @@ public static class OtterkitCompiler
             }
 
             List<string> sourceLines = ReadAndProcessFile(entryPoint, sourceFormat, columnLength);
-            List<Token> tokens = OtterkitLexer.Tokenize(sourceLines);
+            List<Token> tokens = Lexer.Tokenize(sourceLines);
             List<Token> classified = Token.fromValue(tokens);
-            List<Token> analized = OtterkitAnalyzer.Analyze(classified, entryPoint);
-            OtterkitCodegen.Generate(analized, entryPoint);
+            List<Token> analized = Analyzer.Analyze(classified, entryPoint);
+            Codegen.Generate(analized, entryPoint);
         }
     }
 
-    private static void CallDotNetCompiler(string operation, params string[] options)
+    private static void CallDotnetCompiler(string operation, params string[] options)
     {
         string arguments = "";
         if (operation.Equals("new"))

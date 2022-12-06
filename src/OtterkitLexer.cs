@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 
 namespace Otterkit;
-public static class OtterkitLexer
+public static class Lexer
 {
     public static List<Token> Tokenize(List<string> sourceLines)
     {

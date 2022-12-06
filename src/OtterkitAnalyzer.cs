@@ -2,12 +2,15 @@ using System.Diagnostics;
 
 namespace Otterkit;
 
-public static class OtterkitAnalyzer
+public static class Analyzer
 {
     public static List<Token> Analyze(List<Token> tokenList, string fileName)
     {
-        string FileName = fileName;
         List<Token> analyzed = new();
+        string FileName = fileName;
+        string SourceId = string.Empty;
+        string CurrentSection = string.Empty;
+
         int index = 0;
 
         Source();
@@ -15,7 +18,7 @@ public static class OtterkitAnalyzer
 
         void Source()
         {
-            if (Current().value == "EOF")
+            if (CurrentEquals("EOF"))
             {
                 analyzed.Add(Current());
                 return;
@@ -46,16 +49,19 @@ public static class OtterkitAnalyzer
                 default:
                     ErrorHandler.Parser.Report(fileName, Current(), "expected", "IDENTIFICATION, ENVIRONMENT, DATA or PROCEDURE");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
-                    Environment.Exit(1);
                     break;
             }
         }
 
         void IDENTIFICATION()
         {
+            string headerPeriodError = """
+            Missing separator period at the end of this IDENTIFICATION DIVISION header, every division header must end with a separator period
+            """;
+
             Expected("IDENTIFICATION", "identification division");
             Expected("DIVISION");
-            Expected(".", "separator period");
+            Expected(".", headerPeriodError, -1, "separator period");
             ProgramId();
         }
 
@@ -63,33 +69,42 @@ public static class OtterkitAnalyzer
         {
             Expected("PROGRAM-ID", "program definition");
             Expected(".", "separator period");
+            SourceId = Current().value;
             Identifier();
             Expected(".", "separator period");
         }
 
         void ENVIRONMENT()
         {
+            string headerPeriodError = """
+            Missing separator period at the end of this ENVIRONMENT DIVISION header, every division header must end with a separator period
+            """;
+
             Expected("ENVIRONMENT", "environment division");
             Expected("DIVISION");
-            Expected(".", "separator period");
+            Expected(".", headerPeriodError, -1, "separator period");
         }
 
         void DATA()
         {
+            string headerPeriodError = """
+            Missing separator period at the end of this DATA DIVISION header, every division header must end with a separator period
+            """;
+
             Expected("DATA", "data division");
             Expected("DIVISION");
-            Expected(".", "separator period");
+            Expected(".", headerPeriodError, -1, "separator period");
             DataSections();
         }
 
         void DataSections()
         {
-            while (Current().value != "PROCEDURE")
+            while (!CurrentEquals("PROCEDURE"))
             {
-                if (Current().value.Equals("WORKING-STORAGE"))
+                if (CurrentEquals("WORKING-STORAGE"))
                     WorkingStorage();
 
-                if (Current().value.Equals("LOCAL-STORAGE"))
+                if (CurrentEquals("LOCAL-STORAGE"))
                     LocalStorage();
 
                 switch (Current().value)
@@ -109,6 +124,7 @@ public static class OtterkitAnalyzer
 
         void WorkingStorage()
         {
+            CurrentSection = Current().value;
             Expected("WORKING-STORAGE", "working-storage section");
             Expected("SECTION");
             Expected(".", "separator period");
@@ -118,6 +134,7 @@ public static class OtterkitAnalyzer
 
         void LocalStorage()
         {
+            CurrentSection = Current().value;
             Expected("LOCAL-STORAGE", "local-storage section");
             Expected("SECTION");
             Expected(".", "separator period");
@@ -127,13 +144,13 @@ public static class OtterkitAnalyzer
 
         void Entries()
         {
-            if (Current().value.Equals("77"))
+            if (CurrentEquals("77"))
                 BaseEntry();
 
-            if ((Current().value.Equals("01") || Current().value.Equals("1")) && !LookAhead(2).value.Equals("CONSTANT"))
+            if ((CurrentEquals("01") || CurrentEquals("1")) && !LookaheadEquals(2, "CONSTANT"))
                 DataDescriptionEntry();
 
-            if (LookAhead(2).value.Equals("CONSTANT"))
+            if (LookaheadEquals(2, "CONSTANT"))
                 ConstantEntry();
         }
 
@@ -144,13 +161,19 @@ public static class OtterkitAnalyzer
 
         void BaseEntry()
         {
-            string datatype = string.Empty;
+            string dataType = string.Empty;
+            int LevelNumber = int.Parse(Current().value);
             Number();
+
+            string DataName = Current().value;
             Identifier();
+
+            string DataItemHash = $"{SourceId}#{DataName}";
+            DataItemInformation.AddDataItem(DataItemHash, DataName, LevelNumber);
 
             while (Current().type == TokenType.ReservedKeyword)
             {
-                if (Current().value.Equals("IS") && !(LookAhead(1).value.Equals("EXTERNAL") || (LookAhead(1).value.Equals("GLOBAL")) || (LookAhead(1).value.Equals("TYPEDEF"))))
+                if (CurrentEquals("IS") && !(LookaheadEquals(1, "EXTERNAL") || LookaheadEquals(1, "GLOBAL") || LookaheadEquals(1, "TYPEDEF")))
                 {
                     string Externalerror = """
                     Missing clause or possible clause mismatch, in this context the "IS" word must be followed by the EXTERNAL, GLOBAL or TYPEDEF clauses only (IS TYPEDEF), or must be in the middle of the PICTURE clause (PIC IS ...) 
@@ -160,84 +183,99 @@ public static class OtterkitAnalyzer
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
-                if ((Current().value.Equals("IS") && LookAhead(1).value.Equals("EXTERNAL")) || (Current().value.Equals("EXTERNAL")))
+                if ((CurrentEquals("IS") && LookaheadEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
                 {
                     Optional("IS");
                     Expected("EXTERNAL");
-                    if (Current().value.Equals("AS"))
+                    if (CurrentEquals("AS"))
                     {
                         string externalizedNameError = """
                         Missing externalized name, the "AS" word on the EXTERNAL clause must be followed by an alphanumeric or national literal
                         """;
                         Expected("AS");
+                        DataItemInformation.IsExternal(DataItemHash, true, Current().value);
                         String(externalizedNameError, -1);
                     }
+
+                    if (!CurrentEquals("AS"))
+                        DataItemInformation.IsExternal(DataItemHash, true, DataName);
                 }
 
-                if (Current().value.Equals("PIC") || Current().value.Equals("PICTURE"))
+                if (CurrentEquals("PIC") || CurrentEquals("PICTURE"))
                 {
                     Choice(null, "PIC", "PICTURE");
                     Optional("IS");
-                    datatype = Current().value switch
+                    dataType = Current().value switch
                     {
-                        "S9" => "Signed Numeric",
-                        "9" => "Numeric",
-                        "X" => "Alphanumeric",
-                        "A" => "Alphabetic",
-                        "N" => "National",
-                        "1" => "Boolean",
+                        "S9" => "S9",
+                        "9" => "9",
+                        "X" => "X",
+                        "A" => "A",
+                        "N" => "N",
+                        "1" => "1",
                         _ => "Error"
                     };
 
-                    if (datatype == "Error")
+                    if (dataType == "Error")
                     {
-                        ErrorHandler.Parser.Report(fileName, Current(), " ", "Unrecognized type, expected S9, 9, X, A, N or 1");
+                        string dataTypeError = """
+                        Unrecognized type, PICTURE type must be S9, 9, X, A, N or 1. These are Signed Numeric, Unsigned Numeric, Alphanumeric, Alphabetic, National and Boolean respectively
+                        """;
+
+                        ErrorHandler.Parser.Report(fileName, Current(), "general", dataTypeError);
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                     }
 
+                    DataItemInformation.AddType(DataItemHash, dataType);
                     Choice(null, "S9", "9", "X", "A", "N", "1");
+
+                    string DataLength = string.Empty;
                     Expected("(");
+                    DataLength = Current().value;
                     Number();
                     Expected(")");
-                    if (Current().value == "V9" && (datatype != "Signed Numeric" && (datatype != "Numeric")))
+                    if (CurrentEquals("V9") && (dataType != "S9" && (dataType != "9")))
                     {
                         ErrorHandler.Parser.Report(fileName, Current(), " ", "V9 cannot be used with non-numeric types");
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                     }
 
-                    if (Current().value == "V9")
+                    if (CurrentEquals("V9"))
                     {
                         Expected("V9");
                         Expected("(");
+                        DataLength += $"V{Current().value}";
                         Number();
                         Expected(")");
                     }
+
+                    DataItemInformation.AddPicture(DataItemHash, DataLength);
                 }
 
-                if (Current().value == "VALUE")
+                if (CurrentEquals("VALUE"))
                 {
                     Expected("VALUE");
-                    switch (datatype)
+
+                    if (!Current().type.Equals(TokenType.String) && !Current().type.Equals(TokenType.Numeric))
                     {
-                        case "Signed Numeric":
-                        case "Numeric":
-                            Number();
-                            break;
+                        string valueError = """
+                        The only tokens allowed after a VALUE clause are type literals, like an Alphanumeric literal ("Hello, World!") or a Numeric literal (123.456).
+                        """;
 
-                        case "Alphanumeric":
-                        case "Alphabetic":
-                        case "National":
-                        case "Boolean":
-                            String();
-                            break;
+                        ErrorHandler.Parser.Report(fileName, Current(), "general", valueError);
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
+                    }
+                    
+                    if (Current().type.Equals(TokenType.String))
+                    {
+                        DataItemInformation.AddDefault(DataItemHash, Current().value);
+                        String();
+                    }
 
-                        case "Error":
-                            ErrorHandler.Parser.Report(fileName, Current(), " ", "Unable to determine the correct literal type due to the previous type error");
-                            ErrorHandler.Parser.PrettyError(fileName, Current());
-                            break;
-
-                        default:
-                            throw new UnreachableException("Unrecognized type has already been checked above. This should be unreachable.");
+                    if (Current().type.Equals(TokenType.Numeric))
+                    {
+                        DataItemInformation.AddDefault(DataItemHash, Current().value);
+                        Number();
                     }
                 }
 
@@ -251,22 +289,26 @@ public static class OtterkitAnalyzer
 
         void ConstantEntry()
         {
-            if (Current().value != "01" && Current().value != "1")
+            if (!CurrentEquals("01") && !CurrentEquals("1"))
             {
-                ErrorHandler.Parser.Report(fileName, Current(), " ", "Constant entry must have a level number of 1 or 01");
+                string levelNumberError = """
+                Invalid level number for this data item, CONSTANT data items must have a level number of 1 or 01
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", levelNumberError);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
             Number();
             Identifier();
             Expected("CONSTANT");
-            if (Current().value == "IS" || Current().value == "GLOBAL")
+            if (CurrentEquals("IS") || CurrentEquals("GLOBAL"))
             {
                 Optional("IS");
                 Expected("GLOBAL");
             }
 
-            if (Current().value == "FROM")
+            if (CurrentEquals("FROM"))
             {
                 Expected("FROM");
                 Identifier();
@@ -290,14 +332,14 @@ public static class OtterkitAnalyzer
                         break;
                 }
 
-                if (Current().value == "LENGTH")
+                if (CurrentEquals("LENGTH"))
                 {
                     Expected("LENGTH");
                     Optional("OF");
                     Identifier();
                 }
 
-                if (Current().value == "BYTE-LENGTH")
+                if (CurrentEquals("BYTE-LENGTH"))
                 {
                     Expected("BYTE-LENGTH");
                     Optional("OF");
@@ -310,17 +352,25 @@ public static class OtterkitAnalyzer
 
         void PROCEDURE()
         {
+            string headerPeriodError = """
+            Missing separator period at the end of this PROCEDURE DIVISION header, every division header must end with a separator period
+            """;
+
             Expected("PROCEDURE", "procedure division");
             Expected("DIVISION");
-            Expected(".", "separator period");
+            Expected(".", headerPeriodError, -1, "separator period");
             Statement();
 
-            if(Current().value.Equals("END") && LookAhead(1).value.Equals("PROGRAM"))
+            if(CurrentEquals("END") && LookaheadEquals(1, "PROGRAM"))
             {
+                string endProgramPeriodError = """
+                Missing separator period at the end of this END PROGRAM definition
+                """;
+
                 Expected("END");
                 Expected("PROGRAM");
                 Identifier();
-                Expected(".", "separator period");
+                Expected(".", endProgramPeriodError, -1, "separator period");
                 if (Current().value.Equals("IDENTIFICATION"))
                 {
                     Source();
@@ -395,7 +445,7 @@ public static class OtterkitAnalyzer
 
             if (!isNested)
             {
-                Expected(".", "separator period");
+                Expected(".", "expected", -1, "separator period");
                 return;
             }
         }
@@ -436,13 +486,13 @@ public static class OtterkitAnalyzer
                     String();
             }
 
-            if (Current().value == "UPON")
+            if (CurrentEquals("UPON"))
             {
                 Expected("UPON");
                 Choice(TokenType.Device, "STANDARD-OUTPUT", "STANDARD-ERROR");
             }
 
-            if (Current().value == "WITH" || Current().value == "NO")
+            if (CurrentEquals("WITH") || CurrentEquals("NO"))
             {
                 Optional("WITH");
                 Expected("NO");
@@ -456,7 +506,7 @@ public static class OtterkitAnalyzer
         {
             Expected("ACCEPT");
             Identifier();
-            if (Current().value == "FROM")
+            if (CurrentEquals("FROM"))
             {
                 Expected("FROM");
                 switch (Current().value)
@@ -580,7 +630,7 @@ public static class OtterkitAnalyzer
                     Number();
             }
 
-            if (Current().value == "TO" && LookAhead(2).value == "GIVING")
+            if (CurrentEquals("TO") && LookaheadEquals(2, "GIVING"))
             {
                 Optional("TO");
                 switch (Current().type)
@@ -609,7 +659,7 @@ public static class OtterkitAnalyzer
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             }
-            else if (Current().value == "GIVING")
+            else if (CurrentEquals("GIVING"))
             {
                 Expected("GIVING");
                 if (Current().type != TokenType.Identifier)
@@ -621,7 +671,7 @@ public static class OtterkitAnalyzer
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             }
-            else if (Current().value == "TO")
+            else if (CurrentEquals("TO"))
             {
                 Expected("TO");
                 if (Current().type != TokenType.Identifier)
@@ -667,7 +717,7 @@ public static class OtterkitAnalyzer
                     Number();
             }
 
-            if (Current().value == "FROM" && LookAhead(2).value == "GIVING")
+            if (CurrentEquals("FROM") && LookaheadEquals(2, "GIVING"))
             {
                 Optional("FROM");
                 switch (Current().type)
@@ -696,7 +746,7 @@ public static class OtterkitAnalyzer
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             }
-            else if (Current().value == "FROM")
+            else if (CurrentEquals("FROM"))
             {
                 Expected("FROM");
                 if (Current().type != TokenType.Identifier)
@@ -741,7 +791,7 @@ public static class OtterkitAnalyzer
                     break;
             }
 
-            if (Current().value == "BY" && LookAhead(2).value == "GIVING")
+            if (CurrentEquals("BY") && LookaheadEquals(2, "GIVING"))
             {
                 Optional("BY");
                 switch (Current().type)
@@ -770,7 +820,7 @@ public static class OtterkitAnalyzer
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             }
-            else if (Current().value == "BY")
+            else if (CurrentEquals("BY"))
             {
                 Expected("BY");
                 if (Current().type != TokenType.Identifier)
@@ -815,9 +865,7 @@ public static class OtterkitAnalyzer
                     break;
             }
 
-            if ((Current().value == "BY" || Current().value == "INTO")
-                && LookAhead(2).value == "GIVING" && LookAhead(4).value != "REMAINDER"
-            )
+            if ((CurrentEquals("BY") || CurrentEquals("INTO")) && LookaheadEquals(2, "GIVING") && !LookaheadEquals(4, "REMAINDER"))
             {
                 Choice(null, "BY", "INTO");
                 switch (Current().type)
@@ -846,9 +894,7 @@ public static class OtterkitAnalyzer
                 while (Current().type == TokenType.Identifier)
                     Identifier();
             }
-            else if ((Current().value == "BY" || Current().value == "INTO")
-                && LookAhead(2).value == "GIVING" && LookAhead(4).value == "REMAINDER"
-            )
+            else if ((CurrentEquals("BY") || CurrentEquals("INTO")) && LookaheadEquals(2, "GIVING") && LookaheadEquals(4, "REMAINDER"))
             {
                 Choice(null, "BY", "INTO");
                 switch (Current().type)
@@ -872,7 +918,7 @@ public static class OtterkitAnalyzer
                 Expected("REMAINDER");
                 Identifier();
             }
-            else if (Current().value == "INTO")
+            else if (CurrentEquals("INTO"))
             {
                 Expected("INTO");
                 if (Current().type != TokenType.Identifier)
@@ -900,10 +946,7 @@ public static class OtterkitAnalyzer
         {
             Expected("STOP");
             Expected("RUN");
-            if (Current().value == "WITH"
-             || Current().value == "NORMAL"
-             || Current().value == "ERROR"
-            )
+            if (CurrentEquals("WITH") || CurrentEquals("NORMAL") || CurrentEquals("ERROR"))
             {
                 Optional("WITH");
                 Choice(null, "NORMAL", "ERROR");
@@ -924,20 +967,30 @@ public static class OtterkitAnalyzer
         }
 
         // Parser helper methods.
-        Token LookAhead(int amount)
+        Token Lookahead(int amount)
         {
             return tokenList[index + amount];
+        }
+
+        bool LookaheadEquals(int lookahead, string stringToCompare)
+        {
+            return Lookahead(lookahead).value.Equals(stringToCompare);
+        }
+
+        Token Current()
+        {
+            return tokenList[index];
+        }
+
+        bool CurrentEquals(string stringToCompare)
+        {
+            return Current().value.Equals(stringToCompare);
         }
 
         void Continue()
         {
             index += 1;
             return;
-        }
-
-        Token Current()
-        {
-            return tokenList[index];
         }
 
         void Choice(TokenType? type, params string[] choices)
@@ -985,7 +1038,7 @@ public static class OtterkitAnalyzer
             }
 
             if (position != 0)
-                token = LookAhead(position);
+                token = Lookahead(position);
 
             Token current = Current();
             if (!current.value.Equals(expected))
@@ -1003,7 +1056,7 @@ public static class OtterkitAnalyzer
 
         void SizeError(ref bool isConditional)
         {
-            if (Current().value.Equals("ON") || Current().value.Equals("SIZE"))
+            if (CurrentEquals("ON") || CurrentEquals("SIZE"))
             {
                 isConditional = true;
                 Optional("ON");
@@ -1012,7 +1065,7 @@ public static class OtterkitAnalyzer
                 Statement(true);
             }
 
-            if (Current().value.Equals("NOT"))
+            if (CurrentEquals("NOT"))
             {
                 isConditional = true;
                 Expected("NOT");
@@ -1050,7 +1103,7 @@ public static class OtterkitAnalyzer
             }
 
             if (position != 0)
-                token = LookAhead(position);
+                token = Lookahead(position);
 
             Token current = Current();
             if (current.type != TokenType.Numeric)
@@ -1077,7 +1130,7 @@ public static class OtterkitAnalyzer
             }
 
             if (position != 0)
-                token = LookAhead(position);
+                token = Lookahead(position);
 
             Token current = Current();
             if (current.type != TokenType.String)
@@ -1119,7 +1172,7 @@ public static class OtterkitAnalyzer
             }
 
             if (position != 0)
-                token = LookAhead(position);
+                token = Lookahead(position);
 
             Token current = Current();
             if (current.type != TokenType.Symbol)

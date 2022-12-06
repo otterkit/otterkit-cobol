@@ -1,58 +1,57 @@
 namespace Otterkit;
 
-public static class OtterkitCodegen
+public static class Codegen
 {
     public static void Generate(List<Token> tokens, string fileName)
     {
         ProgramBuilder compiled = new();
         int index = 0;
 
-        while (Current().value != "DATA")
+        while (!CurrentEquals("DATA"))
         {
-            if (Current().value == "PROGRAM-ID")
-                compiled.DefineIdentification(LookAhead(2).value);
+            if (CurrentEquals("PROGRAM-ID"))
+                compiled.DefineIdentification(Lookahead(2).value);
 
             Continue();
         }
 
         string scope = string.Empty;
-        while (Current().value != "PROCEDURE")
+        while (!CurrentEquals("PROCEDURE"))
         {
-            if (Current().value == "WORKING-STORAGE" || Current().value == "LOCAL-STORAGE") 
+            if (CurrentEquals("WORKING-STORAGE") || CurrentEquals("LOCAL-STORAGE")) 
                 scope = Current().value;
 
-            if (Current().type == TokenType.Numeric && (Current().value.Equals("01") || Current().value.Equals("1")) && !LookAhead(2).value.Equals("CONSTANT"))
+            if (Current().type == TokenType.Numeric && (CurrentEquals("01") || CurrentEquals("1")) && !LookaheadEquals(2, "CONSTANT"))
             {
-                DataItemBuilder Record = new(compiled, Continue, Current, LookAhead);
+                DataItemBuilder Record = new(compiled, Continue, Current, Lookahead);
                 Record.BuildDataItem(scope);
             }
 
-            if (Current().type == TokenType.Numeric && LookAhead(2).value.Equals("CONSTANT"))
+            if (Current().type == TokenType.Numeric && LookaheadEquals(2, "CONSTANT"))
             {
-                DataItemBuilder Constant = new(compiled, Continue, Current, LookAhead);
+                DataItemBuilder Constant = new(compiled, Continue, Current, Lookahead);
                 Constant.BuildDataItem(scope);
             }
 
             if (Current().type == TokenType.Numeric && Current().value.Equals("77"))
             {
-                DataItemBuilder SevenSeven = new(compiled, Continue, Current, LookAhead);
+                DataItemBuilder SevenSeven = new(compiled, Continue, Current, Lookahead);
                 SevenSeven.BuildDataItem(scope);
             }
 
             Continue();
         }
 
-        while (Current().value != "EOF")
+        while (!CurrentEquals("EOF"))
         {
-            StatementBuilder statement = new(compiled, Continue, Current, LookAhead);
+            StatementBuilder statement = new(compiled, Continue, Current, Lookahead);
             statement.BuildStatement();
 
-            if(Current().value != "EOF")
+            if(!CurrentEquals("EOF"))
             {
-                if (Current().value.Equals("END") && LookAhead(1).value.Equals("PROGRAM"))
+                if (CurrentEquals("END") && LookaheadEquals(1, "PROGRAM") && !LookaheadEquals(4, "EOF"))
                 {
-                    Continue();
-                    Continue();
+                    Continue(2);
                     List<Token> NextProgram = tokens.GetRange(index, tokens.Count - index - 1);
                     Generate(NextProgram, fileName);
                     break;
@@ -71,20 +70,30 @@ public static class OtterkitCodegen
         File.WriteAllText($".otterkit/{compiled.UnformattedID}.cs", compiled.ExportCompiled());
 
         // Generator helper methods.
-        Token LookAhead(int amount)
+        Token Lookahead(int amount)
         {
             return tokens[index + amount];
         }
 
-        void Continue()
+        bool LookaheadEquals(int lookahead, string stringToCompare)
         {
-            index += 1;
-            return;
+            return Lookahead(lookahead).value.Equals(stringToCompare);
         }
 
         Token Current()
         {
             return tokens[index];
+        }
+
+        bool CurrentEquals(string stringToCompare)
+        {
+            return Current().value.Equals(stringToCompare);
+        }
+
+        void Continue(int amount = 1)
+        {
+            index += amount;
+            return;
         }
     }
 

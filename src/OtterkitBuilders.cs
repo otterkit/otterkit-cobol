@@ -116,12 +116,12 @@ public class DataItemBuilder
     private string DataValue = string.Empty;
     private string Section = string.Empty;
     private ProgramBuilder ProgramBuilder;
-    private Action Continue;
+    private Action<int> Continue;
     private Func<Token> Current;
     private Func<int, Token> Lookahead;
 
 
-    public DataItemBuilder(ProgramBuilder ProgramBuilder, Action Continue, Func<Token> Current, Func<int, Token> Lookahead)
+    public DataItemBuilder(ProgramBuilder ProgramBuilder, Action<int> Continue, Func<Token> Current, Func<int, Token> Lookahead)
     {
         this.ProgramBuilder = ProgramBuilder;
         this.Current = Current;
@@ -145,10 +145,10 @@ public class DataItemBuilder
             throw new ArgumentException("Unexpected Input: Data Item Builder has to start with a level number");
 
         LevelNumber = Current().value;
-        Continue();
+        Continue(1);
 
         Identifier = Current().value;
-        Continue();
+        Continue(1);
 
         if (LevelNumber.Equals("77"))
         {
@@ -184,15 +184,14 @@ public class DataItemBuilder
             if (Current().value.Equals("PIC") || Current().value.Equals("PICTURE"))
             {
                 isElementary = true;
-                Continue();
-                if (Current().value.Equals("IS")) Continue();
+                Continue(1);
+                if (Current().value.Equals("IS")) Continue(1);
 
                 DataType = Current().value;
                 if (Current().value.Equals("S9"))
                     isSigned = true;
 
-                Continue();
-                Continue();
+                Continue(2);
 
                 Length = int.Parse(Current().value);
 
@@ -206,12 +205,11 @@ public class DataItemBuilder
                 isExternal = true;
 
                 if (Current().value.Equals("IS"))
-                    Continue();
+                    Continue(1);
 
                 if (Lookahead(1).value.Equals("AS"))
                 {
-                    Continue();
-                    Continue();
+                    Continue(2);
                     externalizedName = FormatIdentifier(Current().value.Substring(1, Current().value.Length - 2));
                 }
 
@@ -220,11 +218,11 @@ public class DataItemBuilder
 
             if (Current().value.Equals("VALUE"))
             {
-                Continue();
+                Continue(1);
                 DataValue = Current().value;
             }
 
-            Continue();
+            Continue(1);
         }
 
         string ConvertType(string current) => current switch
@@ -325,16 +323,16 @@ public class DataItemBuilder
 
         while (Current().value != "AS")
         {
-            Continue();
+            Continue(1);
         }
 
-        Continue();
+        Continue(1);
 
         if (Current().value.Equals("LENGTH"))
         {
-            Continue();
+            Continue(1);
             if (Current().value.Equals("OF"))
-                Continue();
+                Continue(1);
 
             // new(encoding.GetBytes(_WS_FIRST_NAME.Bytes.Length.ToString()), 0, _WS_FIRST_NAME.Bytes.Length, 0, new byte[_WS_FIRST_NAME.Bytes.Length]);
             string FormattedValue = FormatIdentifier(Current().value);
@@ -343,9 +341,9 @@ public class DataItemBuilder
 
         if (Current().value.Equals("BYTE-LENGTH"))
         {
-            Continue();
+            Continue(1);
             if (Current().value.Equals("OF"))
-                Continue();
+                Continue(1);
 
             string FormattedValue = FormatIdentifier(Current().value);
             CompiledDataItem += $"new(encoding.GetBytes({FormattedValue}.Bytes.Length.ToString()));";
@@ -357,7 +355,7 @@ public class DataItemBuilder
         if (Current().type == TokenType.Numeric)
             CompiledDataItem += $"new(\"{Current().value}\"u8);";
 
-        Continue();
+        Continue(1);
 
         if (!Current().value.Equals("."))
             throw new ArgumentException("Unexpected Input: Constant must end with a separator period");
@@ -383,15 +381,14 @@ public class DataItemBuilder
         {
             if (Current().value.Equals("PIC") || Current().value.Equals("PICTURE"))
             {
-                Continue();
-                if (Current().value.Equals("IS")) Continue();
+                Continue(1);
+                if (Current().value.Equals("IS")) Continue(1);
 
                 DataType = dataTypes(Current());
                 if (Current().value.Equals("S9"))
                     isSigned = true;
 
-                Continue();
-                Continue();
+                Continue(2);
 
                 if (DataType.Equals("Alphanumeric"))
                     Length = int.Parse(Current().value);
@@ -415,18 +412,18 @@ public class DataItemBuilder
 
             if (Current().value.Equals("VALUE"))
             {
-                Continue();
+                Continue(1);
                 DataValue = Current().value;
             }
 
-            Continue();
+            Continue(1);
         }
 
         if (Section.Equals("WORKING-STORAGE"))
-            CompiledDataItem = $"private static {DataType} {Identifier} = ";
+            CompiledDataItem = $"private static {DataType} {FormatIdentifier(Identifier)} = ";
 
         if (Section.Equals("LOCAL-STORAGE"))
-            CompiledDataItem = $"private {DataType} {Identifier} = ";
+            CompiledDataItem = $"private {DataType} {FormatIdentifier(Identifier)} = ";
 
         switch (DataType)
         {
@@ -461,13 +458,7 @@ public class DataItemBuilder
         return;
     }
 
-    private void FormatIdentifier()
-    {
-        string FormattedIdentifier = Identifier;
-        FormattedIdentifier = "_" + FormattedIdentifier.Replace("-", "_");
-        Identifier = FormattedIdentifier;
-    }
-
+    // Data item builder helper methods.
     private string FormatIdentifier(string Identifier)
     {
         string FormattedIdentifier = Identifier;
@@ -480,12 +471,12 @@ public class StatementBuilder
 {
     private string CompiledStatement = string.Empty;
     private ProgramBuilder ProgramBuilder;
-    private Action Continue;
+    private Action<int> Continue;
     private Func<Token> Current;
     private Func<int, Token> Lookahead;
 
 
-    public StatementBuilder(ProgramBuilder ProgramBuilder, Action Continue, Func<Token> Current, Func<int, Token> Lookahead)
+    public StatementBuilder(ProgramBuilder ProgramBuilder, Action<int> Continue, Func<Token> Current, Func<int, Token> Lookahead)
     {
         this.ProgramBuilder = ProgramBuilder;
         this.Current = Current;
@@ -529,7 +520,7 @@ public class StatementBuilder
     {
         CompiledStatement += "Statements.DISPLAY(";
         string displayStrings = string.Empty;
-        Continue();
+        Continue(1);
 
         while (Current().type == TokenType.Identifier
             || Current().type == TokenType.Numeric
@@ -549,13 +540,13 @@ public class StatementBuilder
             if (Current().type == TokenType.String)
                 displayStrings += $"{Current().value}, ";
 
-            Continue();
+            Continue(1);
         }
 
-        Continue();
+        Continue(1);
         if (Current().value.Equals("UPON"))
         {
-            Continue();
+            Continue(1);
             if(Current().value.Equals("STANDARD-OUTPUT"))
                 CompiledStatement += $"\"{Current().value}\", ";
 
@@ -566,7 +557,7 @@ public class StatementBuilder
         if (!Current().value.Equals("UPON"))
             CompiledStatement += $"\" \", ";
 
-        Continue();
+        Continue(1);
         if (Current().value.Equals("WITH") || Current().value.Equals("NO"))
             CompiledStatement += "false, ";
 
@@ -579,7 +570,7 @@ public class StatementBuilder
 
     private void CALL()
     {
-        Continue();
+        Continue(1);
         string ProgramName = $"{FormatIdentifier(Current().value.Substring(1, Current().value.Length - 2))}";
         CompiledStatement += $"{ProgramName} {ProgramName} = new();";
         CompiledStatement += "\n        Statements.CALL(";
@@ -591,16 +582,16 @@ public class StatementBuilder
     {
         CompiledStatement += "Statements.ACCEPT(";
         // Statements.ACCEPT(dataItem, from, format)
-        Continue();
+        Continue(1);
         CompiledStatement += $"{FormatIdentifier(Current().value)}, ";
-        Continue();
+        Continue(1);
 
         if (!Current().value.Equals("FROM"))
             CompiledStatement += "\"STANDARD-INPUT\");";
 
         if (Current().value.Equals("FROM"))
         {
-            Continue();
+            Continue(1);
             switch (Current().value)
             {
                 case "STANDARD-INPUT":
@@ -643,8 +634,7 @@ public class StatementBuilder
         // Statements.STOP();
         // Statements.STOP(error, status);
         CompiledStatement += "Statements.STOP(";
-        Continue();
-        Continue();
+        Continue(2);
         
         if (Current().value.Equals("."))
         {
@@ -654,7 +644,7 @@ public class StatementBuilder
         }
 
         if (Current().value.Equals("WITH"))
-            Continue();
+            Continue(1);
 
         if (Current().value.Equals("NORMAL"))
             CompiledStatement += "false, ";
@@ -662,7 +652,7 @@ public class StatementBuilder
         if (Current().value.Equals("ERROR"))
             CompiledStatement += "true, ";
 
-        Continue();
+        Continue(1);
         if (Current().value.Equals("."))
         {
             CompiledStatement += "\"0\");";
@@ -670,7 +660,7 @@ public class StatementBuilder
             return;
         }
 
-        Continue();
+        Continue(1);
         switch (Current().type)
         {
             case TokenType.Identifier:
@@ -686,6 +676,7 @@ public class StatementBuilder
         ExportStatement();
     }
 
+    // Statement builder helper methods.
     private string FormatIdentifier(string Identifier)
     {
         string FormattedIdentifier = Identifier;

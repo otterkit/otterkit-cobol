@@ -316,10 +316,10 @@ public class DataItemBuilder
         string sectionAccessModifier = string.Empty;
 
         if (Section.Equals("WORKING-STORAGE"))
-            CompiledDataItem = $"private static readonly Constant {Identifier} = ";
+            CompiledDataItem = $"private static readonly Constant {FormatIdentifier(Identifier)} = ";
 
         if (Section.Equals("LOCAL-STORAGE"))
-            CompiledDataItem = $"private readonly Constant {Identifier} = ";
+            CompiledDataItem = $"private readonly Constant {FormatIdentifier(Identifier)} = ";
 
         while (Current().value != "AS")
         {
@@ -334,7 +334,6 @@ public class DataItemBuilder
             if (Current().value.Equals("OF"))
                 Continue(1);
 
-            // new(encoding.GetBytes(_WS_FIRST_NAME.Bytes.Length.ToString()), 0, _WS_FIRST_NAME.Bytes.Length, 0, new byte[_WS_FIRST_NAME.Bytes.Length]);
             string FormattedValue = FormatIdentifier(Current().value);
             CompiledDataItem += $"new(encoding.GetBytes({FormattedValue}.Length.ToString()));";
         }

@@ -157,14 +157,14 @@ public class DataItemBuilder
             return;
         }
 
-        if (Current().value.Equals("CONSTANT"))
+        if (CurrentEquals("CONSTANT"))
         {
             BuildConstant();
             ExportDataItem();
             return;
         }
 
-        if (!Current().value.Equals("CONSTANT") && LevelNumber.Equals("01") || LevelNumber.Equals("1"))
+        if (!CurrentEquals("CONSTANT") && LevelNumber.Equals("01") || LevelNumber.Equals("1"))
         {
             BuildDataDescriptionEntry();
             ExportDataItem();
@@ -179,35 +179,34 @@ public class DataItemBuilder
         bool isSigned = false;
         bool isLevelOne = (LevelNumber.Equals("01") || LevelNumber.Equals("1"));
 
-        while (!Current().value.Equals("."))
+        while (!CurrentEquals("."))
         {
-            if (Current().value.Equals("PIC") || Current().value.Equals("PICTURE"))
+            if (CurrentEquals("PIC") || CurrentEquals("PICTURE"))
             {
                 isElementary = true;
                 Continue(1);
-                if (Current().value.Equals("IS")) Continue(1);
+                if (CurrentEquals("IS")) Continue(1);
 
                 DataType = Current().value;
-                if (Current().value.Equals("S9"))
-                    isSigned = true;
+                if (CurrentEquals("S9")) isSigned = true;
 
                 Continue(2);
 
                 Length = int.Parse(Current().value);
 
-                if((DataType.Equals("9") || DataType.Equals("S9")) && Lookahead(2).value == "V9")
+                if ((DataType.Equals("9") || DataType.Equals("S9")) && LookaheadEquals(2, "V9"))
                     FractionalLength = int.Parse(Lookahead(4).value);
             }
 
-            if ((Current().value.Equals("IS") && Lookahead(1).value.Equals("EXTERNAL")) || (Current().value.Equals("EXTERNAL")))
+            if ((CurrentEquals("IS") && LookaheadEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
             {
                 string externalizedName = Identifier;
                 isExternal = true;
 
-                if (Current().value.Equals("IS"))
+                if (CurrentEquals("IS"))
                     Continue(1);
 
-                if (Lookahead(1).value.Equals("AS"))
+                if (LookaheadEquals(1, "EXTERNAL"))
                 {
                     Continue(2);
                     externalizedName = FormatIdentifier(Current().value.Substring(1, Current().value.Length - 2));
@@ -216,7 +215,7 @@ public class DataItemBuilder
                 ExternalName = externalizedName;
             }
 
-            if (Current().value.Equals("VALUE"))
+            if (CurrentEquals("VALUE"))
             {
                 Continue(1);
                 DataValue = Current().value;
@@ -244,41 +243,38 @@ public class DataItemBuilder
 
         string value;
         int TotalLength = 0;
-        switch (DataType)
+
+        if (!DataType.Equals("9") && !DataType.Equals("S9"))
         {
-            case "X":
-            case "A":
-            case "N":
-            case "1":
-                value = DataValue.Equals(String.Empty) ? "\" \"" : DataValue;
-                TotalLength = Length;
+            value = DataValue.Equals(String.Empty) ? "\" \"" : DataValue;
+            TotalLength = Length;
+
+            if (isElementary && isExternal)
+                CompiledDataItem += $"new(_{FormatIdentifier(Identifier)}.Memory, 0, {Length});";
+
+            if (isElementary && !isExternal)
+                CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);"; 
+        }
+
+        if (DataType.Equals("9") || DataType.Equals("S9"))
+        {
+            value = DataValue.Equals(String.Empty) ? "\"0\"" : $"\"{DataValue}\"";
+
+            if (isSigned)
+            {
+                TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 2;
+                if (value.IndexOfAny(new char[] { '+', '-' }) != 1) value = value.Insert(1, "+");
 
                 if (isElementary && isExternal)
-                    CompiledDataItem += $"new(_{FormatIdentifier(Identifier)}.Memory, 0, {Length});";
+                    CompiledDataItem += $"new(_{FormatIdentifier(Identifier)}.Memory, 0, {Length}, {FractionalLength}, {isSigned.ToString().ToLower()});";
 
                 if (isElementary && !isExternal)
-                    CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);";
-                break;
+                    CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
 
-            case "9":
-            case "S9":
-                value = DataValue.Equals(String.Empty) ? "\"0\"" : $"\"{DataValue}\"";
+            }
 
-                if (isSigned)
-                {
-                    TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 2;
-                    if (value.IndexOfAny(new char[] { '+', '-' }) != 1) 
-                        value = value.Insert(1, "+");
-                    
-                    if (isElementary && isExternal)
-                        CompiledDataItem += $"new(_{FormatIdentifier(Identifier)}.Memory, 0, {Length}, {FractionalLength}, {isSigned.ToString().ToLower()});";
-
-                    if (isElementary && !isExternal)
-                        CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
-
-                    break;
-                }
-
+            if (!isSigned)
+            {
                 TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 1;
 
                 if (isElementary && isExternal)
@@ -286,8 +282,9 @@ public class DataItemBuilder
 
                 if (isElementary && !isExternal)
                     CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
-                break;
+            }
         }
+
 
         if (Section.Equals("WORKING-STORAGE") && isLevelOne && isExternal)
             CompiledDataItem = $"""
@@ -321,28 +318,23 @@ public class DataItemBuilder
         if (Section.Equals("LOCAL-STORAGE"))
             CompiledDataItem = $"private readonly Constant {FormatIdentifier(Identifier)} = ";
 
-        while (Current().value != "AS")
-        {
-            Continue(1);
-        }
+        while (!CurrentEquals("AS")) Continue(1);
 
         Continue(1);
 
-        if (Current().value.Equals("LENGTH"))
+        if (CurrentEquals("LENGTH"))
         {
             Continue(1);
-            if (Current().value.Equals("OF"))
-                Continue(1);
+            if (CurrentEquals("OF")) Continue(1);
 
             string FormattedValue = FormatIdentifier(Current().value);
             CompiledDataItem += $"new(encoding.GetBytes({FormattedValue}.Length.ToString()));";
         }
 
-        if (Current().value.Equals("BYTE-LENGTH"))
+        if (CurrentEquals("BYTE-LENGTH"))
         {
             Continue(1);
-            if (Current().value.Equals("OF"))
-                Continue(1);
+            if (CurrentEquals("OF")) Continue(1);
 
             string FormattedValue = FormatIdentifier(Current().value);
             CompiledDataItem += $"new(encoding.GetBytes({FormattedValue}.Bytes.Length.ToString()));";
@@ -356,10 +348,9 @@ public class DataItemBuilder
 
         Continue(1);
 
-        if (!Current().value.Equals("."))
+        if (!CurrentEquals("."))
             throw new ArgumentException("Unexpected Input: Constant must end with a separator period");
 
-        return;
     }
 
     private void BuildSevenSeven()
@@ -384,32 +375,16 @@ public class DataItemBuilder
                 if (Current().value.Equals("IS")) Continue(1);
 
                 DataType = dataTypes(Current());
-                if (Current().value.Equals("S9"))
-                    isSigned = true;
+                if (Current().value.Equals("S9")) isSigned = true;
 
                 Continue(2);
 
-                if (DataType.Equals("Alphanumeric"))
-                    Length = int.Parse(Current().value);
+                Length = int.Parse(Current().value);
 
-                if (DataType.Equals("Alphabetic"))
-                    Length = int.Parse(Current().value);
-
-                if (DataType.Equals("National"))
-                    Length = int.Parse(Current().value);
-
-                if (DataType.Equals("OtterkitBoolean"))
-                    Length = int.Parse(Current().value);
-
-                if (DataType.Equals("Numeric"))
-                {
-                    Length = int.Parse(Current().value);
-                    if(Lookahead(2).value == "V9")
-                        FractionalLength = int.Parse(Lookahead(4).value);
-                }
+                if (Lookahead(2).value == "V9") FractionalLength = int.Parse(Lookahead(4).value);
             }
 
-            if (Current().value.Equals("VALUE"))
+            if (CurrentEquals("VALUE"))
             {
                 Continue(1);
                 DataValue = Current().value;
@@ -424,35 +399,29 @@ public class DataItemBuilder
         if (Section.Equals("LOCAL-STORAGE"))
             CompiledDataItem = $"private {DataType} {FormatIdentifier(Identifier)} = ";
 
-        switch (DataType)
+        string value;
+        if (DataType.Equals("Numeric"))
         {
-            case "Alphanumeric":
-            case "Alphabetic":
-            case "National":
-            case "OtterkitBoolean":
-                string value = DataValue.Equals(String.Empty) ? "\" \"" : DataValue;
+            value = DataValue.Equals(String.Empty) ? "\"0\"" : $"\"{DataValue}\"";
+            int TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 1;
 
-                CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);";
-                break;
+            if (isSigned)
+            {
+                if (value.IndexOfAny(new char[] { '+', '-' }) != 1) value = value.Insert(1, "+");
 
-            case "Numeric":
-                value = DataValue.Equals(String.Empty) ? "\"0\"" : $"\"{DataValue}\"";
-                int TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 1;
-
-                if (isSigned)
-                {
-                    if (value.IndexOfAny(new char[] { '+', '-' }) != 1) 
-                        value = value.Insert(1, "+");
-                    
-                    TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 2;
-
-                    CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
-                    break;
-                }
+                TotalLength = FractionalLength == 0 ? Length : Length + FractionalLength + 2;
 
                 CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
-                break;
+                return;
+            }
+
+            CompiledDataItem += $"new({value}u8, 0, {Length}, {FractionalLength}, new byte[{TotalLength}]);";
+            return; 
         }
+
+        value = DataValue.Equals(String.Empty) ? "\" \"" : DataValue;
+
+        CompiledDataItem += $"new({value}u8, 0, {Length}, new byte[{Length}]);";
 
         return;
     }
@@ -463,6 +432,16 @@ public class DataItemBuilder
         string FormattedIdentifier = Identifier;
         FormattedIdentifier = "_" + FormattedIdentifier.Replace("-", "_");
         return FormattedIdentifier;
+    }
+
+    bool LookaheadEquals(int lookahead, string stringToCompare)
+    {
+        return Lookahead(lookahead).value.Equals(stringToCompare);
+    }
+
+    bool CurrentEquals(string stringToCompare)
+    {
+        return Current().value.Equals(stringToCompare);
     }
 }
 
@@ -546,10 +525,10 @@ public class StatementBuilder
         if (Current().value.Equals("UPON"))
         {
             Continue(1);
-            if(Current().value.Equals("STANDARD-OUTPUT"))
+            if (Current().value.Equals("STANDARD-OUTPUT"))
                 CompiledStatement += $"\"{Current().value}\", ";
 
-            if(Current().value.Equals("STANDARD-ERROR"))
+            if (Current().value.Equals("STANDARD-ERROR"))
                 CompiledStatement += $"\"{Current().value}\", ";
         }
 
@@ -600,19 +579,19 @@ public class StatementBuilder
 
                 case "DATE":
                     CompiledStatement += $"\"{Current().value}\"";
-                    if(Lookahead(1).value.Equals("YYYYMMDD"))
+                    if (Lookahead(1).value.Equals("YYYYMMDD"))
                         CompiledStatement += $", \"{Lookahead(1).value}\");";
 
-                    if(!Lookahead(1).value.Equals("YYYYMMDD"))
+                    if (!Lookahead(1).value.Equals("YYYYMMDD"))
                         CompiledStatement += ");";
                     break;
 
                 case "DAY":
                     CompiledStatement += $"\"{Current().value}\"";
-                    if(Lookahead(1).value.Equals("YYYYDDD"))
+                    if (Lookahead(1).value.Equals("YYYYDDD"))
                         CompiledStatement += $", \"{Lookahead(1).value}\");";
 
-                    if(!Lookahead(1).value.Equals("YYYYDDD"))
+                    if (!Lookahead(1).value.Equals("YYYYDDD"))
                         CompiledStatement += ");";
                     break;
 
@@ -634,7 +613,7 @@ public class StatementBuilder
         // Statements.STOP(error, status);
         CompiledStatement += "Statements.STOP(";
         Continue(2);
-        
+
         if (Current().value.Equals("."))
         {
             CompiledStatement += ");";

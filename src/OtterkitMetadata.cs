@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Otterkit;
 
-public struct DataItems
+public struct DataItemInfo
 {
     public string Section;
     public int LevelNumber;
@@ -19,11 +19,22 @@ public struct DataItems
 
 public static class DataItemInformation
 {
-    public static Dictionary<string, DataItems> Data = new();
+    public static Dictionary<string, DataItemInfo> Data = new();
+
+    public static DataItemInfo GetValue(string DataItemHash)
+    {
+        DataItemInfo DataItem;
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+
+        if (!AlreadyExists)
+            throw new ArgumentException("FAILED TO GET DATA ITEM HASH: THIS SHOULD NOT HAVE HAPPENED, PLEASE REPORT THIS ISSUE ON OTTERKIT'S REPO");
+        
+        return DataItem;
+    }
 
     public static bool AddDataItem(string DataItemHash, string Identifier, int LevelNumber)
     {
-        DataItems DataItem;
+        DataItemInfo DataItem;
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)
@@ -37,7 +48,7 @@ public static class DataItemInformation
 
     public static bool AddType(string DataItemHash, string Type)
     {
-        DataItems DataItem;
+        DataItemInfo DataItem;
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)
@@ -48,7 +59,7 @@ public static class DataItemInformation
 
     public static bool AddPicture(string DataItemHash, string Picture)
     {
-        DataItems DataItem;
+        DataItemInfo DataItem;
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)
@@ -59,7 +70,7 @@ public static class DataItemInformation
 
     public static bool AddDefault(string DataItemHash, string Default)
     {
-        DataItems DataItem;
+        DataItemInfo DataItem;
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)
@@ -70,7 +81,7 @@ public static class DataItemInformation
 
     public static bool IsExternal(string DataItemHash, bool IsExternal, string ExternalName)
     {
-        DataItems DataItem;
+        DataItemInfo DataItem;
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)
@@ -84,7 +95,7 @@ public static class DataItemInformation
 
     public static bool IsElementary(string DataItemHash, bool IsElementary)
     {
-        DataItems DataItem;
+        DataItemInfo DataItem;
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)
@@ -95,7 +106,7 @@ public static class DataItemInformation
 
     public static bool IsGroup(string DataItemHash, bool IsGroup)
     {
-        DataItems DataItem;
+        DataItemInfo DataItem;
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)

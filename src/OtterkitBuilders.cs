@@ -120,7 +120,6 @@ public class DataItemBuilder
     private Func<Token> Current;
     private Func<int, Token> Lookahead;
 
-
     public DataItemBuilder(ProgramBuilder ProgramBuilder, Action<int> Continue, Func<Token> Current, Func<int, Token> Lookahead)
     {
         this.ProgramBuilder = ProgramBuilder;
@@ -149,6 +148,15 @@ public class DataItemBuilder
 
         Identifier = Current().value;
         Continue(1);
+
+        DataItemInfo Item = DataItemInformation.GetValue($"{ProgramBuilder.UnformattedID}#{Identifier}");
+
+        Console.WriteLine(Item.LevelNumber);
+        Console.WriteLine(Item.Identifier);
+        Console.WriteLine(Item.Type);
+        Console.WriteLine(Item.PictureLength);
+        Console.WriteLine(Item.IsConstant);
+        Console.WriteLine(Item.DefaultValue);
 
         if (LevelNumber.Equals("77"))
         {

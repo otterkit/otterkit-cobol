@@ -1077,7 +1077,6 @@ public static class Analyzer
             if (!current.value.Equals(optional))
                 return;
 
-            current.scope = scope;
             analyzed.Add(current);
             Continue();
             return;
@@ -1105,7 +1104,7 @@ public static class Analyzer
                 Continue();
                 return;
             }
-            current.scope = scope;
+
             analyzed.Add(current);
             Continue();
             return;

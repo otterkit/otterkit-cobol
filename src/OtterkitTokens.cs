@@ -9,6 +9,8 @@ public enum TokenType
     ReservedKeyword,
     FigurativeLiteral,
     IntrinsicFunction,
+    Statement,
+    Clause,
     Symbol,
     String,
     Numeric,
@@ -65,16 +67,16 @@ public struct Token
         
         JsonElement tokenJson = (JsonElement)tokenJsonCache;
         //check if the value is a reserved keyword
-        if(tokenJson.GetProperty("reservedKeywords").EnumerateArray().Any(x=>x.GetString()==value.ToUpper()))
+        if(tokenJson.GetProperty("reservedKeywords").EnumerateArray().Any(json => json.GetString() == value.ToUpper()))
             return TokenType.ReservedKeyword;
         //check if the value is a figurative literal
-        else if(tokenJson.GetProperty("figurativeLiteral").EnumerateArray().Any(x=>x.GetString()==value.ToUpper()))
+        else if(tokenJson.GetProperty("figurativeLiteral").EnumerateArray().Any(json => json.GetString() == value.ToUpper()))
             return TokenType.FigurativeLiteral;
         //check if the value is an intrinsic function
-        else if(tokenJson.GetProperty("intrinsicFunctions").EnumerateArray().Any(x=>x.GetString()==value.ToUpper()))
+        else if(tokenJson.GetProperty("intrinsicFunctions").EnumerateArray().Any(json => json.GetString() == value.ToUpper()))
             return TokenType.IntrinsicFunction;
         //check if the value is a symbol
-        else if(tokenJson.GetProperty("symbols").EnumerateArray().Any(x=>x.GetString()==value))
+        else if(tokenJson.GetProperty("symbols").EnumerateArray().Any(json => json.GetString() == value))
             return TokenType.Symbol;
         //check if the value is a string
         else if(value.StartsWith("\""))

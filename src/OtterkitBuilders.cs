@@ -151,13 +151,6 @@ public class DataItemBuilder
 
         DataItemInfo Item = DataItemInformation.GetValue($"{ProgramBuilder.UnformattedID}#{Identifier}");
 
-        Console.WriteLine(Item.LevelNumber);
-        Console.WriteLine(Item.Identifier);
-        Console.WriteLine(Item.Type);
-        Console.WriteLine(Item.PictureLength);
-        Console.WriteLine(Item.IsConstant);
-        Console.WriteLine(Item.DefaultValue);
-
         if (LevelNumber.Equals("77"))
         {
             BuildSevenSeven();

@@ -17,7 +17,7 @@ public static class ErrorHandler
         public static void PrettyError(string fileName, Token token)
         {
             string line = File.ReadLines(fileName).Skip(token.line - 1).Take(token.line).First();
-            string error = new String(' ', line.Length - token.value.Length);
+            string error = new String(' ', line.TrimStart().Length - token.value.Length);
             error = error.Insert(token.column, new String('^', token.value.Length));
 
             Console.WriteLine($"{" ",5}|");

@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace Otterkit;
 
 public static class Analyzer
@@ -148,15 +146,33 @@ public static class Analyzer
                 BaseEntry();
 
             if ((CurrentEquals("01") || CurrentEquals("1")) && !LookaheadEquals(2, "CONSTANT"))
-                DataDescriptionEntry();
+                RecordEntry();
 
             if (LookaheadEquals(2, "CONSTANT"))
                 ConstantEntry();
         }
 
-        void DataDescriptionEntry()
+        void RecordEntry()
         {
             BaseEntry();
+            int OutInt;
+            bool isNum = int.TryParse(Current().value, out OutInt);
+            while (OutInt > 1 && OutInt < 49)
+            {
+                BaseEntry();
+                isNum = int.TryParse(Current().value, out OutInt);
+
+                if (OutInt > 49)
+                {
+                    string levelNumberError = $"""
+                    A data item with this name already exists in this program, data items in a program must have a unique name.
+                    """;
+
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", levelNumberError);
+                    ErrorHandler.Parser.PrettyError(fileName, Lookahead(1));
+                    Continue();
+                }
+            }
         }
 
         void BaseEntry()
@@ -169,7 +185,24 @@ public static class Analyzer
             Identifier();
 
             string DataItemHash = $"{SourceId}#{DataName}";
-            DataItemInformation.AddDataItem(DataItemHash, DataName, LevelNumber);
+            if (!DataItemInformation.AddDataItem(DataItemHash, DataName, LevelNumber, Current()))
+            {
+                DataItemInfo originalItem = DataItemInformation.GetValue(DataItemHash);
+                string duplicateDataItemError = $"""
+                A data item with this name already exists in this program, data items in a program must have a unique name.
+                The original {originalItem.Identifier} data item can be found at line {originalItem.Line}. 
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Lookahead(-1), "general", duplicateDataItemError);
+                ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
+            }
+
+            DataItemInformation.AddSection(DataItemHash, CurrentSection);
+
+            while (Current().type != TokenType.ReservedKeyword)
+            {
+
+            }
 
             while (Current().type == TokenType.ReservedKeyword)
             {
@@ -227,6 +260,7 @@ public static class Analyzer
                     }
 
                     DataItemInformation.AddType(DataItemHash, dataType);
+                    DataItemInformation.IsElementary(DataItemHash, true);
                     Choice(null, "S9", "9", "X", "A", "N", "1");
 
                     string DataLength = string.Empty;
@@ -281,6 +315,9 @@ public static class Analyzer
 
             }
 
+            if (!DataItemInformation.GetValue(DataItemHash).IsElementary)
+                DataItemInformation.IsGroup(DataItemHash, true);
+
             string separatorPeriodError = """
             Missing separator period at the end of this data item definition, each data item must end with a separator period
             """;
@@ -299,13 +336,33 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
+            int LevelNumber = int.Parse(Current().value);
             Number();
+
+            string DataName = Current().value;
             Identifier();
+
+            string DataItemHash = $"{SourceId}#{DataName}";
+            if (!DataItemInformation.AddDataItem(DataItemHash, DataName, LevelNumber, Current()))
+            {
+                DataItemInfo originalItem = DataItemInformation.GetValue(DataItemHash);
+                string duplicateDataItemError = $"""
+                A data item with this name already exists in this program, data items in a program must have a unique name.
+                The original {originalItem.Identifier} data item can be found at line {originalItem.Line}. 
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Lookahead(-1), "general", duplicateDataItemError);
+                ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
+            }
+            DataItemInformation.IsConstant(DataItemHash, true);
+            DataItemInformation.AddSection(DataItemHash, CurrentSection);
+
             Expected("CONSTANT");
             if (CurrentEquals("IS") || CurrentEquals("GLOBAL"))
             {
                 Optional("IS");
                 Expected("GLOBAL");
+                DataItemInformation.IsGlobal(DataItemHash, true);
             }
 
             if (CurrentEquals("FROM"))

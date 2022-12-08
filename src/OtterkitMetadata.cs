@@ -5,6 +5,8 @@ namespace Otterkit;
 public struct DataItemInfo
 {
     public string Section;
+    public string Parent;
+    public int Line;
     public int LevelNumber;
     public string Identifier;
     public string Type;
@@ -15,6 +17,7 @@ public struct DataItemInfo
     public bool IsElementary;
     public bool IsGroup;
     public bool IsConstant;
+    public bool IsGlobal;
 }
 
 public static class DataItemInformation
@@ -32,7 +35,13 @@ public static class DataItemInformation
         return DataItem;
     }
 
-    public static bool AddDataItem(string DataItemHash, string Identifier, int LevelNumber)
+    public static bool ValueExists(string DataItemHash)
+    {
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
+        return AlreadyExists;
+    }
+
+    public static bool AddDataItem(string DataItemHash, string Identifier, int LevelNumber, Token token)
     {
         DataItemInfo DataItem;
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
@@ -42,6 +51,7 @@ public static class DataItemInformation
 
         DataItem.LevelNumber = LevelNumber;
         DataItem.Identifier = Identifier;
+        DataItem.Line = token.line;
         Data.Add(DataItemHash, DataItem);
         return true;
     }
@@ -52,7 +62,12 @@ public static class DataItemInformation
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)
+        {
+            DataItem = Data[DataItemHash];
             DataItem.Type = Type;
+            Data[DataItemHash] = DataItem;
+        }
+            
 
         return false;
     }
@@ -63,7 +78,11 @@ public static class DataItemInformation
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)
+        {
+            DataItem = Data[DataItemHash];
             DataItem.PictureLength = Picture;
+            Data[DataItemHash] = DataItem;
+        }
 
         return false;
     }
@@ -74,7 +93,41 @@ public static class DataItemInformation
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)
+        {
+            DataItem = Data[DataItemHash];
             DataItem.DefaultValue = Default;
+            Data[DataItemHash] = DataItem;
+        }
+
+        return false;
+    }
+
+    public static bool AddSection(string DataItemHash, string Section)
+    {
+        DataItemInfo DataItem;
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+
+        if (AlreadyExists)
+        {
+            DataItem = Data[DataItemHash];
+            DataItem.Section = Section;
+            Data[DataItemHash] = DataItem;
+        }
+
+        return false;
+    }
+
+    public static bool AddParent(string DataItemHash, string Parent)
+    {
+        DataItemInfo DataItem;
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+
+        if (AlreadyExists)
+        {
+            DataItem = Data[DataItemHash];
+            DataItem.Parent = Parent;
+            Data[DataItemHash] = DataItem;
+        }
 
         return false;
     }
@@ -86,8 +139,40 @@ public static class DataItemInformation
 
         if (AlreadyExists)
         {
-            DataItem.IsExternal = IsExternal;
+            DataItem = Data[DataItemHash];
+            DataItem.IsExternal = true;
             DataItem.ExternalName = ExternalName;
+            Data[DataItemHash] = DataItem;
+        }
+
+        return false;
+    }
+
+    public static bool IsConstant(string DataItemHash, bool IsConstant)
+    {
+        DataItemInfo DataItem;
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+
+        if (AlreadyExists)
+        {
+            DataItem = Data[DataItemHash];
+            DataItem.IsConstant = true;
+            Data[DataItemHash] = DataItem;
+        }
+
+        return false;
+    }
+
+    public static bool IsGlobal(string DataItemHash, bool IsGlobal)
+    {
+        DataItemInfo DataItem;
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+
+        if (AlreadyExists)
+        {
+            DataItem = Data[DataItemHash];
+            DataItem.IsGlobal = true;
+            Data[DataItemHash] = DataItem;
         }
 
         return false;
@@ -99,7 +184,11 @@ public static class DataItemInformation
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)
-            DataItem.IsElementary = IsElementary;
+        {
+            DataItem = Data[DataItemHash];
+            DataItem.IsElementary = true;
+            Data[DataItemHash] = DataItem;
+        }
 
         return false;
     }
@@ -110,7 +199,11 @@ public static class DataItemInformation
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (AlreadyExists)
-            DataItem.IsGroup = IsGroup;
+        {
+            DataItem = Data[DataItemHash];
+            DataItem.IsGroup = true;
+            Data[DataItemHash] = DataItem;
+        }
 
         return false;
     }

@@ -157,21 +157,10 @@ public static class Analyzer
             BaseEntry();
             int OutInt;
             bool isNum = int.TryParse(Current().value, out OutInt);
-            while (OutInt > 1 && OutInt < 49)
+            while (OutInt > 1 && OutInt < 50)
             {
                 BaseEntry();
                 isNum = int.TryParse(Current().value, out OutInt);
-
-                if (OutInt > 49)
-                {
-                    string levelNumberError = $"""
-                    A data item with this name already exists in this program, data items in a program must have a unique name.
-                    """;
-
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", levelNumberError);
-                    ErrorHandler.Parser.PrettyError(fileName, Lookahead(1));
-                    Continue();
-                }
             }
         }
 
@@ -199,12 +188,18 @@ public static class Analyzer
 
             DataItemInformation.AddSection(DataItemHash, CurrentSection);
 
-            while (Current().type != TokenType.ReservedKeyword)
+            if (Current().context != TokenContext.IsClause && !CurrentEquals("."))
             {
+                string notAClauseError = $"""
+                Expected data division clauses or a separator period after this data item's identifier.
+                Token found ("{Current().value}") was not a data division clause reserved word.
+                """;
 
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notAClauseError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
-            while (Current().type == TokenType.ReservedKeyword)
+            while (Current().context == TokenContext.IsClause)
             {
                 if (CurrentEquals("IS") && !(LookaheadEquals(1, "EXTERNAL") || LookaheadEquals(1, "GLOBAL") || LookaheadEquals(1, "TYPEDEF")))
                 {
@@ -321,7 +316,7 @@ public static class Analyzer
             string separatorPeriodError = """
             Missing separator period at the end of this data item definition, each data item must end with a separator period
             """;
-            Expected(".", separatorPeriodError, -1, "separator period");
+            Expected(".", separatorPeriodError, -1);
         }
 
         void ConstantEntry()
@@ -369,7 +364,7 @@ public static class Analyzer
             {
                 Expected("FROM");
                 Identifier();
-                Expected(".", "separator period");
+                Expected(".");
             }
             else
             {
@@ -403,7 +398,7 @@ public static class Analyzer
                     Identifier();
                 }
 
-                Expected(".", "separator period");
+                Expected(".");
             }
         }
 
@@ -413,9 +408,9 @@ public static class Analyzer
             Missing separator period at the end of this PROCEDURE DIVISION header, every division header must end with a separator period
             """;
 
-            Expected("PROCEDURE", "procedure division");
+            Expected("PROCEDURE");
             Expected("DIVISION");
-            Expected(".", headerPeriodError, -1, "separator period");
+            Expected(".", headerPeriodError, -1);
             Statement();
 
             if(CurrentEquals("END") && LookaheadEquals(1, "PROGRAM"))
@@ -427,7 +422,7 @@ public static class Analyzer
                 Expected("END");
                 Expected("PROGRAM");
                 Identifier();
-                Expected(".", endProgramPeriodError, -1, "separator period");
+                Expected(".", endProgramPeriodError, -1);
                 if (Current().value.Equals("IDENTIFICATION"))
                 {
                     Source();
@@ -437,61 +432,43 @@ public static class Analyzer
 
         void Statement(bool isNested = false)
         {
-            switch (Current().value)
+            while (Current().context == TokenContext.IsStatement)
             {
-                case "DISPLAY":
-                    DISPLAY();
-                    ScopeTerminator(isNested);
-                    Statement(isNested);
-                    break;
-
-                case "ACCEPT":
+                if (CurrentEquals("ACCEPT"))
                     ACCEPT();
-                    ScopeTerminator(isNested);
-                    Statement(isNested);
-                    break;
 
-                case "COMPUTE":
-                    COMPUTE();
-                    ScopeTerminator(isNested);
-                    Statement(isNested);
-                    break;
-
-                case "CALL":
-                    CALL();
-                    ScopeTerminator(isNested);
-                    Statement(isNested);
-                    break;
-
-                case "ADD":
+                if (CurrentEquals("ADD"))
                     ADD();
-                    ScopeTerminator(isNested);
-                    Statement(isNested);
-                    break;
 
-                case "SUBTRACT":
-                    SUBTRACT();
-                    ScopeTerminator(isNested);
-                    Statement(isNested);
-                    break;
+                if (CurrentEquals("ALLOCATE"))
+                    ALLOCATE();
 
-                case "DIVIDE":
+                if (CurrentEquals("CALL"))
+                    CALL();
+
+                if (CurrentEquals("COMPUTE"))
+                    COMPUTE();
+
+                if (CurrentEquals("DISPLAY"))
+                    DISPLAY();
+
+                if (CurrentEquals("DIVIDE"))
                     DIVIDE();
-                    ScopeTerminator(isNested);
-                    Statement(isNested);
-                    break;
 
-                case "MULTIPLY":
+                if (CurrentEquals("MULTIPLY"))
                     MULTIPLY();
-                    ScopeTerminator(isNested);
-                    Statement(isNested);
-                    break;
 
-                case "STOP":
+                if (CurrentEquals("FREE"))
+                    FREE();
+
+                if (CurrentEquals("SUBTRACT"))
+                    SUBTRACT();
+
+                if (CurrentEquals("STOP"))
                     STOP();
-                    ScopeTerminator(isNested);
-                    Statement(isNested);
-                    break;
+
+                ScopeTerminator(isNested);
+                Statement(isNested);
             }
         }
 
@@ -500,11 +477,7 @@ public static class Analyzer
             if (isNested)
                 return;
 
-            if (!isNested)
-            {
-                Expected(".", "expected", -1, "separator period");
-                return;
-            }
+            Expected(".", "expected", 0);
         }
 
         // Statement parsing section:
@@ -596,6 +569,28 @@ public static class Analyzer
             Optional("END-ACCEPT");
         }
 
+        void ALLOCATE()
+        {
+            Expected("ALLOCATE");
+            if (Current().type == TokenType.Identifier && !LookaheadEquals(1, "CHARACTERS") && Lookahead(1).type != TokenType.Symbol)
+                Identifier();
+
+            if (Current().type == TokenType.Identifier || Current().type == TokenType.Numeric)
+            {
+                Arithmetic();
+                Expected("CHARACTERS");
+            }
+
+            if (CurrentEquals("INITIALIZED"))
+                Expected("INITIALIZED");
+
+            if (CurrentEquals("RETURNING"))
+            {
+                Expected("RETURNING");
+                Identifier();
+            }
+        }
+
         void COMPUTE()
         {
             bool isConditional = false;
@@ -613,46 +608,18 @@ public static class Analyzer
             }
 
             Expected("=");
-            if (Current().type != TokenType.Identifier
-             && Current().type != TokenType.Numeric
-             && Current().type != TokenType.Symbol)
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier, numeric literal or arithmetic symbol");
-
-            while (Current().type == TokenType.Identifier
-               || Current().type == TokenType.Numeric
-               || Current().type == TokenType.Symbol
-            )
+            if (Current().type != TokenType.Identifier && Current().type != TokenType.Numeric && Current().type != TokenType.Symbol)
             {
-                if (Current().type == TokenType.Identifier)
-                    Identifier();
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier, numeric literal or valid arithmetic symbol");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
 
-                if (Current().type == TokenType.Numeric)
-                    Number();
+            Arithmetic();
 
-                if (Current().type == TokenType.Symbol)
-                {
-                    switch (Current().value)
-                    {
-                        case "+":
-                        case "-":
-                        case "*":
-                        case "/":
-                        case "**":
-                        case "(":
-                        case ")":
-                            Symbol();
-                            break;
-
-                        case ".":
-                            return;
-
-                        default:
-                            ErrorHandler.Parser.Report(fileName, Current(), "expected", "+, -, *, /, **, ( or )");
-                            ErrorHandler.Parser.PrettyError(fileName, Current());
-                            Continue();
-                            break;
-                    }
-                }
+            if (CurrentEquals("."))
+            {
+                Expected(".");
+                return;
             }
 
             SizeError(ref isConditional);
@@ -999,6 +966,25 @@ public static class Analyzer
                 Expected("END-MULTIPLY");
         }
 
+        void FREE()
+        {
+            Expected("FREE");
+            Identifier();
+            while (Current().type == TokenType.Identifier)
+                Identifier();
+
+            if (!CurrentEquals("."))
+                {
+                    string notIdentifierError = """
+                    The FREE statement must only contain based data item identifiers.
+                    """;
+
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+
+        }
+
         void STOP()
         {
             Expected("STOP");
@@ -1129,6 +1115,69 @@ public static class Analyzer
                 Expected("SIZE");
                 Expected("ERROR");
                 Statement(true);
+            }
+        }
+
+        void Arithmetic()
+        {
+            bool isArithmeticSymbol(Token current) => current.value switch
+            {
+                "+" => true,
+                "-" => true,
+                "*" => true,
+                "/" => true,
+                "**" => true,
+                "(" => true,
+                ")" => true,
+                _ => false
+            };
+
+            while (Current().type == TokenType.Identifier || Current().type == TokenType.Numeric || Current().type == TokenType.Symbol)
+            {
+                if (Current().type == TokenType.Identifier)
+                    Identifier();
+
+                if (Current().type == TokenType.Numeric)
+                    Number();
+
+                if (isArithmeticSymbol(Current()))
+                {
+                    if (isArithmeticSymbol(Lookahead(-1)))
+                    {
+                        string invalidArithmeticSymbol = """
+                        Invalid token after an arithmetic operator, expected a numeric literal or identifier instead of another arithmetic operator
+                        """;
+
+                        ErrorHandler.Parser.Report(fileName, Current(), "general", invalidArithmeticSymbol);
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
+                    }
+
+                    if (Lookahead(1).type != TokenType.Numeric && Lookahead(1).type != TokenType.Identifier)
+                    {
+                        string invalidArithmeticSymbol = """
+                        Invalid arithmetic expression, expected a numeric literal or identifier after this operator.
+                        Arithmetic expressions cannot end with an operator
+                        """;
+
+                        ErrorHandler.Parser.Report(fileName, Current(), "general", invalidArithmeticSymbol);
+                        ErrorHandler.Parser.PrettyError(fileName, Current());
+                    }
+
+                    Symbol();
+                }
+
+                if (CurrentEquals("."))
+                    return;
+
+                if (Current().type == TokenType.Symbol && !isArithmeticSymbol(Current()))
+                {
+                    string invalidArithmeticSymbol = """
+                    Invalid symbol in this arithmetic expression. Valid operators are: +, -, *, /, **, ( and )
+                    """;
+
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", invalidArithmeticSymbol);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
             }
         }
 

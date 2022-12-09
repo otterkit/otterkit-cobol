@@ -17,15 +17,16 @@ public static class ErrorHandler
         public static void PrettyError(string fileName, Token token)
         {
             string line = File.ReadLines(fileName).Skip(token.line - 1).Take(token.line).First();
-            string error = new String(' ', line.TrimStart().Length - token.value.Length);
-            error = error.Insert(token.column, new String('^', token.value.Length));
+            string error = new String(' ', line.Length - token.value.Length);
+            int errorPosition = token.column - (line.Length - line.TrimStart().Length - 6);
+            error = error.Insert(errorPosition, new String('~', token.value.Length));
 
             Console.WriteLine($"{" ",5}|");
             Console.WriteLine($"{token.line,4} | {line.TrimStart()}");
             Console.Write($"{" ",5}|");
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"{error}\n");
+            Console.WriteLine($" {error}\n");
             Console.ResetColor();
 
             Environment.Exit(1);

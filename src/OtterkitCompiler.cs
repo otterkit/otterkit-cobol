@@ -103,7 +103,11 @@ public static class OtterkitCompiler
             List<Token> tokens = Lexer.Tokenize(sourceLines);
             List<Token> classified = Token.fromValue(tokens);
             List<Token> analized = Analyzer.Analyze(classified, entryPoint);
-            Codegen.Generate(analized, entryPoint);
+            foreach (var item in analized)
+            {
+                Console.WriteLine($"  {item.line}  {item.column}  {item.value}");
+            }
+            // Codegen.Generate(analized, entryPoint);
         }
     }
 

@@ -18,6 +18,7 @@ public struct DataItemInfo
     public bool IsGroup;
     public bool IsConstant;
     public bool IsGlobal;
+    public bool IsBased;
 }
 
 public static class DataItemInformation

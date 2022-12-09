@@ -196,6 +196,7 @@
     "INHERITS",
     "INITIAL",
     "INITIALIZE",
+    "INITIALIZED",
     "INITIATE",
     "INPUT",
     "INPUT-OUTPUT",

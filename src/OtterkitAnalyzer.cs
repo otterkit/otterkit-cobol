@@ -1186,6 +1186,33 @@ public static class Analyzer
             }
         }
 
+        void VALIDATE()
+        {
+            Expected("VALIDATE");
+            if (Current().type != TokenType.Identifier)
+            {
+                string notIdentifierError = """
+                The VALIDATE statement must only contain data item identifiers.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
+            Identifier();
+            while (Current().type == TokenType.Identifier)
+                Identifier();
+
+            if (!CurrentEquals("."))
+            {
+                string notIdentifierError = """
+                The VALIDATE statement must only contain data item identifiers.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
+        }
+
         // Parser helper methods.
         Token Lookahead(int amount)
         {

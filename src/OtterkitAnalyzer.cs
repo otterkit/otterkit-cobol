@@ -467,6 +467,9 @@ public static class Analyzer
                 if (CurrentEquals("MULTIPLY"))
                     MULTIPLY();
 
+                if (CurrentEquals("MOVE"))
+                    MOVE();
+
                 if (CurrentEquals("FREE"))
                     FREE();
 
@@ -886,6 +889,67 @@ public static class Analyzer
 
             if (isConditional)
                 Expected("END-MULTIPLY");
+        }
+
+        void MOVE()
+        {
+            Expected("MOVE");
+            if (CurrentEquals("CORRESPONDING") || CurrentEquals("CORR"))
+            {
+                Expected(Current().value);
+                Identifier();
+                Expected("TO");
+                Identifier();
+                return;
+            }
+
+            if (NotIdentifierOrLiteral())
+            {
+                string notIdentifierOrLiteralError = """
+                The MOVE statement must only contain a single data item identifier, datatype literal or an intrisic function which returns a data item before the "TO" reserved word.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierOrLiteralError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
+
+            if (Current().type == TokenType.Identifier)
+                Identifier();
+
+            else if (Current().type == TokenType.Numeric)
+                Number();
+
+            else if (Current().type == TokenType.String)
+                String();
+
+            Expected("TO");
+            MOVELOOP();
+        }
+
+        void MOVELOOP()
+        {
+            if (Current().type != TokenType.Identifier)
+            {
+                string notIdentifierError = """
+                The MOVE statement must only contain data item identifiers after the "TO" reserved word.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
+
+            while (Current().type == TokenType.Identifier)
+                Identifier();
+
+            if (!CurrentEquals("."))
+            {
+                string notIdentifierError = """
+                The MOVE statement must only contain data item identifiers after the "TO" reserved word.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
         }
 
         void DIVIDE()
@@ -1354,6 +1418,13 @@ public static class Analyzer
             analyzed.Add(current);
             Continue();
             return;
+        }
+
+        bool NotIdentifierOrLiteral()
+        {
+            return Current().type != TokenType.Identifier 
+                && Current().type != TokenType.Numeric 
+                && Current().type != TokenType.String;
         }
 
     }

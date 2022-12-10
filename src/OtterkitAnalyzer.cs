@@ -482,6 +482,12 @@ public static class Analyzer
                 if (CurrentEquals("STOP"))
                     STOP();
 
+                if (CurrentEquals("SUPPRESS"))
+                    SUPPRESS();
+
+                if (CurrentEquals("TERMINATE"))
+                    TERMINATE();
+
                 ScopeTerminator(isNested);
                 Statement(isNested);
             }
@@ -1144,6 +1150,39 @@ public static class Analyzer
                         String();
                         break;
                 }
+            }
+        }
+
+        void SUPPRESS()
+        {
+            Expected("SUPPRESS");
+            Optional("PRINTING");
+        }
+
+        void TERMINATE()
+        {
+            Expected("TERMINATE");
+            if (Current().type != TokenType.Identifier)
+            {
+                string notIdentifierError = """
+                The TERMINATE statement must only contain report entry identifiers defined in the report section.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
+            Identifier();
+            while (Current().type == TokenType.Identifier)
+                Identifier();
+
+            if (!CurrentEquals("."))
+            {
+                string notIdentifierError = """
+                The TERMINATE statement must only contain report entry identifiers defined in the report section.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
             }
         }
 

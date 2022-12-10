@@ -488,6 +488,9 @@ public static class Analyzer
                 if (CurrentEquals("TERMINATE"))
                     TERMINATE();
 
+                if (CurrentEquals("VALIDATE"))
+                    VALIDATE();
+
                 ScopeTerminator(isNested);
                 Statement(isNested);
             }

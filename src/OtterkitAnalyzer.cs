@@ -476,6 +476,9 @@ public static class Analyzer
                 if (CurrentEquals("SUBTRACT"))
                     SUBTRACT();
 
+                if (CurrentEquals("RAISE"))
+                    RAISE();               
+
                 if (CurrentEquals("STOP"))
                     STOP();
 
@@ -923,11 +926,6 @@ public static class Analyzer
                 String();
 
             Expected("TO");
-            MOVELOOP();
-        }
-
-        void MOVELOOP()
-        {
             if (Current().type != TokenType.Identifier)
             {
                 string notIdentifierError = """
@@ -1111,6 +1109,18 @@ public static class Analyzer
                 ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
+        }
+
+        void RAISE()
+        {
+            Expected("RAISE");
+            if(CurrentEquals("EXCEPTION"))
+            {
+                Expected("EXCEPTION");
+                Identifier();
+            }
+            else
+                Identifier();
         }
 
         void STOP()

@@ -446,6 +446,15 @@ public static class Analyzer
                 if (CurrentEquals("CALL"))
                     CALL();
 
+                if (CurrentEquals("CANCEL"))
+                    CANCEL();
+
+                if (CurrentEquals("COMMIT"))
+                    COMMIT();
+
+                if (CurrentEquals("CONTINUE"))
+                    CONTINUE();
+
                 if (CurrentEquals("COMPUTE"))
                     COMPUTE();
 
@@ -633,6 +642,17 @@ public static class Analyzer
             Expected("CALL");
             String();
             Optional("END-CALL");
+        }
+
+        void CONTINUE()
+        {
+            Expected("CONTINUE");
+            if (CurrentEquals("AFTER"))
+            {
+                Expected("AFTER");
+                Arithmetic();
+                Expected("SECONDS");
+            }
         }
 
         void ADD()
@@ -983,6 +1003,50 @@ public static class Analyzer
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
+        }
+
+        void COMMIT()
+        {
+            Expected("COMMIT");
+        }
+
+        void CANCEL()
+        {
+            Expected("CANCEL");
+            if (Current().type == TokenType.Identifier)
+                Identifier();
+
+            else if (Current().type == TokenType.String)
+                String();
+
+            else
+            {
+                string notProgramNameError = """
+                The CANCEL statement only accepts Alphanumeric or National literals and data items, or a program prototype name specified in the REPOSITORY paragraph.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());   
+            }
+
+            while (Current().type == TokenType.Identifier || Current().type == TokenType.String)
+            {
+                if (Current().type == TokenType.Identifier)
+                    Identifier();
+
+                if (Current().type == TokenType.String)
+                    String();
+            }
+
+            if (!CurrentEquals("."))
+            {
+                string notProgramNameError = """
+                The CANCEL statement only accepts Alphanumeric or National literals and data items, or a program prototype name specified in the REPOSITORY paragraph.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
         }
 
         void STOP()

@@ -528,7 +528,7 @@ public static class Analyzer
             while (Current().type == TokenType.Identifier
                 || Current().type == TokenType.Numeric
                 || Current().type == TokenType.String
-            )
+                )
             {
                 if (Current().type == TokenType.Identifier)
                     Identifier();

@@ -26,9 +26,12 @@
 // Build command for windows
 // cl.exe /D_USRDLL /D_WINDLL Decimal128.c /MT /Ox /link /DLL /OUT:Decimal128.dll
 
-char stack[32][45];
-char string[45];
-int count = 0;
+typedef struct 
+{
+	char stack[32][45];
+	char string[45];
+	int count = 0;
+} stack_t;
 
 bool isOperator(char character)
 {
@@ -54,33 +57,33 @@ bool isOperator(char character)
 	}
 }
 
-void stringAppend(char character)
+void stringAppend(char character, stack_t stack)
 {
-	if (strlen(string) >= 44)
+	if (strlen(stack.string) >= 44)
 	{
 		printf("\nOtterkit Buffer Overflow:\n");
 		printf("Numeric string buffer overflow, ignoring all subsequent digits\n");
 		return;
 	}
 	char temporary[2] = { character, '\0' };
-	strcat(string, temporary);
+	strcat(stack.string, temporary);
 }
 
-void push()
+void push(stack_t stack)
 {
-	if (count + 1 >= 32)
+	if (stack.count + 1 >= 32)
 	{
 		printf("\nOtterkit Stack Overflow:\n");
 		printf("Decimal arithmetic stack overflow, ignoring all subsequent operands\n");
 		return;
 	}
-	strcpy(stack[count++], string);
-	memset(string, 0, sizeof string);
+	strcpy(stack.stack[count++], stack.string);
+	memset(stack.string, 0, sizeof stack.string);
 }
 
-char* pop()
+char* pop(stack_t stack)
 {
-	return stack[--count];
+	return stack.stack[--count];
 }
 
 
@@ -105,7 +108,7 @@ char *OtterkitArithmetic(char *expression)
 	right = mpd_new(&context);
 
 	int index = 0;
-	count = 0;
+	stack_t stack;
 	// Evaluate postfix expression until end of string
 	while (expression[index] != '\0')
 	{
@@ -121,31 +124,31 @@ char *OtterkitArithmetic(char *expression)
 		if (isdigit(current))
 		{
 			// Append character to string stack
-			stringAppend(current);
+			stringAppend(current, stack);
 		}
 
 		if (current == '-' && isdigit(next))
 		{
 			// Append '-' to string stack for negative numbers
-			stringAppend(current);
+			stringAppend(current, stack);
 		}
 
 		if (current == 'E' && (next == '-' || next == '+'))
 		{
 			// Append '-' to string stack for negative numbers
-			stringAppend(current);
+			stringAppend(current, stack);
 		}
 
 		if (current == '.' && isdigit(previous) && isdigit(next))
 		{
 			// Append '.' to string stack for decimal values
-			stringAppend(current);
+			stringAppend(current, stack);
 		}
 
 		if (current == ' ' && isdigit(previous))
 		{
 			// Push string stack values to the true stack
-			push();
+			push(stack);
 		}
 
 		if (isOperator(current) && isdigit(next) == false)
@@ -155,40 +158,40 @@ char *OtterkitArithmetic(char *expression)
 				case '+':
 					// Pop two numbers from the stack
 					// and add them together
-					mpd_set_string(right, pop(), &context);
-					mpd_set_string(left, pop(), &context);
+					mpd_set_string(right, pop(stack), &context);
+					mpd_set_string(left, pop(stack), &context);
 					mpd_add(result, left, right, &context);
 					break;
 
 				case '-':
 					// Pop two numbers from the stack
 					// and subtract right from the left
-					mpd_set_string(right, pop(), &context);
-					mpd_set_string(left, pop(), &context);
+					mpd_set_string(right, pop(stack), &context);
+					mpd_set_string(left, pop(stack), &context);
 					mpd_sub(result, left, right, &context);
 					break;
 
 				case '*':
 					// Pop two numbers from the stack
 					// and multiply left by the right
-					mpd_set_string(right, pop(), &context);
-					mpd_set_string(left, pop(), &context);
+					mpd_set_string(right, pop(stack), &context);
+					mpd_set_string(left, pop(stack), &context);
 					mpd_mul(result, left, right, &context);
 					break;
 
 				case '/':
 					// Pop two numbers from the stack
 					// and divide left by the right
-					mpd_set_string(right, pop(), &context);
-					mpd_set_string(left, pop(), &context);
+					mpd_set_string(right, pop(stack), &context);
+					mpd_set_string(left, pop(stack), &context);
 					mpd_div(result, left, right, &context);
 					break;
 
 				case '^':
 					// Pop two numbers from the stack
 					// and calculate left to the power of right
-					mpd_set_string(right, pop(), &context);
-					mpd_set_string(left, pop(), &context);
+					mpd_set_string(right, pop(stack), &context);
+					mpd_set_string(left, pop(stack), &context);
 					mpd_pow(result, left, right, &context);
 					break;
 
@@ -198,9 +201,9 @@ char *OtterkitArithmetic(char *expression)
 
 			rstring = mpd_to_sci(result, 1);
 			// Push result string to the string stack
-			strcat(string, rstring);
+			strcat(stack.string, rstring);
 			// Push string stack value to the true stack
-			push();
+			push(stack);
 		}
 		index++;
 	}
@@ -212,6 +215,7 @@ char *OtterkitArithmetic(char *expression)
 	mpd_del(right);
 	mpd_del(left);
 	mpd_del(result);
+	stack = NULL;
 	
 	return rstring;
 }

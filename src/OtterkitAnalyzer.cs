@@ -294,7 +294,7 @@ public static class Analyzer
                         ErrorHandler.Parser.Report(fileName, Current(), "general", valueError);
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                     }
-                    
+
                     if (Current().type.Equals(TokenType.String))
                     {
                         DataItemInformation.AddDefault(DataItemHash, Current().value);
@@ -413,7 +413,7 @@ public static class Analyzer
             Expected(".", headerPeriodError, -1);
             Statement();
 
-            if(CurrentEquals("END") && LookaheadEquals(1, "PROGRAM"))
+            if (CurrentEquals("END") && LookaheadEquals(1, "PROGRAM"))
             {
                 string endProgramPeriodError = """
                 Missing separator period at the end of this END PROGRAM definition
@@ -468,7 +468,7 @@ public static class Analyzer
                     DIVIDE();
 
                 if (CurrentEquals("INITIATE"))
-                    INITIATE();                    
+                    INITIATE();
 
                 if (CurrentEquals("MULTIPLY"))
                     MULTIPLY();
@@ -479,11 +479,23 @@ public static class Analyzer
                 if (CurrentEquals("FREE"))
                     FREE();
 
+                if (CurrentEquals("GENERATE"))
+                    GENERATE();
+
+                if (CurrentEquals("GO"))
+                    GO();
+
                 if (CurrentEquals("SUBTRACT"))
                     SUBTRACT();
 
                 if (CurrentEquals("RAISE"))
-                    RAISE();               
+                    RAISE();
+
+                if (CurrentEquals("RESUME"))
+                    RESUME();
+
+                if (CurrentEquals("ROLLBACK"))
+                    ROLLBACK();
 
                 if (CurrentEquals("STOP"))
                     STOP();
@@ -493,6 +505,9 @@ public static class Analyzer
 
                 if (CurrentEquals("TERMINATE"))
                     TERMINATE();
+
+                if (CurrentEquals("UNLOCK"))
+                    UNLOCK();
 
                 if (CurrentEquals("VALIDATE"))
                     VALIDATE();
@@ -1098,15 +1113,37 @@ public static class Analyzer
                 Identifier();
 
             if (!CurrentEquals("."))
-                {
-                    string notIdentifierError = """
+            {
+                string notIdentifierError = """
                     The FREE statement must only contain based data item identifiers.
                     """;
 
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
-                    ErrorHandler.Parser.PrettyError(fileName, Current());
-                }
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
 
+        }
+
+        void GENERATE()
+        {
+            Expected("GENERATE");
+            Identifier();
+        }
+
+        void GO()
+        {
+            Expected("GO");
+            Optional("TO");
+            Identifier();
+            if (CurrentEquals("DEPENDING") || Current().type == TokenType.Identifier)
+            {
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+
+                Expected("DEPENDING");
+                Optional("ON");
+                Identifier();
+            }
         }
 
         void COMMIT()
@@ -1145,7 +1182,7 @@ public static class Analyzer
                 """;
 
                 ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
-                ErrorHandler.Parser.PrettyError(fileName, Current());   
+                ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
             while (Current().type == TokenType.Identifier)
@@ -1177,7 +1214,7 @@ public static class Analyzer
                 """;
 
                 ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
-                ErrorHandler.Parser.PrettyError(fileName, Current());   
+                ErrorHandler.Parser.PrettyError(fileName, Current());
             }
         }
 
@@ -1197,7 +1234,7 @@ public static class Analyzer
                 """;
 
                 ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
-                ErrorHandler.Parser.PrettyError(fileName, Current());   
+                ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
             while (Current().type == TokenType.Identifier || Current().type == TokenType.String)
@@ -1223,13 +1260,33 @@ public static class Analyzer
         void RAISE()
         {
             Expected("RAISE");
-            if(CurrentEquals("EXCEPTION"))
+            if (CurrentEquals("EXCEPTION"))
             {
                 Expected("EXCEPTION");
                 Identifier();
             }
             else
                 Identifier();
+        }
+
+        void RESUME()
+        {
+            Expected("RESUME");
+            Optional("AT");
+            if (CurrentEquals("NEXT"))
+            {
+                Expected("NEXT");
+                Expected("STATEMENT");
+            }
+            else
+            {
+                Identifier();
+            }
+        }
+
+        void ROLLBACK()
+        {
+            Expected("ROLLBACK");
         }
 
         void STOP()
@@ -1287,6 +1344,13 @@ public static class Analyzer
                 ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
+        }
+
+        void UNLOCK()
+        {
+            Expected("UNLOCK");
+            Identifier();
+            Choice(null, "RECORD", "RECORDS");
         }
 
         void VALIDATE()
@@ -1624,8 +1688,8 @@ public static class Analyzer
 
         bool NotIdentifierOrLiteral()
         {
-            return Current().type != TokenType.Identifier 
-                && Current().type != TokenType.Numeric 
+            return Current().type != TokenType.Identifier
+                && Current().type != TokenType.Numeric
                 && Current().type != TokenType.String;
         }
 

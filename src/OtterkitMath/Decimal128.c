@@ -15,13 +15,13 @@
 
 // macOS & Linux Build commands
 // Linux with GCC:
-// gcc -I. -shared -Wl,-rpath libmpdec.so.3 -O2 -o Decimal128.so UnixDecimal128.c libmpdec.a -lm
+// gcc -I. -shared -Wl,-rpath libmpdec.so.3 -O2 -o Decimal128.so Decimal128.c libmpdec.a -lm
 //
 // macOS with GCC:
-// gcc -dynamiclib -Wall -W -O2 -o Decimal128.dylib UnixDecimal128.c libmpdec.a -lm
+// gcc -dynamiclib -Wall -W -O2 -o Decimal128.dylib Decimal128.c libmpdec.a -lm
 //
 // macOS with Clang:
-// cc -dynamiclib -Wall -W -O2 -o Decimal128.dylib UnixDecimal128.c libmpdec.a -lm
+// cc -dynamiclib -Wall -W -O2 -o Decimal128.dylib Decimal128.c libmpdec.a -lm
 
 // Build command for windows
 // cl.exe /D_USRDLL /D_WINDLL Decimal128.c /MT /Ox /link /DLL /OUT:Decimal128.dll
@@ -30,8 +30,8 @@ typedef struct
 {
 	char stack[32][45];
 	char string[45];
-	int count = 0;
-} stack_t;
+	int count;
+} ottrstack_t;
 
 bool isOperator(char character)
 {
@@ -57,33 +57,36 @@ bool isOperator(char character)
 	}
 }
 
-void stringAppend(char character, stack_t stack)
+void stringAppend(char character, ottrstack_t *ottrstack)
 {
-	if (strlen(stack.string) >= 44)
+	if (strlen(ottrstack->string) >= 44)
 	{
-		printf("\nOtterkit Buffer Overflow:\n");
+		printf("Otterkit Buffer Overflow:\n");
 		printf("Numeric string buffer overflow, ignoring all subsequent digits\n");
 		return;
 	}
-	char temporary[2] = { character, '\0' };
-	strcat(stack.string, temporary);
+
+	strncat(ottrstack->string, &character, 1);
 }
 
-void push(stack_t stack)
+void push(ottrstack_t *ottrstack)
 {
-	if (stack.count + 1 >= 32)
+	if (ottrstack->count + 1 >= 32)
 	{
-		printf("\nOtterkit Stack Overflow:\n");
+		printf("Otterkit Stack Overflow:\n");
 		printf("Decimal arithmetic stack overflow, ignoring all subsequent operands\n");
 		return;
 	}
-	strcpy(stack.stack[count++], stack.string);
-	memset(stack.string, 0, sizeof stack.string);
+
+	strncpy(ottrstack->stack[ottrstack->count], ottrstack->string, 45);
+	memset(ottrstack->string, 0, 45);
+	ottrstack->stack[ottrstack->count][44] = '\0';
+	ottrstack->count++;
 }
 
-char* pop(stack_t stack)
+char* pop(ottrstack_t *ottrstack)
 {
-	return stack.stack[--count];
+	return ottrstack->stack[--ottrstack->count];
 }
 
 
@@ -108,7 +111,9 @@ char *OtterkitArithmetic(char *expression)
 	right = mpd_new(&context);
 
 	int index = 0;
-	stack_t stack;
+	ottrstack_t stack;
+	stack.count = 0;
+	memset(stack.string, 0, 45);
 	// Evaluate postfix expression until end of string
 	while (expression[index] != '\0')
 	{
@@ -116,7 +121,7 @@ char *OtterkitArithmetic(char *expression)
 		char previous = expression[index - 1];
 		char next = expression[index + 1];
 
-		if (isalpha(current))
+		if (isalpha(current) && current != 'E' && (next != '-' && next != '+'))
 		{
 			return "NaN";
 		}
@@ -124,31 +129,31 @@ char *OtterkitArithmetic(char *expression)
 		if (isdigit(current))
 		{
 			// Append character to string stack
-			stringAppend(current, stack);
+			stringAppend(current, &stack);
 		}
 
 		if (current == '-' && isdigit(next))
 		{
 			// Append '-' to string stack for negative numbers
-			stringAppend(current, stack);
+			stringAppend(current, &stack);
 		}
 
 		if (current == 'E' && (next == '-' || next == '+'))
 		{
 			// Append '-' to string stack for negative numbers
-			stringAppend(current, stack);
+			stringAppend(current, &stack);
 		}
 
 		if (current == '.' && isdigit(previous) && isdigit(next))
 		{
 			// Append '.' to string stack for decimal values
-			stringAppend(current, stack);
+			stringAppend(current, &stack);
 		}
 
 		if (current == ' ' && isdigit(previous))
 		{
 			// Push string stack values to the true stack
-			push(stack);
+			push(&stack);
 		}
 
 		if (isOperator(current) && isdigit(next) == false)
@@ -158,40 +163,40 @@ char *OtterkitArithmetic(char *expression)
 				case '+':
 					// Pop two numbers from the stack
 					// and add them together
-					mpd_set_string(right, pop(stack), &context);
-					mpd_set_string(left, pop(stack), &context);
+					mpd_set_string(right, pop(&stack), &context);
+					mpd_set_string(left, pop(&stack), &context);
 					mpd_add(result, left, right, &context);
 					break;
 
 				case '-':
 					// Pop two numbers from the stack
 					// and subtract right from the left
-					mpd_set_string(right, pop(stack), &context);
-					mpd_set_string(left, pop(stack), &context);
+					mpd_set_string(right, pop(&stack), &context);
+					mpd_set_string(left, pop(&stack), &context);
 					mpd_sub(result, left, right, &context);
 					break;
 
 				case '*':
 					// Pop two numbers from the stack
 					// and multiply left by the right
-					mpd_set_string(right, pop(stack), &context);
-					mpd_set_string(left, pop(stack), &context);
+					mpd_set_string(right, pop(&stack), &context);
+					mpd_set_string(left, pop(&stack), &context);
 					mpd_mul(result, left, right, &context);
 					break;
 
 				case '/':
 					// Pop two numbers from the stack
 					// and divide left by the right
-					mpd_set_string(right, pop(stack), &context);
-					mpd_set_string(left, pop(stack), &context);
+					mpd_set_string(right, pop(&stack), &context);
+					mpd_set_string(left, pop(&stack), &context);
 					mpd_div(result, left, right, &context);
 					break;
 
 				case '^':
 					// Pop two numbers from the stack
 					// and calculate left to the power of right
-					mpd_set_string(right, pop(stack), &context);
-					mpd_set_string(left, pop(stack), &context);
+					mpd_set_string(right, pop(&stack), &context);
+					mpd_set_string(left, pop(&stack), &context);
 					mpd_pow(result, left, right, &context);
 					break;
 
@@ -203,7 +208,7 @@ char *OtterkitArithmetic(char *expression)
 			// Push result string to the string stack
 			strcat(stack.string, rstring);
 			// Push string stack value to the true stack
-			push(stack);
+			push(&stack);
 		}
 		index++;
 	}
@@ -215,7 +220,6 @@ char *OtterkitArithmetic(char *expression)
 	mpd_del(right);
 	mpd_del(left);
 	mpd_del(result);
-	stack = NULL;
 	
 	return rstring;
 }

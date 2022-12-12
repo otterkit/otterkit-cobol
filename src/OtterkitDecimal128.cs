@@ -146,7 +146,7 @@ public static class DecimalMath
             current = result[length];
             length++;
         }
-        
+
         return new ReadOnlySpan<byte>(result, length - 1);
     }
 

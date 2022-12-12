@@ -467,6 +467,9 @@ public static class Analyzer
                 if (CurrentEquals("DIVIDE"))
                     DIVIDE();
 
+                if (CurrentEquals("INITIATE"))
+                    INITIATE();                    
+
                 if (CurrentEquals("MULTIPLY"))
                     MULTIPLY();
 
@@ -830,6 +833,33 @@ public static class Analyzer
 
             if (isConditional)
                 Expected("END-SUBTRACT");
+        }
+
+        void INITIATE()
+        {
+            Expected("INITIATE");
+            if (Current().type != TokenType.Identifier)
+            {
+                string notIdentifierError = """
+                The INITIATE statement must only contain report entry identifiers defined in the report section.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
+            Identifier();
+            while (Current().type == TokenType.Identifier)
+                Identifier();
+
+            if (!CurrentEquals("."))
+            {
+                string notIdentifierError = """
+                The INITIATE statement must only contain report entry identifiers defined in the report section.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
         }
 
         void MULTIPLY()

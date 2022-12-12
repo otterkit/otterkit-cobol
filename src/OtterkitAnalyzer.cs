@@ -449,6 +449,9 @@ public static class Analyzer
                 if (CurrentEquals("CANCEL"))
                     CANCEL();
 
+                if (CurrentEquals("CLOSE"))
+                    CLOSE();
+
                 if (CurrentEquals("COMMIT"))
                     COMMIT();
 
@@ -1081,6 +1084,73 @@ public static class Analyzer
             Expected("COMMIT");
         }
 
+        void CLOSE()
+        {
+            Expected("CLOSE");
+            if (Current().type == TokenType.Identifier)
+            {
+                Identifier();
+                if (CurrentEquals("REEL") || CurrentEquals("UNIT"))
+                {
+                    Expected(Current().value);
+
+                    if (CurrentEquals("FOR") || CurrentEquals("REMOVAL"))
+                    {
+                        Optional("FOR");
+                        Expected("REMOVAL");
+                    }
+                }
+                else if (CurrentEquals("WITH") || CurrentEquals("NO"))
+                {
+                    Optional("WITH");
+                    Expected("NO");
+                    Expected("REWIND");
+                }
+            }
+            else
+            {
+                string notProgramNameError = """
+                The CLOSE statement only accepts file connector names. 
+                NOTE: This statement must not specify more than one file connector when inside of an exception-checking phrase in a PERFORM statement.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());   
+            }
+
+            while (Current().type == TokenType.Identifier)
+            {
+                Identifier();
+                if (CurrentEquals("REEL") || CurrentEquals("UNIT"))
+                {
+                    Expected(Current().value);
+
+                    if (CurrentEquals("FOR") || CurrentEquals("REMOVAL"))
+                    {
+                        Optional("FOR");
+                        Expected("REMOVAL");
+                    }
+                }
+                else if (CurrentEquals("WITH") || CurrentEquals("NO"))
+                {
+                    Optional("WITH");
+                    Expected("NO");
+                    Expected("REWIND");
+                }
+            }
+
+            if (!CurrentEquals("."))
+            {
+                string notProgramNameError = """
+                The CLOSE statement only accepts file connector names. 
+                NOTE: This statement must not specify more than one file connector when inside of an exception-checking phrase in a PERFORM statement.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());   
+            }
+        }
+
         void CANCEL()
         {
             Expected("CANCEL");
@@ -1303,25 +1373,48 @@ public static class Analyzer
             return;
         }
 
-        void SizeError(ref bool isConditional)
+        void SizeError(ref bool isConditional, bool onErrorExists = false, bool notOnErrorExists = false)
         {
             if (CurrentEquals("ON") || CurrentEquals("SIZE"))
             {
+                if (onErrorExists)
+                {
+                    string onErrorExistsError = """
+                    ON SIZE ERROR can only be specified once in this statement. 
+                    The same applies to NOT ON SIZE ERROR.
+                    """;
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", onErrorExistsError);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
                 isConditional = true;
+                onErrorExists = true;
                 Optional("ON");
                 Expected("SIZE");
                 Expected("ERROR");
                 Statement(true);
+                SizeError(ref isConditional, onErrorExists, notOnErrorExists);
+
             }
 
             if (CurrentEquals("NOT"))
             {
+                if (notOnErrorExists)
+                {
+                    string notOnErrorExistsError = """
+                    NOT ON SIZE ERROR can only be specified once in this statement. 
+                    The same applies to ON SIZE ERROR.
+                    """;
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnErrorExistsError);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
                 isConditional = true;
+                notOnErrorExists = true;
                 Expected("NOT");
                 Optional("ON");
                 Expected("SIZE");
                 Expected("ERROR");
                 Statement(true);
+                SizeError(ref isConditional, onErrorExists, notOnErrorExists);
             }
         }
 

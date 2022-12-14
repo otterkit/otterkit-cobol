@@ -15,6 +15,7 @@ public enum TokenType
     String,
     Numeric,
     Identifier,
+    Expression,
     Device,
     EOF
 }

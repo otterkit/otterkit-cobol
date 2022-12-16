@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Otterkit;
 
 
@@ -1606,11 +1608,23 @@ public static class Analyzer
 
         void Condition(string delimiter)
         {
+            Token current = Current();
             List<Token> expression = new();
             while (Current().context != TokenContext.IsStatement && !CurrentEquals(delimiter))
             {
-                expression.Add(Current());
-                Expected(Current().value);
+                if (CurrentEquals("NOT") && (LookaheadEquals(1, ">") || LookaheadEquals(1, "<")))
+                {
+                    Token combined = new($"{Current().value} {Lookahead(1).value}", TokenType.Symbol, Current().line, Current().column);
+                    expression.Add(combined);
+                    analyzed.Add(combined);
+                    Continue();
+                    Continue();
+                }
+                else
+                {
+                    expression.Add(Current());
+                    Expected(Current().value);
+                }
             }
 
             if(!Helpers.IsBalanced(expression))
@@ -1621,6 +1635,18 @@ public static class Analyzer
 
                 ErrorHandler.Parser.Report(fileName, expression[0], "general", expressionNotBalancedError);
                 ErrorHandler.Parser.PrettyError(fileName, expression[0]);
+            }
+
+            List<Token> ShuntingYard = Helpers.ShuntingYard(expression, Helpers.BooleanPrecedence);
+            
+            if (!Helpers.EvaluatePostfix(ShuntingYard, Helpers.BooleanPrecedence, out Token error))
+            {
+                string expressionNotValidError = """
+                This expression cannot be correctly evaluated. Please make sure that all operators have their matching operands.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, error, "general", expressionNotValidError);
+                ErrorHandler.Parser.PrettyError(fileName, error);
             }
         }
 

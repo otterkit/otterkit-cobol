@@ -20,16 +20,18 @@ public static class Helpers
     {
         ["("] = 0,
         ["NOT"] = 1,
-        ["<"] = 2,
-        [">"] = 2,
-        ["<="] = 2,
-        [">="] = 2,
-        ["="] = 2,
-        ["<>"] = 2,
-        ["AND"] = 3,
-        ["OR"] = 4,
-        ["XOR"] = 4,
-        [")"] = 5,
+        ["AND"] = 2,
+        ["OR"] = 2,
+        ["XOR"] = 2,
+        ["<"] = 3,
+        [">"] = 3,
+        ["NOT <"] = 3,
+        ["NOT >"] = 3,
+        ["<="] = 3,
+        [">="] = 3,
+        ["="] = 3,
+        ["<>"] = 3,
+        [")"] = 4,
     };
 
     public static List<Token> ShuntingYard(List<Token> input, Dictionary<string, int> precedence)
@@ -85,22 +87,22 @@ public static class Helpers
         return output;
     }
 
-    public static string PostfixToInfix(string postfix)
+    public static string PostfixToInfix(List<Token> postfix, Dictionary<string, int> precedence)
     {
         Stack<string> stack = new();
 
-        foreach (var token in postfix.Split(' '))
+        foreach (Token token in postfix)
         {
-            if (Regex.IsMatch(token, @"^\d+$"))
+            if (token.type == TokenType.Numeric || token.type == TokenType.Identifier || token.type == TokenType.String)
             {
-                stack.Push(token);
+                stack.Push(token.value);
             }
 
-            else if (Regex.IsMatch(token, @"^[+-/*]$") || token == "**")
+            else if (precedence.ContainsKey(token.value))
             {
                 string right = stack.Pop();
                 string left = stack.Pop();
-                stack.Push($"({left} {token} {right})");
+                stack.Push($"({left} {token.value} {right})");
             }
         }
 
@@ -129,38 +131,43 @@ public static class Helpers
         return stack.Count == 0;
     }
 
-    public static bool EvaluatePostfix(List<Token> expression, Dictionary<string, int> precedence)
+    public static bool EvaluatePostfix(List<Token> expression, Dictionary<string, int> precedence, out Token error)
     {
-        Stack<int> stack = new();
+        Stack<Token> stack = new();
 
         foreach (Token token in expression)
         {
             if (token.type == TokenType.Numeric || token.type == TokenType.Identifier || token.type == TokenType.String)
             {
-                stack.Push(5);
+                stack.Push(token);
             }
             else if (precedence.ContainsKey(token.value))
             {
                 if (stack.Count < 2)
                 {
+                    error = stack.Pop();
                     return false;
                 }
 
-                int right = stack.Pop();
-                int left = stack.Pop();
-                stack.Push(5);
+                Token right = stack.Pop();
+                Token left = stack.Pop();
+                stack.Push(token);
             }
             else
             {
+                error = token;
                 return false;
             }
         }
 
         if (stack.Count != 1)
         {
+            error = stack.Pop();
             return false;
         }
 
+        error = new Token("", TokenType.EOF, -1, -1);
         return true;
     }
+
 }

@@ -1,5 +1,6 @@
 namespace Otterkit;
 
+
 public static class Analyzer
 {
     public static List<Token> Analyze(List<Token> tokenList, string fileName)
@@ -467,6 +468,9 @@ public static class Analyzer
                 if (CurrentEquals("DIVIDE"))
                     DIVIDE();
 
+                if (CurrentEquals("IF"))
+                    IF();
+
                 if (CurrentEquals("INITIATE"))
                     INITIATE();
 
@@ -848,6 +852,31 @@ public static class Analyzer
 
             if (isConditional)
                 Expected("END-SUBTRACT");
+        }
+
+        void IF()
+        {
+            Expected("IF");
+            Condition("THEN");
+            Optional("THEN");
+            if (CurrentEquals("NEXT") && LookaheadEquals(1, "SENTENCE"))
+            {
+                string archaicFeatureError = """
+                Unsupported phrase: NEXT SENTENCE is an archaic feature. This phrase can be confusing and is a common source of errors.
+                The CONTINUE statement can be used to accomplish the same functionality while being much clearer and less prone to error
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", archaicFeatureError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
+            Statement(true);
+            if (CurrentEquals("ELSE"))
+            {
+                Expected("ELSE");
+                Statement(true);
+            }
+
+            Expected("END-IF");
         }
 
         void INITIATE()
@@ -1572,6 +1601,26 @@ public static class Analyzer
                     ErrorHandler.Parser.Report(fileName, Current(), "general", invalidArithmeticSymbol);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
+            }
+        }
+
+        void Condition(string delimiter)
+        {
+            List<Token> expression = new();
+            while (Current().context != TokenContext.IsStatement && !CurrentEquals(delimiter))
+            {
+                expression.Add(Current());
+                Expected(Current().value);
+            }
+
+            if(!Helpers.IsBalanced(expression))
+            {
+                string expressionNotBalancedError = """
+                This expression is not balanced, one or more parenthesis to not have their matching opening or closing pair, it is an invalid expression
+                """;
+
+                ErrorHandler.Parser.Report(fileName, expression[0], "general", expressionNotBalancedError);
+                ErrorHandler.Parser.PrettyError(fileName, expression[0]);
             }
         }
 

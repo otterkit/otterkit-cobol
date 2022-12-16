@@ -16,10 +16,27 @@ public static class Helpers
         [")"] = 4,
     };
 
-    public static string ShuntingYard(List<Token> input, Dictionary<string, int> precedence)
+    public static readonly Dictionary<string, int> BooleanPrecedence = new()
+    {
+        ["("] = 0,
+        ["NOT"] = 1,
+        ["<"] = 2,
+        [">"] = 2,
+        ["<="] = 2,
+        [">="] = 2,
+        ["="] = 2,
+        ["<>"] = 2,
+        ["AND"] = 3,
+        ["OR"] = 4,
+        ["XOR"] = 4,
+        [")"] = 5,
+    };
+
+    public static List<Token> ShuntingYard(List<Token> input, Dictionary<string, int> precedence)
     {
         List<Token> output = new();
         Stack<Token> stack = new();
+        bool isArithmetic = precedence.ContainsKey("+");
 
         foreach (Token token in input)
         {
@@ -44,7 +61,14 @@ public static class Helpers
             {
                 bool isExponentiation = token.value == "**";
 
+                if (isArithmetic)
                 while (stack.Count > 0 && ((precedence[stack.Peek().value] > precedence[token.value] && !isExponentiation) || (precedence[stack.Peek().value] >= precedence[token.value] && !isExponentiation && stack.Peek().value == "**")))
+                {
+                    output.Add(stack.Pop());
+                }
+
+                if (!isArithmetic)
+                while (stack.Count > 0 && precedence[stack.Peek().value] >= precedence[token.value])
                 {
                     output.Add(stack.Pop());
                 }
@@ -58,12 +82,7 @@ public static class Helpers
             output.Add(stack.Pop());
         }
 
-        StringBuilder postfix = new();
-        foreach (Token token in output)
-        {
-            postfix.Append($"{token.value} ");
-        }
-        return postfix.ToString();
+        return output;
     }
 
     public static string PostfixToInfix(string postfix)
@@ -108,5 +127,40 @@ public static class Helpers
         }
 
         return stack.Count == 0;
+    }
+
+    public static bool EvaluatePostfix(List<Token> expression, Dictionary<string, int> precedence)
+    {
+        Stack<int> stack = new();
+
+        foreach (Token token in expression)
+        {
+            if (token.type == TokenType.Numeric || token.type == TokenType.Identifier || token.type == TokenType.String)
+            {
+                stack.Push(5);
+            }
+            else if (precedence.ContainsKey(token.value))
+            {
+                if (stack.Count < 2)
+                {
+                    return false;
+                }
+
+                int right = stack.Pop();
+                int left = stack.Pop();
+                stack.Push(5);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        if (stack.Count != 1)
+        {
+            return false;
+        }
+
+        return true;
     }
 }

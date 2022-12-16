@@ -9,8 +9,6 @@ public enum TokenType
     ReservedKeyword,
     FigurativeLiteral,
     IntrinsicFunction,
-    Statement,
-    Clause,
     Symbol,
     String,
     Numeric,

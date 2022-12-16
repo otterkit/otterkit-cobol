@@ -1,10 +1,11 @@
 ﻿using System.Diagnostics;
 
 namespace Otterkit;
+
 public static class OtterkitCompiler
 {
     public static void Main(string[] args)
-    {
+    {   
         if (args.Length <= 1 || (args[0].Equals("-h") || args[0].Equals("--help")))
         {
             DisplayHelpMessage();

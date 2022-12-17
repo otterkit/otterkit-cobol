@@ -18,7 +18,8 @@ public static class ErrorHandler
         {
             string line = File.ReadLines(fileName).Skip(token.line - 1).Take(token.line).First();
             string error = new String(' ', line.Length - token.value.Length);
-            int errorPosition = token.column - (line.Length - line.TrimStart().Length - 6);
+
+            int errorPosition = token.column - (line.Length - line.TrimStart().Length);
             error = error.Insert(errorPosition, new String('~', token.value.Length));
 
             Console.WriteLine($"{" ",5}|");

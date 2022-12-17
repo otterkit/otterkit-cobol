@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace Otterkit;
@@ -46,7 +45,6 @@ public struct Token
     public TokenType? type;
     public TokenScope? scope;
     public TokenContext? context;
-    private static JsonElement? tokenJsonCache = null;
     public Token(string value, TokenType? type, int line, int column)
     {
         this.line = line;
@@ -69,16 +67,8 @@ public struct Token
 
     public static TokenType FindType(string value)
     {
-        //get Otterkit.paringinfo.json from assembly
-        if (tokenJsonCache == null)
-        {
-            Assembly assembly = Assembly.GetCallingAssembly();
-            Stream? stream = assembly.GetManifestResourceStream("Otterkit.parsinginfo.json");
-            StreamReader reader = new System.IO.StreamReader(stream == null ? throw new ArgumentNullException() : stream);
-            tokenJsonCache = JsonSerializer.Deserialize<JsonElement>(reader.ReadToEnd());
-        }
-
-        JsonElement tokenJson = (JsonElement)tokenJsonCache;
+        JsonElement tokenJson = OtterkitCompiler.ParsingInfo;
+    
         //check if the value is a reserved keyword
         if (tokenJson.GetProperty("reservedKeywords").EnumerateArray().Any(json => json.GetString() == value.ToUpper()))
             return TokenType.ReservedKeyword;
@@ -107,16 +97,8 @@ public struct Token
 
     public static TokenContext? FindContext(Token token)
     {
-        //get Otterkit.paringinfo.json from assembly
-        if (tokenJsonCache == null)
-        {
-            Assembly assembly = Assembly.GetCallingAssembly();
-            Stream? stream = assembly.GetManifestResourceStream("Otterkit.parsinginfo.json");
-            StreamReader reader = new System.IO.StreamReader(stream == null ? throw new ArgumentNullException() : stream);
-            tokenJsonCache = JsonSerializer.Deserialize<JsonElement>(reader.ReadToEnd());
-        }
-
-        JsonElement tokenJson = (JsonElement)tokenJsonCache;
+        JsonElement tokenJson = OtterkitCompiler.ParsingInfo;
+        
         //check if the token belongs to a data division clause
         if (tokenJson.GetProperty("clauses").EnumerateArray().Any(json => json.GetString() == token.value))
             return TokenContext.IsClause;

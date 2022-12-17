@@ -1,9 +1,23 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
+using System.Text.Json;
 
 namespace Otterkit;
 
+public struct Options
+{
+    public string Name;
+    public string Type;
+    public string EntryPoint;
+    public string SourceFormat;
+    public int ColumnLength;
+}
+
 public static class OtterkitCompiler
 {
+    public static Options Options;
+    public static JsonElement ParsingInfo;
+
     public static void Main(string[] args)
     {   
         if (args.Length <= 1 || (args[0].Equals("-h") || args[0].Equals("--help")))
@@ -34,9 +48,10 @@ public static class OtterkitCompiler
         // the command line argument, like the entry point file.
         if (args[0].Equals("new"))
         {
+            Options.Type = "app";
+            Options.Name = "OtterkitExport";
+
             int index = 0;
-            string type = "app";
-            string name = "OtterkitExport";
             foreach (string argument in args)
             {
                 index++;
@@ -44,31 +59,31 @@ public static class OtterkitCompiler
                 {
                     case "app":
                     case "application":
-                        type = "app";
+                        Options.Type = "app";
                         break;
 
                     case "mod":
                     case "module":
-                        type = "mod";
+                        Options.Type = "mod";
                         break;
                     
                     case "-n":
                     case "--name":
-                        name = argument;
+                        Options.Name = argument;
                         break;
                 }
             }
 
-            CallDotnetCompiler(args[0], type, name);
+            CallDotnetCompiler(args[0]);
         }
 
         if (args[0].Equals("build"))
         {
-            int index = 0;
-            string entryPoint = "main.cob";
-            string sourceFormat = "fixed";
-            int columnLength = 80;
+            Options.EntryPoint = "main.cob";
+            Options.SourceFormat = "fixed";
+            Options.ColumnLength = 80;
 
+            int index = 0;
             foreach (string argument in args)
             {
                 index++;
@@ -82,28 +97,29 @@ public static class OtterkitCompiler
 
                     case "-e":
                     case "--Entry":
-                        entryPoint = args[index];
+                        Options.EntryPoint = args[index];
                         break;
 
                     case "-cl":
                     case "--Columns":
-                        columnLength = int.Parse(args[index]);
+                        Options.ColumnLength = int.Parse(args[index]);
                         break;
                     // --Fixed meaning Fixed Format
                     case "--Fixed":
-                        sourceFormat = "fixed";
+                        Options.SourceFormat = "fixed";
                         break;
                     // --Free meaning Free Format
                     case "--Free":
-                        sourceFormat = "free";
+                        Options.SourceFormat = "free";
                         break;
                 }
             }
 
-            List<string> sourceLines = ReadAndProcessFile(entryPoint, sourceFormat, columnLength);
-            List<Token> tokens = Lexer.Tokenize(sourceLines);
+            List<string> sourceLines = ReadSourceFile();
+            List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
+            List<Token> tokens = Lexer.Tokenize(preprocessedLines);
             List<Token> classified = Token.fromValue(tokens);
-            List<Token> analized = Analyzer.Analyze(classified, entryPoint);
+            List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
             foreach (var item in analized)
             {
                 Console.WriteLine($"  {item.line}  {item.column}  {item.value}");
@@ -112,12 +128,12 @@ public static class OtterkitCompiler
         }
     }
 
-    private static void CallDotnetCompiler(string operation, params string[] options)
+    private static void CallDotnetCompiler(string operation)
     {
         string arguments = "";
         if (operation.Equals("new"))
         {
-            string type = options[0] switch
+            string type = Options.Type switch
             {
                 "app" => "otterkit-export",
                 "mod" => "otterkit-module-export",
@@ -128,13 +144,13 @@ public static class OtterkitCompiler
             {
                 "$schema": "https://raw.githubusercontent.com/otterkit/otterkit/unfinished-codegen/src/schema.json",
                 "author": "Project Author",
-                "name": "{{options[1]}}",
-                "id": "MyCompany.{{options[1]}}",
+                "name": "{{Options.Name}}",
+                "id": "MyCompany.{{Options.Name}}",
                 "description": "Description of the project's purpose",
                 "tags": ["COBOL"],
                 "metadata": {
                     "entryPoint": "main.cob#main",
-                    "type": "{{(options[0].Equals("app")?"application":"module")}}"
+                    "type": "{{(Options.Type.Equals("app")?"application":"module")}}"
                 },
                 "license": "License URL"
             }
@@ -144,7 +160,7 @@ public static class OtterkitCompiler
             Directory.SetCurrentDirectory(".otterkit");
 
             File.WriteAllText("OtterkitConfig.json", OtterkitConfig);
-            arguments = $"new {type} -n {options[1]} --force";
+            arguments = $"new {type} -n {Options.Name} --force";
         }
 
         using (Process dotnet = new Process())
@@ -163,53 +179,24 @@ public static class OtterkitCompiler
         Directory.SetCurrentDirectory("..");
     }
 
-    private static List<string> ReadAndProcessFile(string fileName, string sourceFormat, int columnLength)
+    private static List<string> ReadSourceFile()
     {
-        if (!File.Exists(fileName))
+        if (!File.Exists(Options.EntryPoint))
         {
             ErrorHandler.Compiler.Report("Otterkit compiler error: File Not Found");
-            ErrorHandler.Compiler.Report($"The compiler was not able not find the file: {fileName}");
+            ErrorHandler.Compiler.Report($"The compiler was not able not find the file: {Options.EntryPoint}");
             Environment.Exit(1);
         }
 
-        string[] readLines = File.ReadAllLines(fileName);
-        List<string> processedLines = new();
-        foreach (string line in readLines)
-        {
-            if (sourceFormat == "fixed")
-            {
-                string currentLine = line;
-                if (currentLine.Length >= columnLength)
-                {
-                    // Removes everything after the max column length
-                    currentLine = currentLine.Substring(0, columnLength);
-                }
+        List<string> sourceLines = File.ReadAllLines(Options.EntryPoint).ToList();
 
-                // Removes the sequence number area
-                currentLine = currentLine.PadRight(6).Substring(6);
+        // Get COBOL reserved keyword information for parsinginfo.json
+        Assembly assembly = Assembly.GetCallingAssembly();
+        Stream? stream = assembly.GetManifestResourceStream("Otterkit.parsinginfo.json");
+        StreamReader reader = new System.IO.StreamReader(stream == null ? throw new ArgumentNullException() : stream);
+        ParsingInfo = JsonSerializer.Deserialize<JsonElement>(reader.ReadToEnd());
 
-                if (currentLine.StartsWith("*"))
-                {
-                    // Removes all fixed format comment lines
-                    currentLine = "";
-                }
-
-                processedLines.Add(currentLine);
-            }
-            if (sourceFormat == "free")
-            {
-                string currentLine = line;
-                int commentIndex = currentLine.IndexOf("*>");
-                if (commentIndex > -1)
-                {
-                    // Removes all free format comments
-                    currentLine = currentLine.Substring(0, commentIndex);
-                }
-
-                processedLines.Add(currentLine);
-            }
-        }
-        return processedLines;
+        return sourceLines;
     }
 
     private static void DisplayHelpMessage()

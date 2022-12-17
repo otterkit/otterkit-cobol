@@ -23,12 +23,13 @@ public static class Lexer
         **                      decimal numbers that might start with 0. or just .
         */
 
-        int lineNumber = 0;
         string wordsPattern =  @"[a-zA-Z]+([-|_]*[\w0-9]+)*|[0-9]+([-|_][\w0-9]+)+";
         string stringPattern = "|(\")(.*?)(\"|$)|(\')(.*?)(\'|$)";
         string numberPattern = @"|(\+|-)?\.?[0-9]\d*(\.\d+)?";
         string symbolPattern = @"|(\+|\-|\*\*|\*|=|\/|\$|,|;|::|\.|\(|\)|>>|<>|>=|<=|>|<|&|_)";
         string allPatterns = wordsPattern + stringPattern + numberPattern + symbolPattern;
+
+        int lineNumber = 0;
         List<Token> tokens = new();
         foreach (string line in sourceLines)
         {
@@ -45,5 +46,13 @@ public static class Lexer
             }
         }
         return tokens;
+    }
+
+    public static List<Token> TokenizeLine(string sourceLine)
+    {
+        List<string> sourceLines = new();
+        sourceLines.Add(sourceLine);
+
+        return Tokenize(sourceLines);
     }
 }

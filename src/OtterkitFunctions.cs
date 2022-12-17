@@ -114,9 +114,10 @@ public static class Functions
         // TODO: Need to implement other COBOL data types first
     }
 
-    public static DecimalHolder COS(DecimalHolder radians)
+    public static Numeric COS(Numeric radians)
     {
-        return SIN(PI() / "2"u8 - radians);
+        DecimalHolder sineArgument = PI() / "2"u8 - radians.Bytes;
+        return SIN(new Numeric(sineArgument, true));
     }
 
     public static string CURRENT_DATE()
@@ -648,9 +649,10 @@ public static class Functions
         return 1;
     }
 
-    public static DecimalHolder SIN(DecimalHolder radians)
+    public static Numeric SIN(Numeric argument)
     {
         DecimalHolder Pie = PI();
+        DecimalHolder radians = argument;
         radians = radians % (Pie * "2"u8);
 
         if (radians < "0"u8)
@@ -681,7 +683,8 @@ public static class Functions
             coefficient = coefficient + "2"u8;
         }
 
-        return sign * result;
+        DecimalHolder @return = sign * result;
+        return new Numeric(@return, true);
     }
 
 
@@ -736,9 +739,10 @@ public static class Functions
         return new Numeric(sum.Bytes, 0, indexOfDecimal, 34 - indexOfDecimal + 1, new byte[34]);
     }
 
-    public static DecimalHolder TAN(DecimalHolder argument)
+    public static Numeric TAN(Numeric argument)
     {
-        return SIN(argument) / COS(argument);
+        DecimalHolder tanArgument = new DecimalHolder(SIN(argument).Bytes) / COS(argument).Bytes;
+        return new Numeric(tanArgument, true);
     }
 
     public static void TEST_DATE_YYYYMMDD(DecimalHolder argument)

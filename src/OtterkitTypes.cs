@@ -324,6 +324,48 @@ public sealed class Numeric
         }
     }
 
+    public Numeric(DecimalHolder decimalHolder, bool isSigned)
+    {
+        this.Offset = 0;
+
+        int DecimalPointIndex = decimalHolder.Bytes.IndexOf("."u8);
+
+        if (DecimalPointIndex >= 0)
+        {
+            this.Length = isSigned ? DecimalPointIndex : DecimalPointIndex;
+            this.FractionalLength = decimalHolder.Bytes.Length - Length - 1;
+        }
+        else
+        {
+            this.Length = isSigned ? decimalHolder.Bytes.Length : decimalHolder.Bytes.Length;
+            this.FractionalLength = 0;
+        }
+
+        this.isSigned = isSigned;
+
+        if (this.FractionalLength == 0)
+        {
+            int signedSpace = isSigned ? 1 : 0;
+            this.Memory = new byte[Length + signedSpace];
+        }
+
+        if (this.FractionalLength > 0)
+        {
+            int signedSpace = isSigned ? 2 : 1;
+            this.Memory = new byte[Length + FractionalLength + signedSpace];
+        }
+
+        Memory.Span.Fill(48);
+
+        if (isSigned)
+        {
+            FormatSigned(decimalHolder.Bytes);
+            return;
+        }
+
+        Format(decimalHolder.Bytes);
+    }
+
     private void Format(ReadOnlySpan<byte> bytes, bool isSigned = false)
     {
         Span<byte> formatted = stackalloc byte[Memory.Length];

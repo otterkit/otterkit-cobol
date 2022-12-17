@@ -23,6 +23,11 @@ public readonly ref struct DecimalHolder
         return new DecimalHolder(bytes);
     }
 
+    public static implicit operator DecimalHolder(Numeric numeric)
+    {
+        return new DecimalHolder(numeric.Bytes);
+    }
+
     public static DecimalHolder operator +(DecimalHolder left, DecimalHolder right)
     {
         return new(DecimalMath.Add(left.Bytes, right.Bytes));

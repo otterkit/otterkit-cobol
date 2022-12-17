@@ -25,6 +25,10 @@ public readonly ref struct DecimalHolder
 
     public static implicit operator DecimalHolder(Numeric numeric)
     {
+        if (numeric.isSigned)
+        {
+            return new DecimalHolder(numeric.Bytes.Slice(1));
+        }
         return new DecimalHolder(numeric.Bytes);
     }
 

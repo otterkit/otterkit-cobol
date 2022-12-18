@@ -3,6 +3,23 @@ using System.Runtime.Serialization;
 namespace OtterkitLibrary;
 
 [Serializable]
+public sealed class EcArgumentFunction : Exception
+{
+    static readonly string defaultError = "EC-ARGUMENT-FUNCTION: Function argument error";
+    public EcArgumentFunction()
+        : base(defaultError) { }
+
+    public EcArgumentFunction(string message)
+        : base(message) { }
+
+    public EcArgumentFunction(string message, Exception inner)
+        : base(message, inner) { }
+
+    private EcArgumentFunction(SerializationInfo info, StreamingContext context)
+        : base(info, context) { }
+}
+
+[Serializable]
 public sealed class EcDataPtrNull : Exception
 {
     static readonly string defaultError = "EC-DATA-PTR-NULL: Based item data-pointer was null when referenced";

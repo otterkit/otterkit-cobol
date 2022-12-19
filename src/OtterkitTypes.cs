@@ -382,6 +382,11 @@ public sealed class Numeric
 
         ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex);
 
+        if (FractionalLength == 0)
+        {
+            offset = Length - temporary.Length;
+        }
+
         if (isSigned)
             offset += 1;
 

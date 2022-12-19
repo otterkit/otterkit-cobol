@@ -120,7 +120,7 @@ public static class Functions
         return SIN(new Numeric(sineArgument, true));
     }
 
-    public static string CURRENT_DATE()
+    public static Alphanumeric CURRENT_DATE()
     {
         DateTime currentDate = DateTime.Now;
         TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
@@ -136,30 +136,69 @@ public static class Functions
             DatePlusOffset = new String(formattedDate + "-" + offset.ToString("hhmm"));
         }
 
-        return DatePlusOffset;
+        Alphanumeric output = new(Encoding.UTF8.GetBytes(DatePlusOffset), 0, 8, new byte[8]);
+
+        return output;
     }
 
-    public static void DATE_OF_INTEGER(Numeric date)
+    public static Numeric DATE_OF_INTEGER(Numeric date)
     {
-        DateTime Y1600 = new(1600, 12, 31);
-        int intValue = int.Parse(date.Display);
+        DateTime date_object = RuntimeHelpers.new_date(date); //Linter not recognizing OtterkitHelpers.cs?
 
-        DateTime dateOfInteger = Y1600.AddDays(intValue);
+        String date_stamp = date_object.ToString("yyyyMMdd");
+
+        Numeric output = new(Encoding.UTF8.GetBytes(date_stamp), 0, 8, 0, new byte[8]);
+
+        return output;
     }
 
-    public static void DATE_TO_YYYYMMDD(DecimalHolder date)
+    public static Numeric DATE_TO_YYYYMMDD(Numeric date, Numeric? window, Numeric? Current)
     {
-        // TODO: implement DATE-TO-YYYYMMDD
+        DecimalHolder ten_thousand = new(Encoding.UTF8.GetBytes("10000"));
+
+        DecimalHolder date_dec = new(Encoding.UTF8.GetBytes(date.Display));
+        DecimalHolder yy = date_dec/ten_thousand;
+        //TODO: replace INTEGER_PART with proper INTEGER
+        Numeric yy_num = INTEGER_PART(new Numeric(yy, false));
+
+        DecimalHolder mmdd = date_dec % ten_thousand;
+
+        Numeric yyyy= YEAR_TO_YYYY(yy_num, window, Current);
+        DecimalHolder year = new(Encoding.UTF8.GetBytes(yyyy.Display));
+        DecimalHolder result = (year * ten_thousand) + mmdd;
+
+        return new Numeric(result, false);
+
     }
 
-    public static void DAY_OF_INTEGER(DecimalHolder date)
+    public static Numeric DAY_OF_INTEGER(Numeric date)
     {
-        // TODO: implement DAY-OF-INTEGER
+        DateTime date_object = RuntimeHelpers.new_date(date);
+        int day_of_year = date_object.DayOfYear;
+
+        String date_stamp = date_object.ToString("yyyy" + day_of_year);
+
+        Numeric output = new(Encoding.UTF8.GetBytes(date_stamp), 0, 7, 0, new byte[7]);
+
+        return output;
     }
 
-    public static void DAY_TO_YYYYDDD(DecimalHolder date)
+    public static Numeric DAY_TO_YYYYDDD(Numeric date, Numeric? window, Numeric? Current)
     {
-        // TODO: implement DAY-TO-YYYYDDD
+        DecimalHolder thousand = new(Encoding.UTF8.GetBytes("1000"));
+
+        DecimalHolder date_dec = new(Encoding.UTF8.GetBytes(date.Display));
+        DecimalHolder yy = date_dec/thousand;
+        //TODO: replace INTEGER_PART with proper INTEGER
+        Numeric yy_num = INTEGER_PART(new Numeric(yy, false));
+
+        DecimalHolder nnn = date_dec%thousand;
+
+        Numeric yyyy= YEAR_TO_YYYY(yy_num, window, Current);
+        DecimalHolder year = new(Encoding.UTF8.GetBytes(yyyy.Display));
+        DecimalHolder result = (year * thousand) + nnn;
+
+        return new Numeric(result, false);
     }
 
     public static void DISPLAY_OF(DecimalHolder date)
@@ -555,11 +594,11 @@ public static class Functions
         // TODO: Implement NATIONAL types
     }
 
-    public static DecimalHolder NUMVAL(Alphanumeric argument)
+    public static Numeric NUMVAL(Alphanumeric argument)
     {
         // Needs further testing, might not work properly
         // and doesn't implement all NUMVAL functionality
-        return new DecimalHolder(argument.Bytes);
+        return new Numeric(new DecimalHolder(argument.Bytes), false);
     }
 
     public static void NUMVAL_C(Alphanumeric argument)
@@ -745,14 +784,86 @@ public static class Functions
         return new Numeric(tanArgument, true);
     }
 
-    public static void TEST_DATE_YYYYMMDD(DecimalHolder argument)
+    public static Numeric TEST_DATE_YYYYMMDD(Numeric argument)
     {
-        // TODO: Implement TEST-DATE-YYYYMMDD
+        DecimalHolder input = new(argument.Bytes);
+        DecimalHolder ten_thousand = new("10000"u8);
+        DecimalHolder tweleve_ninety_nine = new("1299"u8);
+        DecimalHolder hundred = new("100"u8);
+        DecimalHolder year_lower_bound = new("1601000"u8);
+        DecimalHolder year_upper_bound = new ("99999999"u8);
+
+        DecimalHolder month_check = input % ten_thousand;
+        DecimalHolder day_check_1 = input % hundred;
+        Numeric day_check_2 = INTEGER_PART(new(day_check_1, false));
+        int day_check_3 = int.Parse(day_check_2.Display);
+
+        DecimalHolder day_m_check_1 = (input % ten_thousand) / hundred;
+        //TODO: Replace INTEGER_PART with proper INTEGER
+        Numeric day_m_check_2 = INTEGER_PART(new Numeric(day_m_check_1, false));
+        int day_m_check_3 = int.Parse(day_m_check_2.Display);
+
+        DecimalHolder day_y_check_1 = input / ten_thousand;
+        Numeric day_y_check_2 = INTEGER_PART(new Numeric(day_y_check_1, false));
+        int day_y_check_3 = int.Parse(day_y_check_2.Display);
+
+        Boolean day_works = true;
+
+        try
+        {
+            DateTime check_month = new(day_y_check_3, day_m_check_3, day_check_3);
+        }
+        catch (System.ArgumentOutOfRangeException)
+        {
+            
+            day_works = false;
+        }
+        
+        if ((input < year_lower_bound) || (input > year_upper_bound)){
+            return new Numeric("1"u8, 0, 1, 0, new byte[1]);
+        } else if ((month_check < hundred) || (month_check>tweleve_ninety_nine)){
+            return new Numeric("2"u8, 0, 1, 0, new byte[1]);
+        } else if ((day_check_3 < 1) || (!day_works)){
+            return new Numeric("3"u8, 0, 1, 0, new byte[1]);
+        } else {
+            return new Numeric("0"u8, 0, 1, 0, new byte[1]);
+        }
+
+         
     }
 
-    public static void TEST_DAY_YYYYDDD(DecimalHolder argument)
+    public static Numeric TEST_DAY_YYYYDDD(Numeric argument)
     {
-        // TODO: Implement TEST-DAY-YYYYDDD
+        DecimalHolder input = argument.Bytes;
+        DecimalHolder thousand = new("1000"u8);
+        DecimalHolder year_lower_bound = new("1601000"u8);
+        DecimalHolder year_upper_bound = new ("9999999"u8);
+
+        DecimalHolder day_check_1 = input % thousand;
+        Numeric day_check_2 = new(day_check_1, false);
+        int day_check_3 = int.Parse(day_check_2.Display);
+
+        DecimalHolder y_check_1 = input / thousand;
+        Numeric y_check_2 = INTEGER_PART(new Numeric(y_check_1, false));
+        int y_check_3 = int.Parse(y_check_2.Display);
+
+        Boolean day_works = true;
+
+        DateTime check_year = new(y_check_3, 1, 1);
+        check_year.AddDays(day_check_3);
+
+        if(check_year.Year != y_check_3){
+            day_works = false;
+        }
+
+        if ((input < year_lower_bound) || (input > year_upper_bound)){
+            return new Numeric("1"u8, 0, 1, 0, new byte[1]);
+        } else if ((day_check_3 < 1) || (!day_works)){
+            return new Numeric("2"u8, 0, 1, 0, new byte[1]);
+        } else {
+            return new Numeric("0"u8, 0, 1, 0, new byte[1]);
+        }
+
     }
 
     public static void TEST_FORMATTED_DATETIME(DecimalHolder argument)
@@ -798,8 +909,38 @@ public static class Functions
         return argument;
     }
 
-    public static void YEAR_TO_YYYY(DecimalHolder argument)
+    public static Numeric YEAR_TO_YYYY(Numeric yy, Numeric? window, Numeric? current)
     {
-        // TODO: Implement YEAR-TO-YYYY
+        //TODO: Implement runtime exceptions for invalid inputs
+        if (window == null){
+            window = new Numeric(new DecimalHolder(Encoding.UTF8.GetBytes("50")), false);
+        } 
+        if (current == null){
+            //TODO: make sure NUMVAL works fully
+            String slice = CURRENT_DATE().Display.Substring(0,4);
+            Alphanumeric date = new(Encoding.UTF8.GetBytes(slice), 0, 8, new byte[8]);
+            current = NUMVAL(date);
+        }
+
+        DecimalHolder yy_num = new(Encoding.UTF8.GetBytes(yy.Display));
+        DecimalHolder window_num = new(Encoding.UTF8.GetBytes(window.Display));
+        DecimalHolder current_num = new(Encoding.UTF8.GetBytes(current.Display));
+
+        DecimalHolder max_year = window_num+current_num;
+        DecimalHolder hundred = new(Encoding.UTF8.GetBytes("100"));
+        DecimalHolder one = new(Encoding.UTF8.GetBytes("1"));
+        //TODO: replace with true INTEGER function
+        if ((max_year%hundred) >= yy_num){
+            Numeric part = INTEGER_PART(new Numeric((max_year/hundred), false));
+            DecimalHolder coefficient = new(Encoding.UTF8.GetBytes(part.Display));
+            DecimalHolder result = (yy_num+hundred*coefficient);
+            return new Numeric(result, false);
+        } else {
+            Numeric part = INTEGER_PART(new Numeric((max_year/hundred), false));
+            DecimalHolder coefficient = new(Encoding.UTF8.GetBytes(part.Display));
+            coefficient = coefficient - one;
+            DecimalHolder result = (yy_num+hundred*coefficient);
+            return new Numeric(result, false);
+        }
     }
 }

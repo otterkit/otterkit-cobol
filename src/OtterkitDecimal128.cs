@@ -427,7 +427,7 @@ public static class DecimalMath
         Span<byte> rightWithNullTerminator = stackalloc byte[right.Bytes.Length + 1];
 
         left.Bytes.CopyTo(leftWithNullTerminator);
-        rightWithNullTerminator[left.Bytes.Length] = 0;
+        leftWithNullTerminator[left.Bytes.Length] = 0;
 
         right.Bytes.CopyTo(rightWithNullTerminator);
         rightWithNullTerminator[right.Bytes.Length] = 0;

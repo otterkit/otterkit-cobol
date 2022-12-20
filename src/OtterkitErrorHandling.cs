@@ -2,6 +2,8 @@ namespace Otterkit;
 
 public static class ErrorHandler
 {
+    public static bool Error = false;
+
     public static class Compiler
     {
         public static void Report(string error)
@@ -19,8 +21,9 @@ public static class ErrorHandler
             string line = File.ReadLines(fileName).Skip(token.line - 1).Take(token.line).First();
             string error = new String(' ', line.Length - token.value.Length);
 
-            int errorPosition = token.column - (line.Length - line.TrimStart().Length);
-            error = error.Insert(errorPosition, new String('~', token.value.Length));
+            int count = line.TakeWhile(Char.IsWhiteSpace).Count();
+            int insertOffset = line.IndexOf(token.value) == token.column ? 0 : 7;
+            error = error.Insert(token.column + insertOffset - count, new String('~', token.value.Length));
 
             Console.WriteLine($"{" ",5}|");
             Console.WriteLine($"{token.line,4} | {line.TrimStart()}");
@@ -30,11 +33,13 @@ public static class ErrorHandler
             Console.WriteLine($" {error}\n");
             Console.ResetColor();
 
-            Environment.Exit(1);
+
         }
 
         public static void Report(string fileName, Token token, string error, params string[] expected)
         {
+            Error = true;
+
             Console.ForegroundColor = ConsoleColor.Red;
             if (error == "choice")
             {
@@ -97,7 +102,13 @@ public static class ErrorHandler
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine("Expected {0}, instead of {1}\n", expected[0], token.value);
         }
-
     }
 
+    public static void Terminate(string errorType)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"Compilation process cancelled due to a {errorType} error");
+        Console.ResetColor();
+        Environment.Exit(1);
+    }
 }

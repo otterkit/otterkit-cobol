@@ -2,19 +2,25 @@ using System.Text;
 
 namespace Otterkit;
 
-
 public static class Analyzer
 {
+    private static string FileName = string.Empty;
+    private static string SourceId = string.Empty;
+    private static string SourceType = string.Empty;
+    private static string CurrentSection = string.Empty;
+
     public static List<Token> Analyze(List<Token> tokenList, string fileName)
     {
-        List<Token> analyzed = new();
-        string FileName = fileName;
-        string SourceId = string.Empty;
-        string CurrentSection = string.Empty;
+        FileName = fileName;
 
+        List<Token> analyzed = new();
         int index = 0;
 
         Source();
+
+        if (ErrorHandler.Error)
+            ErrorHandler.Terminate("parsing");
+
         return analyzed;
 
         void Source()
@@ -25,33 +31,18 @@ public static class Analyzer
                 return;
             }
 
-            switch (Current().value)
-            {
-                case "IDENTIFICATION":
-                    IDENTIFICATION();
-                    Source();
-                    break;
+            IDENTIFICATION();
+            if (CurrentEquals("ENVIRONMENT"))
+                ENVIRONMENT();
 
-                case "ENVIRONMENT":
-                    ENVIRONMENT();
-                    Source();
-                    break;
+            if (CurrentEquals("DATA"))
+                DATA();
 
-                case "DATA":
-                    DATA();
-                    Source();
-                    break;
+            PROCEDURE();
 
-                case "PROCEDURE":
-                    PROCEDURE();
-                    Source();
-                    break;
-
-                default:
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "IDENTIFICATION, ENVIRONMENT, DATA or PROCEDURE");
-                    ErrorHandler.Parser.PrettyError(fileName, Current());
-                    break;
-            }
+            if (CurrentEquals("IDENTIFICATION") || CurrentEquals("PROGRAM-ID") || CurrentEquals("FUNCTION-ID"))
+                Source();
+            
         }
 
         void IDENTIFICATION()
@@ -60,19 +51,48 @@ public static class Analyzer
             Missing separator period at the end of this IDENTIFICATION DIVISION header, every division header must end with a separator period
             """;
 
-            Expected("IDENTIFICATION", "identification division");
-            Expected("DIVISION");
-            Expected(".", headerPeriodError, -1, "separator period");
-            ProgramId();
+            if (CurrentEquals("IDENTIFICATION"))
+            {
+                Expected("IDENTIFICATION");
+                Expected("DIVISION");
+                Expected(".", headerPeriodError, -1, "separator period");
+            }
+
+            if (!CurrentEquals("PROGRAM-ID") && !CurrentEquals("FUNCTION-ID"))
+            {
+                string missingIdentificationError = """
+                Missing source unit ID name (PROGRAM-ID, FUNCTION-ID, CLASS-ID...), the identification division header is optional but every source unit must still have an ID.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Current(), "general", missingIdentificationError);
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
+
+            if (CurrentEquals("PROGRAM-ID"))
+                ProgramId();
+
+            if (CurrentEquals("FUNCTION-ID"))
+                FunctionId();
         }
 
         void ProgramId()
         {
-            Expected("PROGRAM-ID", "program definition");
-            Expected(".", "separator period");
+            Expected("PROGRAM-ID");
+            Expected(".");
             SourceId = Current().value;
+            SourceType = "PROGRAM";
             Identifier();
-            Expected(".", "separator period");
+            Expected(".");
+        }
+
+        void FunctionId()
+        {
+            Expected("FUNCTION-ID");
+            Expected(".");
+            SourceId = Current().value;
+            SourceType = "FUNCTION";
+            Identifier();
+            Expected(".");
         }
 
         void ENVIRONMENT()
@@ -100,35 +120,31 @@ public static class Analyzer
 
         void DataSections()
         {
-            while (!CurrentEquals("PROCEDURE"))
+
+            if (CurrentEquals("WORKING-STORAGE"))
+                WorkingStorage();
+
+            if (CurrentEquals("LOCAL-STORAGE"))
+                LocalStorage();
+
+            if (CurrentEquals("LINKAGE"))
+                LinkageSection();
+
+            if (!CurrentEquals("PROCEDURE"))
             {
-                if (CurrentEquals("WORKING-STORAGE"))
-                    WorkingStorage();
-
-                if (CurrentEquals("LOCAL-STORAGE"))
-                    LocalStorage();
-
-                switch (Current().value)
-                {
-                    case "WORKING-STORAGE":
-                    case "LOCAL-STORAGE":
-                    case "PROCEDURE":
-                        break;
-
-                    default:
-                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "Data Division data items and sections");
-                        ErrorHandler.Parser.PrettyError(fileName, Current());
-                        break;
-                }
+                ErrorHandler.Parser.Report(fileName, Current(), "expected", "Data Division data items and sections");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+                Continue();
             }
+
         }
 
         void WorkingStorage()
         {
             CurrentSection = Current().value;
-            Expected("WORKING-STORAGE", "working-storage section");
+            Expected("WORKING-STORAGE");
             Expected("SECTION");
-            Expected(".", "separator period");
+            Expected(".");
             while (Current().type == TokenType.Numeric)
                 Entries();
         }
@@ -136,9 +152,19 @@ public static class Analyzer
         void LocalStorage()
         {
             CurrentSection = Current().value;
-            Expected("LOCAL-STORAGE", "local-storage section");
+            Expected("LOCAL-STORAGE");
             Expected("SECTION");
-            Expected(".", "separator period");
+            Expected(".");
+            while (Current().type == TokenType.Numeric)
+                Entries();
+        }
+
+        void LinkageSection()
+        {
+            CurrentSection = Current().value;
+            Expected("LINKAGE");
+            Expected("SECTION");
+            Expected(".");
             while (Current().type == TokenType.Numeric)
                 Entries();
         }
@@ -200,6 +226,7 @@ public static class Analyzer
 
                 ErrorHandler.Parser.Report(fileName, Current(), "general", notAClauseError);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
+                Continue();
             }
 
             while (Current().context == TokenContext.IsClause)
@@ -413,10 +440,38 @@ public static class Analyzer
 
             Expected("PROCEDURE");
             Expected("DIVISION");
+            if (SourceType.Equals("FUNCTION"))
+            {
+                Expected("RETURNING");
+                ReturningDataName();
+            }
+            else if (!SourceType.Equals("FUNCTION") && CurrentEquals("RETURNING"))
+            {
+                Expected("RETURNING");
+                ReturningDataName(); 
+            }
+
             Expected(".", headerPeriodError, -1);
             Statement();
 
-            if (CurrentEquals("END") && LookaheadEquals(1, "PROGRAM"))
+            if (CurrentEquals("IDENTIFICATION") || CurrentEquals("PROGRAM-ID") || CurrentEquals("FUNCTION-ID"))
+            {
+                string missingEndMarkerError = $"""
+                Missing END {SourceType} marker. If another source unit is present after the end of the current source unit, the current unit must contain an END marker.
+                """;
+
+                string missingEndFunctionMarkerError = $"""
+                Missing END FUNCTION marker. User-defined functions must always end with an END FUNCTION marker.
+                """;
+
+                string errorMessageChoice = SourceType.Equals("FUNCTION") ? missingEndFunctionMarkerError : missingEndMarkerError;
+
+                ErrorHandler.Parser.Report(fileName, Lookahead(-1), "general", errorMessageChoice);
+                ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
+                return;
+            }
+
+            if (SourceType.Equals("PROGRAM") && CurrentEquals("END") && LookaheadEquals(1, "PROGRAM"))
             {
                 string endProgramPeriodError = """
                 Missing separator period at the end of this END PROGRAM definition
@@ -426,10 +481,48 @@ public static class Analyzer
                 Expected("PROGRAM");
                 Identifier();
                 Expected(".", endProgramPeriodError, -1);
-                if (Current().value.Equals("IDENTIFICATION"))
-                {
-                    Source();
-                }
+            }
+
+            if (SourceType.Equals("FUNCTION"))
+            {
+                string endFunctionPeriodError = """
+                Missing separator period at the end of this END FUNCTION definition
+                """;
+
+                Expected("END");
+                Expected("FUNCTION");
+                Identifier();
+                Expected(".", endFunctionPeriodError, -1);
+            }
+        }
+
+        void ReturningDataName()
+        {
+            if (Current().type != TokenType.Identifier)
+            {
+                string missingDataItemError = $"""
+                Missing returning data item after this RETURNING definition.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Lookahead(-1), "general", missingDataItemError);
+                ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
+                return;
+            }
+
+            string DataName = Current().value;
+            Identifier();
+
+            string DataItemHash = $"{SourceId}#{DataName}";
+            if (!DataItemInformation.ValueExists(DataItemHash))
+            {
+                string undefinedDataItemError = $"""
+                No data item found with this name in this source unit's data division. 
+                Please define a new returning data item in this unit's linkage section.
+                """;
+
+                ErrorHandler.Parser.Report(fileName, Lookahead(-1), "general", undefinedDataItemError);
+                ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
+                return;
             }
         }
 
@@ -490,6 +583,9 @@ public static class Analyzer
 
                 if (CurrentEquals("GO"))
                     GO();
+
+                if (CurrentEquals("GOBACK"))
+                    GOBACK();
 
                 if (CurrentEquals("SUBTRACT"))
                     SUBTRACT();
@@ -1177,6 +1273,11 @@ public static class Analyzer
             }
         }
 
+        void GOBACK()
+        {
+            Expected("GOBACK");
+        }
+
         void COMMIT()
         {
             Expected("COMMIT");
@@ -1769,5 +1870,4 @@ public static class Analyzer
         }
 
     }
-
 }

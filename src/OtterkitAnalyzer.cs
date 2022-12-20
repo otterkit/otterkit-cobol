@@ -563,6 +563,9 @@ public static class Analyzer
                 if (CurrentEquals("DIVIDE"))
                     DIVIDE();
 
+                if (CurrentEquals("DELETE"))
+                    DELETE();
+
                 if (CurrentEquals("IF"))
                     IF();
 
@@ -574,6 +577,9 @@ public static class Analyzer
 
                 if (CurrentEquals("MOVE"))
                     MOVE();
+
+                if (CurrentEquals("EXIT"))
+                    EXIT();
 
                 if (CurrentEquals("FREE"))
                     FREE();
@@ -590,11 +596,20 @@ public static class Analyzer
                 if (CurrentEquals("SUBTRACT"))
                     SUBTRACT();
 
+                if (CurrentEquals("RELEASE"))
+                    RELEASE();
+
                 if (CurrentEquals("RAISE"))
                     RAISE();
 
                 if (CurrentEquals("RESUME"))
                     RESUME();
+
+                if (CurrentEquals("RETURN"))
+                    RETURN();
+
+                if (CurrentEquals("REWRITE"))
+                    REWRITE();
 
                 if (CurrentEquals("ROLLBACK"))
                     ROLLBACK();
@@ -1232,6 +1247,76 @@ public static class Analyzer
                 Expected("END-MULTIPLY");
         }
 
+        void DELETE()
+        {
+            bool isConditional = false;
+            bool isFile = false;
+
+            Expected("DELETE");
+            if (CurrentEquals("FILE"))
+            {
+                isFile = true;
+                Expected("FILE");
+                Optional("OVERRIDE");
+                Identifier();
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+            else if (Current().type == TokenType.Identifier)
+            {
+                Identifier();
+                Expected("RECORD");
+            }
+
+            if (CurrentEquals("RETRY"))
+                RetryPhrase();
+            
+            if (!isFile)
+                InvalidKey(ref isConditional);
+
+            if (isFile)
+                OnException(ref isConditional);
+
+            if (isConditional)
+                Expected("END-DELETE");
+        }
+
+        void EXIT()
+        {
+            Expected("EXIT");
+            if (CurrentEquals("PERFORM"))
+            {
+                Expected("PERFORM");
+                Optional("CYCLE");
+            }
+            else if (CurrentEquals("PARAGRAPH"))
+                Expected("PARAGRAPH");
+
+            else if (CurrentEquals("SECTION"))
+                Expected("SECTION");
+
+            else if (CurrentEquals("PROGRAM"))
+            {
+                Expected("PROGRAM");
+                if (CurrentEquals("RAISING"))
+                {
+                    Expected("RAISING");
+                    if (CurrentEquals("EXCEPTION"))
+                    {
+                        Expected("EXCEPTION");
+                        Identifier();
+                    }
+                    else if (CurrentEquals("LAST"))
+                    {
+                        Expected("LAST");
+                        Optional("EXCEPTION");
+                    }
+                    else
+                        Identifier();
+                }
+            }
+        }
+
         void FREE()
         {
             Expected("FREE");
@@ -1399,6 +1484,95 @@ public static class Analyzer
             }
             else
                 Identifier();
+        }
+
+        void RELEASE()
+        {
+            Expected("RELEASE");
+            Identifier();
+
+            if (CurrentEquals("FROM"))
+            {
+                Expected("FROM");
+                if (Current().type == TokenType.String)
+                    String();
+
+                else if (Current().type == TokenType.Numeric)
+                    Number();
+
+                else
+                    Identifier();
+            }
+        }
+
+        void RETURN()
+        {
+            bool isConditional = false;
+
+            Expected("RETURN");
+            Identifier();
+            Expected("RECORD");
+            if (CurrentEquals("INTO"))
+            {
+                Expected("INTO");
+                Identifier();
+            }
+
+            AtEnd(ref isConditional);
+
+            if (isConditional)
+                Expected("END-RETURN");
+        }
+
+        void REWRITE()
+        {
+            bool isConditional = false;
+            bool isFile = false;
+
+            Expected("REWRITE");
+            if (CurrentEquals("FILE"))
+            {
+                isFile = true;
+                Expected("FILE");
+                Identifier();
+            }
+            else
+                Identifier();
+
+            Expected("RECORD");
+            if (CurrentEquals("FROM") || isFile)
+            {
+                Expected("FROM");
+                
+                if (Current().type == TokenType.Identifier)
+                    Identifier();
+
+                else if (Current().type == TokenType.Numeric)
+                    Number();
+
+                else
+                    String();
+            }
+
+            RetryPhrase();
+            if (CurrentEquals("WITH") || CurrentEquals("LOCK") || CurrentEquals("NO"))
+            {
+                Optional("WITH");
+                if (CurrentEquals("LOCK"))
+                {
+                    Expected("LOCK");
+                }
+                else
+                {
+                    Expected("NO");
+                    Expected("LOCK");
+                }
+            }
+
+            InvalidKey(ref isConditional);
+
+            if (isConditional)
+                Expected("END-REWRITE");
         }
 
         void RESUME()
@@ -1597,6 +1771,160 @@ public static class Analyzer
             analyzed.Add(current);
             Continue();
             return;
+        }
+
+        void RetryPhrase()
+        {
+            bool hasFor = false;
+
+            Expected("RETRY");
+            if (CurrentEquals("FOREVER"))
+            {
+                Expected("FOREVER");
+                return;
+            }
+
+            if (CurrentEquals("FOR"))
+            {
+                Optional("FOR");
+                hasFor = true;
+            }
+
+            Arithmetic();
+            if (CurrentEquals("SECONDS") || hasFor)
+                Expected("SECONDS");
+
+            else
+                Expected("TIMES");
+        }
+
+        void InvalidKey(ref bool isConditional, bool invalidKeyExists = false, bool notInvalidKeyExists = false)
+        {
+            if (CurrentEquals("INVALID"))
+            {
+                if (invalidKeyExists)
+                {
+                    string onErrorExistsError = """
+                    INVALID KEY can only be specified once in this statement. 
+                    The same applies to the NOT INVALID KEY.
+                    """;
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", onErrorExistsError);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+                isConditional = true;
+                invalidKeyExists = true;
+                Expected("INVALID");
+                Optional("KEY");
+                Statement(true);
+                InvalidKey(ref isConditional, invalidKeyExists, notInvalidKeyExists);
+
+            }
+
+            if (CurrentEquals("NOT"))
+            {
+                if (notInvalidKeyExists)
+                {
+                    string notOnErrorExistsError = """
+                    NOT INVALID KEY can only be specified once in this statement. 
+                    The same applies to the INVALID KEY.
+                    """;
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnErrorExistsError);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+                isConditional = true;
+                notInvalidKeyExists = true;
+                Expected("NOT");
+                Expected("INVALID");
+                Optional("KEY");
+                Statement(true);
+                InvalidKey(ref isConditional, invalidKeyExists, notInvalidKeyExists);
+            }
+        }
+
+        void OnException(ref bool isConditional, bool onExceptionExists = false, bool notOnExceptionExists = false)
+        {
+            if (CurrentEquals("ON") || CurrentEquals("EXCEPTION"))
+            {
+                if (onExceptionExists)
+                {
+                    string onExceptionExistsError = """
+                    ON EXCEPTION can only be specified once in this statement. 
+                    The same applies to the NOT ON EXCEPTION.
+                    """;
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", onExceptionExistsError);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+                isConditional = true;
+                onExceptionExists = true;
+                Optional("ON");
+                Expected("EXCEPTION");
+                Statement(true);
+                OnException(ref isConditional, onExceptionExists, notOnExceptionExists);
+
+            }
+
+            if (CurrentEquals("NOT"))
+            {
+                if (notOnExceptionExists)
+                {
+                    string notOnExceptionExistsError = """
+                    NOT ON EXCEPTION can only be specified once in this statement. 
+                    The same applies to the ON EXCEPTION.
+                    """;
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnExceptionExistsError);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+                isConditional = true;
+                notOnExceptionExists = true;
+                Expected("NOT");
+                Optional("ON");
+                Expected("EXCEPTION");
+                Statement(true);
+                OnException(ref isConditional, onExceptionExists, notOnExceptionExists);
+            }
+        }
+
+        void AtEnd(ref bool isConditional, bool atEndExists = false, bool notAtEndExists = false)
+        {
+            if (CurrentEquals("AT") || CurrentEquals("END"))
+            {
+                if (atEndExists)
+                {
+                    string onExceptionExistsError = """
+                    AT END can only be specified once in this statement. 
+                    The same applies to the NOT AT END.
+                    """;
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", onExceptionExistsError);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+                isConditional = true;
+                atEndExists = true;
+                Optional("AT");
+                Expected("END");
+                Statement(true);
+                AtEnd(ref isConditional, atEndExists, notAtEndExists);
+
+            }
+
+            if (CurrentEquals("NOT"))
+            {
+                if (notAtEndExists)
+                {
+                    string notOnExceptionExistsError = """
+                    NOT AT END can only be specified once in this statement. 
+                    The same applies to the AT END.
+                    """;
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnExceptionExistsError);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+                isConditional = true;
+                notAtEndExists = true;
+                Expected("NOT");
+                Optional("AT");
+                Expected("END");
+                Statement(true);
+                AtEnd(ref isConditional, atEndExists, notAtEndExists);
+            }
         }
 
         void SizeError(ref bool isConditional, bool onErrorExists = false, bool notOnErrorExists = false)

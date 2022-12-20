@@ -1361,6 +1361,7 @@ public static class Analyzer
         void GOBACK()
         {
             Expected("GOBACK");
+            RaisingStatus();
         }
 
         void COMMIT()
@@ -1543,7 +1544,7 @@ public static class Analyzer
             if (CurrentEquals("FROM") || isFile)
             {
                 Expected("FROM");
-                
+
                 if (Current().type == TokenType.Identifier)
                     Identifier();
 
@@ -1881,6 +1882,72 @@ public static class Analyzer
                 Expected("EXCEPTION");
                 Statement(true);
                 OnException(ref isConditional, onExceptionExists, notOnExceptionExists);
+            }
+        }
+
+        void RaisingStatus(bool raisingExists = false, bool statusExists = false)
+        {
+            if (CurrentEquals("RAISING"))
+            {
+                if (raisingExists)
+                {
+                    string onExceptionExistsError = """
+                    RAISING can only be specified once in this statement. 
+                    The same applies to the WITH NORMAL/ERROR STATUS.
+                    """;
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", onExceptionExistsError);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+
+                Expected("RAISING");
+                if (CurrentEquals("EXCEPTION"))
+                {
+                    Expected("EXCEPTION");
+                    Identifier();
+                }
+                else if (CurrentEquals("LAST"))
+                {
+                    Expected("LAST");
+                    Optional("EXCEPTION");
+                }
+                else
+                    Identifier();
+                
+                raisingExists = true;
+                RaisingStatus(raisingExists, statusExists);
+
+            }
+
+            if (CurrentEquals("WITH") || CurrentEquals("NORMAL") || CurrentEquals("ERROR"))
+            {
+                if (statusExists)
+                {
+                    string notOnExceptionExistsError = """
+                    WITH NORMAL/ERROR STATUS can only be specified once in this statement. 
+                    The same applies to the RAISING.
+                    """;
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnExceptionExistsError);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+
+                Optional("WITH");
+                Choice(null, "NORMAL", "ERROR");
+                Optional("STATUS");
+                switch (Current().type)
+                {
+                    case TokenType.Identifier:
+                        Identifier();
+                        break;
+                    case TokenType.Numeric:
+                        Number();
+                        break;
+                    case TokenType.String:
+                        String();
+                        break;
+                }
+
+                statusExists = true;
+                RaisingStatus(raisingExists, statusExists);
             }
         }
 

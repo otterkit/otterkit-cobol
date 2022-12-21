@@ -1,36 +1,87 @@
-using System.Text;
-
 namespace Otterkit;
 
+/// <summary>
+/// Otterkit COBOL Syntax Analyzer
+/// <para>This parser was built to be easily extensible, with some reusable COBOL parts.</para>
+/// <para>It requires a List of Tokens generated from the Lexer and the Token Classifier.</para>
+/// </summary>
 public static class Analyzer
 {
+    /// <summary>
+    /// String <c>FileName</c> is used in the parser as a parameter for the <c>ErrorHandler</c> method.
+    /// <para>The error handler will use this to fetch the file and get the correct line and column when displaying the error message.</para>
+    /// </summary>
     private static string FileName = string.Empty;
+
+    /// <summary>
+    /// String <c>SourceId</c> is used in the parser whenever it needs to know the name of the current source unit (The identifier after PROGRAM-ID).
+    /// <para>This is used when checking if a variable already exists in the current source unit, and when adding them to the DataItemInformation class's variable table.
+    /// The DataItemInformation class is then used to simplify the codegen process of generating data items.</para>
+    /// </summary>
     private static string SourceId = string.Empty;
+
+    /// <summary>
+    /// String <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
+    /// <para>This is used when handling certain syntax rules for different <c>-ID</c>s, like the <c>"RETURNING data-name"</c> being required for every <c>FUNCTION-ID</c> source unit.</para>
+    /// </summary>
     private static string SourceType = string.Empty;
+
+    /// <summary>
+    /// String <c>CurrentSection</c> is used in the parser whenever it needs to know which section it is currently parsing (WORKING-STORAGE and LOCAL-STORAGE for example).
+    /// <para>This is used when handling certain syntax rules for different sections and to add extra context needed for the DataItemInformation class's variable table.
+    /// This will also be used by the DataItemInformation class during codegen to simplify the process to figuring out if a variable is static or not.</para>
+    /// </summary>
     private static string CurrentSection = string.Empty;
 
+    /// <summary>
+    /// List of Tokens <c>TokenList</c>: This is the main data structure that the parser will be iterating through.
+    /// <para>The parser expects a list of already preprocessed and classified COBOL tokens in the form of full COBOL words (CALL, END-IF, COMPUTE for example)</para>
+    /// </summary>
+    private static List<Token> TokenList = new();
+
+    /// <summary>
+    /// Int <c>Index</c>: This is the index of the current token, used by most helper methods including Continue, Current and Lookahead.
+    /// <para>The index should only move forwards, but if the previous token is needed you can use the Lookahead and LookaheadEquals methods with a negative integer parameter</para>
+    /// </summary>
+    private static int Index;
+
+    /// <summary>
+    /// List of Tokens <c>Analyzed</c>: This list will contain the parsed Tokens after the parser is finished with the TokenList.
+    /// <para>This parser does not generate an AST, instead it returns this list only if the COBOL source code was written correctly.
+    /// Generating a full AST and the code needed to handle it would add extra complexity to the compiler, the AST is also not needed for the codegen to work</para>
+    /// </summary>
+    private static List<Token> Analyzed = new();
+
+    /// <summary>
+    /// Otterkit COBOL Syntax Analyzer
+    /// <para>This parser was built to be easily extensible, with some reusable COBOL parts.</para>
+    /// <para>It requires a List of Tokens generated from the Lexer and the Token Classifier.</para>
+    /// </summary>
     public static List<Token> Analyze(List<Token> tokenList, string fileName)
     {
         FileName = fileName;
+        TokenList = tokenList;
+        Analyzed = new();
+        Index = 0;
 
-        List<Token> analyzed = new();
-        int index = 0;
-
+        // Call the parser's main method
+        // This should only return when the parser reaches the EOF token
         Source();
 
+        // If a parsing error has occured, terminate the compilation process.
+        // We do not want the compiler to continue when the source code is not valid.
         if (ErrorHandler.Error)
             ErrorHandler.Terminate("parsing");
 
-        return analyzed;
+        // Return parsed list of tokens.
+        return Analyzed;
 
+        // Source() is the main method of the parser.
+        // It's responsible for parsing COBOL divisions until the EOF token.
+        // If EOF was not returned as the last Token in the list then,
+        // the parser has not finished reading through the list of tokens correctly.
         void Source()
         {
-            if (CurrentEquals("EOF"))
-            {
-                analyzed.Add(Current());
-                return;
-            }
-
             IDENTIFICATION();
             if (CurrentEquals("ENVIRONMENT"))
                 ENVIRONMENT();
@@ -43,8 +94,15 @@ public static class Analyzer
             if (CurrentEquals("IDENTIFICATION") || CurrentEquals("PROGRAM-ID") || CurrentEquals("FUNCTION-ID"))
                 Source();
             
+            if (CurrentEquals("EOF"))
+                Analyzed.Add(Current());
+
         }
 
+
+        // Method responsible for parsing the IDENTIFICATION DIVISION.
+        // That includes PROGRAM-ID, FUNCTION-ID, CLASS-ID, METHOD-ID, INTERFACE-ID, OBJECT, FACTORY and OPTIONS paragraphs.
+        // It is also responsible for showing appropriate error messages when an error occurs in the IDENTIFICATION DIVISION.
         void IDENTIFICATION()
         {
             string headerPeriodError = """
@@ -75,6 +133,10 @@ public static class Analyzer
                 FunctionId();
         }
 
+
+        // The following methods are responsible for parsing the -ID paragraph.
+        // That includes the program, user-defined function, method, class, interface, factory or object identifier that should be specified right after.
+        // This is where SourceId and SourceType get their values for a COBOL source unit.
         void ProgramId()
         {
             Expected("PROGRAM-ID");
@@ -95,6 +157,10 @@ public static class Analyzer
             Expected(".");
         }
 
+
+        // Method responsible for parsing the ENVIRONMENT DIVISION.
+        // That includes the CONFIGURATION and the INPUT-OUTPUT sections.
+        // It is also responsible for showing appropriate error messages when an error occurs in the ENVIRONMENT DIVISION.
         void ENVIRONMENT()
         {
             string headerPeriodError = """
@@ -106,6 +172,10 @@ public static class Analyzer
             Expected(".", headerPeriodError, -1, "separator period");
         }
 
+
+        // Method responsible for parsing the DATA DIVISION.
+        // That includes the FILE, WORKING-STORAGE, LOCAL-STORAGE, LINKAGE, REPORT and SCREEN sections.
+        // It is also responsible for showing appropriate error messages when an error occurs in the DATA DIVISION.
         void DATA()
         {
             string headerPeriodError = """
@@ -115,11 +185,6 @@ public static class Analyzer
             Expected("DATA", "data division");
             Expected("DIVISION");
             Expected(".", headerPeriodError, -1, "separator period");
-            DataSections();
-        }
-
-        void DataSections()
-        {
 
             if (CurrentEquals("WORKING-STORAGE"))
                 WorkingStorage();
@@ -136,9 +201,12 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
             }
-
         }
+       
 
+        // The following methods are responsible for parsing the DATA DIVISION sections
+        // They are technically only responsible for parsing the section header, 
+        // the Entries() method handles parsing the actual data items in their correct sections.
         void WorkingStorage()
         {
             CurrentSection = Current().value;
@@ -169,6 +237,13 @@ public static class Analyzer
                 Entries();
         }
 
+
+        // The following methods are responsible for parsing the DATA DIVISION data items
+        // The Entries() method is responsible for identifying which kind of data item to 
+        // parse based on it's level number.
+
+        // The RecordEntry(), BaseEntry(), and ConstantEntry() are then responsible for correctly
+        // parsing each data item, or in the case of the RecordEntry() a group item or 01-level elementary item.
         void Entries()
         {
             if (CurrentEquals("77"))
@@ -261,7 +336,7 @@ public static class Analyzer
 
                 if (CurrentEquals("PIC") || CurrentEquals("PICTURE"))
                 {
-                    Choice(null, "PIC", "PICTURE");
+                    Choice("PIC", "PICTURE");
                     Optional("IS");
                     dataType = Current().value switch
                     {
@@ -286,7 +361,7 @@ public static class Analyzer
 
                     DataItemInformation.AddType(DataItemHash, dataType);
                     DataItemInformation.IsElementary(DataItemHash, true);
-                    Choice(null, "S9", "9", "X", "A", "N", "1");
+                    Choice("S9", "9", "X", "A", "N", "1");
 
                     string DataLength = string.Empty;
                     Expected("(");
@@ -432,6 +507,11 @@ public static class Analyzer
             }
         }
 
+
+        // Method responsible for parsing the PROCEDURE DIVISION.
+        // That includes the user-defined paragraphs, sections and declaratives
+        // or when parsing OOP COBOL code, it's responsible for parsing COBOL methods, objects and factories. 
+        // It is also responsible for showing appropriate error messages when an error occurs in the PROCEDURE DIVISION.
         void PROCEDURE()
         {
             string headerPeriodError = """
@@ -496,6 +576,9 @@ public static class Analyzer
             }
         }
 
+        // This method is part of the PROCEDURE DIVISION parsing. It's used to parse the "RETURNING" data item specified in
+        // the PROCEDURE DIVISION header. It's separate from the previous method because its code is needed more than once.
+        // COBOL user-defined functions should always return a data item.
         void ReturningDataName()
         {
             if (Current().type != TokenType.Identifier)
@@ -526,6 +609,12 @@ public static class Analyzer
             }
         }
 
+
+        // Recursive method responsible for parsing ALL COBOL statements.
+        // The while loop continues parsing statements while the current token is a statement reserved word,
+        // This might look like it could cause issues by parsing two statements in a single loop, but that
+        // can only happen on nested statements, and in those cases it still parses every statement correctly.
+        // For other statements, the separator period is required, which is then handled by the ScopeTerminator()
         void Statement(bool isNested = false)
         {
             while (Current().context == TokenContext.IsStatement)
@@ -634,6 +723,10 @@ public static class Analyzer
             }
         }
 
+
+        // This method handles COBOL's slightly inconsistent separator period rules.
+        // Statements that are nested inside another statement cannot end with a separator period,
+        // since that separator period would mean the end of the containing statement and not the contained statement.
         void ScopeTerminator(bool isNested)
         {
             if (isNested)
@@ -642,7 +735,11 @@ public static class Analyzer
             Expected(".", "expected", 0);
         }
 
-        // Statement parsing section:
+
+        // Statement parsing methods
+        // All the following uppercased methods are responsible for parsing a single COBOL statement
+        // When a new method is added here to parse a new statement, we need to add it to the Statement() method as well.
+        // Adding extra statements to the parser only requires a new method here, and an if statement added to the Statement() method
         void DISPLAY()
         {
             Expected("DISPLAY");
@@ -681,7 +778,7 @@ public static class Analyzer
             if (CurrentEquals("UPON"))
             {
                 Expected("UPON");
-                Choice(TokenType.Device, "STANDARD-OUTPUT", "STANDARD-ERROR");
+                Choice("STANDARD-OUTPUT", "STANDARD-ERROR");
             }
 
             if (CurrentEquals("WITH") || CurrentEquals("NO"))
@@ -705,7 +802,7 @@ public static class Analyzer
                 {
                     case "STANDARD-INPUT":
                     case "COMMAND-LINE":
-                        Choice(TokenType.Device, "STANDARD-INPUT", "COMMAND-LINE");
+                        Choice("STANDARD-INPUT", "COMMAND-LINE");
                         break;
 
                     case "DATE":
@@ -1172,7 +1269,7 @@ public static class Analyzer
 
             if ((CurrentEquals("BY") || CurrentEquals("INTO")) && LookaheadEquals(2, "GIVING") && !LookaheadEquals(4, "REMAINDER"))
             {
-                Choice(null, "BY", "INTO");
+                Choice("BY", "INTO");
                 switch (Current().type)
                 {
                     case TokenType.Identifier:
@@ -1201,7 +1298,7 @@ public static class Analyzer
             }
             else if ((CurrentEquals("BY") || CurrentEquals("INTO")) && LookaheadEquals(2, "GIVING") && LookaheadEquals(4, "REMAINDER"))
             {
-                Choice(null, "BY", "INTO");
+                Choice("BY", "INTO");
                 switch (Current().type)
                 {
                     case TokenType.Identifier:
@@ -1603,7 +1700,7 @@ public static class Analyzer
             if (CurrentEquals("WITH") || CurrentEquals("NORMAL") || CurrentEquals("ERROR"))
             {
                 Optional("WITH");
-                Choice(null, "NORMAL", "ERROR");
+                Choice("NORMAL", "ERROR");
                 Optional("STATUS");
                 switch (Current().type)
                 {
@@ -1657,7 +1754,7 @@ public static class Analyzer
         {
             Expected("UNLOCK");
             Identifier();
-            Choice(null, "RECORD", "RECORDS");
+            Choice("RECORD", "RECORDS");
         }
 
         void VALIDATE()
@@ -1687,93 +1784,14 @@ public static class Analyzer
             }
         }
 
-        // Parser helper methods.
-        Token Lookahead(int amount)
-        {
-            return tokenList[index + amount];
-        }
 
-        bool LookaheadEquals(int lookahead, string stringToCompare)
-        {
-            return Lookahead(lookahead).value.Equals(stringToCompare);
-        }
-
-        Token Current()
-        {
-            return tokenList[index];
-        }
-
-        bool CurrentEquals(string stringToCompare)
-        {
-            return Current().value.Equals(stringToCompare);
-        }
-
-        void Continue()
-        {
-            index += 1;
-            return;
-        }
-
-        void Choice(TokenType? type, params string[] choices)
-        {
-            Token current = Current();
-            foreach (string choice in choices)
-            {
-                if (current.value.Equals(choice))
-                {
-                    if (type != null)
-                        current.type = type;
-                    analyzed.Add(current);
-                    Continue();
-                    return;
-                }
-            }
-
-            ErrorHandler.Parser.Report(fileName, Current(), "choice", choices);
-            ErrorHandler.Parser.PrettyError(fileName, Current());
-            Continue();
-            return;
-        }
-
-        void Optional(string optional, string scope = "")
-        {
-            Token current = Current();
-            if (!current.value.Equals(optional))
-                return;
-
-            analyzed.Add(current);
-            Continue();
-            return;
-        }
-
-        void Expected(string expected, string custom = "expected", int position = 0, string scope = "")
-        {
-            string errorMessage = expected;
-            string errorType = "expected";
-            Token token = Current();
-            if (!custom.Equals("expected"))
-            {
-                errorMessage = custom;
-                errorType = "general";
-            }
-
-            if (position != 0)
-                token = Lookahead(position);
-
-            Token current = Current();
-            if (!current.value.Equals(expected))
-            {
-                ErrorHandler.Parser.Report(fileName, token, errorType, errorMessage);
-                ErrorHandler.Parser.PrettyError(fileName, token);
-                Continue();
-                return;
-            }
-
-            analyzed.Add(current);
-            Continue();
-            return;
-        }
-
+        // The following methods are responsible for parsing some commonly repeated pieces of COBOL statements.
+        // The ON SIZE ERROR, ON EXCEPTION, INVALID KEY, AT END, and the RETRY phrase are examples of pieces of COBOL syntax
+        // that appear on multiple statements. Reusing the same code in those cases keeps things much more modular and easier to maintain.
+        //
+        // The Arithmetic() and Condition() methods are responsible for parsing expressions and verifying if those expressions were
+        // written correctly. This is using a combination of the Shunting Yard algorithm, and some methods to verify if the 
+        // parentheses are balanced and if it can be evaluated correctly.
         void RetryPhrase()
         {
             bool hasFor = false;
@@ -1931,7 +1949,7 @@ public static class Analyzer
                 }
 
                 Optional("WITH");
-                Choice(null, "NORMAL", "ERROR");
+                Choice("NORMAL", "ERROR");
                 Optional("STATUS");
                 switch (Current().type)
                 {
@@ -2112,7 +2130,7 @@ public static class Analyzer
                 {
                     Token combined = new($"{Current().value} {Lookahead(1).value}", TokenType.Symbol, Current().line, Current().column);
                     expression.Add(combined);
-                    analyzed.Add(combined);
+                    Analyzed.Add(combined);
                     Continue();
                     Continue();
                 }
@@ -2146,117 +2164,6 @@ public static class Analyzer
             }
         }
 
-        void Identifier()
-        {
-            Token current = Current();
-            if (current.type != TokenType.Identifier)
-            {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
-                ErrorHandler.Parser.PrettyError(fileName, Current());
-                Continue();
-                return;
-            }
-            analyzed.Add(current);
-            Continue();
-            return;
-        }
-
-        void Number(string custom = "expected", int position = 0)
-        {
-            string errorMessage = "string literal";
-            string errorType = "expected";
-            Token token = Current();
-            if (!custom.Equals("expected"))
-            {
-                errorMessage = custom;
-                errorType = "general";
-            }
-
-            if (position != 0)
-                token = Lookahead(position);
-
-            Token current = Current();
-            if (current.type != TokenType.Numeric)
-            {
-                ErrorHandler.Parser.Report(fileName, token, errorType, errorMessage);
-                ErrorHandler.Parser.PrettyError(fileName, token);
-                Continue();
-                return;
-            }
-            analyzed.Add(current);
-            Continue();
-            return;
-        }
-
-        void String(string custom = "expected", int position = 0)
-        {
-            string errorMessage = "string literal";
-            string errorType = "expected";
-            Token token = Current();
-            if (!custom.Equals("expected"))
-            {
-                errorMessage = custom;
-                errorType = "general";
-            }
-
-            if (position != 0)
-                token = Lookahead(position);
-
-            Token current = Current();
-            if (current.type != TokenType.String)
-            {
-                ErrorHandler.Parser.Report(fileName, token, errorType, errorMessage);
-                ErrorHandler.Parser.PrettyError(fileName, token);
-                Continue();
-                return;
-            }
-            analyzed.Add(current);
-            Continue();
-            return;
-        }
-
-        void FigurativeLiteral()
-        {
-            Token current = Current();
-            if (current.type != TokenType.FigurativeLiteral)
-            {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "figurative literal");
-                ErrorHandler.Parser.PrettyError(fileName, Current());
-                Continue();
-                return;
-            }
-            analyzed.Add(current);
-            Continue();
-            return;
-        }
-
-        void Symbol(string custom = "expected", int position = 0)
-        {
-            string errorMessage = "string literal";
-            string errorType = "expected";
-            Token token = Current();
-            if (!custom.Equals("expected"))
-            {
-                errorMessage = custom;
-                errorType = "general";
-            }
-
-            if (position != 0)
-                token = Lookahead(position);
-
-            Token current = Current();
-            if (current.type != TokenType.Symbol)
-            {
-                ErrorHandler.Parser.Report(fileName, token, errorType, errorMessage);
-                ErrorHandler.Parser.PrettyError(fileName, token);
-                Continue();
-                return;
-            }
-            analyzed.Add(current);
-            Continue();
-            return;
-        }
-
         bool NotIdentifierOrLiteral()
         {
             return Current().type != TokenType.Identifier
@@ -2265,4 +2172,280 @@ public static class Analyzer
         }
 
     }
+    
+
+    // Parser Helper methods.
+    // These are the main methods used to interact with and iterate through the List of Tokens.
+    // All other methods inside of the parser depend on these to parse through the tokens.
+
+    /// <summary>
+    /// Token <c>Lookahead</c>: This method returns a Token from an index of Current Index + the amount parameter
+    /// <para>When passed a positive amount it will act as a lookahead method, and when passed a negative amount it will act as a lookbehind method</para>
+    /// <para>Technically this method allows for infinite lookahead and lookbehind, as long as the Index + amount is not bigger than the
+    /// number of items on the list of Tokens or smaller than 0.</para>
+    /// </summary>
+    private static Token Lookahead(int amount)
+    {
+        if (Index + amount >= TokenList.Count)
+        {
+            return TokenList[TokenList.Count - 1];
+        }
+
+        if (Index + amount < 0)
+        {
+            return TokenList[0];
+        }
+
+        return TokenList[Index + amount];
+    }
+
+    /// <summary>
+    /// Boolean <c>LookaheadEquals</c>: This method returns true or false depending on if the Token from an index of Current Index + the first parameter is equal to the second paramenter
+    /// <para>When passed a positive amount it will act as a lookahead comparison method, and when passed a negative amount it will act as a lookbehind comparison method</para>
+    /// <para>Technically this method allows for infinite lookahead and lookbehind comparisons, as long as the Index + amount is not bigger than the
+    /// number of items on the list of Tokens or smaller than 0.</para>
+    /// </summary>
+    private static bool LookaheadEquals(int lookahead, string stringToCompare)
+    {
+        return Lookahead(lookahead).value.Equals(stringToCompare);
+    }
+
+    /// <summary>
+    /// Token <c>Current</c>: This method returns the current token from the current Index.
+    /// <para>The returned token in encapsulated inside of the Token type, which holds not only the value of the token but also some additional context
+    /// that might be required by the parser in certain situations</para>
+    /// </summary>
+    private static Token Current()
+    {
+        return TokenList[Index];
+    }
+
+    /// <summary>
+    /// Boolean <c>CurrentEquals</c>: This method returns true or false depending on if the current token from the current Index has the same value as the parameter.
+    /// <para>This helper method is an alternative to the <c>"Current().value.Equals()"</c> syntax, which could become verbose and harder to read when it's used frequently</para>
+    /// </summary>
+    private static bool CurrentEquals(string stringToCompare)
+    {
+        return Current().value.Equals(stringToCompare);
+    }
+
+    /// <summary>
+    /// Void <c>Continue</c>: This method adds +1 to the current index, moving the index to the next token.
+    /// <para>This method will be called in the Expected(), Optional(), Choice(), Identifier(), Number() and String() methods,
+    /// so there's no need to call Continue after calling those methods.</para>
+    /// </summary>
+    private static void Continue()
+    {
+        Index += 1;
+        return;
+    }
+
+    /// <summary>
+    /// Void <c>Choice</c>: This method checks if the current token matches one of the values passed in its parameters.
+    /// <para>If the current token matches one the values, it adds the correct value to the parsed list,
+    /// if the current token doesn't match any of the values it calls the ErrorHandler to report a parsing error</para>
+    /// </summary>
+    private static void Choice(params string[] choices)
+    {
+        Token current = Current();
+        foreach (string choice in choices)
+        {
+            if (current.value.Equals(choice))
+            {
+                Analyzed.Add(current);
+                Continue();
+                return;
+            }
+        }
+
+        ErrorHandler.Parser.Report(FileName, Current(), "choice", choices);
+        ErrorHandler.Parser.PrettyError(FileName, Current());
+        Analyzed.Add(current);
+        Continue();
+    }
+    
+    /// <summary>
+    /// Void <c>Optional</c>: This method checks if the current token is equal to it's first parameter.
+    /// <para>If the current token matches the value, it adds the token to the parsed list,
+    /// if the current token doesn't match the value it ignores the token and returns without moving to the next token</para>
+    /// </summary>
+    private static void Optional(string optional, string scope = "")
+    {
+        Token current = Current();
+        if (!current.value.Equals(optional))
+            return;
+
+        Analyzed.Add(current);
+        Continue();
+    }
+
+    /// <summary>
+    /// Void <c>Expected</c>: This method checks if the current token is equal to it's first parameter.
+    /// <para>If the current token matches the value, it adds the token to the parsed list,
+    /// if the current token doesn't match the value it calls the ErrorHandler to report a parsing error</para>
+    /// </summary>
+    private static void Expected(string expected, string custom = "", int position = 0, string scope = "")
+    {
+        string errorMessage = expected;
+        string errorType = "expected";
+        Token token = Current();
+        if (!custom.Equals(""))
+        {
+            errorMessage = custom;
+            errorType = "general";
+        }
+
+        if (position != 0)
+            token = Lookahead(position);
+
+        Token current = Current();
+        if (!current.value.Equals(expected))
+        {
+            ErrorHandler.Parser.Report(FileName, token, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, token);
+            Analyzed.Add(current);
+            Continue();
+            return;
+        }
+
+        Analyzed.Add(current);
+        Continue();
+    }
+
+    /// <summary>
+    /// Void <c>Identifier</c>: This method checks if the current token is an identifier.
+    /// <para>If the current token's type is TokenType.Identifier, it adds the token to the parsed list,
+    /// if the current token's type is TokenType.Identifier it calls the ErrorHandler to report a parsing error</para>
+    /// </summary>
+    private static void Identifier()
+    {
+        Token current = Current();
+        if (current.type != TokenType.Identifier)
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), "expected", "identifier");
+            ErrorHandler.Parser.PrettyError(FileName, Current());
+            Continue();
+            return;
+        }
+        Analyzed.Add(current);
+        Continue();
+        return;
+    }
+
+    /// <summary>
+    /// Void <c>Number</c>: This method checks if the current token is a Number.
+    /// <para>If the current token's type is TokenType.Numeric, it adds the token to the parsed list,
+    /// if the current token's type is TokenType.Numeric it calls the ErrorHandler to report a parsing error</para>
+    /// </summary>
+    private static void Number(string custom = "expected", int position = 0)
+    {
+        string errorMessage = "string literal";
+        string errorType = "expected";
+        Token token = Current();
+        if (!custom.Equals("expected"))
+        {
+            errorMessage = custom;
+            errorType = "general";
+        }
+
+        if (position != 0)
+            token = Lookahead(position);
+
+        Token current = Current();
+        if (current.type != TokenType.Numeric)
+        {
+            ErrorHandler.Parser.Report(FileName, token, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, token);
+            Continue();
+            return;
+        }
+        Analyzed.Add(current);
+        Continue();
+        return;
+    }
+
+    /// <summary>
+    /// Void <c>String</c>: This method checks if the current token is a National, Alphanumeric, Alphabetic or Boolean.
+    /// <para>If the current token's type is TokenType.String, it adds the token to the parsed list,
+    /// if the current token's type is TokenType.String it calls the ErrorHandler to report a parsing error</para>
+    /// </summary>
+    private static void String(string custom = "expected", int position = 0)
+    {
+        string errorMessage = "string literal";
+        string errorType = "expected";
+        Token token = Current();
+        if (!custom.Equals("expected"))
+        {
+            errorMessage = custom;
+            errorType = "general";
+        }
+
+        if (position != 0)
+            token = Lookahead(position);
+
+        Token current = Current();
+        if (current.type != TokenType.String)
+        {
+            ErrorHandler.Parser.Report(FileName, token, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, token);
+            Continue();
+            return;
+        }
+        Analyzed.Add(current);
+        Continue();
+        return;
+    }
+
+    /// <summary>
+    /// Void <c>FigurativeLiteral</c>: This method checks if the current token is a Figurative Literal.
+    /// <para>If the current token's type is TokenType.FigurativeLiteral, it adds the token to the parsed list,
+    /// if the current token's type is TokenType.FigurativeLiteral it calls the ErrorHandler to report a parsing error</para>
+    /// </summary>
+    private static void FigurativeLiteral()
+    {
+        Token current = Current();
+        if (current.type != TokenType.FigurativeLiteral)
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), "expected", "figurative literal");
+            ErrorHandler.Parser.PrettyError(FileName, Current());
+            Continue();
+            return;
+        }
+        Analyzed.Add(current);
+        Continue();
+        return;
+    }
+
+    /// <summary>
+    /// Void <c>Symbol</c>: This method checks if the current token is a valid COBOl Symbol.
+    /// <para>If the current token's type is TokenType.Symbol, it adds the token to the parsed list,
+    /// if the current token's type is TokenType.Symbol it calls the ErrorHandler to report a parsing error</para>
+    /// </summary>
+    private static void Symbol(string custom = "expected", int position = 0)
+    {
+        string errorMessage = "string literal";
+        string errorType = "expected";
+        Token token = Current();
+        if (!custom.Equals("expected"))
+        {
+            errorMessage = custom;
+            errorType = "general";
+        }
+
+        if (position != 0)
+            token = Lookahead(position);
+
+        Token current = Current();
+        if (current.type != TokenType.Symbol)
+        {
+            ErrorHandler.Parser.Report(FileName, token, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, token);
+            Continue();
+            return;
+        }
+        Analyzed.Add(current);
+        Continue();
+        return;
+    }
+
 }

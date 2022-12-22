@@ -120,11 +120,7 @@ public static class OtterkitCompiler
             List<Token> tokens = Lexer.Tokenize(preprocessedLines);
             List<Token> classified = Token.fromValue(tokens);
             List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
-            foreach (var item in analized)
-            {
-                Console.WriteLine($"  {item.line}  {item.column}  {item.value}");
-            }
-            // Codegen.Generate(analized, entryPoint);
+            Codegen.Generate(analized, Options.EntryPoint);
         }
     }
 
@@ -157,10 +153,9 @@ public static class OtterkitCompiler
             """;
 
             Directory.CreateDirectory(".otterkit");
-            Directory.SetCurrentDirectory(".otterkit");
 
-            File.WriteAllText("OtterkitConfig.json", OtterkitConfig);
-            arguments = $"new {type} -n {Options.Name} --force";
+            File.WriteAllText(".otterkit/OtterkitConfig.json", OtterkitConfig);
+            arguments = $"new {type} -n OtterkitExport -o .otterkit --force";
         }
 
         using (Process dotnet = new Process())
@@ -175,8 +170,6 @@ public static class OtterkitCompiler
 
             dotnet.WaitForExit();
         }
-
-        Directory.SetCurrentDirectory("..");
     }
 
     private static List<string> ReadSourceFile()

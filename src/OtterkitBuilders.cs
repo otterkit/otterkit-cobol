@@ -4,7 +4,7 @@ public class ProgramBuilder
 {
     static readonly string Tab = "    ";
     private string Compiled { get; set; }
-    private string Identification { get; set; }
+    public string Identification { get; set; }
     private string WorkingStorage { get; set; }
     private string LocalStorage { get; set; }
     private string Statements { get; set; }
@@ -522,7 +522,6 @@ public class StatementBuilder
             Continue(1);
         }
 
-        Continue(1);
         if (Current().value.Equals("UPON"))
         {
             Continue(1);
@@ -531,12 +530,14 @@ public class StatementBuilder
 
             if (Current().value.Equals("STANDARD-ERROR"))
                 CompiledStatement += $"\"{Current().value}\", ";
+
+            Continue(1);
+        }
+        else if (!Current().value.Equals("UPON"))
+        {
+            CompiledStatement += $"\" \", ";
         }
 
-        if (!Current().value.Equals("UPON"))
-            CompiledStatement += $"\" \", ";
-
-        Continue(1);
         if (Current().value.Equals("WITH") || Current().value.Equals("NO"))
             CompiledStatement += "false, ";
 

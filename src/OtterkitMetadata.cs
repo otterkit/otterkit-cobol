@@ -31,7 +31,7 @@ public static class DataItemInformation
         bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
 
         if (!AlreadyExists)
-            throw new ArgumentException("FAILED TO GET DATA ITEM HASH: THIS SHOULD NOT HAVE HAPPENED, PLEASE REPORT THIS ISSUE ON OTTERKIT'S REPO");
+            throw new ArgumentException($"FAILED TO GET DATA ITEM HASH FOR {DataItemHash}: THIS SHOULD NOT HAVE HAPPENED, PLEASE REPORT THIS ISSUE ON OTTERKIT'S REPO");
         
         return DataItem;
     }

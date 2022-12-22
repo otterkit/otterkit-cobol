@@ -2,6 +2,7 @@ namespace Otterkit;
 
 public static class Codegen
 {
+    public static string ProgramEntryPoint = string.Empty;
     public static void Generate(List<Token> tokens, string fileName)
     {
         ProgramBuilder compiled = new();
@@ -10,6 +11,15 @@ public static class Codegen
         while (!CurrentEquals("DATA"))
         {
             if (CurrentEquals("PROGRAM-ID"))
+            {
+                compiled.DefineIdentification(Lookahead(2).value);
+                if (ProgramEntryPoint == string.Empty)
+                {
+                    ProgramEntryPoint = compiled.Identification;
+                }
+            }
+
+            if (CurrentEquals("FUNCTION-ID"))
                 compiled.DefineIdentification(Lookahead(2).value);
 
             Continue();
@@ -49,7 +59,7 @@ public static class Codegen
 
             if(!CurrentEquals("EOF"))
             {
-                if (CurrentEquals("END") && LookaheadEquals(1, "PROGRAM") && !LookaheadEquals(4, "EOF"))
+                if (CurrentEquals("END") && (LookaheadEquals(1, "PROGRAM") || LookaheadEquals(1, "FUNCTION")) && !LookaheadEquals(4, "EOF"))
                 {
                     Continue(2);
                     List<Token> NextProgram = tokens.GetRange(index, tokens.Count - index - 1);
@@ -67,7 +77,16 @@ public static class Codegen
         compiled.CompileProcedure();
 
         Directory.CreateDirectory(".otterkit");
-        File.WriteAllText($".otterkit/{compiled.UnformattedID}.cs", compiled.ExportCompiled());
+        File.WriteAllText($".otterkit/OtterkitExport/{compiled.UnformattedID}.cs", compiled.ExportCompiled());
+        string startupCode = $"""
+        using OtterkitLibrary;
+        using OtterkitExport;
+
+        {ProgramEntryPoint} startup = new();
+        startup.Procedure();
+        """;
+
+        File.WriteAllText(".otterkit/OtterkitExport/Startup.cs" ,startupCode);
 
         // Generator helper methods.
         Token Lookahead(int amount)

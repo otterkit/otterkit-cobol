@@ -145,18 +145,6 @@ public static class OtterkitCompiler
                 }
             }
 
-            if (Options.BuildMode.Equals("Build&Run"))
-            {
-                List<string> sourceLines = ReadSourceFile();
-                List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
-                List<Token> tokens = Lexer.Tokenize(preprocessedLines);
-                List<Token> classified = Token.fromValue(tokens);
-                List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
-                Codegen.Generate(analized, Options.EntryPoint);
-
-                CallDotnetCompiler("run");
-            }
-
             if (Options.BuildMode.Equals("BuildOnly"))
             {
                 List<string> sourceLines = ReadSourceFile();
@@ -168,6 +156,19 @@ public static class OtterkitCompiler
 
                 Directory.CreateDirectory(".otterkit/Build");
                 CallDotnetCompiler("build");
+            }
+            
+            if (Options.BuildMode.Equals("Build&Run"))
+            {
+                List<string> sourceLines = ReadSourceFile();
+                List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
+                List<Token> tokens = Lexer.Tokenize(preprocessedLines);
+                List<Token> classified = Token.fromValue(tokens);
+                List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
+                Codegen.Generate(analized, Options.EntryPoint);
+
+                Directory.CreateDirectory(".otterkit/Build");
+                CallDotnetCompiler("run");
             }
         }
     }

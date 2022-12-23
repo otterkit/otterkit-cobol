@@ -8,6 +8,7 @@ public struct Options
 {
     public string Name;
     public string Type;
+    public string BuildMode;
     public string EntryPoint;
     public string SourceFormat;
     public int ColumnLength;
@@ -79,6 +80,7 @@ public static class OtterkitCompiler
 
         if (args[0].Equals("build"))
         {
+            Options.BuildMode = "BuildOnly";
             Options.EntryPoint = "main.cob";
             Options.SourceFormat = "fixed";
             Options.ColumnLength = 80;
@@ -104,6 +106,17 @@ public static class OtterkitCompiler
                     case "--Columns":
                         Options.ColumnLength = int.Parse(args[index]);
                         break;
+
+                    case "-p":
+                    case "--Parse":
+                        Options.BuildMode = "ParseOnly";
+                        break;
+
+                    case "-r":
+                    case "--Run":
+                        Options.BuildMode = "Build&Run";
+                        break;
+
                     // --Fixed meaning Fixed Format
                     case "--Fixed":
                         Options.SourceFormat = "fixed";
@@ -115,18 +128,53 @@ public static class OtterkitCompiler
                 }
             }
 
-            List<string> sourceLines = ReadSourceFile();
-            List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
-            List<Token> tokens = Lexer.Tokenize(preprocessedLines);
-            List<Token> classified = Token.fromValue(tokens);
-            List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
-            Codegen.Generate(analized, Options.EntryPoint);
+            if (Options.BuildMode.Equals("ParseOnly"))
+            {
+                List<string> sourceLines = ReadSourceFile();
+                List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
+                List<Token> tokens = Lexer.Tokenize(preprocessedLines);
+                List<Token> classified = Token.fromValue(tokens);
+                List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
+
+                string format = $$"""
+                {0,-5} {1,-3} {2,-35} {3,-16} {4,-10}
+                """;
+                foreach (Token token in analized)
+                {
+                    Console.WriteLine(format, token.line, token.column, token.value, token.type, token.context);
+                }
+            }
+
+            if (Options.BuildMode.Equals("Build&Run"))
+            {
+                List<string> sourceLines = ReadSourceFile();
+                List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
+                List<Token> tokens = Lexer.Tokenize(preprocessedLines);
+                List<Token> classified = Token.fromValue(tokens);
+                List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
+                Codegen.Generate(analized, Options.EntryPoint);
+
+                CallDotnetCompiler("run");
+            }
+
+            if (Options.BuildMode.Equals("BuildOnly"))
+            {
+                List<string> sourceLines = ReadSourceFile();
+                List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
+                List<Token> tokens = Lexer.Tokenize(preprocessedLines);
+                List<Token> classified = Token.fromValue(tokens);
+                List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
+                Codegen.Generate(analized, Options.EntryPoint);
+
+                Directory.CreateDirectory(".otterkit/Build");
+                CallDotnetCompiler("build");
+            }
         }
     }
 
-    private static void CallDotnetCompiler(string operation)
+    private static void CallDotnetCompiler(string operation, bool output = true)
     {
-        string arguments = "";
+        string arguments = string.Empty;
         if (operation.Equals("new"))
         {
             string type = Options.Type switch
@@ -158,6 +206,45 @@ public static class OtterkitCompiler
             arguments = $"new {type} -n OtterkitExport -o .otterkit --force";
         }
 
+        if (operation.Equals("run"))
+        {
+            CallDotnetCompiler("build", false);
+
+            using (Process otterkitExport = new Process())
+            {
+                otterkitExport.StartInfo.FileName = ".otterkit/Build/OtterkitExport";
+                otterkitExport.StartInfo.UseShellExecute = true;
+                otterkitExport.Start();
+
+                otterkitExport.WaitForExit();
+            }
+
+            return;
+        }
+
+        if (operation.Equals("build"))
+        {
+            string runtimeIdentifier = string.Empty;
+            if (OperatingSystem.IsLinux())
+            {
+                runtimeIdentifier = "linux-x64";
+            }
+
+            if (OperatingSystem.IsMacOS())
+            {
+                runtimeIdentifier = "osx-x64";
+            }
+
+            if (OperatingSystem.IsWindows())
+            {
+                runtimeIdentifier = "win-x64";
+            }
+
+            arguments = $"""
+            publish .otterkit/OtterkitExport/OtterkitExport.csproj -r {runtimeIdentifier} -c Release -o .otterkit/Build
+            """;
+        }
+
         using (Process dotnet = new Process())
         {
             dotnet.StartInfo.FileName = "dotnet";
@@ -166,9 +253,17 @@ public static class OtterkitCompiler
             dotnet.StartInfo.RedirectStandardOutput = true;
             dotnet.Start();
 
-            Console.Write(dotnet.StandardOutput.ReadToEnd());
+            if (output)
+            {
+                Console.Write(dotnet.StandardOutput.ReadToEnd());
+            }
 
             dotnet.WaitForExit();
+        }
+
+        if (Directory.Exists(".otterkit/Build/OtterkitMath"))
+        {
+            Directory.Delete(".otterkit/Build/OtterkitMath", true);
         }
     }
 

@@ -7,14 +7,17 @@
     <Nullable>enable</Nullable>
     <Optimize>true</Optimize>
     <Deterministic>true</Deterministic>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="OtterkitLibrary">
       <HintPath>OtterkitLibrary.dll</HintPath>
     </Reference>
-    <Content Include="OtterkitMath/Decimal128.*">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="OtterkitMath/**">
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
 

@@ -7,11 +7,13 @@
     <Nullable>enable</Nullable>
     <Optimize>true</Optimize>
     <Deterministic>true</Deterministic>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../libotterkit/src/OtterkitLibrary.csproj" />
     <EmbeddedResource Include="parsinginfo.json" />
-    <Content Include="../OtterkitTemplates/*">
+    <Content Include="../OtterkitTemplates/**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -15,7 +15,7 @@
   <PropertyGroup>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.0.0-alpha</Version>
+    <Version>1.0.1-alpha</Version>
     <Copyright>Copyright (c) Otterkit 2022</Copyright>
     <Authors>Otterkit Authors</Authors>
     <Company>Otterkit Project</Company>

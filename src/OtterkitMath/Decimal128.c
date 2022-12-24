@@ -15,7 +15,7 @@
 
 // macOS & Linux Build commands
 // Linux with GCC:
-// gcc -I. -shared -Wl,-rpath libmpdec.so.3 -O2 -o Decimal128.so Decimal128.c libmpdec.a -lm
+// gcc -I. -shared -Wl,-rpath libmpdec.so.3 -O2 -fPIC -o Decimal128.so Decimal128.c libmpdec.a -lm
 //
 // macOS with GCC:
 // gcc -dynamiclib -Wall -W -O2 -o Decimal128.dylib Decimal128.c libmpdec.a -lm

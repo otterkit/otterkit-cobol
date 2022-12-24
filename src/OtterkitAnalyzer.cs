@@ -47,7 +47,7 @@ public static class Analyzer
 
     /// <summary>
     /// List of Tokens <c>Analyzed</c>: This list will contain the parsed Tokens after the parser is finished with the TokenList.
-    /// <para>This parser does not generate an AST, instead it returns this list only if the COBOL source code was written correctly.
+    /// <para>This parser does not generate an AST, instead it returns this list only if the COBOL source code was written correctly and passed all parsing checks.
     /// Generating a full AST and the code needed to handle it would add extra complexity to the compiler, the AST is also not needed for the codegen to work</para>
     /// </summary>
     private static List<Token> Analyzed = new();

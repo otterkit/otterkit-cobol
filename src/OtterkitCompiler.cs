@@ -59,11 +59,9 @@ public static class OtterkitCompiler
                 switch (argument)
                 {
                     case "app":
-                    case "application":
                         Options.Type = "app";
                         break;
 
-                    case "mod":
                     case "module":
                         Options.Type = "mod";
                         break;
@@ -92,37 +90,37 @@ public static class OtterkitCompiler
                 switch (argument)
                 {
                     case "-h":
-                    case "--Help":
+                    case "--help":
                         DisplayHelpMessage();
                         Environment.Exit(0);
                         break;
 
                     case "-e":
-                    case "--Entry":
+                    case "--entry":
                         Options.EntryPoint = args[index];
                         break;
 
                     case "-cl":
-                    case "--Columns":
+                    case "--columns":
                         Options.ColumnLength = int.Parse(args[index]);
                         break;
 
                     case "-p":
-                    case "--Parse":
+                    case "--parse":
                         Options.BuildMode = "ParseOnly";
                         break;
 
                     case "-r":
-                    case "--Run":
+                    case "--run":
                         Options.BuildMode = "Build&Run";
                         break;
 
                     // --Fixed meaning Fixed Format
-                    case "--Fixed":
+                    case "--fixed":
                         Options.SourceFormat = "fixed";
                         break;
                     // --Free meaning Free Format
-                    case "--Free":
+                    case "--free":
                         Options.SourceFormat = "free";
                         break;
                 }
@@ -297,25 +295,27 @@ public static class OtterkitCompiler
         Licensed under Apache 2.0
 
         Command line options:
-            -h --Help           : Displays this help message
+            -h --help           : Displays this help message
 
         New command usage:
             otterkit new <options>
 
         New command options:
-            app application     : Create a new executable COBOL application
-            mod module          : Create a new COBOL module library
-            -n --Name           : Specify the name for the project 
+            app                 : Create a new executable COBOL application
+            module              : Create a new COBOL module library
+            -n --name           : Specify the name for the project 
                                     (default is OtterkitExport)
 
         Build command usage:
             otterkit build <options>
 
         Build command options:
-            -e --Entry          : Specify the entry point for the project
-            -cl --Columns       : Specify the max column length (default is 80)
-            --Fixed             : Use fixed source format
-            --Free              : Use free source format 
+            -e --entry          : Specify the entry point for the project
+            -cl --columns       : Specify the max column length (default is 80)
+            -p --parse          : Use the "Parse Only" build mode
+            -r --run            : Use the "Build & Run" build mode
+            --fixed             : Use fixed source format
+            --free              : Use free source format 
                                     (-cl has no effect on free format)
 
         """;

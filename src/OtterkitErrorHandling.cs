@@ -70,7 +70,7 @@ public static class ErrorHandler
         {
             Console.Error.Write("Otterkit parsing error: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Error.WriteLine("In {0} at line {1}, column {2}", fileName, token.line, token.column);
+            Console.Error.WriteLine("{0}:{1}:{2}", fileName, token.line, token.column);
 
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Unexpected token: ");
@@ -82,7 +82,7 @@ public static class ErrorHandler
         {
             Console.Error.Write("Otterkit parsing error: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Error.WriteLine("In {0} at line {1}, column {2}", fileName, token.line, token.column);
+            Console.Error.WriteLine("{0}:{1}:{2}", fileName, token.line, token.column);
 
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Unexpected token: ");
@@ -95,7 +95,7 @@ public static class ErrorHandler
 
             Console.Error.Write("Otterkit parsing error: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Error.WriteLine("In {0} at line {1}, column {2}", fileName, token.line, token.column);
+            Console.Error.WriteLine("{0}:{1}:{2}", fileName, token.line, token.column);
 
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Unexpected token: ");

@@ -732,7 +732,7 @@ public static class Analyzer
             if (isNested)
                 return;
 
-            Expected(".", "expected", 0);
+            Expected(".");
         }
 
 
@@ -1550,6 +1550,7 @@ public static class Analyzer
 
                 ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
+                Continue();
             }
 
             while (Current().type == TokenType.Identifier || Current().type == TokenType.String)
@@ -2284,12 +2285,12 @@ public static class Analyzer
     /// <para>If the current token matches the value, it adds the token to the parsed list,
     /// if the current token doesn't match the value it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void Expected(string expected, string custom = "", int position = 0, string scope = "")
+    private static void Expected(string expected, string custom = "default", int position = 0, string scope = "")
     {
         string errorMessage = expected;
         string errorType = "expected";
         Token token = Current();
-        if (!custom.Equals(""))
+        if (!custom.Equals("default"))
         {
             errorMessage = custom;
             errorType = "general";

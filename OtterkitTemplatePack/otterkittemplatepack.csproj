@@ -1,17 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <Optimize>true</Optimize>
-    <Deterministic>true</Deterministic>
+    <PackageType>Template</PackageType>
+    <PackageId>Otterkit.Templates</PackageId>
+    <Title>Otterkit COBOL Templates</Title>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <NoWarn>$(NoWarn);NU5128;NU5100</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackAsTool>true</PackAsTool>
-    <ToolCommandName>otterkit</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Version>1.0.0-alpha</Version>
@@ -20,18 +21,18 @@
     <Company>Otterkit Project</Company>
     <PackageIcon>OtterkitIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>Otterkit;COBOL;Compiler;Transpiler</PackageTags>
+    <PackageTags>Otterkit;COBOL;Project;Templates</PackageTags>
     <PackageProjectUrl>https://github.com/otterkit</PackageProjectUrl>
     <RepositoryUrl>https://github.com/otterkit/otterkit</RepositoryUrl> 
     <RepositoryType>git</RepositoryType>
     <Description>
-      Main package for the Otterkit COBOL compiler. This package installs the compiler as a dotnet global tool.
+      Part of the Otterkit COBOL compiler. This package installs the templates needed to generate new Otterkit COBOL projects.
     </Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../libotterkit/src/OtterkitLibrary.csproj" />
-    <EmbeddedResource Include="parsinginfo.json" />
+    <Content Include="templates\**\*" Exclude="templates\**\bin\**;templates\**\obj\**" />
+    <Compile Remove="**\*" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,7 +5,7 @@
 
 # Otterkit compiler files
 .otterkit/
-OtterkitConfig.json
+nupkg/
 
 # COBOL source files
 *.cob

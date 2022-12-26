@@ -123,7 +123,7 @@ public readonly ref struct DecimalHolder
         throw new System.NotImplementedException();
     }
 
-    public string Display() => System.Text.Encoding.UTF8.GetString(Bytes);
+    public string Display => System.Text.Encoding.UTF8.GetString(Bytes);
 }
 
 /// <summary>
@@ -144,7 +144,7 @@ public static class DecimalMath
 
         fixed (byte* Pointer = withNullTerminator)
         {
-            result = OtterkitArithmetic(Pointer);
+            result = NativeDecimal128.Arithmetic(Pointer);
         }
 
         int length = 0;
@@ -250,7 +250,7 @@ public static class DecimalMath
 
         fixed (byte* Pointer = withNullTerminator)
         {
-            result = Decimal128Exp(Pointer);
+            result = NativeDecimal128.Exp(Pointer);
         }
 
         int length = 0;
@@ -276,7 +276,7 @@ public static class DecimalMath
 
         fixed (byte* Pointer = withNullTerminator)
         {
-            result = Decimal128Sqrt(Pointer);
+            result = NativeDecimal128.Sqrt(Pointer);
         }
 
         int length = 0;
@@ -302,7 +302,7 @@ public static class DecimalMath
 
         fixed (byte* Pointer = withNullTerminator)
         {
-            result = Decimal128Ln(Pointer);
+            result = NativeDecimal128.Ln(Pointer);
         }
 
         int length = 0;
@@ -328,7 +328,7 @@ public static class DecimalMath
 
         fixed (byte* Pointer = withNullTerminator)
         {
-            result = Decimal128Log10(Pointer);
+            result = NativeDecimal128.Log10(Pointer);
         }
 
         int length = 0;
@@ -354,7 +354,7 @@ public static class DecimalMath
 
         fixed (byte* Pointer = withNullTerminator)
         {
-            result = Decimal128Abs(Pointer);
+            result = NativeDecimal128.Abs(Pointer);
         }
 
         int length = 0;
@@ -380,7 +380,7 @@ public static class DecimalMath
 
         fixed (byte* Pointer = withNullTerminator)
         {
-            result = Decimal128Plus(Pointer);
+            result = NativeDecimal128.Plus(Pointer);
         }
 
         int length = 0;
@@ -406,7 +406,7 @@ public static class DecimalMath
 
         fixed (byte* Pointer = withNullTerminator)
         {
-            result = Decimal128Minus(Pointer);
+            result = NativeDecimal128.Minus(Pointer);
         }
 
         int length = 0;
@@ -436,7 +436,7 @@ public static class DecimalMath
 
         fixed (byte* LeftPointer = leftWithNullTerminator, RightPointer = rightWithNullTerminator)
         {
-            result = Decimal128Rem(LeftPointer, RightPointer);
+            result = NativeDecimal128.Rem(LeftPointer, RightPointer);
         }
 
         int length = 0;
@@ -466,7 +466,7 @@ public static class DecimalMath
 
         fixed (byte* LeftPointer = leftWithNullTerminator, RightPointer = rightWithNullTerminator)
         {
-            result = Decimal128Compare(LeftPointer, RightPointer);
+            result = NativeDecimal128.Compare(LeftPointer, RightPointer);
         }
 
         int length = 0;
@@ -487,7 +487,7 @@ public static class DecimalMath
         Span<byte> rightWithNullTerminator = stackalloc byte[right.Bytes.Length + 1];
 
         left.Bytes.CopyTo(leftWithNullTerminator);
-        rightWithNullTerminator[left.Bytes.Length] = 0;
+        leftWithNullTerminator[left.Bytes.Length] = 0;
 
         right.Bytes.CopyTo(rightWithNullTerminator);
         rightWithNullTerminator[right.Bytes.Length] = 0;
@@ -496,7 +496,7 @@ public static class DecimalMath
 
         fixed (byte* LeftPointer = leftWithNullTerminator, RightPointer = rightWithNullTerminator)
         {
-            result = Decimal128Min(LeftPointer, RightPointer);
+            result = NativeDecimal128.Min(LeftPointer, RightPointer);
         }
 
         int length = 0;
@@ -517,7 +517,7 @@ public static class DecimalMath
         Span<byte> rightWithNullTerminator = stackalloc byte[right.Bytes.Length + 1];
 
         left.Bytes.CopyTo(leftWithNullTerminator);
-        rightWithNullTerminator[left.Bytes.Length] = 0;
+        leftWithNullTerminator[left.Bytes.Length] = 0;
 
         right.Bytes.CopyTo(rightWithNullTerminator);
         rightWithNullTerminator[right.Bytes.Length] = 0;
@@ -526,7 +526,7 @@ public static class DecimalMath
 
         fixed (byte* LeftPointer = leftWithNullTerminator, RightPointer = rightWithNullTerminator)
         {
-            result = Decimal128Max(LeftPointer, RightPointer);
+            result = NativeDecimal128.Max(LeftPointer, RightPointer);
         }
 
         int length = 0;
@@ -547,7 +547,7 @@ public static class DecimalMath
         Span<byte> rightWithNullTerminator = stackalloc byte[right.Bytes.Length + 1];
 
         left.Bytes.CopyTo(leftWithNullTerminator);
-        rightWithNullTerminator[left.Bytes.Length] = 0;
+        leftWithNullTerminator[left.Bytes.Length] = 0;
 
         right.Bytes.CopyTo(rightWithNullTerminator);
         rightWithNullTerminator[right.Bytes.Length] = 0;
@@ -556,7 +556,7 @@ public static class DecimalMath
 
         fixed (byte* LeftPointer = leftWithNullTerminator, RightPointer = rightWithNullTerminator)
         {
-            result = Decimal128Shift(LeftPointer, RightPointer);
+            result = NativeDecimal128.Shift(LeftPointer, RightPointer);
         }
 
         int length = 0;
@@ -577,7 +577,7 @@ public static class DecimalMath
         Span<byte> rightWithNullTerminator = stackalloc byte[right.Bytes.Length + 1];
 
         left.Bytes.CopyTo(leftWithNullTerminator);
-        rightWithNullTerminator[left.Bytes.Length] = 0;
+        leftWithNullTerminator[left.Bytes.Length] = 0;
 
         right.Bytes.CopyTo(rightWithNullTerminator);
         rightWithNullTerminator[right.Bytes.Length] = 0;
@@ -586,7 +586,7 @@ public static class DecimalMath
 
         fixed (byte* LeftPointer = leftWithNullTerminator, RightPointer = rightWithNullTerminator)
         {
-            result = Decimal128And(LeftPointer, RightPointer);
+            result = NativeDecimal128.And(LeftPointer, RightPointer);
         }
 
         int length = 0;
@@ -607,7 +607,7 @@ public static class DecimalMath
         Span<byte> rightWithNullTerminator = stackalloc byte[right.Bytes.Length + 1];
 
         left.Bytes.CopyTo(leftWithNullTerminator);
-        rightWithNullTerminator[left.Bytes.Length] = 0;
+        leftWithNullTerminator[left.Bytes.Length] = 0;
 
         right.Bytes.CopyTo(rightWithNullTerminator);
         rightWithNullTerminator[right.Bytes.Length] = 0;
@@ -616,7 +616,7 @@ public static class DecimalMath
 
         fixed (byte* LeftPointer = leftWithNullTerminator, RightPointer = rightWithNullTerminator)
         {
-            result = Decimal128Or(LeftPointer, RightPointer);
+            result = NativeDecimal128.Or(LeftPointer, RightPointer);
         }
 
         int length = 0;
@@ -637,7 +637,7 @@ public static class DecimalMath
         Span<byte> rightWithNullTerminator = stackalloc byte[right.Bytes.Length + 1];
 
         left.Bytes.CopyTo(leftWithNullTerminator);
-        rightWithNullTerminator[left.Bytes.Length] = 0;
+        leftWithNullTerminator[left.Bytes.Length] = 0;
 
         right.Bytes.CopyTo(rightWithNullTerminator);
         rightWithNullTerminator[right.Bytes.Length] = 0;
@@ -646,7 +646,7 @@ public static class DecimalMath
 
         fixed (byte* LeftPointer = leftWithNullTerminator, RightPointer = rightWithNullTerminator)
         {
-            result = Decimal128Xor(LeftPointer, RightPointer);
+            result = NativeDecimal128.Xor(LeftPointer, RightPointer);
         }
 
         int length = 0;
@@ -661,52 +661,56 @@ public static class DecimalMath
         return new ReadOnlySpan<byte>(result, length - 1);
     }
 
+}
+
+public partial class NativeDecimal128
+{
     // Import native C code from libmpdec
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* OtterkitArithmetic(byte* expression);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "OtterkitArithmetic")]
+    public static unsafe partial byte* Arithmetic(byte* expression);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Exp(byte* exponent);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Exp")]
+    public static unsafe partial byte* Exp(byte* exponent);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Sqrt(byte* radicand);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Sqrt")]
+    public static unsafe partial byte* Sqrt(byte* radicand);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Ln(byte* argument);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Ln")]
+    public static unsafe partial byte* Ln(byte* argument);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Log10(byte* argument);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Log10")]
+    public static unsafe partial byte* Log10(byte* argument);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Abs(byte* number);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Abs")]
+    public static unsafe partial byte* Abs(byte* number);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Plus(byte* number);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Plus")]
+    public static unsafe partial byte* Plus(byte* number);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Minus(byte* number);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Minus")]
+    public static unsafe partial byte* Minus(byte* number);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Rem(byte* left, byte* right);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Rem")]
+    public static unsafe partial byte* Rem(byte* left, byte* right);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Compare(byte* left, byte* right);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Compare")]
+    public static unsafe partial byte* Compare(byte* left, byte* right);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Min(byte* left, byte* right);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Min")]
+    public static unsafe partial byte* Min(byte* left, byte* right);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Max(byte* left, byte* right);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Max")]
+    public static unsafe partial byte* Max(byte* left, byte* right);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Shift(byte* left, byte* right);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Shift")]
+    public static unsafe partial byte* Shift(byte* left, byte* right);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128And(byte* left, byte* right);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128And")]
+    public static unsafe partial byte* And(byte* left, byte* right);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Or(byte* left, byte* right);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Or")]
+    public static unsafe partial byte* Or(byte* left, byte* right);
 
-    [DllImport("OtterkitMath/Decimal128")]
-    static extern unsafe byte* Decimal128Xor(byte* left, byte* right);
+    [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Xor")]
+    public static unsafe partial byte* Xor(byte* left, byte* right);
 }

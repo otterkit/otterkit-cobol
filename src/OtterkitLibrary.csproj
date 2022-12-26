@@ -9,7 +9,7 @@
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="OtterkitMath/Decimal128.*">
+    <Content Include="OtterkitMath/**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Remove="OtterkitMath/Decimal128.c"></Content>

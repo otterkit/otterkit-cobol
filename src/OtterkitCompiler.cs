@@ -303,8 +303,6 @@ public static class OtterkitCompiler
         New command options:
             app                 : Create a new executable COBOL application
             module              : Create a new COBOL module library
-            -n --name           : Specify the name for the project 
-                                    (default is OtterkitExport)
 
         Build command usage:
             otterkit build <options>

@@ -70,8 +70,7 @@ public static class Analyzer
 
         // If a parsing error has occured, terminate the compilation process.
         // We do not want the compiler to continue when the source code is not valid.
-        if (ErrorHandler.Error)
-            ErrorHandler.Terminate("parsing");
+        if (ErrorHandler.Error) ErrorHandler.Terminate("parsing");
 
         // Return parsed list of tokens.
         return Analyzed;
@@ -105,7 +104,7 @@ public static class Analyzer
         // It is also responsible for showing appropriate error messages when an error occurs in the IDENTIFICATION DIVISION.
         void IDENTIFICATION()
         {
-            string headerPeriodError = """
+            const string headerPeriodError = """
             Missing separator period at the end of this IDENTIFICATION DIVISION header, every division header must end with a separator period
             """;
 
@@ -118,7 +117,7 @@ public static class Analyzer
 
             if (!CurrentEquals("PROGRAM-ID") && !CurrentEquals("FUNCTION-ID"))
             {
-                string missingIdentificationError = """
+                const string missingIdentificationError = """
                 Missing source unit ID name (PROGRAM-ID, FUNCTION-ID, CLASS-ID...), the identification division header is optional but every source unit must still have an ID.
                 """;
 
@@ -163,7 +162,7 @@ public static class Analyzer
         // It is also responsible for showing appropriate error messages when an error occurs in the ENVIRONMENT DIVISION.
         void ENVIRONMENT()
         {
-            string headerPeriodError = """
+            const string headerPeriodError = """
             Missing separator period at the end of this ENVIRONMENT DIVISION header, every division header must end with a separator period
             """;
 
@@ -178,7 +177,7 @@ public static class Analyzer
         // It is also responsible for showing appropriate error messages when an error occurs in the DATA DIVISION.
         void DATA()
         {
-            string headerPeriodError = """
+            const string headerPeriodError = """
             Missing separator period at the end of this DATA DIVISION header, every division header must end with a separator period
             """;
 
@@ -223,7 +222,7 @@ public static class Analyzer
             Expected("LOCAL-STORAGE");
             Expected("SECTION");
             Expected(".");
-            while (Current().type == TokenType.Numeric)
+            while (Current().type is TokenType.Numeric)
                 Entries();
         }
 
@@ -233,7 +232,7 @@ public static class Analyzer
             Expected("LINKAGE");
             Expected("SECTION");
             Expected(".");
-            while (Current().type == TokenType.Numeric)
+            while (Current().type is TokenType.Numeric)
                 Entries();
         }
 
@@ -292,7 +291,7 @@ public static class Analyzer
 
             DataItemInformation.AddSection(DataItemHash, CurrentSection);
 
-            if (Current().context != TokenContext.IsClause && !CurrentEquals("."))
+            if (Current().context is not TokenContext.IsClause && !CurrentEquals("."))
             {
                 string notAClauseError = $"""
                 Expected data division clauses or a separator period after this data item's identifier.
@@ -304,11 +303,11 @@ public static class Analyzer
                 Continue();
             }
 
-            while (Current().context == TokenContext.IsClause)
+            while (Current().context is TokenContext.IsClause)
             {
                 if (CurrentEquals("IS") && !(LookaheadEquals(1, "EXTERNAL") || LookaheadEquals(1, "GLOBAL") || LookaheadEquals(1, "TYPEDEF")))
                 {
-                    string Externalerror = """
+                    const string Externalerror = """
                     Missing clause or possible clause mismatch, in this context the "IS" word must be followed by the EXTERNAL, GLOBAL or TYPEDEF clauses only (IS TYPEDEF), or must be in the middle of the PICTURE clause (PIC IS ...) 
                     """;
 
@@ -322,7 +321,7 @@ public static class Analyzer
                     Expected("EXTERNAL");
                     if (CurrentEquals("AS"))
                     {
-                        string externalizedNameError = """
+                        const string externalizedNameError = """
                         Missing externalized name, the "AS" word on the EXTERNAL clause must be followed by an alphanumeric or national literal
                         """;
                         Expected("AS");
@@ -351,7 +350,7 @@ public static class Analyzer
 
                     if (dataType == "Error")
                     {
-                        string dataTypeError = """
+                        const string dataTypeError = """
                         Unrecognized type, PICTURE type must be S9, 9, X, A, N or 1. These are Signed Numeric, Unsigned Numeric, Alphanumeric, Alphabetic, National and Boolean respectively
                         """;
 
@@ -390,9 +389,9 @@ public static class Analyzer
                 {
                     Expected("VALUE");
 
-                    if (!Current().type.Equals(TokenType.String) && !Current().type.Equals(TokenType.Numeric))
+                    if (Current().type is not TokenType.String and not TokenType.Numeric)
                     {
-                        string valueError = """
+                        const string valueError = """
                         The only tokens allowed after a VALUE clause are type literals, like an Alphanumeric literal ("Hello, World!") or a Numeric literal (123.456).
                         """;
 
@@ -400,13 +399,13 @@ public static class Analyzer
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                     }
 
-                    if (Current().type.Equals(TokenType.String))
+                    if (Current().type is TokenType.String)
                     {
                         DataItemInformation.AddDefault(DataItemHash, Current().value);
                         String();
                     }
 
-                    if (Current().type.Equals(TokenType.Numeric))
+                    if (Current().type is TokenType.Numeric)
                     {
                         DataItemInformation.AddDefault(DataItemHash, Current().value);
                         Number();
@@ -418,7 +417,7 @@ public static class Analyzer
             if (!DataItemInformation.GetValue(DataItemHash).IsElementary)
                 DataItemInformation.IsGroup(DataItemHash, true);
 
-            string separatorPeriodError = """
+            const string separatorPeriodError = """
             Missing separator period at the end of this data item definition, each data item must end with a separator period
             """;
             Expected(".", separatorPeriodError, -1);
@@ -428,7 +427,7 @@ public static class Analyzer
         {
             if (!CurrentEquals("01") && !CurrentEquals("1"))
             {
-                string levelNumberError = """
+                const string levelNumberError = """
                 Invalid level number for this data item, CONSTANT data items must have a level number of 1 or 01
                 """;
 
@@ -436,17 +435,17 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
-            int LevelNumber = int.Parse(Current().value);
+            var LevelNumber = int.Parse(Current().value);
             Number();
 
-            string DataName = Current().value;
+            var DataName = Current().value;
             Identifier();
 
-            string DataItemHash = $"{SourceId}#{DataName}";
+            var DataItemHash = $"{SourceId}#{DataName}";
             if (!DataItemInformation.AddDataItem(DataItemHash, DataName, LevelNumber, Current()))
             {
-                DataItemInfo originalItem = DataItemInformation.GetValue(DataItemHash);
-                string duplicateDataItemError = $"""
+                var originalItem = DataItemInformation.GetValue(DataItemHash);
+                var duplicateDataItemError = $"""
                 A data item with this name already exists in this program, data items in a program must have a unique name.
                 The original {originalItem.Identifier} data item can be found at line {originalItem.Line}. 
                 """;
@@ -514,7 +513,7 @@ public static class Analyzer
         // It is also responsible for showing appropriate error messages when an error occurs in the PROCEDURE DIVISION.
         void PROCEDURE()
         {
-            string headerPeriodError = """
+            const string headerPeriodError = """
             Missing separator period at the end of this PROCEDURE DIVISION header, every division header must end with a separator period
             """;
 
@@ -540,7 +539,7 @@ public static class Analyzer
                 Missing END {SourceType} marker. If another source unit is present after the end of the current source unit, the current unit must contain an END marker.
                 """;
 
-                string missingEndFunctionMarkerError = $"""
+                const string missingEndFunctionMarkerError = $"""
                 Missing END FUNCTION marker. User-defined functions must always end with an END FUNCTION marker.
                 """;
 
@@ -553,7 +552,7 @@ public static class Analyzer
 
             if (SourceType.Equals("PROGRAM") && CurrentEquals("END") && LookaheadEquals(1, "PROGRAM"))
             {
-                string endProgramPeriodError = """
+                const string endProgramPeriodError = """
                 Missing separator period at the end of this END PROGRAM definition
                 """;
 
@@ -565,7 +564,7 @@ public static class Analyzer
 
             if (SourceType.Equals("FUNCTION"))
             {
-                string endFunctionPeriodError = """
+                const string endFunctionPeriodError = """
                 Missing separator period at the end of this END FUNCTION definition
                 """;
 
@@ -583,7 +582,7 @@ public static class Analyzer
         {
             if (Current().type != TokenType.Identifier)
             {
-                string missingDataItemError = $"""
+                const string missingDataItemError = $"""
                 Missing returning data item after this RETURNING definition.
                 """;
 
@@ -592,13 +591,13 @@ public static class Analyzer
                 return;
             }
 
-            string DataName = Current().value;
+            var DataName = Current().value;
             Identifier();
 
-            string DataItemHash = $"{SourceId}#{DataName}";
+            var DataItemHash = $"{SourceId}#{DataName}";
             if (!DataItemInformation.ValueExists(DataItemHash))
             {
-                string undefinedDataItemError = $"""
+                const string undefinedDataItemError = $"""
                 No data item found with this name in this source unit's data division. 
                 Please define a new returning data item in this unit's linkage section.
                 """;
@@ -1795,7 +1794,7 @@ public static class Analyzer
         // parentheses are balanced and if it can be evaluated correctly.
         void RetryPhrase()
         {
-            bool hasFor = false;
+            var hasFor = false;
 
             Expected("RETRY");
             if (CurrentEquals("FOREVER"))
@@ -1824,11 +1823,11 @@ public static class Analyzer
             {
                 if (invalidKeyExists)
                 {
-                    string onErrorExistsError = """
+                    const string onInvalidExistsError = """
                     INVALID KEY can only be specified once in this statement. 
                     The same applies to the NOT INVALID KEY.
                     """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", onErrorExistsError);
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", onInvalidExistsError);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -1844,11 +1843,11 @@ public static class Analyzer
             {
                 if (notInvalidKeyExists)
                 {
-                    string notOnErrorExistsError = """
+                    const string notOnInvalidExistsError = """
                     NOT INVALID KEY can only be specified once in this statement. 
                     The same applies to the INVALID KEY.
                     """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnErrorExistsError);
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnInvalidExistsError);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -1867,7 +1866,7 @@ public static class Analyzer
             {
                 if (onExceptionExists)
                 {
-                    string onExceptionExistsError = """
+                    const string onExceptionExistsError = """
                     ON EXCEPTION can only be specified once in this statement. 
                     The same applies to the NOT ON EXCEPTION.
                     """;
@@ -1887,7 +1886,7 @@ public static class Analyzer
             {
                 if (notOnExceptionExists)
                 {
-                    string notOnExceptionExistsError = """
+                    const string notOnExceptionExistsError = """
                     NOT ON EXCEPTION can only be specified once in this statement. 
                     The same applies to the ON EXCEPTION.
                     """;
@@ -1910,11 +1909,11 @@ public static class Analyzer
             {
                 if (raisingExists)
                 {
-                    string onExceptionExistsError = """
+                    const string raisingExistsError = """
                     RAISING can only be specified once in this statement. 
                     The same applies to the WITH NORMAL/ERROR STATUS.
                     """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", onExceptionExistsError);
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", raisingExistsError);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -1941,11 +1940,11 @@ public static class Analyzer
             {
                 if (statusExists)
                 {
-                    string notOnExceptionExistsError = """
+                    const string statusExistsError = """
                     WITH NORMAL/ERROR STATUS can only be specified once in this statement. 
                     The same applies to the RAISING.
                     """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnExceptionExistsError);
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", statusExistsError);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -1976,11 +1975,11 @@ public static class Analyzer
             {
                 if (atEndExists)
                 {
-                    string onExceptionExistsError = """
+                    const string atEndExistsError = """
                     AT END can only be specified once in this statement. 
                     The same applies to the NOT AT END.
                     """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", onExceptionExistsError);
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", atEndExistsError);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -1996,11 +1995,11 @@ public static class Analyzer
             {
                 if (notAtEndExists)
                 {
-                    string notOnExceptionExistsError = """
+                    const string notAtEndExistsError = """
                     NOT AT END can only be specified once in this statement. 
                     The same applies to the AT END.
                     """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnExceptionExistsError);
+                    ErrorHandler.Parser.Report(fileName, Current(), "general", notAtEndExistsError);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -2019,7 +2018,7 @@ public static class Analyzer
             {
                 if (onErrorExists)
                 {
-                    string onErrorExistsError = """
+                    const string onErrorExistsError = """
                     ON SIZE ERROR can only be specified once in this statement. 
                     The same applies to NOT ON SIZE ERROR.
                     """;
@@ -2040,7 +2039,7 @@ public static class Analyzer
             {
                 if (notOnErrorExists)
                 {
-                    string notOnErrorExistsError = """
+                    const string notOnErrorExistsError = """
                     NOT ON SIZE ERROR can only be specified once in this statement. 
                     The same applies to ON SIZE ERROR.
                     """;
@@ -2060,7 +2059,7 @@ public static class Analyzer
 
         void Arithmetic()
         {
-            bool isArithmeticSymbol(Token current) => current.value switch
+            bool IsArithmeticSymbol(Token current) => current.value switch
             {
                 "+" => true,
                 "-" => true,
@@ -2072,7 +2071,7 @@ public static class Analyzer
                 _ => false
             };
 
-            while (Current().type == TokenType.Identifier || Current().type == TokenType.Numeric || Current().type == TokenType.Symbol)
+            while (Current().type is TokenType.Identifier or TokenType.Numeric or TokenType.Symbol)
             {
                 if (Current().type == TokenType.Identifier)
                     Identifier();
@@ -2080,9 +2079,9 @@ public static class Analyzer
                 if (Current().type == TokenType.Numeric)
                     Number();
 
-                if (isArithmeticSymbol(Current()))
+                if (IsArithmeticSymbol(Current()))
                 {
-                    if (isArithmeticSymbol(Lookahead(-1)))
+                    if (IsArithmeticSymbol(Lookahead(-1)))
                     {
                         string invalidArithmeticSymbol = """
                         Invalid token after an arithmetic operator, expected a numeric literal or identifier instead of another arithmetic operator
@@ -2109,9 +2108,9 @@ public static class Analyzer
                 if (CurrentEquals("."))
                     return;
 
-                if (Current().type == TokenType.Symbol && !isArithmeticSymbol(Current()))
+                if (Current().type == TokenType.Symbol && !IsArithmeticSymbol(Current()))
                 {
-                    string invalidArithmeticSymbol = """
+                    const string invalidArithmeticSymbol = """
                     Invalid symbol in this arithmetic expression. Valid operators are: +, -, *, /, **, ( and )
                     """;
 
@@ -2123,13 +2122,13 @@ public static class Analyzer
 
         void Condition(string delimiter)
         {
-            Token current = Current();
-            List<Token> expression = new();
+            var current = Current();
+            var expression = new List<Token>();
             while (Current().context != TokenContext.IsStatement && !CurrentEquals(delimiter))
             {
                 if (CurrentEquals("NOT") && (LookaheadEquals(1, ">") || LookaheadEquals(1, "<")))
                 {
-                    Token combined = new($"{Current().value} {Lookahead(1).value}", TokenType.Symbol, Current().line, Current().column);
+                    var combined = new Token($"{Current().value} {Lookahead(1).value}", TokenType.Symbol, Current().line, Current().column);
                     expression.Add(combined);
                     Analyzed.Add(combined);
                     Continue();
@@ -2144,7 +2143,7 @@ public static class Analyzer
 
             if(!Helpers.IsBalanced(expression))
             {
-                string expressionNotBalancedError = """
+                const string expressionNotBalancedError = """
                 This expression is not balanced, one or more parenthesis to not have their matching opening or closing pair, it is an invalid expression
                 """;
 
@@ -2152,11 +2151,11 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(fileName, expression[0]);
             }
 
-            List<Token> ShuntingYard = Helpers.ShuntingYard(expression, Helpers.BooleanPrecedence);
+            var shuntingYard = Helpers.ShuntingYard(expression, Helpers.BooleanPrecedence);
             
-            if (!Helpers.EvaluatePostfix(ShuntingYard, Helpers.BooleanPrecedence, out Token error))
+            if (!Helpers.EvaluatePostfix(shuntingYard, Helpers.BooleanPrecedence, out Token error))
             {
-                string expressionNotValidError = """
+                const string expressionNotValidError = """
                 This expression cannot be correctly evaluated. Please make sure that all operators have their matching operands.
                 """;
 
@@ -2167,9 +2166,7 @@ public static class Analyzer
 
         bool NotIdentifierOrLiteral()
         {
-            return Current().type != TokenType.Identifier
-                && Current().type != TokenType.Numeric
-                && Current().type != TokenType.String;
+            return Current().type is not TokenType.Identifier and not TokenType.Numeric and not TokenType.String;
         }
 
     }
@@ -2192,12 +2189,7 @@ public static class Analyzer
             return TokenList[TokenList.Count - 1];
         }
 
-        if (Index + amount < 0)
-        {
-            return TokenList[0];
-        }
-
-        return TokenList[Index + amount];
+        return Index + amount < 0 ? TokenList[0] : TokenList[Index + amount];
     }
 
     /// <summary>
@@ -2238,7 +2230,6 @@ public static class Analyzer
     private static void Continue()
     {
         Index += 1;
-        return;
     }
 
     /// <summary>
@@ -2248,20 +2239,20 @@ public static class Analyzer
     /// </summary>
     private static void Choice(params string[] choices)
     {
-        Token current = Current();
+        Token token = Current();
         foreach (string choice in choices)
         {
-            if (current.value.Equals(choice))
+            if (token.value.Equals(choice))
             {
-                Analyzed.Add(current);
+                Analyzed.Add(token);
                 Continue();
                 return;
             }
         }
 
-        ErrorHandler.Parser.Report(FileName, Current(), "choice", choices);
-        ErrorHandler.Parser.PrettyError(FileName, Current());
-        Analyzed.Add(current);
+        ErrorHandler.Parser.Report(FileName, token, "choice", choices);
+        ErrorHandler.Parser.PrettyError(FileName, token);
+        Analyzed.Add(token);
         Continue();
     }
     
@@ -2272,11 +2263,11 @@ public static class Analyzer
     /// </summary>
     private static void Optional(string optional, string scope = "")
     {
-        Token current = Current();
-        if (!current.value.Equals(optional))
+        var token = Current();
+        if (!token.value.Equals(optional))
             return;
 
-        Analyzed.Add(current);
+        Analyzed.Add(token);
         Continue();
     }
 
@@ -2287,29 +2278,26 @@ public static class Analyzer
     /// </summary>
     private static void Expected(string expected, string custom = "default", int position = 0, string scope = "")
     {
-        string errorMessage = expected;
-        string errorType = "expected";
-        Token token = Current();
+        var errorMessage = expected;
+        var errorType = "expected";
+        var token = Current();
+        var lookahead = Lookahead(position);
         if (!custom.Equals("default"))
         {
             errorMessage = custom;
             errorType = "general";
         }
 
-        if (position != 0)
-            token = Lookahead(position);
-
-        Token current = Current();
-        if (!current.value.Equals(expected))
+        if (!token.value.Equals(expected))
         {
-            ErrorHandler.Parser.Report(FileName, token, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, token);
-            Analyzed.Add(current);
+            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            Analyzed.Add(token);
             Continue();
             return;
         }
 
-        Analyzed.Add(current);
+        Analyzed.Add(token);
         Continue();
     }
 
@@ -2320,15 +2308,15 @@ public static class Analyzer
     /// </summary>
     private static void Identifier()
     {
-        Token current = Current();
-        if (current.type != TokenType.Identifier)
+        Token token = Current();
+        if (token.type is not TokenType.Identifier)
         {
-            ErrorHandler.Parser.Report(FileName, Current(), "expected", "identifier");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Parser.Report(FileName, token, "expected", "identifier");
+            ErrorHandler.Parser.PrettyError(FileName, token);
             Continue();
             return;
         }
-        Analyzed.Add(current);
+        Analyzed.Add(token);
         Continue();
         return;
     }
@@ -2340,27 +2328,24 @@ public static class Analyzer
     /// </summary>
     private static void Number(string custom = "expected", int position = 0)
     {
-        string errorMessage = "string literal";
-        string errorType = "expected";
-        Token token = Current();
+        var errorMessage = "string literal";
+        var errorType = "expected";
+        var token = Current();
+        var lookahead = Lookahead(position);
         if (!custom.Equals("expected"))
         {
             errorMessage = custom;
             errorType = "general";
         }
 
-        if (position != 0)
-            token = Lookahead(position);
-
-        Token current = Current();
-        if (current.type != TokenType.Numeric)
+        if (token.type is not TokenType.Numeric)
         {
-            ErrorHandler.Parser.Report(FileName, token, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, token);
+            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, lookahead);
             Continue();
             return;
         }
-        Analyzed.Add(current);
+        Analyzed.Add(token);
         Continue();
         return;
     }
@@ -2372,27 +2357,24 @@ public static class Analyzer
     /// </summary>
     private static void String(string custom = "expected", int position = 0)
     {
-        string errorMessage = "string literal";
-        string errorType = "expected";
-        Token token = Current();
+        var errorMessage = "string literal";
+        var errorType = "expected";
+        var token = Current();
+        var lookahead = Lookahead(position);
         if (!custom.Equals("expected"))
         {
             errorMessage = custom;
             errorType = "general";
         }
 
-        if (position != 0)
-            token = Lookahead(position);
-
-        Token current = Current();
-        if (current.type != TokenType.String)
+        if (token.type is not TokenType.String)
         {
-            ErrorHandler.Parser.Report(FileName, token, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, token);
+            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, lookahead);
             Continue();
             return;
         }
-        Analyzed.Add(current);
+        Analyzed.Add(token);
         Continue();
         return;
     }
@@ -2404,8 +2386,8 @@ public static class Analyzer
     /// </summary>
     private static void FigurativeLiteral()
     {
-        Token current = Current();
-        if (current.type != TokenType.FigurativeLiteral)
+        var current = Current();
+        if (current.type is not TokenType.FigurativeLiteral)
         {
             ErrorHandler.Parser.Report(FileName, Current(), "expected", "figurative literal");
             ErrorHandler.Parser.PrettyError(FileName, Current());
@@ -2424,9 +2406,10 @@ public static class Analyzer
     /// </summary>
     private static void Symbol(string custom = "expected", int position = 0)
     {
-        string errorMessage = "string literal";
-        string errorType = "expected";
-        Token token = Current();
+        var errorMessage = "string literal";
+        var errorType = "expected";
+        var token = Current();
+        var lookahead = Lookahead(position);
         if (!custom.Equals("expected"))
         {
             errorMessage = custom;
@@ -2436,15 +2419,14 @@ public static class Analyzer
         if (position != 0)
             token = Lookahead(position);
 
-        Token current = Current();
-        if (current.type != TokenType.Symbol)
+        if (token.type is not TokenType.Symbol)
         {
-            ErrorHandler.Parser.Report(FileName, token, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, token);
+            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, lookahead);
             Continue();
             return;
         }
-        Analyzed.Add(current);
+        Analyzed.Add(token);
         Continue();
         return;
     }

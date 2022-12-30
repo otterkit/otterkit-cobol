@@ -36,13 +36,13 @@ public static class Helpers
 
     public static List<Token> ShuntingYard(List<Token> input, Dictionary<string, int> precedence)
     {
-        List<Token> output = new();
-        Stack<Token> stack = new();
-        bool isArithmetic = precedence.ContainsKey("+");
+        var output = new List<Token>();
+        var stack = new Stack<Token>();
+        var isArithmetic = precedence.ContainsKey("+");
 
-        foreach (Token token in input)
+        foreach (var token in input)
         {
-            if (token.type == TokenType.Numeric || token.type == TokenType.Identifier || token.type == TokenType.String)
+            if (token.type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
             {
                 output.Add(token);
             }
@@ -61,7 +61,7 @@ public static class Helpers
             }
             else if (precedence.ContainsKey(token.value))
             {
-                bool isExponentiation = token.value == "**";
+                var isExponentiation = token.value == "**";
 
                 if (isArithmetic)
                 while (stack.Count > 0 && ((precedence[stack.Peek().value] > precedence[token.value] && !isExponentiation) || (precedence[stack.Peek().value] >= precedence[token.value] && !isExponentiation && stack.Peek().value == "**")))
@@ -135,23 +135,41 @@ public static class Helpers
     {
         Stack<Token> stack = new();
 
-        foreach (Token token in expression)
+        foreach (var token in expression)
         {
-            if (token.type == TokenType.Numeric || token.type == TokenType.Identifier || token.type == TokenType.String)
+            if (token.type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
             {
                 stack.Push(token);
             }
             else if (precedence.ContainsKey(token.value))
             {
-                if (stack.Count < 2)
+                var isUnary = token.value == "NOT";
+
+                if (stack.Count < 1 && isUnary)
                 {
                     error = stack.Pop();
                     return false;
                 }
 
-                Token right = stack.Pop();
-                Token left = stack.Pop();
-                stack.Push(token);
+                if (stack.Count < 2 && !isUnary)
+                {
+                    error = stack.Pop();
+                    return false;
+                }
+
+
+                if (isUnary)
+                {
+                    var unary = stack.Pop();
+                    stack.Push(token);
+                }
+
+                if (!isUnary)
+                {
+                    var right = stack.Pop();
+                    var left = stack.Pop();
+                    stack.Push(token);
+                }
             }
             else
             {

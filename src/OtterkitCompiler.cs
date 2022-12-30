@@ -52,7 +52,7 @@ public static class OtterkitCompiler
             Options.Type = "app";
             Options.Name = "OtterkitExport";
 
-            int index = 0;
+            var index = 0;
             foreach (string argument in args)
             {
                 index++;
@@ -68,7 +68,7 @@ public static class OtterkitCompiler
                     
                     case "-n":
                     case "--name":
-                        Options.Name = argument;
+                        Options.Name = args[index];
                         break;
                 }
             }
@@ -83,7 +83,7 @@ public static class OtterkitCompiler
             Options.SourceFormat = "fixed";
             Options.ColumnLength = 80;
 
-            int index = 0;
+            var index = 0;
             foreach (string argument in args)
             {
                 index++;
@@ -173,17 +173,17 @@ public static class OtterkitCompiler
 
     private static void CallDotnetCompiler(string operation, bool output = true)
     {
-        string arguments = string.Empty;
+        var arguments = string.Empty;
         if (operation.Equals("new"))
         {
-            string type = Options.Type switch
+            var type = Options.Type switch
             {
                 "app" => "otterkit-export",
                 "mod" => "otterkit-module-export",
                 _ => "app"
             };
 
-            string OtterkitConfig = $$"""
+            var otterkitConfig = $$"""
             {
                 "$schema": "https://raw.githubusercontent.com/otterkit/otterkit/unfinished-codegen/src/schema.json",
                 "author": "Project Author",
@@ -201,7 +201,7 @@ public static class OtterkitCompiler
 
             Directory.CreateDirectory(".otterkit");
 
-            File.WriteAllText(".otterkit/OtterkitConfig.json", OtterkitConfig);
+            File.WriteAllText(".otterkit/OtterkitConfig.json", otterkitConfig);
             arguments = $"new {type} -n OtterkitExport -o .otterkit --force";
         }
 
@@ -275,12 +275,12 @@ public static class OtterkitCompiler
             Environment.Exit(1);
         }
 
-        List<string> sourceLines = File.ReadAllLines(Options.EntryPoint).ToList();
+        var sourceLines = File.ReadAllLines(Options.EntryPoint).ToList();
 
-        // Get COBOL reserved keyword information for parsinginfo.json
-        Assembly assembly = Assembly.GetCallingAssembly();
-        Stream? stream = assembly.GetManifestResourceStream("Otterkit.parsinginfo.json");
-        StreamReader reader = new System.IO.StreamReader(stream == null ? throw new ArgumentNullException() : stream);
+        // Get COBOL reserved keyword information from parsinginfo.json
+        var assembly = Assembly.GetCallingAssembly();
+        var stream = assembly.GetManifestResourceStream("Otterkit.parsinginfo.json");
+        var reader = new StreamReader(stream ?? throw new ArgumentNullException());
         ParsingInfo = JsonSerializer.Deserialize<JsonElement>(reader.ReadToEnd());
 
         return sourceLines;
@@ -288,7 +288,7 @@ public static class OtterkitCompiler
 
     private static void DisplayHelpMessage()
     {
-        string helpMessage = """
+        const string helpMessage = """
 
         Otterkit COBOL Compiler
         Copyright Otterkit Project 2022

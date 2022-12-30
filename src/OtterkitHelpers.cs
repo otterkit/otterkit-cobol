@@ -19,10 +19,11 @@ public static class Helpers
     public static readonly Dictionary<string, int> BooleanPrecedence = new()
     {
         ["("] = 0,
-        ["NOT"] = 1,
-        ["AND"] = 2,
-        ["OR"] = 2,
-        ["XOR"] = 2,
+        ["AND"] = 1,
+        ["OR"] = 1,
+        ["XOR"] = 1,
+        ["EXCLUSIVE-OR"] = 1,
+        ["NOT"] = 2,
         ["<"] = 3,
         [">"] = 3,
         ["NOT <"] = 3,
@@ -89,20 +90,86 @@ public static class Helpers
 
     public static string PostfixToInfix(List<Token> postfix, Dictionary<string, int> precedence)
     {
-        Stack<string> stack = new();
+        var stack = new Stack<string>();
 
-        foreach (Token token in postfix)
+        foreach (var token in postfix)
         {
-            if (token.type == TokenType.Numeric || token.type == TokenType.Identifier || token.type == TokenType.String)
+            var isUnary = token.value == "NOT";
+
+            if (token.type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
             {
                 stack.Push(token.value);
             }
 
-            else if (precedence.ContainsKey(token.value))
+            else if (precedence.ContainsKey(token.value) && isUnary)
             {
-                string right = stack.Pop();
-                string left = stack.Pop();
+                var right = stack.Pop();
+                stack.Push($"({token.value} {right})");
+            }
+
+            else if (precedence.ContainsKey(token.value) && !isUnary)
+            {
+                var right = stack.Pop();
+                var left = stack.Pop();
                 stack.Push($"({left} {token.value} {right})");
+            }
+        }
+
+        return stack.Pop();
+    }
+
+    public static string PostfixToCSharpInfix(List<Token> postfix, Dictionary<string, int> precedence)
+    {
+        var stack = new Stack<string>();
+
+        foreach (var token in postfix)
+        {
+            var isUnary = token.value == "NOT";
+
+            if (token.type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
+            {
+                stack.Push(token.value);
+            }
+
+            else if (precedence.ContainsKey(token.value) && isUnary)
+            {
+                var right = stack.Pop();
+                stack.Push($"!({right})");
+            }
+
+            else if (precedence.ContainsKey(token.value) && !isUnary)
+            {
+                var right = stack.Pop();
+                var left = stack.Pop();
+
+                switch (token.value)
+                {
+                    case "NOT >":
+                        stack.Push($"!({left} > {right})"); break;
+
+                    case "NOT <":
+                        stack.Push($"!({left} < {right})"); break;
+
+                    case "<>":
+                        stack.Push($"({left} != {right})"); break;
+
+                    case "=":
+                        stack.Push($"({left} == {right})"); break;
+
+                    case "AND":
+                        stack.Push($"({left} && {right})"); break;
+
+                    case "OR":
+                        stack.Push($"({left} || {right})"); break;
+
+                    case "XOR":
+                    case "EXCLUSIVE-OR":
+                        stack.Push($"({left} ^ {right})"); break;
+
+                    default:
+                        stack.Push($"({left} {token.value} {right})"); break;
+                }
+
             }
         }
 
@@ -157,7 +224,6 @@ public static class Helpers
                     return false;
                 }
 
-
                 if (isUnary)
                 {
                     var unary = stack.Pop();
@@ -184,7 +250,7 @@ public static class Helpers
             return false;
         }
 
-        error = new Token("", TokenType.EOF, -1, -1);
+        error = new Token("NoError", TokenType.EOF, -1, -1);
         return true;
     }
 

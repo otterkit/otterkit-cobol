@@ -373,17 +373,14 @@ public sealed class Numeric
 
         int indexOfDecimal = bytes.IndexOf("."u8);
 
-        int offset = Math.Max(0, Length - indexOfDecimal);
-        if (indexOfDecimal < 0) offset = Length - (isSigned ? 2 : 1);
-
         int isDecimal = Math.Min(FractionalLength, 1);
         int startIndex = Math.Max(0, indexOfDecimal - Length);
-        int endIndex = Math.Min(bytes.Length - startIndex, Length + FractionalLength - offset + isDecimal);
-
+        int endIndex = Math.Min(bytes.Length - startIndex, Length + FractionalLength + isDecimal);
+        
         ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex);
 
-        if (isSigned)
-            offset += 1;
+        int offset = Math.Max(0, Length - indexOfDecimal) + (isSigned ? 1 : 0);
+        if (indexOfDecimal < 0) offset = Math.Max(0, Length - bytes.Length) + (isSigned ? 1 : 0);
 
         temporary.CopyTo(formatted.Slice(offset));
 

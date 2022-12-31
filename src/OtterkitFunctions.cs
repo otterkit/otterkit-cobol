@@ -659,9 +659,27 @@ public static class Functions
         // TODO: Implement PRESENT-VALUE
     }
 
-    public static void RANDOM(Numeric? argument)
+    public static Numeric RANDOM(Numeric? argument = null)
     {
-        // TODO: Implement RANDOM
+        Random random;
+        Encoding encoding = Encoding.UTF8;
+
+        if (argument is null)
+        {
+            random = new();
+        }
+
+        else
+        {
+            DecimalHolder range = argument.Bytes.Slice(0, Math.Min(9, argument.Bytes.Length));
+            int int_arg = int.Parse(range.Display); // The range variable above makes sure that it fits inside of an Int32
+            random = new(int_arg);//what about fractional arguments? Accoridng to the standard, those are not supported
+        }
+
+        double output = random.NextDouble();
+        string s_output = output.ToString();
+        DecimalHolder d_output = new(encoding.GetBytes(s_output));//since the string type is UTF-16, would this work?
+        return new Numeric(d_output, false);
     }
 
     public static void RANGE(Numeric? argument)

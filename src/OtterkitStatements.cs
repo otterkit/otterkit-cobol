@@ -8,13 +8,13 @@ public static class Statements
     {
         // ACCEPT Statement devices: STANDARD-INPUT, COMMAND-LINE.
         Encoding encoding = Encoding.UTF8;
-        Span<byte> bytes = new();
+        Span<byte> bytes;
 
         switch (from)
         {
             case "STANDARD-INPUT":
                 string? value = Console.ReadLine();
-                bytes = encoding.GetBytes(value == null ? " " : value);
+                bytes = encoding.GetBytes(value ?? " ");
                 dataItem.Bytes = bytes;
                 return;
 
@@ -48,7 +48,7 @@ public static class Statements
                 }
                 // Default DAY value:
                 bytes = encoding.GetBytes(day);
-                dataItem.Bytes = bytes.Slice(2);
+                dataItem.Bytes = bytes[2..];
                 return;
 
             case "DAY-OF-WEEK":
@@ -65,7 +65,7 @@ public static class Statements
         }
 
         string? _default = Console.ReadLine();
-        bytes = encoding.GetBytes(_default == null ? " " : _default);
+        bytes = encoding.GetBytes(_default ?? " ");
         dataItem.Bytes = bytes;
     }
     

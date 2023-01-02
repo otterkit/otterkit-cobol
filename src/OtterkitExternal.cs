@@ -18,12 +18,11 @@ struct ExternalDataItem
 
 public sealed class External
 {
-    private static Dictionary<string, ExternalDataItem> ExternalMetadata = new();
+    private static readonly Dictionary<string, ExternalDataItem> ExternalMetadata = new();
 
     public static Memory<byte> Resolver(string dataItemName, int bytes)
     {
-        ExternalDataItem ExternalDataItem;
-        bool AlreadyExists = ExternalMetadata.TryGetValue(dataItemName, out ExternalDataItem);
+        bool AlreadyExists = ExternalMetadata.TryGetValue(dataItemName, out ExternalDataItem ExternalDataItem);
 
         if (AlreadyExists && ExternalDataItem.Length == bytes)
             return ExternalDataItem.ExternalMemory;

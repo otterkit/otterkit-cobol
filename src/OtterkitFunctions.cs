@@ -9,7 +9,7 @@ public static class Functions
         DecimalHolder input = new(Encoding.UTF8.GetBytes(argument.Display));
         DecimalHolder abs = DecimalMath.Abs(input.Bytes);
         return new Numeric(abs, false);
-        
+
     }
 
     public static Numeric ACOS(Numeric ratio)
@@ -50,7 +50,7 @@ public static class Functions
     public static Numeric ATAN(Numeric ratio)
     {
         DecimalHolder Dratio = new(Encoding.UTF8.GetBytes(ratio.Display));
-        DecimalHolder half_pi = new DecimalHolder(Encoding.UTF8.GetBytes(PI().Display))/"2"u8;
+        DecimalHolder half_pi = new DecimalHolder(Encoding.UTF8.GetBytes(PI().Display)) / "2"u8;
         if (Dratio < "-1"u8)
             return new Numeric(-(half_pi) - new DecimalHolder(Encoding.UTF8.GetBytes(ATAN(new Numeric("1"u8 / Dratio, true)).Display)), true);
 
@@ -88,7 +88,7 @@ public static class Functions
         // Does not cover all BYTE-LENGTH functionality
         DecimalHolder Dargument = new(Encoding.UTF8.GetBytes(argument.Display));
         DecimalHolder byteLength = "0"u8;
-        foreach (var bytes in Dargument.Bytes) 
+        foreach (var _ in Dargument.Bytes)
         {
             byteLength++;
         }
@@ -140,8 +140,8 @@ public static class Functions
         string formattedDate = currentDate.ToString("yyyyMMddHHmmssff");
         string DatePlusOffset;
 
-        if (offset.ToString().Contains("+"))
-        { 
+        if (offset.ToString().Contains('+'))
+        {
             DatePlusOffset = new String(formattedDate + "+" + offset.ToString("hhmm"));
         }
         else
@@ -156,7 +156,7 @@ public static class Functions
 
     public static Numeric DATE_OF_INTEGER(Numeric date)
     {
-        DateTime date_object = RuntimeHelpers.new_date(date); //Linter not recognizing OtterkitHelpers.cs?
+        DateTime date_object = RuntimeHelpers.New_date(date); //Linter not recognizing OtterkitHelpers.cs?
 
         String date_stamp = date_object.ToString("yyyyMMdd");
 
@@ -170,13 +170,13 @@ public static class Functions
         DecimalHolder ten_thousand = new(Encoding.UTF8.GetBytes("10000"));
 
         DecimalHolder date_dec = new(Encoding.UTF8.GetBytes(date.Display));
-        DecimalHolder yy = date_dec/ten_thousand;
+        DecimalHolder yy = date_dec / ten_thousand;
         //TODO: replace INTEGER_PART with proper INTEGER
         Numeric yy_num = INTEGER_PART(new Numeric(yy, false));
 
         DecimalHolder mmdd = date_dec % ten_thousand;
 
-        Numeric yyyy= YEAR_TO_YYYY(yy_num, window, Current);
+        Numeric yyyy = YEAR_TO_YYYY(yy_num, window, Current);
         DecimalHolder year = new(Encoding.UTF8.GetBytes(yyyy.Display));
         DecimalHolder result = (year * ten_thousand) + mmdd;
 
@@ -186,7 +186,7 @@ public static class Functions
 
     public static Numeric DAY_OF_INTEGER(Numeric date)
     {
-        DateTime date_object = RuntimeHelpers.new_date(date);
+        DateTime date_object = RuntimeHelpers.New_date(date);
         int day_of_year = date_object.DayOfYear;
 
         String date_stamp = date_object.ToString("yyyy" + day_of_year);
@@ -201,13 +201,13 @@ public static class Functions
         DecimalHolder thousand = new(Encoding.UTF8.GetBytes("1000"));
 
         DecimalHolder date_dec = new(Encoding.UTF8.GetBytes(date.Display));
-        DecimalHolder yy = date_dec/thousand;
+        DecimalHolder yy = date_dec / thousand;
         //TODO: replace INTEGER_PART with proper INTEGER
         Numeric yy_num = INTEGER_PART(new Numeric(yy, false));
 
-        DecimalHolder nnn = date_dec%thousand;
+        DecimalHolder nnn = date_dec % thousand;
 
-        Numeric yyyy= YEAR_TO_YYYY(yy_num, window, Current);
+        Numeric yyyy = YEAR_TO_YYYY(yy_num, window, Current);
         DecimalHolder year = new(Encoding.UTF8.GetBytes(yyyy.Display));
         DecimalHolder result = (year * thousand) + nnn;
 
@@ -221,7 +221,7 @@ public static class Functions
 
     public static Numeric E()
     {
-        DecimalHolder output = new DecimalHolder("2.718281828459045235360287471352662"u8);
+        DecimalHolder output = new("2.718281828459045235360287471352662"u8);
         return new Numeric(output, false);
     }
 
@@ -258,7 +258,6 @@ public static class Functions
     public static Numeric EXP(Numeric exponent)
     {
         DecimalHolder result = DecimalMath.Exp(exponent.Bytes);
-        int PositionOfDecimal = result.Bytes.IndexOf("."u8);
         Numeric temporary = new(result.Bytes, 0, 32, 2, new byte[34]);
         return temporary;
     }
@@ -266,7 +265,6 @@ public static class Functions
     public static Numeric EXP10(Numeric exponent)
     {
         DecimalHolder result = DecimalMath.Pow("10"u8, exponent.Bytes);
-        int PositionOfDecimal = result.Bytes.IndexOf("."u8);
         Numeric temporary = new(result.Bytes, 0, 32, 2, new byte[34]);
         return temporary;
     }
@@ -302,7 +300,7 @@ public static class Functions
         // convert the bytes value from the DecimalHolder argument
         // into an int value that can be used for the switch statement
         // 48 is the position of 0 in UTF-8 encoded bytes
-        DecimalHolder normalized = argument.Bytes[0] == 43 ? argument.Bytes.Slice(1) : argument.Bytes;
+        DecimalHolder normalized = argument.Bytes[0] == 43 ? argument.Bytes[1..] : argument.Bytes;
 
         int FirstInteger = normalized.Bytes.Length == 2 ? ((normalized.Bytes[0] - 48) * 10) : normalized.Bytes[0] - 48;
         int SecondInteger = normalized.Bytes.Length == 2 ? normalized.Bytes[1] - 48 : 0;
@@ -364,36 +362,38 @@ public static class Functions
 
     public static int FIND_STRING(string argument, string substring, int ignore, bool last, bool anycase)
     {
-        if (!last && anycase && ignore == 0) 
+        if (!last && anycase && ignore == 0)
             return argument.ToLower().IndexOf(substring.ToLower()) + 1;
-        
-        if (!last && ignore == 0) 
+
+        if (!last && ignore == 0)
             return argument.IndexOf(substring) + 1;
 
-        if (last && anycase) 
+        if (last && anycase)
             return argument.ToLower().LastIndexOf(substring.ToLower()) + 1;
 
-        if (last) 
+        if (last)
             return argument.LastIndexOf(substring) + 1;
 
         List<int> matches = new();
-        foreach (Match str in Regex.Matches(argument, substring, anycase ? RegexOptions.IgnoreCase: RegexOptions.None))
+        foreach (Match str in Regex.Matches(argument, substring, anycase ? RegexOptions.IgnoreCase : RegexOptions.None).Cast<Match>())
+        {
             matches.Add(str.Index + 1);
+        }
 
         if (ignore >= matches.Count) return 0;
 
         return matches[ignore];
     }
 
-     public static string FORMATTED_CURRENT_DATE(string format)
+    public static string FORMATTED_CURRENT_DATE(string format)
     {
         DateTime currentDate = DateTime.Now;
         TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
         string formattedDate = currentDate.ToString(format);
         string DatePlusOffset;
 
-        if (offset.ToString().Contains("+"))
-        { 
+        if (offset.ToString().Contains('+'))
+        {
             DatePlusOffset = new String(formattedDate + "+" + offset.ToString("hh:mm"));
         }
         else
@@ -430,8 +430,8 @@ public static class Functions
         int indexOfDecimal = argument.Bytes.IndexOf("."u8);
         if (indexOfDecimal == -1)
             return new Numeric("0.0"u8, 0, 1, 1, new byte[2]);
-        
-        argument.Bytes.Slice(indexOfDecimal + 1).CopyTo(FractionPart.Slice(2));
+
+        argument.Bytes[(indexOfDecimal + 1)..].CopyTo(FractionPart[2..]);
         return new Numeric(FractionPart, 0, 1, argument.FractionalLength, new byte[2 + argument.FractionalLength]);
     }
 
@@ -446,7 +446,7 @@ public static class Functions
         if (fraction > 0)
         {
             HighestAlgebraic[integer + 1] = 46;
-            HighestAlgebraic.Slice(integer + 2).Fill(57);
+            HighestAlgebraic[(integer + 2)..].Fill(57);
         }
 
         return new Numeric(HighestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 2]);
@@ -467,7 +467,7 @@ public static class Functions
         // Datetime constructor => Year, Month, Day
         // Calculations below are to remove the appropriate parts from the argument
         // It Just Works™
-        DateTime current = new((intValue / 10000),(intValue / 100) - (intValue / 10000 * 100),intValue - (intValue / 100 * 100));
+        DateTime current = new((intValue / 10000), (intValue / 100) - (intValue / 10000 * 100), intValue - (intValue / 100 * 100));
         string str = (current.Date - Y1600.Date).Days.ToString();
         ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(str);
 
@@ -499,8 +499,8 @@ public static class Functions
     public static Numeric INTEGER_PART(Numeric argument)
     {
         int indexOfDecimal = argument.Bytes.IndexOf("."u8);
-        ReadOnlySpan<byte> IntegerPart = indexOfDecimal > 0 
-            ? argument.Bytes.Slice(0, indexOfDecimal)
+        ReadOnlySpan<byte> IntegerPart = indexOfDecimal > 0
+            ? argument.Bytes[..indexOfDecimal]
             : argument.Bytes;
 
         return new Numeric(IntegerPart, 0, argument.Length, 0, new byte[argument.Length]);
@@ -534,14 +534,12 @@ public static class Functions
 
     public static Numeric LOG(Numeric argument)
     {
-        DecimalHolder input = new(Encoding.UTF8.GetBytes(argument.Display));
         DecimalHolder output = DecimalMath.Ln(argument);
         return new Numeric(output, false);
     }
 
     public static Numeric LOG10(Numeric argument)
     {
-        DecimalHolder input = new(Encoding.UTF8.GetBytes(argument.Display));
         DecimalHolder output = DecimalMath.Log10(argument);
         return new Numeric(output, false);
     }
@@ -562,10 +560,10 @@ public static class Functions
         if (fraction > 0)
         {
             LowestAlgebraic[integer + 1] = 46;
-            LowestAlgebraic.Slice(integer + 2).Fill(57);
+            LowestAlgebraic[(integer + 2)..].Fill(57);
         }
 
-        bool isSigned = argument.isSigned;
+        bool isSigned = argument.IsSigned;
         if (!isSigned) return new Numeric("0"u8, 0, 1, 0, new byte[1]);
 
         return new Numeric(LowestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 2]);
@@ -590,7 +588,7 @@ public static class Functions
     {
         // TODO: Implement MIDRANGE
     }
-    
+
     public static void MIN(Numeric[] argument)
     {
         // TODO: Implement MIN
@@ -600,10 +598,11 @@ public static class Functions
     {
         Numeric rem = REM(left, right);
         DecimalHolder mod = new(Encoding.UTF8.GetBytes(rem.Display));
-        if (mod < "0"u8) {
+        if (mod < "0"u8)
+        {
             mod = right.Bytes < new DecimalHolder("0"u8) ? mod - right.Bytes : mod + right.Bytes;
         }
-        return new Numeric(mod,false);
+        return new Numeric(mod, false);
     }
 
     public static void MODULE_NAME()
@@ -650,7 +649,7 @@ public static class Functions
 
     public static Numeric PI()
     {
-        DecimalHolder pi = new DecimalHolder("3.141592653589793238462643383279503"u8);
+        DecimalHolder pi = new("3.141592653589793238462643383279503"u8);
         return new Numeric(pi, false);
     }
 
@@ -691,10 +690,10 @@ public static class Functions
     public static Numeric REM(Numeric left, Numeric right)
     {
         // The COBOL standard suggested this calculation:
-        DecimalHolder subsidiaryQuotient = (new DecimalHolder(left.Bytes) / right.Bytes);
+        DecimalHolder subsidiaryQuotient = new DecimalHolder(left.Bytes) / right.Bytes;
         if (subsidiaryQuotient.Bytes.IndexOf("."u8) > -1)
-            subsidiaryQuotient = subsidiaryQuotient.Bytes.Slice(0, subsidiaryQuotient.Bytes.Length - 1);
-        DecimalHolder output = (left.Bytes - (subsidiaryQuotient * right.Bytes));
+            subsidiaryQuotient = subsidiaryQuotient.Bytes[..^1];
+        DecimalHolder output = left.Bytes - (subsidiaryQuotient * right.Bytes);
         return new Numeric(output, true);
     }
 
@@ -733,7 +732,7 @@ public static class Functions
     {
         DecimalHolder Pie = new(Encoding.UTF8.GetBytes(PI().Display));
         DecimalHolder radians = argument;
-        radians = radians % (Pie * "2"u8);
+        radians %= Pie * "2"u8;
 
         if (radians < "0"u8)
             radians = "2"u8 * Pie - radians;
@@ -753,14 +752,11 @@ public static class Functions
             DecimalHolder power = DecimalMath.Pow(radians.Bytes, coefficient.Bytes);
             DecimalHolder factorial = new(Encoding.UTF8.GetBytes(FACTORIAL(new Numeric(coefficient, false)).Display));
 
-            if(i % 2 == 0)
-                result = result - power / factorial;
+            if (i % 2 == 0) result -= power / factorial;
 
-            else
-                result = result + power / factorial;
+            else result += power / factorial;
 
-
-            coefficient = coefficient + "2"u8;
+            coefficient += "2"u8;
         }
 
         DecimalHolder @return = sign * result;
@@ -832,7 +828,7 @@ public static class Functions
         DecimalHolder tweleve_ninety_nine = new("1299"u8);
         DecimalHolder hundred = new("100"u8);
         DecimalHolder year_lower_bound = new("1601000"u8);
-        DecimalHolder year_upper_bound = new ("99999999"u8);
+        DecimalHolder year_upper_bound = new("99999999"u8);
 
         DecimalHolder month_check = input % ten_thousand;
         DecimalHolder day_check_1 = input % hundred;
@@ -856,21 +852,28 @@ public static class Functions
         }
         catch (System.ArgumentOutOfRangeException)
         {
-            
+
             day_works = false;
         }
-        
-        if ((input < year_lower_bound) || (input > year_upper_bound)){
+
+        if ((input < year_lower_bound) || (input > year_upper_bound))
+        {
             return new Numeric("1"u8, 0, 1, 0, new byte[1]);
-        } else if ((month_check < hundred) || (month_check>tweleve_ninety_nine)){
+        }
+        else if ((month_check < hundred) || (month_check > tweleve_ninety_nine))
+        {
             return new Numeric("2"u8, 0, 1, 0, new byte[1]);
-        } else if ((day_check_3 < 1) || (!day_works)){
+        }
+        else if ((day_check_3 < 1) || (!day_works))
+        {
             return new Numeric("3"u8, 0, 1, 0, new byte[1]);
-        } else {
+        }
+        else
+        {
             return new Numeric("0"u8, 0, 1, 0, new byte[1]);
         }
 
-         
+
     }
 
     public static Numeric TEST_DAY_YYYYDDD(Numeric argument)
@@ -878,7 +881,7 @@ public static class Functions
         DecimalHolder input = argument.Bytes;
         DecimalHolder thousand = new("1000"u8);
         DecimalHolder year_lower_bound = new("1601000"u8);
-        DecimalHolder year_upper_bound = new ("9999999"u8);
+        DecimalHolder year_upper_bound = new("9999999"u8);
 
         DecimalHolder day_check_1 = input % thousand;
         Numeric day_check_2 = new(day_check_1, false);
@@ -893,15 +896,21 @@ public static class Functions
         DateTime check_year = new(y_check_3, 1, 1);
         check_year.AddDays(day_check_3);
 
-        if(check_year.Year != y_check_3){
+        if (check_year.Year != y_check_3)
+        {
             day_works = false;
         }
 
-        if ((input < year_lower_bound) || (input > year_upper_bound)){
+        if ((input < year_lower_bound) || (input > year_upper_bound))
+        {
             return new Numeric("1"u8, 0, 1, 0, new byte[1]);
-        } else if ((day_check_3 < 1) || (!day_works)){
+        }
+        else if ((day_check_3 < 1) || (!day_works))
+        {
             return new Numeric("2"u8, 0, 1, 0, new byte[1]);
-        } else {
+        }
+        else
+        {
             return new Numeric("0"u8, 0, 1, 0, new byte[1]);
         }
 
@@ -933,7 +942,7 @@ public static class Functions
             return argument.TrimStart(character);
 
         if (operation == "TRAILING")
-            return argument.TrimEnd(character);    
+            return argument.TrimEnd(character);
 
         return argument.Trim(character);
     }
@@ -953,12 +962,12 @@ public static class Functions
     public static Numeric YEAR_TO_YYYY(Numeric yy, Numeric? window, Numeric? current)
     {
         //TODO: Implement runtime exceptions for invalid inputs
-        if (window == null){
-            window = new Numeric(new DecimalHolder(Encoding.UTF8.GetBytes("50")), false);
-        } 
-        if (current == null){
+        window ??= new Numeric(new DecimalHolder(Encoding.UTF8.GetBytes("50")), false);
+        
+        if (current == null)
+        {
             //TODO: make sure NUMVAL works fully
-            String slice = CURRENT_DATE().Display.Substring(0,4);
+            String slice = CURRENT_DATE().Display[..4];
             Alphanumeric date = new(Encoding.UTF8.GetBytes(slice), 0, 8, new byte[8]);
             current = NUMVAL(date);
         }
@@ -967,20 +976,23 @@ public static class Functions
         DecimalHolder window_num = new(Encoding.UTF8.GetBytes(window.Display));
         DecimalHolder current_num = new(Encoding.UTF8.GetBytes(current.Display));
 
-        DecimalHolder max_year = window_num+current_num;
+        DecimalHolder max_year = window_num + current_num;
         DecimalHolder hundred = new(Encoding.UTF8.GetBytes("100"));
         DecimalHolder one = new(Encoding.UTF8.GetBytes("1"));
         //TODO: replace with true INTEGER function
-        if ((max_year%hundred) >= yy_num){
-            Numeric part = INTEGER_PART(new Numeric((max_year/hundred), false));
+        if ((max_year % hundred) >= yy_num)
+        {
+            Numeric part = INTEGER_PART(new Numeric((max_year / hundred), false));
             DecimalHolder coefficient = new(Encoding.UTF8.GetBytes(part.Display));
-            DecimalHolder result = (yy_num+hundred*coefficient);
+            DecimalHolder result = (yy_num + hundred * coefficient);
             return new Numeric(result, false);
-        } else {
-            Numeric part = INTEGER_PART(new Numeric((max_year/hundred), false));
+        }
+        else
+        {
+            Numeric part = INTEGER_PART(new Numeric((max_year / hundred), false));
             DecimalHolder coefficient = new(Encoding.UTF8.GetBytes(part.Display));
-            coefficient = coefficient - one;
-            DecimalHolder result = (yy_num+hundred*coefficient);
+            coefficient -= one;
+            DecimalHolder result = (yy_num + hundred * coefficient);
             return new Numeric(result, false);
         }
     }

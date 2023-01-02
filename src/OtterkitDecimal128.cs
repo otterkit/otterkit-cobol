@@ -13,7 +13,7 @@ public readonly ref struct DecimalHolder
 
     public DecimalHolder(ReadOnlySpan<byte> bytes)
     {
-        this.Bytes = bytes;
+        Bytes = bytes;
         if (bytes[0] == 45)
             IsNegative = true;
     }
@@ -25,9 +25,9 @@ public readonly ref struct DecimalHolder
 
     public static implicit operator DecimalHolder(Numeric numeric)
     {
-        if (numeric.isSigned && numeric.Bytes[0] == 45)
+        if (numeric.IsSigned && numeric.Bytes[0] == 45)
         {
-            return new DecimalHolder(numeric.Bytes.Slice(1));
+            return new DecimalHolder(numeric.Bytes[1..]);
         }
         return new DecimalHolder(numeric.Bytes);
     }
@@ -80,37 +80,37 @@ public readonly ref struct DecimalHolder
     public static bool operator ==(DecimalHolder left, DecimalHolder right)
     {
         DecimalHolder result = DecimalMath.Compare(left, right);
-        return result.Bytes[0] == 48 ? true : false;
+        return result.Bytes[0] == 48;
     }
 
     public static bool operator !=(DecimalHolder left, DecimalHolder right)
     {
         DecimalHolder result = DecimalMath.Compare(left, right);
-        return result.Bytes[0] != 48 ? true : false;
+        return result.Bytes[0] != 48;
     }
 
     public static bool operator >(DecimalHolder left, DecimalHolder right)
     {
         DecimalHolder result = DecimalMath.Compare(left, right);
-        return result.Bytes[0] == 49 ? true : false;
+        return result.Bytes[0] == 49;
     }
 
     public static bool operator <(DecimalHolder left, DecimalHolder right)
     {
         DecimalHolder result = DecimalMath.Compare(left, right);
-        return result.Bytes[0] == 45 && result.Bytes[1] == 49 ? true : false;
+        return result.Bytes[0] == 45 && result.Bytes[1] == 49;
     }
 
     public static bool operator >=(DecimalHolder left, DecimalHolder right)
     {
         DecimalHolder result = DecimalMath.Compare(left, right);
-        return result.Bytes[0] == 48 || result.Bytes[0] == 49 ? true : false;
+        return result.Bytes[0] == 48 || result.Bytes[0] == 49;
     }
 
     public static bool operator <=(DecimalHolder left, DecimalHolder right)
     {
         DecimalHolder result = DecimalMath.Compare(left, right);
-        return (result.Bytes[0] == 45 && result.Bytes[1] == 49) || result.Bytes[0] == 48 ? true : false;
+        return (result.Bytes[0] == 45 && result.Bytes[1] == 49) || result.Bytes[0] == 48;
     }
 
     public override bool Equals(object? obj)
@@ -165,7 +165,7 @@ public static class DecimalMath
         expression.Fill(32);
 
         left.CopyTo(expression);
-        right.CopyTo(expression.Slice(left.Length + 1));
+        right.CopyTo(expression[(left.Length + 1)..]);
         expression[left.Length + right.Length + 2] = 43;
 
         ReadOnlySpan<byte> result = Arithmetic(expression);
@@ -181,7 +181,7 @@ public static class DecimalMath
         expression.Fill(32);
 
         left.CopyTo(expression);
-        right.CopyTo(expression.Slice(left.Length + 1));
+        right.CopyTo(expression[(left.Length + 1)..]);
         expression[left.Length + right.Length + 2] = 45;
 
         ReadOnlySpan<byte> result = Arithmetic(expression);
@@ -197,7 +197,7 @@ public static class DecimalMath
         expression.Fill(32);
 
         left.CopyTo(expression);
-        right.CopyTo(expression.Slice(left.Length + 1));
+        right.CopyTo(expression[(left.Length + 1)..]);
         expression[left.Length + right.Length + 2] = 42;
 
         ReadOnlySpan<byte> result = Arithmetic(expression);
@@ -213,7 +213,7 @@ public static class DecimalMath
         expression.Fill(32);
 
         left.CopyTo(expression);
-        right.CopyTo(expression.Slice(left.Length + 1));
+        right.CopyTo(expression[(left.Length + 1)..]);
         expression[left.Length + right.Length + 2] = 47;
 
         ReadOnlySpan<byte> result = Arithmetic(expression);
@@ -229,7 +229,7 @@ public static class DecimalMath
         expression.Fill(32);
 
         left.Bytes.CopyTo(expression);
-        right.Bytes.CopyTo(expression.Slice(left.Bytes.Length + 1));
+        right.Bytes.CopyTo(expression[(left.Bytes.Length + 1)..]);
         expression[left.Bytes.Length + right.Bytes.Length + 2] = 94;
 
         ReadOnlySpan<byte> result = Arithmetic(expression);

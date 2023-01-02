@@ -15,13 +15,13 @@ public sealed unsafe class OtterkitNativeMemory<TBytes>
     public OtterkitNativeMemory(TBytes* pointer, int length)
     {
         if (length < 0)
-            throw new ArgumentOutOfRangeException("Otterkit Memory Management: Cannot allocate negative bytes of memory");
+            throw new ArgumentOutOfRangeException(nameof(length), "Otterkit Memory Management: Cannot allocate negative bytes of memory");
 
-        this.Pointer = pointer;
-        this.Length = length;
+        Pointer = pointer;
+        Length = length;
     }
 
-    public override Span<TBytes> GetSpan() => new Span<TBytes>(Pointer, Length);
+    public override Span<TBytes> GetSpan() => new(Pointer, Length);
 
     public override MemoryHandle Pin(int index = 0)
     {
@@ -43,7 +43,7 @@ public sealed unsafe class OtterkitNativeMemory<TBytes>
         if (!Disposed)
         {
             if (disposing)
-                this.Memory.Span.Clear();
+                Memory.Span.Clear();
 
             NativeMemory.Free(Pointer);
             Pointer = null;
@@ -60,20 +60,20 @@ public sealed class DataItem
 
     public DataItem(int length)
     {
-        this.Length = length;
-        this.Memory = new byte[length];
+        Length = length;
+        Memory = new byte[length];
     }
 
     public DataItem(Memory<byte> memory)
     {
-        this.Length = memory.Length;
-        this.Memory = memory;
+        Length = memory.Length;
+        Memory = memory;
     }
 
     public DataItem(int length, Memory<byte> memory)
     {
-        this.Length = length;
-        this.Memory = memory;
+        Length = length;
+        Memory = memory;
     }
 
     public ReadOnlySpan<char> Chars
@@ -86,13 +86,13 @@ public sealed class DataItem
         {
             Memory.Span.Fill(32);
 
-            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+            int byteDifference = encoding.GetByteCount(value) - value.Length;
 
             int byteLength = Length < value.Length + byteDifference
                 ? Length - byteDifference
                 : value.Length;
 
-            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
+            _ = encoding.GetBytes(value[..byteLength], Memory.Span);
         }
     }
 
@@ -110,7 +110,7 @@ public sealed class DataItem
             ? Length
             : value.Length;
 
-            value.Slice(0, length).CopyTo(Memory.Span);
+            value[..length].CopyTo(Memory.Span);
         }
     }
 
@@ -132,45 +132,42 @@ public sealed unsafe class BasedDataItem
 
     public BasedDataItem()
     {
-        this.Length = 0;
-        this.Memory = null;
-        this.UnsafeMemory = new(null, 0);
+        Length = 0;
+        Memory = null;
+        UnsafeMemory = new(null, 0);
     }
 
     public void Allocate(int length, bool initialized)
     {
-        this.Length = length;
+        Length = length;
         byte* Pointer;
 
         if (initialized)
         {
             Pointer = (byte*)NativeMemory.AllocZeroed((nuint)length);
-            this.UnsafeMemory = new(Pointer, length);
-            Pointer = null;
+            UnsafeMemory = new(Pointer, length);
         }
 
         if (!initialized)
         {
             Pointer = (byte*)NativeMemory.Alloc((nuint)length);
-            this.UnsafeMemory = new(Pointer, length);
-            Pointer = null;
+            UnsafeMemory = new(Pointer, length);
         }
 
-        this.Memory = UnsafeMemory.Memory;
+        Memory = UnsafeMemory.Memory;
     }
 
     public void Free()
     {
         UnsafeMemory.Dispose();
-        this.Length = 0;
-        this.Memory = null;
-        this.UnsafeMemory = new(null, 0);
+        Length = 0;
+        Memory = null;
+        UnsafeMemory = new(null, 0);
     }
 
     public void NullCheck()
     {
-        if (this.Memory.Span == null)
-            throw new EcDataPtrNull();
+        if (Memory.Span == null) throw new EcDataPtrNull();
     }
 
     public ReadOnlySpan<char> Chars
@@ -185,13 +182,13 @@ public sealed unsafe class BasedDataItem
             NullCheck();
             Memory.Span.Fill(32);
 
-            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+            int byteDifference = encoding.GetByteCount(value) - value.Length;
 
             int byteLength = Length < value.Length + byteDifference
                 ? Length - byteDifference
                 : value.Length;
 
-            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
+            _ = encoding.GetBytes(value[..byteLength], Memory.Span);
         }
     }
 
@@ -211,7 +208,7 @@ public sealed unsafe class BasedDataItem
             ? Length
             : value.Length;
 
-            value.Slice(0, length).CopyTo(Memory.Span);
+            value[..length].CopyTo(Memory.Span);
         }
     }
 
@@ -271,31 +268,31 @@ public sealed class Numeric
     public int Offset { get; init; }
     public int Length { get; init; }
     public int FractionalLength { get; init; }
-    public bool isSigned { get; private set; }
-    public bool isNegative { get; private set; }
+    public bool IsSigned { get; private set; }
+    public bool IsNegative { get; private set; }
     private readonly Encoding encoding = Encoding.UTF8;
 
     public Numeric(ReadOnlySpan<byte> value, int offset, int length, int fractionalLength, Memory<byte> memory)
     {
-        this.isSigned = value[0] == 43 || value[0] == 45;
+        this.IsSigned = value[0] == 43 || value[0] == 45;
         this.Offset = offset;
         this.Length = length;
         this.FractionalLength = fractionalLength;
         if (fractionalLength == 0)
         {
-            int signedSpace = isSigned ? 1 : 0;
+            int signedSpace = IsSigned ? 1 : 0;
             this.Memory = memory.Slice(offset, length + signedSpace);
         }
 
         if (fractionalLength > 0)
         {
-            int signedSpace = isSigned ? 2 : 1;
+            int signedSpace = IsSigned ? 2 : 1;
             this.Memory = memory.Slice(offset, length + fractionalLength + signedSpace);
         }
 
         Memory.Span.Fill(48);
 
-        if (isSigned)
+        if (IsSigned)
         {
             FormatSigned(value);
             return;
@@ -309,7 +306,7 @@ public sealed class Numeric
         this.Offset = offset;
         this.Length = length;
         this.FractionalLength = fractionalLength;
-        this.isSigned = isSigned;
+        this.IsSigned = isSigned;
 
         if (fractionalLength == 0)
         {
@@ -341,7 +338,7 @@ public sealed class Numeric
             this.FractionalLength = 0;
         }
 
-        this.isSigned = isSigned;
+        this.IsSigned = isSigned;
 
         if (this.FractionalLength == 0)
         {
@@ -382,7 +379,7 @@ public sealed class Numeric
         int offset = Math.Max(0, Length - indexOfDecimal) + (isSigned ? 1 : 0);
         if (indexOfDecimal < 0) offset = Math.Max(0, Length - bytes.Length) + (isSigned ? 1 : 0);
 
-        temporary.CopyTo(formatted.Slice(offset));
+        temporary.CopyTo(formatted[offset..]);
 
         int indexOfSign = formatted.IndexOfAny("+-"u8);
         if (indexOfSign > -1)
@@ -391,7 +388,7 @@ public sealed class Numeric
         if (isSigned)
         {
             formatted.CopyTo(Memory.Span);
-            byte sign = (byte)(isNegative ? 45 : 43);
+            byte sign = (byte)(IsNegative ? 45 : 43);
             Memory.Span[0] = sign;
             return;
         }
@@ -403,12 +400,12 @@ public sealed class Numeric
     {
         if (bytes[0] == 45)
         {
-            isNegative = true;
+            IsNegative = true;
             Format(bytes, true);
             return;
         }
 
-        isNegative = false;
+        IsNegative = false;
         Format(bytes, true);
     }
 
@@ -422,7 +419,7 @@ public sealed class Numeric
         {
             Span<byte> bytes = stackalloc byte[value.Length];
             encoding.GetBytes(value, bytes);
-            if (isSigned)
+            if (IsSigned)
             {
                 FormatSigned(bytes);
                 return;
@@ -440,7 +437,7 @@ public sealed class Numeric
         }
         set
         {
-            if (isSigned)
+            if (IsSigned)
             {
                 FormatSigned(value);
                 return;
@@ -477,7 +474,7 @@ public sealed class Alphanumeric
             ? Length
             : value.Length;
 
-        value.Slice(0, byteLength).CopyTo(Memory.Span);
+        value[..byteLength].CopyTo(Memory.Span);
     }
 
     public Alphanumeric(Memory<byte> memory, int offset, int length)
@@ -503,7 +500,7 @@ public sealed class Alphanumeric
                 ? Length - byteDifference
                 : value.Length;
 
-            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
+            _ = encoding.GetBytes(value[..byteLength], Memory.Span);
         }
     }
 
@@ -521,7 +518,7 @@ public sealed class Alphanumeric
             ? Length
             : value.Length;
 
-            value.Slice(0, length).CopyTo(Memory.Span);
+            value[..length].CopyTo(Memory.Span);
         }
     }
 
@@ -566,7 +563,7 @@ public sealed class BasedAlphanumeric
                 ? Length - byteDifference
                 : value.Length;
 
-            encoding.GetBytes(value.Slice(0, byteLength), MemoryOffset);
+            _ = encoding.GetBytes(value[..byteLength], MemoryOffset);
         }
     }
 
@@ -586,7 +583,7 @@ public sealed class BasedAlphanumeric
             ? Length
             : value.Length;
 
-            value.Slice(0, length).CopyTo(MemoryOffset);
+            value[..length].CopyTo(MemoryOffset);
         }
     }
 
@@ -610,7 +607,7 @@ public sealed class Alphabetic
     public Alphabetic(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
     {
         if (value.IndexOfAny("1234567890"u8) > -1)
-            throw new ArgumentOutOfRangeException("value", "Alphabetic type cannot contain numberic values");
+            throw new ArgumentOutOfRangeException(nameof(value), "Alphabetic type cannot contain numberic values");
 
         this.Offset = offset;
         this.Length = length;
@@ -621,7 +618,7 @@ public sealed class Alphabetic
             ? Length
             : value.Length;
 
-        value.Slice(0, byteLength).CopyTo(Memory.Span);
+        value[..byteLength].CopyTo(Memory.Span);
     }
 
     public Alphabetic(Memory<byte> memory, int offset, int length)
@@ -640,7 +637,7 @@ public sealed class Alphabetic
         set
         {
             if (value.IndexOfAny("1234567890") > -1)
-                throw new ArgumentOutOfRangeException("value", "Alphabetic type cannot contain numberic values");
+                throw new ArgumentOutOfRangeException(nameof(value), "Alphabetic type cannot contain numberic values");
 
             Memory.Span.Fill(32);
 
@@ -650,7 +647,7 @@ public sealed class Alphabetic
                 ? Length - byteDifference
                 : value.Length;
 
-            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
+            _ = encoding.GetBytes(value[..byteLength], Memory.Span);
         }
     }
 
@@ -663,7 +660,7 @@ public sealed class Alphabetic
         set
         {
             if (value.IndexOfAny("1234567890"u8) > -1)
-                throw new ArgumentOutOfRangeException("value", "Alphabetic type cannot contain numberic values");
+                throw new ArgumentOutOfRangeException(nameof(value), "Alphabetic type cannot contain numberic values");
 
             Memory.Span.Fill(32);
 
@@ -671,7 +668,7 @@ public sealed class Alphabetic
             ? Length
             : value.Length;
 
-            value.Slice(0, length).CopyTo(Memory.Span);
+            value[..length].CopyTo(Memory.Span);
         }
     }
 
@@ -708,7 +705,7 @@ public sealed class BasedAlphabetic
         set
         {
             if (value.IndexOfAny("1234567890") > -1)
-                throw new ArgumentOutOfRangeException("value", "Alphabetic type cannot contain numberic values");
+                throw new ArgumentOutOfRangeException(nameof(value), "Alphabetic type cannot contain numberic values");
 
             Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
             MemoryOffset.Fill(32);
@@ -719,7 +716,7 @@ public sealed class BasedAlphabetic
                 ? Length - byteDifference
                 : value.Length;
 
-            encoding.GetBytes(value.Slice(0, byteLength), MemoryOffset);
+            _ = encoding.GetBytes(value[..byteLength], MemoryOffset);
         }
     }
 
@@ -733,7 +730,7 @@ public sealed class BasedAlphabetic
         set
         {
             if (value.IndexOfAny("1234567890"u8) > -1)
-                throw new ArgumentOutOfRangeException("value", "Alphabetic type cannot contain numberic values");
+                throw new ArgumentOutOfRangeException(nameof(value), "Alphabetic type cannot contain numberic values");
 
             Span<byte> MemoryOffset = Parent.Memory.Slice(Offset, Length).Span;
             MemoryOffset.Fill(32);
@@ -742,7 +739,7 @@ public sealed class BasedAlphabetic
             ? Length
             : value.Length;
 
-            value.Slice(0, length).CopyTo(MemoryOffset);
+            value[..length].CopyTo(MemoryOffset);
         }
     }
 
@@ -774,7 +771,7 @@ public sealed class National
             ? Length
             : value.Length;
 
-        value.Slice(0, byteLength).CopyTo(Memory.Span);
+        value[..byteLength].CopyTo(Memory.Span);
     }
 
     public National(Memory<byte> memory, int offset, int length)
@@ -800,7 +797,7 @@ public sealed class National
                 ? Length - byteDifference
                 : value.Length;
 
-            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
+            _ = encoding.GetBytes(value[..byteLength], Memory.Span);
         }
     }
 
@@ -818,7 +815,7 @@ public sealed class National
             ? Length
             : value.Length;
 
-            value.Slice(0, length).CopyTo(Memory.Span);
+            value[..length].CopyTo(Memory.Span);
         }
     }
 
@@ -863,7 +860,7 @@ public sealed class BasedNational
                 ? Length - byteDifference
                 : value.Length;
 
-            encoding.GetBytes(value.Slice(0, byteLength), MemoryOffset);
+            _ = encoding.GetBytes(value[..byteLength], MemoryOffset);
         }
     }
 
@@ -883,7 +880,7 @@ public sealed class BasedNational
             ? Length
             : value.Length;
 
-            value.Slice(0, length).CopyTo(MemoryOffset);
+            value[..length].CopyTo(MemoryOffset);
         }
     }
 
@@ -921,7 +918,7 @@ public sealed class OtterkitBoolean
             ? Length
             : value.Length;
 
-        value.Slice(0, byteLength).CopyTo(Memory.Span);
+        value[..byteLength].CopyTo(Memory.Span);
     }
 
     public OtterkitBoolean(Memory<byte> memory, int offset, int length)
@@ -952,7 +949,7 @@ public sealed class OtterkitBoolean
                 ? Length - byteDifference
                 : value.Length;
 
-            encoding.GetBytes(value.Slice(0, byteLength), Memory.Span);
+            _ = encoding.GetBytes(value[..byteLength], Memory.Span);
         }
     }
 
@@ -975,7 +972,7 @@ public sealed class OtterkitBoolean
             ? Length
             : value.Length;
 
-            value.Slice(0, length).CopyTo(Memory.Span);
+            value[..length].CopyTo(Memory.Span);
         }
     }
 
@@ -1026,7 +1023,7 @@ public sealed class BasedOtterkitBoolean
                 ? Length - byteDifference
                 : value.Length;
 
-            encoding.GetBytes(value.Slice(0, byteLength), MemoryOffset);
+            _ = encoding.GetBytes(value[..byteLength], MemoryOffset);
         }
     }
 
@@ -1052,7 +1049,7 @@ public sealed class BasedOtterkitBoolean
             ? Length
             : value.Length;
 
-            value.Slice(0, length).CopyTo(MemoryOffset);
+            value[..length].CopyTo(MemoryOffset);
         }
     }
 

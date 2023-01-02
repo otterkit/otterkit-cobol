@@ -138,12 +138,84 @@ public static class Analyzer
         // This is where SourceId and SourceType get their values for a COBOL source unit.
         void ProgramId()
         {
+            Token ProgramIdentifier;
+
             Expected("PROGRAM-ID");
             Expected(".");
-            SourceId = Current().value;
+            ProgramIdentifier = Current();
+            SourceId = ProgramIdentifier.value;
             SourceType = "PROGRAM";
             Identifier();
-            Expected(".");
+            if (CurrentEquals("AS"))
+            {
+                Expected("AS");
+                String();
+            }
+
+            if (Current().value is "IS" or "COMMON" or "INITIAL" or "RECURSIVE" or "PROTOTYPE")
+            {
+                bool isCommon = false;
+                bool isInitial = false;
+                bool isPrototype = false;
+                bool isRecursive = false;
+
+                Optional("IS");
+
+                while (Current().value is "COMMON" or "INITIAL" or "RECURSIVE" or "PROTOTYPE")
+                {
+                    if (CurrentEquals("COMMON"))
+                    {
+                        Expected("COMMON");
+                        isCommon = true;
+                    }
+
+                    if (CurrentEquals("INITIAL"))
+                    {
+                        Expected("INITIAL");
+                        isInitial = true;
+                    }
+
+                    if (CurrentEquals("RECURSIVE"))
+                    {
+                        Expected("RECURSIVE");
+                        isRecursive = true;
+                    }
+
+                    if (CurrentEquals("PROTOTYPE"))
+                    {
+                        Expected("PROTOTYPE");
+                        isPrototype = true;
+                    }
+                }
+
+                if (isPrototype && (isCommon || isInitial || isRecursive))
+                {
+                    const string invalidPrototypeError = """
+                    Invalid prototype. Program prototypes cannot be defined as common, initial or recursive.
+                    """;
+
+                    ErrorHandler.Parser.Report(fileName, ProgramIdentifier, "general", invalidPrototypeError);
+                    ErrorHandler.Parser.PrettyError(fileName, ProgramIdentifier);
+                }
+
+                if (isInitial && isRecursive)
+                {
+                    const string invalidProgramDefinitionError = """
+                    Invalid program definition. Initial programs cannot be defined as recursive.
+                    """;
+
+                    ErrorHandler.Parser.Report(fileName, ProgramIdentifier, "general", invalidProgramDefinitionError);
+                    ErrorHandler.Parser.PrettyError(fileName, ProgramIdentifier);
+                }
+
+                if (!isPrototype) Optional("PROGRAM");
+            }
+
+            const string missingPeriodError = """
+            Missing separator period at the end of this program definition
+            """;
+
+            ExpectedWithoutContinue(".", missingPeriodError, -1);
         }
 
         void FunctionId()
@@ -2349,6 +2421,36 @@ public static class Analyzer
             ErrorHandler.Parser.PrettyError(FileName, lookahead);
             Analyzed.Add(token);
             Continue();
+            return;
+        }
+
+        Analyzed.Add(token);
+        Continue();
+    }
+
+    /// <summary>
+    /// Void <c>ExpectedWithoutContinue</c>: This method checks if the current token is equal to it's first parameter.
+    /// <para>If the current token matches the value, it adds the token to the parsed list,
+    /// if the current token doesn't match the value it calls the ErrorHandler to report a parsing error</para>
+    /// <para>This method works exactly like the Expected method, but without continuing if the current token is not correct</para>
+    /// </summary>
+    private static void ExpectedWithoutContinue(string expected, string custom = "default", int position = 0)
+    {
+        var errorMessage = expected;
+        var errorType = "expected";
+        var token = Current();
+        var lookahead = Lookahead(position);
+        if (!custom.Equals("default"))
+        {
+            errorMessage = custom;
+            errorType = "general";
+        }
+
+        if (!token.value.Equals(expected))
+        {
+            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            Analyzed.Add(token);
             return;
         }
 

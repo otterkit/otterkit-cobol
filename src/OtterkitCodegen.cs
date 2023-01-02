@@ -2,7 +2,8 @@ namespace Otterkit;
 
 public static class Codegen
 {
-    public static string ProgramEntryPoint = string.Empty;
+    private static string ProgramEntryPoint = string.Empty;
+
     public static void Generate(List<Token> tokens, string fileName)
     {
         ProgramBuilder compiled = new();
@@ -28,7 +29,7 @@ public static class Codegen
         string scope = string.Empty;
         while (!CurrentEquals("PROCEDURE"))
         {
-            if (CurrentEquals("WORKING-STORAGE") || CurrentEquals("LOCAL-STORAGE")) 
+            if (CurrentEquals("WORKING-STORAGE") || CurrentEquals("LOCAL-STORAGE"))
                 scope = Current().value;
 
             if (Current().type == TokenType.Numeric && (CurrentEquals("01") || CurrentEquals("1")) && !LookaheadEquals(2, "CONSTANT"))
@@ -57,7 +58,7 @@ public static class Codegen
             StatementBuilder statement = new(compiled, Continue, Current, Lookahead);
             statement.BuildStatement();
 
-            if(!CurrentEquals("EOF"))
+            if (!CurrentEquals("EOF"))
             {
                 if (CurrentEquals("END") && (LookaheadEquals(1, "PROGRAM") || LookaheadEquals(1, "FUNCTION")) && !LookaheadEquals(4, "EOF"))
                 {
@@ -86,7 +87,7 @@ public static class Codegen
         startup.Procedure();
         """;
 
-        File.WriteAllText(".otterkit/OtterkitExport/Startup.cs" ,startupCode);
+        File.WriteAllText(".otterkit/OtterkitExport/Startup.cs", startupCode);
 
         // Generator helper methods.
         Token Lookahead(int amount)

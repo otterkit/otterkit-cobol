@@ -112,7 +112,7 @@ public static class Analyzer
             {
                 Expected("IDENTIFICATION");
                 Expected("DIVISION");
-                Expected(".", headerPeriodError, -1, "separator period");
+                Expected(".", headerPeriodError, -1);
             }
 
             if (!CurrentEquals("PROGRAM-ID") && !CurrentEquals("FUNCTION-ID"))
@@ -168,7 +168,7 @@ public static class Analyzer
 
             Expected("ENVIRONMENT", "environment division");
             Expected("DIVISION");
-            Expected(".", headerPeriodError, -1, "separator period");
+            Expected(".", headerPeriodError, -1);
         }
 
 
@@ -183,7 +183,7 @@ public static class Analyzer
 
             Expected("DATA", "data division");
             Expected("DIVISION");
-            Expected(".", headerPeriodError, -1, "separator period");
+            Expected(".", headerPeriodError, -1);
 
             if (CurrentEquals("WORKING-STORAGE"))
                 WorkingStorage();
@@ -258,12 +258,11 @@ public static class Analyzer
         void RecordEntry()
         {
             BaseEntry();
-            int OutInt;
-            bool isNum = int.TryParse(Current().value, out OutInt);
+            _ = int.TryParse(Current().value, out int OutInt);
             while (OutInt > 1 && OutInt < 50)
             {
                 BaseEntry();
-                isNum = int.TryParse(Current().value, out OutInt);
+                _ = int.TryParse(Current().value, out OutInt);
             }
         }
 
@@ -362,9 +361,8 @@ public static class Analyzer
                     DataItemInformation.IsElementary(DataItemHash, true);
                     Choice("S9", "9", "X", "A", "N", "1");
 
-                    string DataLength = string.Empty;
                     Expected("(");
-                    DataLength = Current().value;
+                    string DataLength = Current().value;
                     Number();
                     Expected(")");
                     if (CurrentEquals("V9") && (dataType != "S9" && (dataType != "9")))
@@ -2186,7 +2184,7 @@ public static class Analyzer
     {
         if (Index + amount >= TokenList.Count)
         {
-            return TokenList[TokenList.Count - 1];
+            return TokenList[^1];
         }
 
         return Index + amount < 0 ? TokenList[0] : TokenList[Index + amount];
@@ -2261,7 +2259,7 @@ public static class Analyzer
     /// <para>If the current token matches the value, it adds the token to the parsed list,
     /// if the current token doesn't match the value it ignores the token and returns without moving to the next token</para>
     /// </summary>
-    private static void Optional(string optional, string scope = "")
+    private static void Optional(string optional)
     {
         var token = Current();
         if (!token.value.Equals(optional))
@@ -2276,7 +2274,7 @@ public static class Analyzer
     /// <para>If the current token matches the value, it adds the token to the parsed list,
     /// if the current token doesn't match the value it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void Expected(string expected, string custom = "default", int position = 0, string scope = "")
+    private static void Expected(string expected, string custom = "default", int position = 0)
     {
         var errorMessage = expected;
         var errorType = "expected";

@@ -19,11 +19,11 @@ public static class ErrorHandler
         public static void PrettyError(string fileName, Token token)
         {
             string line = File.ReadLines(fileName).Skip(token.line - 1).Take(token.line).First();
-            string error = new String(' ', line.Length - token.value.Length);
+            string error = new(' ', line.Length - token.value.Length);
 
-            int count = line.TakeWhile(Char.IsWhiteSpace).Count();
+            int count = line.TakeWhile(char.IsWhiteSpace).Count();
             int insertOffset = line.IndexOf(token.value) == token.column ? 0 : 7;
-            error = error.Insert(token.column + insertOffset - count, new String('~', token.value.Length));
+            error = error.Insert(token.column + insertOffset - count, new string('~', token.value.Length));
 
             Console.WriteLine($"{" ",5}|");
             Console.WriteLine($"{token.line,4} | {line.TrimStart()}");

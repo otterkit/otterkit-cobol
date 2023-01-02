@@ -31,19 +31,19 @@ public static class Preprocessor
                 if (currentLine.Length >= Options.ColumnLength)
                 {
                     // Removes everything after the max column length
-                    currentLine = currentLine.Substring(0, Options.ColumnLength);
+                    currentLine = currentLine[..Options.ColumnLength];
                 }
 
                 // Removes the sequence number area
-                currentLine = currentLine.PadRight(7).Substring(6);
+                currentLine = currentLine.PadRight(7)[6..];
 
                 if (currentLine.StartsWith("*"))
                 {
                     // Removes all fixed format comment lines
-                    currentLine = "";
+                    currentLine = " ";
                 }
 
-                currentLine = currentLine.Substring(1);
+                currentLine = currentLine[1..];
 
                 preprocessedLines.Add(currentLine);
             }
@@ -54,7 +54,7 @@ public static class Preprocessor
                 if (commentIndex > -1)
                 {
                     // Removes all free format comments
-                    currentLine = currentLine.Substring(0, commentIndex);
+                    currentLine = currentLine[..commentIndex];
                 }
 
                 preprocessedLines.Add(currentLine);
@@ -69,7 +69,6 @@ public static class Preprocessor
     private static (string, DirectiveType) PreprocessDirectives(string currentLine)
     {
         int index = 0;
-        List<Token> lexedLine = new();
         string directivePattern = """
         ^\s*>>SOURCE
         """;
@@ -77,7 +76,7 @@ public static class Preprocessor
         if (!Regex.IsMatch(currentLine, directivePattern, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture))
             return (currentLine, DirectiveType.None);
         
-        lexedLine = Lexer.TokenizeLine(currentLine);
+        List<Token> lexedLine = Lexer.TokenizeLine(currentLine);
 
         Continue();
         if (CurrentEquals("SOURCE"))
@@ -133,6 +132,6 @@ public static class Preprocessor
 
     private static void NextLine()
     {
-        Index = Index + 1;
+        Index++;
     }
 }

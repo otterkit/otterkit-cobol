@@ -115,10 +115,10 @@ public class DataItemBuilder
     private int FractionalLength = 0;
     private string DataValue = string.Empty;
     private string Section = string.Empty;
-    private ProgramBuilder ProgramBuilder;
-    private Action<int> Continue;
-    private Func<Token> Current;
-    private Func<int, Token> Lookahead;
+    private readonly ProgramBuilder ProgramBuilder;
+    private readonly Action<int> Continue;
+    private readonly Func<Token> Current;
+    private readonly Func<int, Token> Lookahead;
 
     public DataItemBuilder(ProgramBuilder ProgramBuilder, Action<int> Continue, Func<Token> Current, Func<int, Token> Lookahead)
     {
@@ -210,7 +210,7 @@ public class DataItemBuilder
                 if (LookaheadEquals(1, "EXTERNAL"))
                 {
                     Continue(2);
-                    externalizedName = FormatIdentifier(Current().value.Substring(1, Current().value.Length - 2));
+                    externalizedName = FormatIdentifier(Current().value[1..^1]);
                 }
 
                 ExternalName = externalizedName;
@@ -225,16 +225,19 @@ public class DataItemBuilder
             Continue(1);
         }
 
-        string ConvertType(string current) => current switch
+        static string ConvertType(string current)
         {
-            "X" => "Alphanumeric",
-            "A" => "Alphabetic",
-            "N" => "National",
-            "1" => "OtterkitBoolean",
-            "9" => "Numeric",
-            "S9" => "Numeric",
-            _ => "Error"
-        };
+            return current switch
+            {
+                "X" => "Alphanumeric",
+                "A" => "Alphabetic",
+                "N" => "National",
+                "1" => "OtterkitBoolean",
+                "9" => "Numeric",
+                "S9" => "Numeric",
+                _ => "Error"
+            };
+        }
 
         if (Section.Equals("WORKING-STORAGE") && isElementary)
             CompiledDataItem = $"\n    private static {ConvertType(DataType)} {FormatIdentifier(Identifier)} = ";
@@ -357,16 +360,20 @@ public class DataItemBuilder
     private void BuildSevenSeven()
     {
         bool isSigned = false;
-        string dataTypes(Token current) => current.value switch
+
+        static string dataTypes(Token current)
         {
-            "X" => "Alphanumeric",
-            "A" => "Alphabetic",
-            "N" => "National",
-            "1" => "OtterkitBoolean",
-            "9" => "Numeric",
-            "S9" => "Numeric",
-            _ => "Error"
-        };
+            return current.value switch
+            {
+                "X" => "Alphanumeric",
+                "A" => "Alphabetic",
+                "N" => "National",
+                "1" => "OtterkitBoolean",
+                "9" => "Numeric",
+                "S9" => "Numeric",
+                _ => "Error"
+            };
+        }
 
         while (!Current().value.Equals("."))
         {
@@ -428,7 +435,7 @@ public class DataItemBuilder
     }
 
     // Data item builder helper methods.
-    private string FormatIdentifier(string Identifier)
+    private static string FormatIdentifier(string Identifier)
     {
         string FormattedIdentifier = Identifier;
         FormattedIdentifier = "_" + FormattedIdentifier.Replace("-", "_");
@@ -449,10 +456,10 @@ public class DataItemBuilder
 public class StatementBuilder
 {
     private string CompiledStatement = string.Empty;
-    private ProgramBuilder ProgramBuilder;
-    private Action<int> Continue;
-    private Func<Token> Current;
-    private Func<int, Token> Lookahead;
+    private readonly ProgramBuilder ProgramBuilder;
+    private readonly Action<int> Continue;
+    private readonly Func<Token> Current;
+    private readonly Func<int, Token> Lookahead;
 
 
     public StatementBuilder(ProgramBuilder ProgramBuilder, Action<int> Continue, Func<Token> Current, Func<int, Token> Lookahead)
@@ -551,7 +558,7 @@ public class StatementBuilder
     private void CALL()
     {
         Continue(1);
-        string ProgramName = $"{FormatIdentifier(Current().value.Substring(1, Current().value.Length - 2))}";
+        string ProgramName = $"{FormatIdentifier(Current().value[1..^1])}";
         CompiledStatement += $"{ProgramName} {ProgramName} = new();";
         CompiledStatement += "\n        Statements.CALL(";
         CompiledStatement += $"() => {ProgramName}.Procedure());";
@@ -657,7 +664,7 @@ public class StatementBuilder
     }
 
     // Statement builder helper methods.
-    private string FormatIdentifier(string Identifier)
+    private static string FormatIdentifier(string Identifier)
     {
         string FormattedIdentifier = Identifier;
         FormattedIdentifier = "_" + FormattedIdentifier.Replace("-", "_");

@@ -37,7 +37,7 @@ public enum TokenContext
     IsStatement
 }
 
-public struct Token
+public partial struct Token
 {
     public int line;
     public int column;
@@ -51,8 +51,8 @@ public struct Token
         this.column = column;
         this.value = value;
         this.type = type;
-        this.scope = null;
-        this.context = null;
+        scope = null;
+        context = null;
     }
 
     public Token(string value, int line, int column)
@@ -60,9 +60,9 @@ public struct Token
         this.line = line;
         this.column = column;
         this.value = value;
-        this.type = null;
-        this.scope = null;
-        this.context = null;
+        type = null;
+        scope = null;
+        context = null;
     }
 
     public static TokenType FindType(string value)
@@ -85,7 +85,7 @@ public struct Token
         else if (value.StartsWith("\""))
             return TokenType.String;
         //check if the value is a numeric
-        else if (Regex.IsMatch(value, @"^(\+|-)?\.?[0-9]\d*(\.\d+)?"))
+        else if (NumericRegex().IsMatch(value))
             return TokenType.Numeric;
         //check if the value is End Of File
         else if (value == "EOF")
@@ -145,38 +145,30 @@ public struct Token
         return previousToken.scope;
     }
 
-    public static Token fromValue(string value, int line, int column)
+    public static Token FromValue(string value, int line, int column)
     {
-        if (Token.FindType(value) == TokenType.String)
-            return new Token(value, Token.FindType(value), line, column);
+        if (FindType(value) == TokenType.String)
+            return new Token(value, FindType(value), line, column);
 
-        return new Token(value.ToUpper(), Token.FindType(value), line, column);
+        return new Token(value.ToUpper(), FindType(value), line, column);
     }
 
-    public static List<Token> fromValue(List<Token> tokens)
+    public static List<Token> FromValue(List<Token> tokens)
     {
-        List<Token> newTokens = new List<Token>();
+        List<Token> newTokens = new();
         Token previousToken = new();
         foreach (Token token in tokens)
         {
-            Token newToken = Token.fromValue(token.value, token.line, token.column);
+            Token newToken = FromValue(token.value, token.line, token.column);
             newToken.scope = FindScope(newToken, previousToken);
             newToken.context = FindContext(newToken);
             newTokens.Add(newToken);
             previousToken = newToken;
         }
-        newTokens.Add(Token.fromValue("EOF", -1, -1));
+        newTokens.Add(FromValue("EOF", -1, -1));
         return newTokens;
     }
 
-    public static IEnumerable<Token> fromValue(IEnumerable<Token> tokens)
-    {
-        return Token.fromValue(tokens.ToList());
-    }
-
-    public static Token[] fromValue(Token[] tokens)
-    {
-        return Token.fromValue(tokens.ToList()).ToArray();
-    }
-
+    [GeneratedRegex("^(\\+|-)?\\.?[0-9]+(\\.[0-9]+)?", RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking)]
+    private static partial Regex NumericRegex();
 }

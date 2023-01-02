@@ -27,8 +27,7 @@ public static class DataItemInformation
 
     public static DataItemInfo GetValue(string DataItemHash)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItemInfo DataItem);
 
         if (!AlreadyExists)
             throw new ArgumentException($"FAILED TO GET DATA ITEM HASH FOR {DataItemHash}: THIS SHOULD NOT HAVE HAPPENED, PLEASE REPORT THIS ISSUE ON OTTERKIT'S REPO");
@@ -44,8 +43,7 @@ public static class DataItemInformation
 
     public static bool AddDataItem(string DataItemHash, string Identifier, int LevelNumber, Token token)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItemInfo DataItem);
 
         if (AlreadyExists)
             return false;
@@ -59,12 +57,11 @@ public static class DataItemInformation
 
     public static bool AddType(string DataItemHash, string Type)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 
         if (AlreadyExists)
         {
-            DataItem = Data[DataItemHash];
+            DataItemInfo DataItem = Data[DataItemHash];
             DataItem.Type = Type;
             Data[DataItemHash] = DataItem;
         }
@@ -75,12 +72,11 @@ public static class DataItemInformation
 
     public static bool AddPicture(string DataItemHash, string Picture)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 
         if (AlreadyExists)
         {
-            DataItem = Data[DataItemHash];
+            DataItemInfo DataItem = Data[DataItemHash];
             DataItem.PictureLength = Picture;
             Data[DataItemHash] = DataItem;
         }
@@ -90,12 +86,11 @@ public static class DataItemInformation
 
     public static bool AddDefault(string DataItemHash, string Default)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 
         if (AlreadyExists)
         {
-            DataItem = Data[DataItemHash];
+            DataItemInfo DataItem = Data[DataItemHash];
             DataItem.DefaultValue = Default;
             Data[DataItemHash] = DataItem;
         }
@@ -105,12 +100,11 @@ public static class DataItemInformation
 
     public static bool AddSection(string DataItemHash, string Section)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 
         if (AlreadyExists)
         {
-            DataItem = Data[DataItemHash];
+            DataItemInfo DataItem = Data[DataItemHash];
             DataItem.Section = Section;
             Data[DataItemHash] = DataItem;
         }
@@ -120,12 +114,11 @@ public static class DataItemInformation
 
     public static bool AddParent(string DataItemHash, string Parent)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 
         if (AlreadyExists)
         {
-            DataItem = Data[DataItemHash];
+            DataItemInfo DataItem = Data[DataItemHash];
             DataItem.Parent = Parent;
             Data[DataItemHash] = DataItem;
         }
@@ -135,12 +128,11 @@ public static class DataItemInformation
 
     public static bool IsExternal(string DataItemHash, bool IsExternal, string ExternalName)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 
         if (AlreadyExists)
         {
-            DataItem = Data[DataItemHash];
+            DataItemInfo DataItem = Data[DataItemHash];
             DataItem.IsExternal = true;
             DataItem.ExternalName = ExternalName;
             Data[DataItemHash] = DataItem;
@@ -151,12 +143,11 @@ public static class DataItemInformation
 
     public static bool IsConstant(string DataItemHash, bool IsConstant)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 
         if (AlreadyExists)
         {
-            DataItem = Data[DataItemHash];
+            DataItemInfo DataItem = Data[DataItemHash];
             DataItem.IsConstant = true;
             Data[DataItemHash] = DataItem;
         }
@@ -166,12 +157,11 @@ public static class DataItemInformation
 
     public static bool IsGlobal(string DataItemHash, bool IsGlobal)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 
         if (AlreadyExists)
         {
-            DataItem = Data[DataItemHash];
+            DataItemInfo DataItem = Data[DataItemHash];
             DataItem.IsGlobal = true;
             Data[DataItemHash] = DataItem;
         }
@@ -181,12 +171,11 @@ public static class DataItemInformation
 
     public static bool IsElementary(string DataItemHash, bool IsElementary)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 
         if (AlreadyExists)
         {
-            DataItem = Data[DataItemHash];
+            DataItemInfo DataItem = Data[DataItemHash];
             DataItem.IsElementary = true;
             Data[DataItemHash] = DataItem;
         }
@@ -196,12 +185,11 @@ public static class DataItemInformation
 
     public static bool IsGroup(string DataItemHash, bool IsGroup)
     {
-        DataItemInfo DataItem;
-        bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItem);
+        bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 
         if (AlreadyExists)
         {
-            DataItem = Data[DataItemHash];
+            DataItemInfo DataItem = Data[DataItemHash];
             DataItem.IsGroup = true;
             Data[DataItemHash] = DataItem;
         }

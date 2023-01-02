@@ -21,7 +21,7 @@ public static class OtterkitCompiler
 
     public static void Main(string[] args)
     {
-        if (args.Length <= 1 || (args[0].Equals("-h") || args[0].Equals("--help")))
+        if (args.Length <= 1 || args[0].Equals("-h") || args[0].Equals("--help"))
         {
             DisplayHelpMessage();
             return;
@@ -131,7 +131,7 @@ public static class OtterkitCompiler
                 List<string> sourceLines = ReadSourceFile();
                 List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
                 List<Token> tokens = Lexer.Tokenize(preprocessedLines);
-                List<Token> classified = Token.fromValue(tokens);
+                List<Token> classified = Token.FromValue(tokens);
                 List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
 
                 string format = $$"""
@@ -148,7 +148,7 @@ public static class OtterkitCompiler
                 List<string> sourceLines = ReadSourceFile();
                 List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
                 List<Token> tokens = Lexer.Tokenize(preprocessedLines);
-                List<Token> classified = Token.fromValue(tokens);
+                List<Token> classified = Token.FromValue(tokens);
                 List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
                 Codegen.Generate(analized, Options.EntryPoint);
 
@@ -161,7 +161,7 @@ public static class OtterkitCompiler
                 List<string> sourceLines = ReadSourceFile();
                 List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
                 List<Token> tokens = Lexer.Tokenize(preprocessedLines);
-                List<Token> classified = Token.fromValue(tokens);
+                List<Token> classified = Token.FromValue(tokens);
                 List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
                 Codegen.Generate(analized, Options.EntryPoint);
 
@@ -209,14 +209,12 @@ public static class OtterkitCompiler
         {
             CallDotnetCompiler("build", false);
 
-            using (Process otterkitExport = new Process())
-            {
-                otterkitExport.StartInfo.FileName = ".otterkit/Build/OtterkitExport";
-                otterkitExport.StartInfo.UseShellExecute = true;
-                otterkitExport.Start();
+            using Process otterkitExport = new();
+            otterkitExport.StartInfo.FileName = ".otterkit/Build/OtterkitExport";
+            otterkitExport.StartInfo.UseShellExecute = true;
+            otterkitExport.Start();
 
-                otterkitExport.WaitForExit();
-            }
+            otterkitExport.WaitForExit();
 
             return;
         }
@@ -244,7 +242,7 @@ public static class OtterkitCompiler
             """;
         }
 
-        using (Process dotnet = new Process())
+        using (Process dotnet = new())
         {
             dotnet.StartInfo.FileName = "dotnet";
             dotnet.StartInfo.Arguments = arguments;

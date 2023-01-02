@@ -2120,17 +2120,74 @@ public static class Analyzer
 
         void Condition(string delimiter)
         {
-            var current = Current();
             var expression = new List<Token>();
+
             while (Current().context != TokenContext.IsStatement && !CurrentEquals(delimiter))
             {
-                if (CurrentEquals("NOT") && (LookaheadEquals(1, ">") || LookaheadEquals(1, "<")))
+                if (CurrentEquals("IS") && (Lookahead(1).value is "GREATER" or "LESS" or "EQUAL" or "NOT" || Lookahead(1).type is TokenType.Symbol))
                 {
-                    var combined = new Token($"{Current().value} {Lookahead(1).value}", TokenType.Symbol, Current().line, Current().column);
+                    Continue();
+                }
+                else if (CurrentEquals("NOT") && (LookaheadEquals(1, ">") || LookaheadEquals(1, "<")))
+                {
+                    var combined = new Token($"NOT {Lookahead(1).value}", TokenType.Symbol, Current().line, Current().column);
                     expression.Add(combined);
                     Analyzed.Add(combined);
+                    Continue(2);
+                }
+                else if (CurrentEquals("NOT") && (LookaheadEquals(1, "GREATER") || LookaheadEquals(1, "LESS") || LookaheadEquals(1, "EQUAL")))
+                {
+                    var combined = new Token();
+                    if (LookaheadEquals(1, "GREATER")) 
+                        combined = new Token($"NOT >", TokenType.Symbol, Current().line, Current().column);
+
+                    if (LookaheadEquals(1, "LESS")) 
+                        combined = new Token($"NOT <", TokenType.Symbol, Current().line, Current().column);
+
+                    if (LookaheadEquals(1, "EQUAL")) 
+                        combined = new Token($"<>", TokenType.Symbol, Current().line, Current().column);
+
+                    expression.Add(combined);
+                    Analyzed.Add(combined);
+                    Continue(2);
+
+                    if (Current().value is "THAN" or "TO") Continue();
+                }
+                else if (CurrentEquals("GREATER") || CurrentEquals("LESS") || CurrentEquals("EQUAL"))
+                {
+                    var converted = new Token();
+                    if (CurrentEquals("GREATER"))
+                        converted = new Token($">", TokenType.Symbol, Current().line, Current().column);
+
+                    if (CurrentEquals("LESS"))
+                        converted = new Token($"<", TokenType.Symbol, Current().line, Current().column);
+
+                    if (CurrentEquals("EQUAL"))
+                        converted = new Token($"=", TokenType.Symbol, Current().line, Current().column);
+
+                    if (CurrentEquals("GREATER") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
+                    {
+                        if (!LookaheadEquals(1, "THAN")) Continue(2);
+
+                        if (LookaheadEquals(1, "THAN")) Continue(3);
+
+                        converted = new Token($">=", TokenType.Symbol, Current().line, Current().column);
+                    }
+
+                    if (CurrentEquals("LESS") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
+                    {
+                        if (LookaheadEquals(1, "THAN")) Continue(3);
+
+                        if (!LookaheadEquals(1, "THAN")) Continue(2);
+
+                        converted = new Token($"<=", TokenType.Symbol, Current().line, Current().column);
+                    }
+
+                    expression.Add(converted);
+                    Analyzed.Add(converted);
                     Continue();
-                    Continue();
+
+                    if (Current().value is "THAN" or "TO") Continue();
                 }
                 else
                 {
@@ -2150,7 +2207,7 @@ public static class Analyzer
             }
 
             var shuntingYard = Helpers.ShuntingYard(expression, Helpers.BooleanPrecedence);
-            
+
             if (!Helpers.EvaluatePostfix(shuntingYard, Helpers.BooleanPrecedence, out Token error))
             {
                 const string expressionNotValidError = """
@@ -2225,9 +2282,9 @@ public static class Analyzer
     /// <para>This method will be called in the Expected(), Optional(), Choice(), Identifier(), Number() and String() methods,
     /// so there's no need to call Continue after calling those methods.</para>
     /// </summary>
-    private static void Continue()
+    private static void Continue(int amount = 1)
     {
-        Index += 1;
+        Index += amount;
     }
 
     /// <summary>

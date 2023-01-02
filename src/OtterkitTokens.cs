@@ -45,6 +45,7 @@ public partial struct Token
     public TokenType? type;
     public TokenScope? scope;
     public TokenContext? context;
+
     public Token(string value, TokenType? type, int line, int column)
     {
         this.line = line;

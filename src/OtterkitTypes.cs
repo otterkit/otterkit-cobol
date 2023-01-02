@@ -409,26 +409,6 @@ public sealed class Numeric
         Format(bytes, true);
     }
 
-    public ReadOnlySpan<char> Chars
-    {
-        get
-        {
-            return MemoryMarshal.Cast<byte, char>(Memory.Span);
-        }
-        set
-        {
-            Span<byte> bytes = stackalloc byte[value.Length];
-            encoding.GetBytes(value, bytes);
-            if (IsSigned)
-            {
-                FormatSigned(bytes);
-                return;
-            }
-
-            Format(bytes);
-        }
-    }
-
     public ReadOnlySpan<byte> Bytes
     {
         get
@@ -484,24 +464,55 @@ public sealed class Alphanumeric
         this.Memory = memory.Slice(offset, length);
     }
 
-    public ReadOnlySpan<char> Chars
+    public Alphanumeric(ReadOnlySpan<byte> aphanumeric)
     {
-        get
-        {
-            return MemoryMarshal.Cast<byte, char>(Memory.Span);
-        }
-        set
-        {
-            Memory.Span.Fill(32);
+        this.Length = aphanumeric.Length;
+        this.Memory = new byte[Length];
+        aphanumeric.CopyTo(Memory.Span);
+    }
 
-            int byteDifference = (encoding.GetByteCount(value) - value.Length);
+    public static bool operator >(Alphanumeric left, Alphanumeric right)
+    {
+        int unequalPosition = left.Bytes.CommonPrefixLength(right.Bytes);
+        return left.Bytes[unequalPosition] > right.Bytes[unequalPosition];
+    }
 
-            int byteLength = Length < value.Length + byteDifference
-                ? Length - byteDifference
-                : value.Length;
+    public static bool operator <(Alphanumeric left, Alphanumeric right)
+    {
+        int unequalPosition = left.Bytes.CommonPrefixLength(right.Bytes);
+        return left.Bytes[unequalPosition] < right.Bytes[unequalPosition];
+    }
 
-            _ = encoding.GetBytes(value[..byteLength], Memory.Span);
-        }
+    public static bool operator >=(Alphanumeric left, Alphanumeric right)
+    {
+        int unequalPosition = left.Bytes.CommonPrefixLength(right.Bytes);
+        return left.Bytes[unequalPosition] >= right.Bytes[unequalPosition];
+    }
+
+    public static bool operator <=(Alphanumeric left, Alphanumeric right)
+    {
+        int unequalPosition = left.Bytes.CommonPrefixLength(right.Bytes);
+        return left.Bytes[unequalPosition] <= right.Bytes[unequalPosition];
+    }
+
+    public static bool operator ==(Alphanumeric left, Alphanumeric right)
+    {
+        return left.Bytes.SequenceEqual(right.Bytes);
+    }
+
+    public static bool operator !=(Alphanumeric left, Alphanumeric right)
+    {
+        return !left.Bytes.SequenceEqual(right.Bytes);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        throw new NotSupportedException();
+    }
+
+    public override int GetHashCode()
+    {
+        throw new NotSupportedException();
     }
 
     public ReadOnlySpan<byte> Bytes

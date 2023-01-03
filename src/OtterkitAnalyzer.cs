@@ -46,13 +46,6 @@ public static class Analyzer
     private static int Index;
 
     /// <summary>
-    /// List of Tokens <c>Analyzed</c>: This list will contain the parsed Tokens after the parser is finished with the TokenList.
-    /// <para>This parser does not generate an AST, instead it returns this list only if the COBOL source code was written correctly and passed all parsing checks.
-    /// Generating a full AST and the code needed to handle it would add extra complexity to the compiler, the AST is also not needed for the codegen to work</para>
-    /// </summary>
-    private static List<Token> Analyzed = new();
-
-    /// <summary>
     /// Otterkit COBOL Syntax Analyzer
     /// <para>This parser was built to be easily extensible, with some reusable COBOL parts.</para>
     /// <para>It requires a List of Tokens generated from the Lexer and the Token Classifier.</para>
@@ -61,7 +54,6 @@ public static class Analyzer
     {
         FileName = fileName;
         TokenList = tokenList;
-        Analyzed = new();
         Index = 0;
 
         // Call the parser's main method
@@ -73,7 +65,7 @@ public static class Analyzer
         if (ErrorHandler.Error) ErrorHandler.Terminate("parsing");
 
         // Return parsed list of tokens.
-        return Analyzed;
+        return TokenList;
 
         // Source() is the main method of the parser.
         // It's responsible for parsing COBOL divisions until the EOF token.
@@ -82,19 +74,19 @@ public static class Analyzer
         void Source()
         {
             IDENTIFICATION();
-            if (CurrentEquals("ENVIRONMENT"))
-                ENVIRONMENT();
+            
+            if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
 
-            if (CurrentEquals("DATA"))
-                DATA();
+            if (CurrentEquals("DATA")) DATA();
 
             PROCEDURE();
 
-            if (CurrentEquals("IDENTIFICATION") || CurrentEquals("PROGRAM-ID") || CurrentEquals("FUNCTION-ID"))
+            if (CurrentEquals("IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID"))
+            {
                 Source();
+            }
             
-            if (CurrentEquals("EOF"))
-                Analyzed.Add(Current());
+            if (CurrentEquals("EOF")) return;
 
         }
 
@@ -104,24 +96,21 @@ public static class Analyzer
         // It is also responsible for showing appropriate error messages when an error occurs in the IDENTIFICATION DIVISION.
         void IDENTIFICATION()
         {
-            const string headerPeriodError = """
-            Missing separator period at the end of this IDENTIFICATION DIVISION header, every division header must end with a separator period
-            """;
-
             if (CurrentEquals("IDENTIFICATION"))
             {
                 Expected("IDENTIFICATION");
                 Expected("DIVISION");
-                Expected(".", headerPeriodError, -1);
+
+                Expected(".", """
+                Missing separator period at the end of this IDENTIFICATION DIVISION header, every division header must end with a separator period
+                """, -1, "PROGRAM-ID", "FUNCTION-ID", "ENVIRONMENT", "DATA", "PROCEDURE");
             }
 
             if (!CurrentEquals("PROGRAM-ID") && !CurrentEquals("FUNCTION-ID"))
             {
-                const string missingIdentificationError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 Missing source unit ID name (PROGRAM-ID, FUNCTION-ID, CLASS-ID...), the identification division header is optional but every source unit must still have an ID.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", missingIdentificationError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
@@ -152,7 +141,7 @@ public static class Analyzer
                 String();
             }
 
-            if (Current().value is "IS" or "COMMON" or "INITIAL" or "RECURSIVE" or "PROTOTYPE")
+            if (CurrentEquals("IS", "COMMON", "INITIAL", "RECURSIVE", "PROTOTYPE"))
             {
                 bool isCommon = false;
                 bool isInitial = false;
@@ -161,7 +150,7 @@ public static class Analyzer
 
                 Optional("IS");
 
-                while (Current().value is "COMMON" or "INITIAL" or "RECURSIVE" or "PROTOTYPE")
+                while (CurrentEquals("COMMON", "INITIAL", "RECURSIVE", "PROTOTYPE"))
                 {
                     if (CurrentEquals("COMMON"))
                     {
@@ -190,32 +179,26 @@ public static class Analyzer
 
                 if (isPrototype && (isCommon || isInitial || isRecursive))
                 {
-                    const string invalidPrototypeError = """
+                    ErrorHandler.Parser.Report(fileName, ProgramIdentifier, ErrorType.General, """
                     Invalid prototype. Program prototypes cannot be defined as common, initial or recursive.
-                    """;
-
-                    ErrorHandler.Parser.Report(fileName, ProgramIdentifier, "general", invalidPrototypeError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, ProgramIdentifier);
                 }
 
                 if (isInitial && isRecursive)
                 {
-                    const string invalidProgramDefinitionError = """
+                    ErrorHandler.Parser.Report(fileName, ProgramIdentifier, ErrorType.General, """
                     Invalid program definition. Initial programs cannot be defined as recursive.
-                    """;
-
-                    ErrorHandler.Parser.Report(fileName, ProgramIdentifier, "general", invalidProgramDefinitionError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, ProgramIdentifier);
                 }
 
                 if (!isPrototype) Optional("PROGRAM");
             }
 
-            const string missingPeriodError = """
+            Expected(".", """
             Missing separator period at the end of this program definition
-            """;
-
-            ExpectedWithoutContinue(".", missingPeriodError, -1);
+            """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
         }
 
         void FunctionId()
@@ -225,7 +208,10 @@ public static class Analyzer
             SourceId = Current().value;
             SourceType = "FUNCTION";
             Identifier();
-            Expected(".");
+
+            Expected(".", """
+            Missing separator period at the end of this program definition
+            """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
         }
 
 
@@ -268,7 +254,7 @@ public static class Analyzer
 
             if (!CurrentEquals("PROCEDURE"))
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "Data Division data items and sections");
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, "Data Division data items and sections");
                 ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
             }
@@ -351,38 +337,33 @@ public static class Analyzer
             if (!DataItemInformation.AddDataItem(DataItemHash, DataName, LevelNumber, Current()))
             {
                 DataItemInfo originalItem = DataItemInformation.GetValue(DataItemHash);
-                string duplicateDataItemError = $"""
+
+                ErrorHandler.Parser.Report(fileName, Lookahead(-1), ErrorType.General, $"""
                 A data item with this name already exists in this program, data items in a program must have a unique name.
                 The original {originalItem.Identifier} data item can be found at line {originalItem.Line}. 
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Lookahead(-1), "general", duplicateDataItemError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
             }
 
             DataItemInformation.AddSection(DataItemHash, CurrentSection);
 
-            if (Current().context is not TokenContext.IsClause && !CurrentEquals("."))
+            if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
             {
-                string notAClauseError = $"""
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, $"""
                 Expected data division clauses or a separator period after this data item's identifier.
                 Token found ("{Current().value}") was not a data division clause reserved word.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notAClauseError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
             }
 
-            while (Current().context is TokenContext.IsClause)
+            while (CurrentEquals(TokenContext.IsClause))
             {
-                if (CurrentEquals("IS") && !(LookaheadEquals(1, "EXTERNAL") || LookaheadEquals(1, "GLOBAL") || LookaheadEquals(1, "TYPEDEF")))
+                if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL", "TYPEDEF"))
                 {
-                    const string Externalerror = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     Missing clause or possible clause mismatch, in this context the "IS" word must be followed by the EXTERNAL, GLOBAL or TYPEDEF clauses only (IS TYPEDEF), or must be in the middle of the PICTURE clause (PIC IS ...) 
-                    """;
-
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", Externalerror);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -392,12 +373,12 @@ public static class Analyzer
                     Expected("EXTERNAL");
                     if (CurrentEquals("AS"))
                     {
-                        const string externalizedNameError = """
-                        Missing externalized name, the "AS" word on the EXTERNAL clause must be followed by an alphanumeric or national literal
-                        """;
                         Expected("AS");
                         DataItemInformation.IsExternal(DataItemHash, true, Current().value);
-                        String(externalizedNameError, -1);
+
+                        String("""
+                        Missing externalized name, the "AS" word on the EXTERNAL clause must be followed by an alphanumeric or national literal
+                        """, -1);
                     }
 
                     if (!CurrentEquals("AS"))
@@ -421,11 +402,9 @@ public static class Analyzer
 
                     if (dataType == "Error")
                     {
-                        const string dataTypeError = """
+                        ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                         Unrecognized type, PICTURE type must be S9, 9, X, A, N or 1. These are Signed Numeric, Unsigned Numeric, Alphanumeric, Alphabetic, National and Boolean respectively
-                        """;
-
-                        ErrorHandler.Parser.Report(fileName, Current(), "general", dataTypeError);
+                        """);
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                     }
 
@@ -439,7 +418,7 @@ public static class Analyzer
                     Expected(")");
                     if (CurrentEquals("V9") && (dataType != "S9" && (dataType != "9")))
                     {
-                        ErrorHandler.Parser.Report(fileName, Current(), " ", "V9 cannot be used with non-numeric types");
+                        ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, "V9 cannot be used with non-numeric types");
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                     }
 
@@ -461,11 +440,9 @@ public static class Analyzer
 
                     if (Current().type is not TokenType.String and not TokenType.Numeric)
                     {
-                        const string valueError = """
+                        ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                         The only tokens allowed after a VALUE clause are type literals, like an Alphanumeric literal ("Hello, World!") or a Numeric literal (123.456).
-                        """;
-
-                        ErrorHandler.Parser.Report(fileName, Current(), "general", valueError);
+                        """);
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                     }
 
@@ -497,11 +474,9 @@ public static class Analyzer
         {
             if (!CurrentEquals("01") && !CurrentEquals("1"))
             {
-                const string levelNumberError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 Invalid level number for this data item, CONSTANT data items must have a level number of 1 or 01
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", levelNumberError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
@@ -515,12 +490,11 @@ public static class Analyzer
             if (!DataItemInformation.AddDataItem(DataItemHash, DataName, LevelNumber, Current()))
             {
                 var originalItem = DataItemInformation.GetValue(DataItemHash);
-                var duplicateDataItemError = $"""
+
+                ErrorHandler.Parser.Report(fileName, Lookahead(-1), ErrorType.General, $"""
                 A data item with this name already exists in this program, data items in a program must have a unique name.
                 The original {originalItem.Identifier} data item can be found at line {originalItem.Line}. 
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Lookahead(-1), "general", duplicateDataItemError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
             }
             DataItemInformation.IsConstant(DataItemHash, true);
@@ -605,7 +579,7 @@ public static class Analyzer
 
             if (CurrentEquals("IDENTIFICATION") || CurrentEquals("PROGRAM-ID") || CurrentEquals("FUNCTION-ID"))
             {
-                string missingEndMarkerError = $"""
+                var missingEndMarkerError = $"""
                 Missing END {SourceType} marker. If another source unit is present after the end of the current source unit, the current unit must contain an END marker.
                 """;
 
@@ -615,7 +589,7 @@ public static class Analyzer
 
                 string errorMessageChoice = SourceType.Equals("FUNCTION") ? missingEndFunctionMarkerError : missingEndMarkerError;
 
-                ErrorHandler.Parser.Report(fileName, Lookahead(-1), "general", errorMessageChoice);
+                ErrorHandler.Parser.Report(fileName, Lookahead(-1), ErrorType.General, errorMessageChoice);
                 ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
                 return;
             }
@@ -650,13 +624,11 @@ public static class Analyzer
         // COBOL user-defined functions should always return a data item.
         void ReturningDataName()
         {
-            if (Current().type != TokenType.Identifier)
+            if (!CurrentEquals(TokenType.Identifier))
             {
-                const string missingDataItemError = $"""
+                ErrorHandler.Parser.Report(fileName, Lookahead(-1), ErrorType.General, """
                 Missing returning data item after this RETURNING definition.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Lookahead(-1), "general", missingDataItemError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
                 return;
             }
@@ -667,14 +639,11 @@ public static class Analyzer
             var DataItemHash = $"{SourceId}#{DataName}";
             if (!DataItemInformation.ValueExists(DataItemHash))
             {
-                const string undefinedDataItemError = $"""
+                ErrorHandler.Parser.Report(fileName, Lookahead(-1), ErrorType.General, """
                 No data item found with this name in this source unit's data division. 
                 Please define a new returning data item in this unit's linkage section.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Lookahead(-1), "general", undefinedDataItemError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
-                return;
             }
         }
 
@@ -824,23 +793,20 @@ public static class Analyzer
                     String();
                     break;
                 default:
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or literal");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier or literal");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                     break;
             }
 
-            while (Current().type == TokenType.Identifier
-                || Current().type == TokenType.Numeric
-                || Current().type == TokenType.String
-                )
+            while (CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
             {
-                if (Current().type == TokenType.Identifier)
+                if (CurrentEquals(TokenType.Identifier))
                     Identifier();
 
-                if (Current().type == TokenType.Numeric)
+                if (CurrentEquals(TokenType.Numeric))
                     Number();
 
-                if (Current().type == TokenType.String)
+                if (CurrentEquals(TokenType.String))
                     String();
             }
 
@@ -850,7 +816,7 @@ public static class Analyzer
                 Choice("STANDARD-OUTPUT", "STANDARD-ERROR");
             }
 
-            if (CurrentEquals("WITH") || CurrentEquals("NO"))
+            if (CurrentEquals("WITH", "NO"))
             {
                 Optional("WITH");
                 Expected("NO");
@@ -900,10 +866,10 @@ public static class Analyzer
         void ALLOCATE()
         {
             Expected("ALLOCATE");
-            if (Current().type == TokenType.Identifier && !LookaheadEquals(1, "CHARACTERS") && Lookahead(1).type != TokenType.Symbol)
+            if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "CHARACTERS") && !LookaheadEquals(1, TokenType.Symbol))
                 Identifier();
 
-            if (Current().type == TokenType.Identifier || Current().type == TokenType.Numeric)
+            if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
             {
                 Arithmetic();
                 Expected("CHARACTERS");
@@ -924,21 +890,21 @@ public static class Analyzer
             bool isConditional = false;
 
             Expected("COMPUTE");
-            if (Current().type != TokenType.Identifier)
+            if (!CurrentEquals(TokenType.Identifier))
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier");
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
-            while (Current().type == TokenType.Identifier)
+            while (CurrentEquals(TokenType.Identifier))
             {
                 Identifier();
             }
 
             Expected("=");
-            if (Current().type != TokenType.Identifier && Current().type != TokenType.Numeric && Current().type != TokenType.Symbol)
+            if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier, numeric literal or valid arithmetic symbol");
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier, numeric literal or valid arithmetic symbol");
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
@@ -979,17 +945,18 @@ public static class Analyzer
             bool isConditional = false;
 
             Expected("ADD");
-            if (Current().type != TokenType.Identifier && Current().type != TokenType.Numeric)
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
-
-            while (Current().type == TokenType.Identifier
-                || Current().type == TokenType.Numeric
-            )
+            if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric))
             {
-                if (Current().type == TokenType.Identifier)
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier or numeric literal");
+                ErrorHandler.Parser.PrettyError(fileName, Current());
+            }
+
+            while (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
+            {
+                if (CurrentEquals(TokenType.Identifier))
                     Identifier();
 
-                if (Current().type == TokenType.Numeric)
+                if (CurrentEquals(TokenType.Numeric))
                     Number();
             }
 
@@ -1007,7 +974,7 @@ public static class Analyzer
                         break;
 
                     default:
-                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier or numeric literal");
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                         break;
                 }
@@ -1015,7 +982,7 @@ public static class Analyzer
                 Expected("GIVING");
                 if (Current().type != TokenType.Identifier)
                 {
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -1027,7 +994,7 @@ public static class Analyzer
                 Expected("GIVING");
                 if (Current().type != TokenType.Identifier)
                 {
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -1039,7 +1006,7 @@ public static class Analyzer
                 Expected("TO");
                 if (Current().type != TokenType.Identifier)
                 {
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -1048,7 +1015,7 @@ public static class Analyzer
             }
             else
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "TO or GIVING");
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "TO or GIVING");
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
@@ -1065,7 +1032,7 @@ public static class Analyzer
             Expected("SUBTRACT");
             if (Current().type != TokenType.Identifier && Current().type != TokenType.Numeric)
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier or numeric literal");
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
@@ -1094,7 +1061,7 @@ public static class Analyzer
                         break;
 
                     default:
-                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier or numeric literal");
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                         break;
                 }
@@ -1102,7 +1069,7 @@ public static class Analyzer
                 Expected("GIVING");
                 if (Current().type != TokenType.Identifier)
                 {
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -1114,7 +1081,7 @@ public static class Analyzer
                 Expected("FROM");
                 if (Current().type != TokenType.Identifier)
                 {
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -1123,7 +1090,7 @@ public static class Analyzer
             }
             else
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "FROM");
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "FROM");
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
@@ -1140,12 +1107,10 @@ public static class Analyzer
             Optional("THEN");
             if (CurrentEquals("NEXT") && LookaheadEquals(1, "SENTENCE"))
             {
-                string archaicFeatureError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 Unsupported phrase: NEXT SENTENCE is an archaic feature. This phrase can be confusing and is a common source of errors.
                 The CONTINUE statement can be used to accomplish the same functionality while being much clearer and less prone to error
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", archaicFeatureError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
             Statement(true);
@@ -1163,11 +1128,9 @@ public static class Analyzer
             Expected("INITIATE");
             if (Current().type != TokenType.Identifier)
             {
-                string notIdentifierError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The INITIATE statement must only contain report entry identifiers defined in the report section.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
             Identifier();
@@ -1176,11 +1139,9 @@ public static class Analyzer
 
             if (!CurrentEquals("."))
             {
-                string notIdentifierError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The INITIATE statement must only contain report entry identifiers defined in the report section.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
         }
@@ -1201,7 +1162,7 @@ public static class Analyzer
                     break;
 
                 default:
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier or numeric literal");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                     break;
             }
@@ -1220,7 +1181,7 @@ public static class Analyzer
                         break;
 
                     default:
-                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier or numeric literal");
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                         break;
                 }
@@ -1228,7 +1189,7 @@ public static class Analyzer
                 Expected("GIVING");
                 if (Current().type != TokenType.Identifier)
                 {
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -1240,7 +1201,7 @@ public static class Analyzer
                 Expected("BY");
                 if (Current().type != TokenType.Identifier)
                 {
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -1249,7 +1210,7 @@ public static class Analyzer
             }
             else
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "BY");
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "BY");
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
@@ -1273,11 +1234,9 @@ public static class Analyzer
 
             if (NotIdentifierOrLiteral())
             {
-                string notIdentifierOrLiteralError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The MOVE statement must only contain a single data item identifier, datatype literal or an intrisic function which returns a data item before the "TO" reserved word.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierOrLiteralError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
@@ -1293,11 +1252,9 @@ public static class Analyzer
             Expected("TO");
             if (Current().type != TokenType.Identifier)
             {
-                string notIdentifierError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The MOVE statement must only contain data item identifiers after the "TO" reserved word.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
@@ -1306,11 +1263,9 @@ public static class Analyzer
 
             if (!CurrentEquals("."))
             {
-                string notIdentifierError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The MOVE statement must only contain data item identifiers after the "TO" reserved word.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
         }
@@ -1331,7 +1286,7 @@ public static class Analyzer
                     break;
 
                 default:
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier or numeric literal");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                     break;
             }
@@ -1350,7 +1305,7 @@ public static class Analyzer
                         break;
 
                     default:
-                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier or numeric literal");
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                         break;
                 }
@@ -1358,7 +1313,7 @@ public static class Analyzer
                 Expected("GIVING");
                 if (Current().type != TokenType.Identifier)
                 {
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -1379,7 +1334,7 @@ public static class Analyzer
                         break;
 
                     default:
-                        ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier or numeric literal");
+                        ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier or numeric literal");
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                         break;
                 }
@@ -1394,7 +1349,7 @@ public static class Analyzer
                 Expected("INTO");
                 if (Current().type != TokenType.Identifier)
                 {
-                    ErrorHandler.Parser.Report(fileName, Current(), "expected", "identifier");
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "identifier");
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -1403,7 +1358,7 @@ public static class Analyzer
             }
             else
             {
-                ErrorHandler.Parser.Report(fileName, Current(), "expected", "BY or INTO");
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "BY or INTO");
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
@@ -1487,16 +1442,13 @@ public static class Analyzer
         {
             Expected("FREE");
             Identifier();
-            while (Current().type == TokenType.Identifier)
-                Identifier();
+            while (CurrentEquals(TokenType.Identifier)) Identifier();
 
             if (!CurrentEquals("."))
             {
-                string notIdentifierError = """
-                    The FREE statement must only contain based data item identifiers.
-                    """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
+                The FREE statement must only contain based data item identifiers.
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
@@ -1515,8 +1467,7 @@ public static class Analyzer
             Identifier();
             if (CurrentEquals("DEPENDING") || Current().type == TokenType.Identifier)
             {
-                while (Current().type == TokenType.Identifier)
-                    Identifier();
+                while (CurrentEquals(TokenType.Identifier)) Identifier();
 
                 Expected("DEPENDING");
                 Optional("ON");
@@ -1560,29 +1511,27 @@ public static class Analyzer
             }
             else
             {
-                string notProgramNameError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The CLOSE statement only accepts file connector names. 
                 NOTE: This statement must not specify more than one file connector when inside of an exception-checking phrase in a PERFORM statement.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
 
             while (Current().type == TokenType.Identifier)
             {
                 Identifier();
-                if (CurrentEquals("REEL") || CurrentEquals("UNIT"))
+                if (CurrentEquals("REEL", "UNIT"))
                 {
                     Expected(Current().value);
 
-                    if (CurrentEquals("FOR") || CurrentEquals("REMOVAL"))
+                    if (CurrentEquals("FOR", "REMOVAL"))
                     {
                         Optional("FOR");
                         Expected("REMOVAL");
                     }
                 }
-                else if (CurrentEquals("WITH") || CurrentEquals("NO"))
+                else if (CurrentEquals("WITH", "NO"))
                 {
                     Optional("WITH");
                     Expected("NO");
@@ -1592,12 +1541,10 @@ public static class Analyzer
 
             if (!CurrentEquals("."))
             {
-                string notProgramNameError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The CLOSE statement only accepts file connector names. 
                 NOTE: This statement must not specify more than one file connector when inside of an exception-checking phrase in a PERFORM statement.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
         }
@@ -1613,11 +1560,9 @@ public static class Analyzer
 
             else
             {
-                string notProgramNameError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The CANCEL statement only accepts Alphanumeric or National literals and data items, or a program prototype name specified in the REPOSITORY paragraph.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
             }
@@ -1633,11 +1578,9 @@ public static class Analyzer
 
             if (!CurrentEquals("."))
             {
-                string notProgramNameError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The CANCEL statement only accepts Alphanumeric or National literals and data items, or a program prototype name specified in the REPOSITORY paragraph.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notProgramNameError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
         }
@@ -1798,11 +1741,9 @@ public static class Analyzer
             Expected("TERMINATE");
             if (Current().type != TokenType.Identifier)
             {
-                string notIdentifierError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The TERMINATE statement must only contain report entry identifiers defined in the report section.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
             Identifier();
@@ -1811,11 +1752,9 @@ public static class Analyzer
 
             if (!CurrentEquals("."))
             {
-                string notIdentifierError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The TERMINATE statement must only contain report entry identifiers defined in the report section.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
         }
@@ -1832,11 +1771,9 @@ public static class Analyzer
             Expected("VALIDATE");
             if (Current().type != TokenType.Identifier)
             {
-                string notIdentifierError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The VALIDATE statement must only contain data item identifiers.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
             Identifier();
@@ -1845,11 +1782,9 @@ public static class Analyzer
 
             if (!CurrentEquals("."))
             {
-                string notIdentifierError = """
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                 The VALIDATE statement must only contain data item identifiers.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, Current(), "general", notIdentifierError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, Current());
             }
         }
@@ -1893,11 +1828,10 @@ public static class Analyzer
             {
                 if (invalidKeyExists)
                 {
-                    const string onInvalidExistsError = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     INVALID KEY can only be specified once in this statement. 
                     The same applies to the NOT INVALID KEY.
-                    """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", onInvalidExistsError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -1913,11 +1847,10 @@ public static class Analyzer
             {
                 if (notInvalidKeyExists)
                 {
-                    const string notOnInvalidExistsError = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     NOT INVALID KEY can only be specified once in this statement. 
                     The same applies to the INVALID KEY.
-                    """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnInvalidExistsError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -1936,11 +1869,10 @@ public static class Analyzer
             {
                 if (onExceptionExists)
                 {
-                    const string onExceptionExistsError = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     ON EXCEPTION can only be specified once in this statement. 
                     The same applies to the NOT ON EXCEPTION.
-                    """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", onExceptionExistsError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -1956,11 +1888,10 @@ public static class Analyzer
             {
                 if (notOnExceptionExists)
                 {
-                    const string notOnExceptionExistsError = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     NOT ON EXCEPTION can only be specified once in this statement. 
                     The same applies to the ON EXCEPTION.
-                    """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnExceptionExistsError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -1979,11 +1910,10 @@ public static class Analyzer
             {
                 if (raisingExists)
                 {
-                    const string raisingExistsError = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     RAISING can only be specified once in this statement. 
                     The same applies to the WITH NORMAL/ERROR STATUS.
-                    """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", raisingExistsError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -2010,11 +1940,10 @@ public static class Analyzer
             {
                 if (statusExists)
                 {
-                    const string statusExistsError = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     WITH NORMAL/ERROR STATUS can only be specified once in this statement. 
                     The same applies to the RAISING.
-                    """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", statusExistsError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
 
@@ -2045,11 +1974,10 @@ public static class Analyzer
             {
                 if (atEndExists)
                 {
-                    const string atEndExistsError = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     AT END can only be specified once in this statement. 
                     The same applies to the NOT AT END.
-                    """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", atEndExistsError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -2065,11 +1993,10 @@ public static class Analyzer
             {
                 if (notAtEndExists)
                 {
-                    const string notAtEndExistsError = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     NOT AT END can only be specified once in this statement. 
                     The same applies to the AT END.
-                    """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", notAtEndExistsError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -2088,11 +2015,10 @@ public static class Analyzer
             {
                 if (onErrorExists)
                 {
-                    const string onErrorExistsError = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     ON SIZE ERROR can only be specified once in this statement. 
                     The same applies to NOT ON SIZE ERROR.
-                    """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", onErrorExistsError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -2109,11 +2035,10 @@ public static class Analyzer
             {
                 if (notOnErrorExists)
                 {
-                    const string notOnErrorExistsError = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     NOT ON SIZE ERROR can only be specified once in this statement. 
                     The same applies to ON SIZE ERROR.
-                    """;
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", notOnErrorExistsError);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
                 isConditional = true;
@@ -2153,22 +2078,18 @@ public static class Analyzer
                 {
                     if (IsArithmeticSymbol(Lookahead(-1)))
                     {
-                        string invalidArithmeticSymbol = """
+                        ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                         Invalid token after an arithmetic operator, expected a numeric literal or identifier instead of another arithmetic operator
-                        """;
-
-                        ErrorHandler.Parser.Report(fileName, Current(), "general", invalidArithmeticSymbol);
+                        """);
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                     }
 
                     if (Lookahead(1).type != TokenType.Numeric && Lookahead(1).type != TokenType.Identifier)
                     {
-                        string invalidArithmeticSymbol = """
+                        ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                         Invalid arithmetic expression, expected a numeric literal or identifier after this operator.
                         Arithmetic expressions cannot end with an operator
-                        """;
-
-                        ErrorHandler.Parser.Report(fileName, Current(), "general", invalidArithmeticSymbol);
+                        """);
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                     }
 
@@ -2180,11 +2101,9 @@ public static class Analyzer
 
                 if (Current().type == TokenType.Symbol && !IsArithmeticSymbol(Current()))
                 {
-                    const string invalidArithmeticSymbol = """
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
                     Invalid symbol in this arithmetic expression. Valid operators are: +, -, *, /, **, ( and )
-                    """;
-
-                    ErrorHandler.Parser.Report(fileName, Current(), "general", invalidArithmeticSymbol);
+                    """);
                     ErrorHandler.Parser.PrettyError(fileName, Current());
                 }
             }
@@ -2204,7 +2123,6 @@ public static class Analyzer
                 {
                     var combined = new Token($"NOT {Lookahead(1).value}", TokenType.Symbol, Current().line, Current().column);
                     expression.Add(combined);
-                    Analyzed.Add(combined);
                     Continue(2);
                 }
                 else if (CurrentEquals("NOT") && (LookaheadEquals(1, "GREATER") || LookaheadEquals(1, "LESS") || LookaheadEquals(1, "EQUAL")))
@@ -2220,7 +2138,6 @@ public static class Analyzer
                         combined = new Token($"<>", TokenType.Symbol, Current().line, Current().column);
 
                     expression.Add(combined);
-                    Analyzed.Add(combined);
                     Continue(2);
 
                     if (Current().value is "THAN" or "TO") Continue();
@@ -2256,7 +2173,6 @@ public static class Analyzer
                     }
 
                     expression.Add(converted);
-                    Analyzed.Add(converted);
                     Continue();
 
                     if (Current().value is "THAN" or "TO") Continue();
@@ -2270,11 +2186,9 @@ public static class Analyzer
 
             if(!Helpers.IsBalanced(expression))
             {
-                const string expressionNotBalancedError = """
+                ErrorHandler.Parser.Report(fileName, expression[0], ErrorType.General, """
                 This expression is not balanced, one or more parenthesis to not have their matching opening or closing pair, it is an invalid expression
-                """;
-
-                ErrorHandler.Parser.Report(fileName, expression[0], "general", expressionNotBalancedError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, expression[0]);
             }
 
@@ -2282,11 +2196,9 @@ public static class Analyzer
 
             if (!Helpers.EvaluatePostfix(shuntingYard, Helpers.BooleanPrecedence, out Token error))
             {
-                const string expressionNotValidError = """
+                ErrorHandler.Parser.Report(fileName, error, ErrorType.General, """
                 This expression cannot be correctly evaluated. Please make sure that all operators have their matching operands.
-                """;
-
-                ErrorHandler.Parser.Report(fileName, error, "general", expressionNotValidError);
+                """);
                 ErrorHandler.Parser.PrettyError(fileName, error);
             }
         }
@@ -2303,6 +2215,64 @@ public static class Analyzer
     // These are the main methods used to interact with and iterate through the List of Tokens.
     // All other methods inside of the parser depend on these to parse through the tokens.
 
+    private static void AnchorPoint(params string[] anchors)
+    {
+        ErrorHandler.Parser.AttemptRecovery(anchors);
+
+        while(!CurrentEquals(TokenType.EOF))
+        {
+            if (CurrentEquals("."))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                Parser recovered at the following anchor point: 
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                Continue();
+                return;
+            }
+            
+            if (CurrentEquals(anchors))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                Parser recovered at the following anchor point: 
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                return;
+            }
+
+            Continue();
+        }
+    }
+
+    private static void AnchorPoint(TokenType anchor)
+    {
+        ErrorHandler.Parser.AttemptRecovery(anchor);
+
+        while(!CurrentEquals(TokenType.EOF))
+        {
+            if (CurrentEquals("."))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                Parser recovered at the following anchor point: 
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                Continue();
+                return;
+            }
+            
+            if (CurrentEquals(anchor))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                Parser recovered at the following anchor point: 
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                return;
+            }
+
+            Continue();
+        }
+    }
+
     /// <summary>
     /// Token <c>Lookahead</c>: This method returns a Token from an index of Current Index + the amount parameter
     /// <para>When passed a positive amount it will act as a lookahead method, and when passed a negative amount it will act as a lookbehind method</para>
@@ -2311,23 +2281,73 @@ public static class Analyzer
     /// </summary>
     private static Token Lookahead(int amount)
     {
-        if (Index + amount >= TokenList.Count)
-        {
-            return TokenList[^1];
-        }
+        if (Index + amount >= TokenList.Count) return TokenList[^1];
 
         return Index + amount < 0 ? TokenList[0] : TokenList[Index + amount];
     }
 
     /// <summary>
-    /// Boolean <c>LookaheadEquals</c>: This method returns true or false depending on if the Token from an index of Current Index + the first parameter is equal to the second paramenter
+    /// Boolean <c>LookaheadEquals</c> string[]: This method returns true or false depending on if the Token value from an index of Current Index + the first parameter is equal to the values of the second paramenter
     /// <para>When passed a positive amount it will act as a lookahead comparison method, and when passed a negative amount it will act as a lookbehind comparison method</para>
     /// <para>Technically this method allows for infinite lookahead and lookbehind comparisons, as long as the Index + amount is not bigger than the
     /// number of items on the list of Tokens or smaller than 0.</para>
     /// </summary>
-    private static bool LookaheadEquals(int lookahead, string stringToCompare)
+    private static bool LookaheadEquals(int lookahead, params string[] valuesToCompare)
     {
-        return Lookahead(lookahead).value.Equals(stringToCompare);
+        foreach (var value in valuesToCompare)
+        {
+            if (Lookahead(lookahead).value.Equals(value)) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Boolean <c>LookaheadEquals</c> TokenType[]: This method returns true or false depending on if the Token type from an index of Current Index + the first parameter is equal to the types of the second paramenter
+    /// <para>When passed a positive amount it will act as a lookahead comparison method, and when passed a negative amount it will act as a lookbehind comparison method</para>
+    /// <para>Technically this method allows for infinite lookahead and lookbehind comparisons, as long as the Index + amount is not bigger than the
+    /// number of items on the list of Tokens or smaller than 0.</para>
+    /// </summary>
+    private static bool LookaheadEquals(int lookahead, params TokenType[] tokenTypesToCompare)
+    {
+        foreach (var type in tokenTypesToCompare)
+        {
+            if (Lookahead(lookahead).type.Equals(type)) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Boolean <c>LookaheadEquals</c> TokenScope[]: This method returns true or false depending on if the Token scope from an index of Current Index + the first parameter is equal to the scopes of the second paramenter
+    /// <para>When passed a positive amount it will act as a lookahead comparison method, and when passed a negative amount it will act as a lookbehind comparison method</para>
+    /// <para>Technically this method allows for infinite lookahead and lookbehind comparisons, as long as the Index + amount is not bigger than the
+    /// number of items on the list of Tokens or smaller than 0.</para>
+    /// </summary>
+    private static bool LookaheadEquals(int lookahead, params TokenScope[] tokenScopesToCompare)
+    {
+        foreach (var scope in tokenScopesToCompare)
+        {
+            if (Lookahead(lookahead).scope.Equals(scope)) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Boolean <c>LookaheadEquals</c> TokenContext[]: This method returns true or false depending on if the Token context from an index of Current Index + the first parameter is equal to the contexts of the second paramenter
+    /// <para>When passed a positive amount it will act as a lookahead comparison method, and when passed a negative amount it will act as a lookbehind comparison method</para>
+    /// <para>Technically this method allows for infinite lookahead and lookbehind comparisons, as long as the Index + amount is not bigger than the
+    /// number of items on the list of Tokens or smaller than 0.</para>
+    /// </summary>
+    private static bool LookaheadEquals(int lookahead, params TokenContext[] tokenContextsToCompare)
+    {
+        foreach (var context in tokenContextsToCompare)
+        {
+            if (Lookahead(lookahead).context.Equals(context)) return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -2341,12 +2361,59 @@ public static class Analyzer
     }
 
     /// <summary>
-    /// Boolean <c>CurrentEquals</c>: This method returns true or false depending on if the current token from the current Index has the same value as the parameter.
+    /// Boolean <c>CurrentEquals</c> string[]: This method returns true or false depending on if the current token from the current Index has the same value as the parameter.
     /// <para>This helper method is an alternative to the <c>"Current().value.Equals()"</c> syntax, which could become verbose and harder to read when it's used frequently</para>
     /// </summary>
-    private static bool CurrentEquals(string stringToCompare)
+    private static bool CurrentEquals(params string[] valuesToCompare)
     {
-        return Current().value.Equals(stringToCompare);
+        foreach (var value in valuesToCompare)
+        {
+            if (Current().value.Equals(value)) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Boolean <c>CurrentEquals</c> TokenType[]: This method returns true or false depending on if the current token from the current Index has the same type as the parameter.
+    /// <para>This helper method is an alternative to the <c>"Current().value.Equals()"</c> syntax, which could become verbose and harder to read when it's used frequently</para>
+    /// </summary>
+    private static bool CurrentEquals(params TokenType[] tokenTypesToCompare)
+    {
+        foreach (var type in tokenTypesToCompare)
+        {
+            if (Current().type.Equals(type)) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Boolean <c>CurrentEquals</c> TokenScope[]: This method returns true or false depending on if the current token from the current Index has the same scope as the parameter.
+    /// <para>This helper method is an alternative to the <c>"Current().value.Equals()"</c> syntax, which could become verbose and harder to read when it's used frequently</para>
+    /// </summary>
+    private static bool CurrentEquals(params TokenScope[] tokenScopesToCompare)
+    {
+        foreach (var scope in tokenScopesToCompare)
+        {
+            if (Current().scope.Equals(scope)) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Boolean <c>CurrentEquals</c> TokenContext[]: This method returns true or false depending on if the current token from the current Index has the same context as the parameter.
+    /// <para>This helper method is an alternative to the <c>"Current().value.Equals()"</c> syntax, which could become verbose and harder to read when it's used frequently</para>
+    /// </summary>
+    private static bool CurrentEquals(params TokenContext[] tokenContextsToCompare)
+    {
+        foreach (var context in tokenContextsToCompare)
+        {
+            if (Current().context.Equals(context)) return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -2356,12 +2423,14 @@ public static class Analyzer
     /// </summary>
     private static void Continue(int amount = 1)
     {
+        if (CurrentEquals(TokenType.EOF)) return;
+
         Index += amount;
     }
 
     /// <summary>
     /// Void <c>Choice</c>: This method checks if the current token matches one of the values passed in its parameters.
-    /// <para>If the current token matches one the values, it adds the correct value to the parsed list,
+    /// <para>If the current token matches one the values, it moves to the next token,
     /// if the current token doesn't match any of the values it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
     private static void Choice(params string[] choices)
@@ -2369,223 +2438,236 @@ public static class Analyzer
         Token token = Current();
         foreach (string choice in choices)
         {
-            if (token.value.Equals(choice))
+            if (CurrentEquals(choice))
             {
-                Analyzed.Add(token);
                 Continue();
                 return;
             }
         }
 
-        ErrorHandler.Parser.Report(FileName, token, "choice", choices);
+        ErrorHandler.Parser.Report(FileName, token, ErrorType.Choice, choices);
         ErrorHandler.Parser.PrettyError(FileName, token);
-        Analyzed.Add(token);
         Continue();
     }
     
     /// <summary>
     /// Void <c>Optional</c>: This method checks if the current token is equal to it's first parameter.
-    /// <para>If the current token matches the value, it adds the token to the parsed list,
+    /// <para>If the current token matches the value, it moves to the next token,
     /// if the current token doesn't match the value it ignores the token and returns without moving to the next token</para>
     /// </summary>
     private static void Optional(string optional)
     {
-        var token = Current();
-        if (!token.value.Equals(optional))
-            return;
+        if (CurrentEquals(optional)) Continue();
+    }
 
-        Analyzed.Add(token);
-        Continue();
+    /// <summary>
+    /// Void <c>Optional</c>: This method checks if the current token is equal to it's first parameter.
+    /// <para>If the current token matches the type, it moves to the next token,
+    /// if the current token doesn't match the type it ignores the token and returns without moving to the next token</para>
+    /// </summary>
+    private static void Optional(TokenType optional)
+    {
+        if (CurrentEquals(optional)) Continue();
     }
 
     /// <summary>
     /// Void <c>Expected</c>: This method checks if the current token is equal to it's first parameter.
-    /// <para>If the current token matches the value, it adds the token to the parsed list,
+    /// <para>If the current token matches the value, it moves to the next token,
     /// if the current token doesn't match the value it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void Expected(string expected, string custom = "default", int position = 0)
+    private static void Expected(string expected, string custom = "default", int position = 0, params string[] wordAnchors)
     {
         var errorMessage = expected;
-        var errorType = "expected";
-        var token = Current();
-        var lookahead = Lookahead(position);
+        var errorType = ErrorType.Expected;
         if (!custom.Equals("default"))
         {
             errorMessage = custom;
-            errorType = "general";
+            errorType = ErrorType.General;
         }
 
-        if (!token.value.Equals(expected))
+        if (!CurrentEquals(expected))
         {
+            var lookahead = Lookahead(position);
+
             ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
             ErrorHandler.Parser.PrettyError(FileName, lookahead);
-            Analyzed.Add(token);
-            Continue();
-            return;
-        }
 
-        Analyzed.Add(token);
-        Continue();
+            if (wordAnchors.Length != 0) AnchorPoint(wordAnchors);
+        }
+        else
+        {
+            Continue();
+        }
     }
 
-    /// <summary>
-    /// Void <c>ExpectedWithoutContinue</c>: This method checks if the current token is equal to it's first parameter.
-    /// <para>If the current token matches the value, it adds the token to the parsed list,
-    /// if the current token doesn't match the value it calls the ErrorHandler to report a parsing error</para>
-    /// <para>This method works exactly like the Expected method, but without continuing if the current token is not correct</para>
-    /// </summary>
-    private static void ExpectedWithoutContinue(string expected, string custom = "default", int position = 0)
+    private static void Expected(string expected, string custom = "default", int position = 0, TokenType typeAnchor = TokenType.EOF)
     {
         var errorMessage = expected;
-        var errorType = "expected";
-        var token = Current();
-        var lookahead = Lookahead(position);
+        var errorType = ErrorType.Expected;
         if (!custom.Equals("default"))
         {
             errorMessage = custom;
-            errorType = "general";
+            errorType = ErrorType.General;
         }
 
-        if (!token.value.Equals(expected))
+        if (!CurrentEquals(expected))
         {
+            var lookahead = Lookahead(position);
+
             ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
             ErrorHandler.Parser.PrettyError(FileName, lookahead);
-            Analyzed.Add(token);
-            return;
-        }
 
-        Analyzed.Add(token);
-        Continue();
+            if (typeAnchor is not TokenType.EOF) AnchorPoint(typeAnchor);
+        }
+        else
+        {
+            Continue();
+        }
     }
 
     /// <summary>
     /// Void <c>Identifier</c>: This method checks if the current token is an identifier.
-    /// <para>If the current token's type is TokenType.Identifier, it adds the token to the parsed list,
+    /// <para>If the current token's type is TokenType.Identifier, it moves to the next token,
     /// if the current token's type is TokenType.Identifier it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void Identifier()
+    private static void Identifier(string custom = "default", int position = 0)
     {
-        Token token = Current();
-        if (token.type is not TokenType.Identifier)
+        var errorMessage = "Identifier";
+        var errorType = ErrorType.Expected;
+        if (!custom.Equals("default"))
         {
-            ErrorHandler.Parser.Report(FileName, token, "expected", "identifier");
-            ErrorHandler.Parser.PrettyError(FileName, token);
-            Continue();
-            return;
+            errorMessage = custom;
+            errorType = ErrorType.General;
         }
-        Analyzed.Add(token);
-        Continue();
-        return;
+
+        if (!CurrentEquals(TokenType.Identifier))
+        {
+            var lookahead = Lookahead(position);
+
+            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            Continue();
+        }
+        else
+        {
+            Continue();
+        }
     }
 
     /// <summary>
     /// Void <c>Number</c>: This method checks if the current token is a Number.
-    /// <para>If the current token's type is TokenType.Numeric, it adds the token to the parsed list,
+    /// <para>If the current token's type is TokenType.Numeric, it moves to the next token,
     /// if the current token's type is TokenType.Numeric it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void Number(string custom = "expected", int position = 0)
+    private static void Number(string custom = "default", int position = 0)
     {
-        var errorMessage = "string literal";
-        var errorType = "expected";
-        var token = Current();
-        var lookahead = Lookahead(position);
-        if (!custom.Equals("expected"))
+        var errorMessage = "Numeric literal";
+        var errorType = ErrorType.Expected;
+        if (!custom.Equals("default"))
         {
             errorMessage = custom;
-            errorType = "general";
+            errorType = ErrorType.General;
         }
 
-        if (token.type is not TokenType.Numeric)
+        if (!CurrentEquals(TokenType.Numeric))
         {
+            var lookahead = Lookahead(position);
+
             ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
             ErrorHandler.Parser.PrettyError(FileName, lookahead);
             Continue();
-            return;
         }
-        Analyzed.Add(token);
-        Continue();
-        return;
+        else
+        {
+            Continue();
+        }
     }
 
     /// <summary>
     /// Void <c>String</c>: This method checks if the current token is a National, Alphanumeric, Alphabetic or Boolean.
-    /// <para>If the current token's type is TokenType.String, it adds the token to the parsed list,
+    /// <para>If the current token's type is TokenType.String, it moves to the next token,
     /// if the current token's type is TokenType.String it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void String(string custom = "expected", int position = 0)
+    private static void String(string custom = "default", int position = 0)
     {
-        var errorMessage = "string literal";
-        var errorType = "expected";
-        var token = Current();
-        var lookahead = Lookahead(position);
-        if (!custom.Equals("expected"))
+        var errorMessage = "String literal";
+        var errorType = ErrorType.Expected;
+        if (!custom.Equals("default"))
         {
             errorMessage = custom;
-            errorType = "general";
+            errorType = ErrorType.General;
         }
 
-        if (token.type is not TokenType.String)
+        if (!CurrentEquals(TokenType.String))
         {
+            var lookahead = Lookahead(position);
+
             ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
             ErrorHandler.Parser.PrettyError(FileName, lookahead);
             Continue();
-            return;
         }
-        Analyzed.Add(token);
-        Continue();
-        return;
+        else
+        {
+            Continue();
+        }
     }
 
     /// <summary>
     /// Void <c>FigurativeLiteral</c>: This method checks if the current token is a Figurative Literal.
-    /// <para>If the current token's type is TokenType.FigurativeLiteral, it adds the token to the parsed list,
+    /// <para>If the current token's type is TokenType.FigurativeLiteral, it moves to the next token,
     /// if the current token's type is TokenType.FigurativeLiteral it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void FigurativeLiteral()
+    private static void FigurativeLiteral(string custom = "default", int position = 0)
     {
-        var current = Current();
-        if (current.type is not TokenType.FigurativeLiteral)
+        var errorMessage = "Numeric literal";
+        var errorType = ErrorType.Expected;
+        if (!custom.Equals("default"))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), "expected", "figurative literal");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
-            Continue();
-            return;
+            errorMessage = custom;
+            errorType = ErrorType.General;
         }
-        Analyzed.Add(current);
-        Continue();
-        return;
+
+        if (!CurrentEquals(TokenType.FigurativeLiteral))
+        {
+            var lookahead = Lookahead(position);
+
+            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            Continue();
+        }
+        else
+        {
+            Continue();
+        }
     }
 
     /// <summary>
     /// Void <c>Symbol</c>: This method checks if the current token is a valid COBOl Symbol.
-    /// <para>If the current token's type is TokenType.Symbol, it adds the token to the parsed list,
+    /// <para>If the current token's type is TokenType.Symbol, it moves to the next token,
     /// if the current token's type is TokenType.Symbol it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void Symbol(string custom = "expected", int position = 0)
+    private static void Symbol(string custom = "default", int position = 0)
     {
-        var errorMessage = "string literal";
-        var errorType = "expected";
-        var token = Current();
-        var lookahead = Lookahead(position);
-        if (!custom.Equals("expected"))
+        var errorMessage = "a COBOL symbol";
+        var errorType = ErrorType.Expected;
+        if (!custom.Equals("default"))
         {
             errorMessage = custom;
-            errorType = "general";
+            errorType = ErrorType.General;
         }
 
-        if (position != 0)
-            token = Lookahead(position);
-
-        if (token.type is not TokenType.Symbol)
+        if (!CurrentEquals(TokenType.Symbol))
         {
+            var lookahead = Lookahead(position);
+
             ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
             ErrorHandler.Parser.PrettyError(FileName, lookahead);
             Continue();
-            return;
         }
-        Analyzed.Add(token);
-        Continue();
-        return;
+        else
+        {
+            Continue();
+        }
     }
 
 }

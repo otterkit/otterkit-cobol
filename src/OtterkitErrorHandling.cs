@@ -1,5 +1,13 @@
 namespace Otterkit;
 
+public enum ErrorType
+{
+    General,
+    Expected,
+    Choice,
+    Recovery,
+}
+
 public static class ErrorHandler
 {
     public static bool Error = false;
@@ -16,7 +24,7 @@ public static class ErrorHandler
 
     public static class Parser
     {
-        public static void PrettyError(string fileName, Token token)
+        public static void PrettyError(string fileName, Token token, ConsoleColor color = ConsoleColor.Red)
         {
             string line = File.ReadLines(fileName).Skip(token.line - 1).Take(token.line).First();
             string error = new(' ', line.Length - token.value.Length);
@@ -29,33 +37,64 @@ public static class ErrorHandler
             Console.WriteLine($"{token.line,4} | {line.TrimStart()}");
             Console.Write($"{" ",5}|");
 
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = color;
             Console.WriteLine($" {error}\n");
             Console.ResetColor();
 
 
         }
 
-        public static void Report(string fileName, Token token, string error, params string[] expected)
+        public static void AttemptRecovery(string[] anchors)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("Attempting recovery: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine($"""
+            Unexpected tokens will be ignored until a separator period or an anchor point is found 
+            (Anchors: {string.Join(", ", anchors)})
+
+            """);
+        }
+
+        public static void AttemptRecovery(TokenType anchor)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("Attempting recovery: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine($"""
+            Unexpected tokens will be ignored until a separator period or an anchor point is found 
+            (Anchor: {anchor})
+
+            """);
+        }
+
+        public static void Report(string fileName, Token token, ErrorType error, params string[] expected)
         {
             Error = true;
 
             Console.ForegroundColor = ConsoleColor.Red;
-            if (error == "choice")
+            if (error == ErrorType.Choice)
             {
                 Choice(token, expected, fileName);
                 Console.ResetColor();
                 return;
             }
 
-            if (error == "expected")
+            if (error == ErrorType.Expected)
             {
-                Expected(token, expected, fileName);
+                Expected(token, expected[0], fileName);
                 Console.ResetColor();
                 return;
             }
 
-            if (error == "general")
+            if (error == ErrorType.Recovery)
+            {
+                Recovery(token, expected[0], fileName);
+                Console.ResetColor();
+                return;
+            }
+
+            if (error == ErrorType.General)
             {
                 General(token, expected, fileName);
                 Console.ResetColor();
@@ -70,7 +109,7 @@ public static class ErrorHandler
         {
             Console.Error.Write("Otterkit parsing error: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Error.WriteLine("{0}:{1}:{2}", fileName, token.line, token.column);
+            Console.Error.WriteLine("{0}:{1}:{2}", Path.GetFullPath(fileName), token.line, token.column);
 
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Unexpected token: ");
@@ -90,7 +129,7 @@ public static class ErrorHandler
             Console.WriteLine("Expected {0} or {1}, instead of {2}\n", expected[0], expected[1], token.value);
         }
 
-        private static void Expected(Token token, string[] expected, string fileName)
+        private static void Expected(Token token, string expected, string fileName)
         {
 
             Console.Error.Write("Otterkit parsing error: ");
@@ -100,8 +139,22 @@ public static class ErrorHandler
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Unexpected token: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("Expected {0}, instead of {1}\n", expected[0], token.value);
+            Console.WriteLine("Expected {0}, instead of {1}\n", expected, token.value);
         }
+
+        private static void Recovery(Token token, string recovery, string fileName)
+        {
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Error.Write("Otterkit parsing recovery: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Error.WriteLine("{0}:{1}:{2}", Path.GetFullPath(fileName), token.line, token.column);
+
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Error.Write(recovery);
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("(Anchor: \"{0}\")\n", token.value);
+        }
+
     }
 
     public static void Terminate(string errorType)

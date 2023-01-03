@@ -124,6 +124,9 @@ public static class Analyzer
 
             if (CurrentEquals("INTERFACE-ID"))
                 InterfaceId();
+
+            if (CurrentEquals("METHOD-ID"))
+                MethodId();
         }
 
 
@@ -335,6 +338,50 @@ public static class Analyzer
             Expected(".", """
             Missing separator period at the end of this interface definition
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "FACTORY", "OBJECT");
+        }
+
+        void MethodId()
+        {
+            Expected("METHOD-ID");
+            Expected(".");
+            SourceType = "METHOD";
+
+            if (CurrentEquals(TokenType.Identifier))
+            {
+                SourceId = Current().value;
+                Identifier();
+                if (CurrentEquals("AS"))
+                {
+                    Expected("AS");
+                    String();
+                }
+            }
+            else if (CurrentEquals("GET"))
+            {
+                Expected("GET");
+                Expected("PROPERTY");
+                SourceId = $"GET {Current().value}";
+                Identifier();
+            }
+            else if (CurrentEquals("SET"))
+            {
+                Expected("SET");
+                Expected("PROPERTY");
+                SourceId = $"SET {Current().value}";
+                Identifier();
+            }
+
+            if (CurrentEquals("OVERRIDE")) Expected("OVERRIDE");
+
+            if (CurrentEquals("IS", "FINAL"))
+            {
+                Optional("IS");
+                Expected("FINAL");
+            }
+
+            Expected(".", """
+            Missing separator period at the end of this method definition
+            """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
         }
 
 

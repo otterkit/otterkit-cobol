@@ -1,5 +1,16 @@
 namespace Otterkit;
 
+enum SourceUnit
+{
+    Program,
+    Function,
+    Class,
+    Interface,
+    Method,
+    Object,
+    Factory
+}
+
 /// <summary>
 /// Otterkit COBOL Syntax Analyzer
 /// <para>This parser was built to be easily extensible, with some reusable COBOL parts.</para>
@@ -24,7 +35,7 @@ public static class Analyzer
     /// String <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
     /// <para>This is used when handling certain syntax rules for different <c>-ID</c>s, like the <c>"RETURNING data-name"</c> being required for every <c>FUNCTION-ID</c> source unit.</para>
     /// </summary>
-    private static string SourceType = string.Empty;
+    private static SourceUnit SourceType;
 
     /// <summary>
     /// String <c>CurrentSection</c> is used in the parser whenever it needs to know which section it is currently parsing (WORKING-STORAGE and LOCAL-STORAGE for example).
@@ -141,7 +152,7 @@ public static class Analyzer
             Expected(".");
             ProgramIdentifier = Current();
             SourceId = ProgramIdentifier.value;
-            SourceType = "PROGRAM";
+            SourceType = SourceUnit.Program;
             Identifier();
             if (CurrentEquals("AS"))
             {
@@ -214,7 +225,7 @@ public static class Analyzer
             Expected("FUNCTION-ID");
             Expected(".");
             SourceId = Current().value;
-            SourceType = "FUNCTION";
+            SourceType = SourceUnit.Function;
             Identifier();
 
             if (CurrentEquals("AS"))
@@ -239,7 +250,7 @@ public static class Analyzer
             Expected("CLASS-ID");
             Expected(".");
             SourceId = Current().value;
-            SourceType = "CLASS";
+            SourceType = SourceUnit.Class;
             Identifier();
 
             if (CurrentEquals("AS"))
@@ -295,7 +306,7 @@ public static class Analyzer
             Expected("INTERFACE-ID");
             Expected(".");
             SourceId = Current().value;
-            SourceType = "INTERFACE";
+            SourceType = SourceUnit.Interface;
             Identifier();
 
             if (CurrentEquals("AS"))
@@ -344,7 +355,7 @@ public static class Analyzer
         {
             Expected("METHOD-ID");
             Expected(".");
-            SourceType = "METHOD";
+            SourceType = SourceUnit.Method;
 
             if (CurrentEquals(TokenType.Identifier))
             {
@@ -875,12 +886,62 @@ public static class Analyzer
         {
             Expected("PROCEDURE");
             Expected("DIVISION");
-            if (SourceType.Equals("FUNCTION"))
+
+            bool notObjectOrFactory = SourceType is not SourceUnit.Factory and not SourceUnit.Object;
+
+            if (CurrentEquals("USING") && notObjectOrFactory)
+            {
+                Expected("USING");
+
+                while (CurrentEquals("BY", "REFERENCE", "VALUE"))
+                {
+                    if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
+                    {
+                        Optional("BY");
+                        Expected("REFERENCE");
+
+                        if (CurrentEquals("OPTIONAL")) Expected("OPTIONAL");
+
+                        if (!CurrentEquals(TokenType.Identifier))
+                        {
+                            ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
+                            The USING BY VALUE clause must contain at least one data item name.
+                            """);
+                            ErrorHandler.Parser.PrettyError(fileName, Current());
+                        }
+
+                        Identifier();
+                        while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
+                        {
+                            if (CurrentEquals("OPTIONAL")) Expected("OPTIONAL");
+                            Identifier();
+                        }
+                    }
+
+                    if (CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
+                    {
+                        Optional("BY");
+                        Expected("VALUE");
+                        if (!CurrentEquals(TokenType.Identifier))
+                        {
+                            ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
+                            The USING BY VALUE clause must contain at least one data item name.
+                            """);
+                            ErrorHandler.Parser.PrettyError(fileName, Current());
+                        }
+
+                        Identifier();
+                        while (CurrentEquals(TokenType.Identifier)) Identifier();
+                    }
+                }
+            }
+
+            if (SourceType == SourceUnit.Function)
             {
                 Expected("RETURNING");
                 ReturningDataName();
             }
-            else if (CurrentEquals("RETURNING"))
+            else if (CurrentEquals("RETURNING") && notObjectOrFactory)
             {
                 Expected("RETURNING");
                 ReturningDataName(); 
@@ -909,7 +970,7 @@ public static class Analyzer
                 return;
             }
 
-            if (SourceType.Equals("PROGRAM") && CurrentEquals("END") && LookaheadEquals(1, "PROGRAM"))
+            if (SourceType == SourceUnit.Program && CurrentEquals("END") && LookaheadEquals(1, "PROGRAM"))
             {
                 Expected("END");
                 Expected("PROGRAM");
@@ -919,7 +980,7 @@ public static class Analyzer
                 """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID");
             }
 
-            if (SourceType.Equals("FUNCTION"))
+            if (SourceType == SourceUnit.Function)
             {
                 Expected("END");
                 Expected("FUNCTION");

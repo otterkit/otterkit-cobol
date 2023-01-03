@@ -56,7 +56,7 @@ public static class ErrorHandler
             """);
         }
 
-        public static void AttemptRecovery(TokenType anchor)
+        public static void AttemptRecovery(TokenContext anchor)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write("Attempting recovery: ");

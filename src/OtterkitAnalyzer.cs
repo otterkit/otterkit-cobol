@@ -106,12 +106,11 @@ public static class Analyzer
                 """, -1, "PROGRAM-ID", "FUNCTION-ID", "ENVIRONMENT", "DATA", "PROCEDURE");
             }
 
-            if (!CurrentEquals("PROGRAM-ID") && !CurrentEquals("FUNCTION-ID"))
+            if (!CurrentEquals("PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "METHOD-ID", "INTERFACE-ID"))
             {
-                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
+                Expected("PROGRAM-ID", """
                 Missing source unit ID name (PROGRAM-ID, FUNCTION-ID, CLASS-ID...), the identification division header is optional but every source unit must still have an ID.
-                """);
-                ErrorHandler.Parser.PrettyError(fileName, Current());
+                """, 0, "OPTIONS", "ENVIRONMENT", "DATA", "PROCEDURE");
             }
 
             if (CurrentEquals("PROGRAM-ID"))
@@ -119,6 +118,12 @@ public static class Analyzer
 
             if (CurrentEquals("FUNCTION-ID"))
                 FunctionId();
+
+            if (CurrentEquals("CLASS-ID"))
+                ClassId();
+
+            if (CurrentEquals("INTERFACE-ID"))
+                InterfaceId();
         }
 
 
@@ -209,9 +214,127 @@ public static class Analyzer
             SourceType = "FUNCTION";
             Identifier();
 
+            if (CurrentEquals("AS"))
+            {
+                Expected("AS");
+                String();
+            }
+
+            if (CurrentEquals("IS", "PROTOTYPE"))
+            {
+                Optional("IS");
+                Expected("PROTOTYPE");
+            }
+
             Expected(".", """
-            Missing separator period at the end of this program definition
+            Missing separator period at the end of this function definition
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+        }
+
+        void ClassId()
+        {
+            Expected("CLASS-ID");
+            Expected(".");
+            SourceId = Current().value;
+            SourceType = "CLASS";
+            Identifier();
+
+            if (CurrentEquals("AS"))
+            {
+                Expected("AS");
+                String();
+            }
+
+            if (CurrentEquals("IS", "FINAL"))
+            {
+                Optional("IS");
+                Expected("FINAL");
+            }
+
+            if (CurrentEquals("INHERITS"))
+            {
+                Expected("INHERITS");
+                Optional("FROM");
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
+                    The INHERITS FROM clause must contain at least one class or object name.
+                    """);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier)) Identifier();
+            }
+
+            if (CurrentEquals("USING"))
+            {
+                Expected("USING");
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
+                    The USING clause must contain at least one parameter.
+                    """);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier)) Identifier();
+            }
+
+            Expected(".", """
+            Missing separator period at the end of this class definition
+            """, -1, "OPTION", "ENVIRONMENT", "DATA", "FACTORY", "OBJECT");
+        }
+
+        void InterfaceId()
+        {
+            Expected("INTERFACE-ID");
+            Expected(".");
+            SourceId = Current().value;
+            SourceType = "INTERFACE";
+            Identifier();
+
+            if (CurrentEquals("AS"))
+            {
+                Expected("AS");
+                String();
+            }
+
+            if (CurrentEquals("INHERITS"))
+            {
+                Expected("INHERITS");
+                Optional("FROM");
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
+                    The INHERITS FROM clause must contain at least one class or object name.
+                    """);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier)) Identifier();
+            }
+
+            if (CurrentEquals("USING"))
+            {
+                Expected("USING");
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, """
+                    The USING clause must contain at least one parameter.
+                    """);
+                    ErrorHandler.Parser.PrettyError(fileName, Current());
+                }
+
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier)) Identifier();
+            }
+
+            Expected(".", """
+            Missing separator period at the end of this interface definition
+            """, -1, "OPTION", "ENVIRONMENT", "DATA", "FACTORY", "OBJECT");
         }
 
 
@@ -235,13 +358,11 @@ public static class Analyzer
         // It is also responsible for showing appropriate error messages when an error occurs in the DATA DIVISION.
         void DATA()
         {
-            const string headerPeriodError = """
-            Missing separator period at the end of this DATA DIVISION header, every division header must end with a separator period
-            """;
-
             Expected("DATA", "data division");
             Expected("DIVISION");
-            Expected(".", headerPeriodError, -1);
+            Expected(".", """
+            Missing separator period at the end of this DATA DIVISION header, every division header must end with a separator period
+            """, -1, "WORKING-STORAGE", "LOCAL-STORAGE" , "LINKAGE", "PROCEDURE");
 
             if (CurrentEquals("WORKING-STORAGE"))
                 WorkingStorage();
@@ -254,7 +375,7 @@ public static class Analyzer
 
             if (!CurrentEquals("PROCEDURE"))
             {
-                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.General, "Data Division data items and sections");
+                ErrorHandler.Parser.Report(fileName, Current(), ErrorType.Expected, "Data Division data items and sections");
                 ErrorHandler.Parser.PrettyError(fileName, Current());
                 Continue();
             }
@@ -557,10 +678,6 @@ public static class Analyzer
         // It is also responsible for showing appropriate error messages when an error occurs in the PROCEDURE DIVISION.
         void PROCEDURE()
         {
-            const string headerPeriodError = """
-            Missing separator period at the end of this PROCEDURE DIVISION header, every division header must end with a separator period
-            """;
-
             Expected("PROCEDURE");
             Expected("DIVISION");
             if (SourceType.Equals("FUNCTION"))
@@ -568,13 +685,16 @@ public static class Analyzer
                 Expected("RETURNING");
                 ReturningDataName();
             }
-            else if (!SourceType.Equals("FUNCTION") && CurrentEquals("RETURNING"))
+            else if (CurrentEquals("RETURNING"))
             {
                 Expected("RETURNING");
                 ReturningDataName(); 
             }
 
-            Expected(".", headerPeriodError, -1);
+            Expected(".", """
+            Missing separator period at the end of this PROCEDURE DIVISION header, every division header must end with a separator period
+            """, -1, TokenContext.IsStatement);
+
             Statement();
 
             if (CurrentEquals("IDENTIFICATION") || CurrentEquals("PROGRAM-ID") || CurrentEquals("FUNCTION-ID"))
@@ -596,26 +716,22 @@ public static class Analyzer
 
             if (SourceType.Equals("PROGRAM") && CurrentEquals("END") && LookaheadEquals(1, "PROGRAM"))
             {
-                const string endProgramPeriodError = """
-                Missing separator period at the end of this END PROGRAM definition
-                """;
-
                 Expected("END");
                 Expected("PROGRAM");
                 Identifier();
-                Expected(".", endProgramPeriodError, -1);
+                Expected(".", """
+                Missing separator period at the end of this END PROGRAM definition
+                """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID");
             }
 
             if (SourceType.Equals("FUNCTION"))
             {
-                const string endFunctionPeriodError = """
-                Missing separator period at the end of this END FUNCTION definition
-                """;
-
                 Expected("END");
                 Expected("FUNCTION");
                 Identifier();
-                Expected(".", endFunctionPeriodError, -1);
+                Expected(".", """
+                Missing separator period at the end of this END FUNCTION definition
+                """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID");
             }
         }
 
@@ -2205,7 +2321,7 @@ public static class Analyzer
 
         bool NotIdentifierOrLiteral()
         {
-            return Current().type is not TokenType.Identifier and not TokenType.Numeric and not TokenType.String;
+            return !CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String);
         }
 
     }
@@ -2244,7 +2360,7 @@ public static class Analyzer
         }
     }
 
-    private static void AnchorPoint(TokenType anchor)
+    private static void AnchorPoint(TokenContext anchor)
     {
         ErrorHandler.Parser.AttemptRecovery(anchor);
 
@@ -2500,7 +2616,7 @@ public static class Analyzer
         }
     }
 
-    private static void Expected(string expected, string custom = "default", int position = 0, TokenType typeAnchor = TokenType.EOF)
+    private static void Expected(string expected, string custom = "default", int position = 0, TokenContext typeAnchor = TokenContext.IsStatement)
     {
         var errorMessage = expected;
         var errorType = ErrorType.Expected;
@@ -2517,7 +2633,7 @@ public static class Analyzer
             ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
             ErrorHandler.Parser.PrettyError(FileName, lookahead);
 
-            if (typeAnchor is not TokenType.EOF) AnchorPoint(typeAnchor);
+            AnchorPoint(typeAnchor);
         }
         else
         {

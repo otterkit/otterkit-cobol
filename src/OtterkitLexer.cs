@@ -22,7 +22,7 @@ public static partial class Lexer
     */
     private const string WordsPattern = @"[a-zA-Z]+([-|_]*[\w0-9]+)*|[0-9]+([-|_][\w0-9]+)+";
     private const string StringPattern = "|(\")(.*?)(\"|$)|(\')(.*?)(\'|$)";
-    private const string SymbolPattern = @"|(\+|\-|\*\*|\*|=|\/|\$|,|;|::|\.|\(|\)|>>|<>|>=|<=|>|<|&|_)";
+    private const string SymbolPattern = @"|(\+|\-|\*\*|\*|=|\/|\$|,|;| :: |\.|\(|\)|>>|<>|>=|<=|>|<|&|_)";
     private const string NumberPattern = @"|(\+|-)?\.?[0-9]\d*(\.\d+)?";
     private const string AllPatterns = WordsPattern + StringPattern + NumberPattern + SymbolPattern;
 

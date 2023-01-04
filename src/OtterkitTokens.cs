@@ -128,12 +128,6 @@ public partial struct Token
         if (token.value.Equals("METHOD-ID"))
             return TokenScope.MethodId;
 
-        if (token.value.Equals("FACTORY"))
-            return TokenScope.Factory;
-
-        if (token.value.Equals("OBJECT"))
-            return TokenScope.Object;
-
         if (token.value.Equals("ENVIRONMENT"))
             return TokenScope.EnvironmentDivision;
 
@@ -142,6 +136,12 @@ public partial struct Token
 
         if (token.value.Equals("PROCEDURE"))
             return TokenScope.ProcedureDivision;
+
+        if (token.value.Equals("FACTORY"))
+            return TokenScope.Factory;
+
+        if (token.value.Equals("OBJECT"))
+            return TokenScope.Object;
 
         return previousToken.scope;
     }

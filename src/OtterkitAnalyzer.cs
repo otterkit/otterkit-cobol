@@ -1,6 +1,7 @@
+
 namespace Otterkit;
 
-enum SourceUnit
+public enum SourceUnit
 {
     Program,
     Function,
@@ -10,6 +11,25 @@ enum SourceUnit
     Object,
     Factory
 }
+
+public enum CurrentScope
+{
+    ProgramId,
+    FunctionId,
+    InterfaceId,
+    ClassId,
+    MethodId,
+    EnvironmentDivision,
+    Repository,
+    DataDivision,
+    WorkingStorage,
+    LocalStorage,
+    LinkageSection,
+    ProcedureDivision,
+    Factory,
+    Object,
+}
+
 
 /// <summary>
 /// Otterkit COBOL Syntax Analyzer
@@ -32,17 +52,18 @@ public static class Analyzer
     private static string SourceId = string.Empty;
 
     /// <summary>
-    /// String <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
+    /// SourceUnit <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
     /// <para>This is used when handling certain syntax rules for different <c>-ID</c>s, like the <c>"RETURNING data-name"</c> being required for every <c>FUNCTION-ID</c> source unit.</para>
     /// </summary>
     private static SourceUnit SourceType;
 
     /// <summary>
-    /// String <c>CurrentSection</c> is used in the parser whenever it needs to know which section it is currently parsing (WORKING-STORAGE and LOCAL-STORAGE for example).
+    /// CurrentSection <c>CurrentSection</c> is used in the parser whenever it needs to know which section it is currently parsing (WORKING-STORAGE and LOCAL-STORAGE for example).
     /// <para>This is used when handling certain syntax rules for different sections and to add extra context needed for the DataItemInformation class's variable table.
     /// This will also be used by the DataItemInformation class during codegen to simplify the process to figuring out if a variable is static or not.</para>
     /// </summary>
-    private static string CurrentSection = string.Empty;
+    
+    private static CurrentScope CurrentSection;
 
     /// <summary>
     /// List of Tokens <c>TokenList</c>: This is the main data structure that the parser will be iterating through.
@@ -153,6 +174,7 @@ public static class Analyzer
             ProgramIdentifier = Current();
             SourceId = ProgramIdentifier.value;
             SourceType = SourceUnit.Program;
+            CurrentSection = CurrentScope.ProgramId;
             Identifier();
             if (CurrentEquals("AS"))
             {
@@ -226,6 +248,7 @@ public static class Analyzer
             Expected(".");
             SourceId = Current().value;
             SourceType = SourceUnit.Function;
+            CurrentSection = CurrentScope.FunctionId;
             Identifier();
 
             if (CurrentEquals("AS"))
@@ -251,6 +274,7 @@ public static class Analyzer
             Expected(".");
             SourceId = Current().value;
             SourceType = SourceUnit.Class;
+            CurrentSection = CurrentScope.ClassId;
             Identifier();
 
             if (CurrentEquals("AS"))
@@ -307,6 +331,7 @@ public static class Analyzer
             Expected(".");
             SourceId = Current().value;
             SourceType = SourceUnit.Interface;
+            CurrentSection = CurrentScope.InterfaceId;
             Identifier();
 
             if (CurrentEquals("AS"))
@@ -356,6 +381,7 @@ public static class Analyzer
             Expected("METHOD-ID");
             Expected(".");
             SourceType = SourceUnit.Method;
+            CurrentSection = CurrentScope.MethodId;
 
             if (CurrentEquals(TokenType.Identifier))
             {
@@ -403,6 +429,8 @@ public static class Analyzer
         {
             Expected("ENVIRONMENT");
             Expected("DIVISION");
+            CurrentSection = CurrentScope.EnvironmentDivision;
+
             Expected(".", """
             Missing separator period at the end of this ENVIRONMENT DIVISION header, every division header must end with a separator period
             """, -1, "DATA", "PROCEDURE", "PROGRAM-ID", "FUNCTION-ID");
@@ -422,6 +450,8 @@ public static class Analyzer
         void REPOSITORY()
         {
             Expected("REPOSITORY");
+            CurrentSection = CurrentScope.Repository;
+
             Expected(".", """
             Missing separator period at the end of this REPOSITORY paragraph header, every paragraph must end with a separator period
             """, -1, "CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY", "DATA", "PROCEDURE");
@@ -566,6 +596,8 @@ public static class Analyzer
         {
             Expected("DATA", "data division");
             Expected("DIVISION");
+            CurrentSection = CurrentScope.DataDivision;
+
             Expected(".", """
             Missing separator period at the end of this DATA DIVISION header, every division header must end with a separator period
             """, -1, "WORKING-STORAGE", "LOCAL-STORAGE" , "LINKAGE", "PROCEDURE");
@@ -593,9 +625,10 @@ public static class Analyzer
         // the Entries() method handles parsing the actual data items in their correct sections.
         void WorkingStorage()
         {
-            CurrentSection = Current().value;
             Expected("WORKING-STORAGE");
             Expected("SECTION");
+            CurrentSection = CurrentScope.WorkingStorage;
+
             Expected(".");
             while (Current().type == TokenType.Numeric)
                 Entries();
@@ -603,9 +636,10 @@ public static class Analyzer
 
         void LocalStorage()
         {
-            CurrentSection = Current().value;
             Expected("LOCAL-STORAGE");
             Expected("SECTION");
+            CurrentSection = CurrentScope.LocalStorage;
+
             Expected(".");
             while (Current().type is TokenType.Numeric)
                 Entries();
@@ -613,9 +647,10 @@ public static class Analyzer
 
         void LinkageSection()
         {
-            CurrentSection = Current().value;
             Expected("LINKAGE");
             Expected("SECTION");
+            CurrentSection = CurrentScope.LinkageSection;
+
             Expected(".");
             while (Current().type is TokenType.Numeric)
                 Entries();
@@ -661,9 +696,9 @@ public static class Analyzer
             Identifier();
 
             string DataItemHash = $"{SourceId}#{DataName}";
-            if (!DataItemInformation.AddDataItem(DataItemHash, DataName, LevelNumber, Current()))
+            if (!Information.DataItems.AddDataItem(DataItemHash, DataName, LevelNumber, Current()))
             {
-                DataItemInfo originalItem = DataItemInformation.GetValue(DataItemHash);
+                DataItemInfo originalItem = Information.DataItems.GetValue(DataItemHash);
 
                 ErrorHandler.Parser.Report(fileName, Lookahead(-1), ErrorType.General, $"""
                 A data item with this name already exists in this program, data items in a program must have a unique name.
@@ -672,7 +707,7 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
             }
 
-            DataItemInformation.AddSection(DataItemHash, CurrentSection);
+            Information.DataItems.AddSection(DataItemHash, CurrentSection.ToString());
 
             if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
             {
@@ -701,7 +736,7 @@ public static class Analyzer
                     if (CurrentEquals("AS"))
                     {
                         Expected("AS");
-                        DataItemInformation.IsExternal(DataItemHash, true, Current().value);
+                        Information.DataItems.IsExternal(DataItemHash, true, Current().value);
 
                         String("""
                         Missing externalized name, the "AS" word on the EXTERNAL clause must be followed by an alphanumeric or national literal
@@ -709,7 +744,7 @@ public static class Analyzer
                     }
 
                     if (!CurrentEquals("AS"))
-                        DataItemInformation.IsExternal(DataItemHash, true, DataName);
+                        Information.DataItems.IsExternal(DataItemHash, true, DataName);
                 }
 
                 if (CurrentEquals("PIC") || CurrentEquals("PICTURE"))
@@ -735,8 +770,8 @@ public static class Analyzer
                         ErrorHandler.Parser.PrettyError(fileName, Current());
                     }
 
-                    DataItemInformation.AddType(DataItemHash, dataType);
-                    DataItemInformation.IsElementary(DataItemHash, true);
+                    Information.DataItems.AddType(DataItemHash, dataType);
+                    Information.DataItems.IsElementary(DataItemHash, true);
                     Choice("S9", "9", "X", "A", "N", "1");
 
                     Expected("(");
@@ -758,7 +793,7 @@ public static class Analyzer
                         Expected(")");
                     }
 
-                    DataItemInformation.AddPicture(DataItemHash, DataLength);
+                    Information.DataItems.AddPicture(DataItemHash, DataLength);
                 }
 
                 if (CurrentEquals("VALUE"))
@@ -775,21 +810,21 @@ public static class Analyzer
 
                     if (Current().type is TokenType.String)
                     {
-                        DataItemInformation.AddDefault(DataItemHash, Current().value);
+                        Information.DataItems.AddDefault(DataItemHash, Current().value);
                         String();
                     }
 
                     if (Current().type is TokenType.Numeric)
                     {
-                        DataItemInformation.AddDefault(DataItemHash, Current().value);
+                        Information.DataItems.AddDefault(DataItemHash, Current().value);
                         Number();
                     }
                 }
 
             }
 
-            if (!DataItemInformation.GetValue(DataItemHash).IsElementary)
-                DataItemInformation.IsGroup(DataItemHash, true);
+            if (!Information.DataItems.GetValue(DataItemHash).IsElementary)
+                Information.DataItems.IsGroup(DataItemHash, true);
 
             const string separatorPeriodError = """
             Missing separator period at the end of this data item definition, each data item must end with a separator period
@@ -814,9 +849,9 @@ public static class Analyzer
             Identifier();
 
             var DataItemHash = $"{SourceId}#{DataName}";
-            if (!DataItemInformation.AddDataItem(DataItemHash, DataName, LevelNumber, Current()))
+            if (!Information.DataItems.AddDataItem(DataItemHash, DataName, LevelNumber, Current()))
             {
-                var originalItem = DataItemInformation.GetValue(DataItemHash);
+                var originalItem = Information.DataItems.GetValue(DataItemHash);
 
                 ErrorHandler.Parser.Report(fileName, Lookahead(-1), ErrorType.General, $"""
                 A data item with this name already exists in this program, data items in a program must have a unique name.
@@ -824,15 +859,15 @@ public static class Analyzer
                 """);
                 ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
             }
-            DataItemInformation.IsConstant(DataItemHash, true);
-            DataItemInformation.AddSection(DataItemHash, CurrentSection);
+            Information.DataItems.IsConstant(DataItemHash, true);
+            Information.DataItems.AddSection(DataItemHash, CurrentSection.ToString());
 
             Expected("CONSTANT");
             if (CurrentEquals("IS") || CurrentEquals("GLOBAL"))
             {
                 Optional("IS");
                 Expected("GLOBAL");
-                DataItemInformation.IsGlobal(DataItemHash, true);
+                Information.DataItems.IsGlobal(DataItemHash, true);
             }
 
             if (CurrentEquals("FROM"))
@@ -886,6 +921,7 @@ public static class Analyzer
         {
             Expected("PROCEDURE");
             Expected("DIVISION");
+            CurrentSection = CurrentScope.ProcedureDivision;
 
             bool notObjectOrFactory = SourceType is not SourceUnit.Factory and not SourceUnit.Object;
 
@@ -1007,16 +1043,6 @@ public static class Analyzer
 
             var DataName = Current().value;
             Identifier();
-
-            var DataItemHash = $"{SourceId}#{DataName}";
-            if (!DataItemInformation.ValueExists(DataItemHash))
-            {
-                ErrorHandler.Parser.Report(fileName, Lookahead(-1), ErrorType.General, """
-                No data item found with this name in this source unit's data division. 
-                Please define a new returning data item in this unit's linkage section.
-                """);
-                ErrorHandler.Parser.PrettyError(fileName, Lookahead(-1));
-            }
         }
 
 
@@ -2902,6 +2928,7 @@ public static class Analyzer
     /// <para>If the current token's type is TokenType.Identifier, it moves to the next token,
     /// if the current token's type is TokenType.Identifier it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
+
     private static void Identifier(string custom = "default", int position = 0)
     {
         var errorMessage = "Identifier";
@@ -2922,6 +2949,16 @@ public static class Analyzer
         }
         else
         {
+            var DataItemHash = $"{SourceId}#{Current().value}";
+            if (!Information.DataItems.ValueExists(DataItemHash) && CurrentSection == CurrentScope.ProcedureDivision)
+            {
+                var current = Current();
+
+                ErrorHandler.Parser.Report(FileName, current, ErrorType.General, """
+                No data item with this name in this source unit's data division. 
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, current);
+            }
             Continue();
         }
     }
@@ -3029,6 +3066,30 @@ public static class Analyzer
         }
 
         if (!CurrentEquals(TokenType.Symbol))
+        {
+            var lookahead = Lookahead(position);
+
+            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            Continue();
+        }
+        else
+        {
+            Continue();
+        }
+    }
+
+    private static void FunctionCall(string custom = "default", int position = 0)
+    {
+        var errorMessage = "an intrinsic or user-defined function call";
+        var errorType = ErrorType.Expected;
+        if (!custom.Equals("default"))
+        {
+            errorMessage = custom;
+            errorType = ErrorType.General;
+        }
+
+        if (!CurrentEquals("FUNCTION") && !CurrentEquals(TokenType.IntrinsicFunction, TokenType.Identifier))
         {
             var lookahead = Lookahead(position);
 

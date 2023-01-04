@@ -62,7 +62,7 @@ public static class Analyzer
     /// <para>This is used when handling certain syntax rules for different sections and to add extra context needed for the DataItemInformation class's variable table.
     /// This will also be used by the DataItemInformation class during codegen to simplify the process to figuring out if a variable is static or not.</para>
     /// </summary>
-    
+
     private static CurrentScope CurrentSection;
 
     /// <summary>
@@ -106,7 +106,7 @@ public static class Analyzer
         void Source()
         {
             IDENTIFICATION();
-            
+
             if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
 
             if (CurrentEquals("DATA")) DATA();
@@ -117,7 +117,7 @@ public static class Analyzer
             {
                 Source();
             }
-            
+
             if (CurrentEquals("EOF")) return;
 
         }
@@ -600,7 +600,7 @@ public static class Analyzer
 
             Expected(".", """
             Missing separator period at the end of this DATA DIVISION header, every division header must end with a separator period
-            """, -1, "WORKING-STORAGE", "LOCAL-STORAGE" , "LINKAGE", "PROCEDURE");
+            """, -1, "WORKING-STORAGE", "LOCAL-STORAGE", "LINKAGE", "PROCEDURE");
 
             if (CurrentEquals("WORKING-STORAGE"))
                 WorkingStorage();
@@ -618,7 +618,7 @@ public static class Analyzer
                 Continue();
             }
         }
-       
+
 
         // The following methods are responsible for parsing the DATA DIVISION sections
         // They are technically only responsible for parsing the section header, 
@@ -688,7 +688,7 @@ public static class Analyzer
 
         void BaseEntry()
         {
-            string dataType = string.Empty;
+            string dataType;
             int LevelNumber = int.Parse(Current().value);
             Number();
 
@@ -980,7 +980,7 @@ public static class Analyzer
             else if (CurrentEquals("RETURNING") && notObjectOrFactory)
             {
                 Expected("RETURNING");
-                ReturningDataName(); 
+                ReturningDataName();
             }
 
             Expected(".", """
@@ -1041,7 +1041,6 @@ public static class Analyzer
                 return;
             }
 
-            var DataName = Current().value;
             Identifier();
         }
 
@@ -1789,7 +1788,7 @@ public static class Analyzer
 
             if (CurrentEquals("RETRY"))
                 RetryPhrase();
-            
+
             if (!isFile)
                 InvalidKey(ref isConditional);
 
@@ -2328,7 +2327,7 @@ public static class Analyzer
                 }
                 else
                     Identifier();
-                
+
                 raisingExists = true;
                 RaisingStatus(raisingExists, statusExists);
 
@@ -2526,13 +2525,13 @@ public static class Analyzer
                 else if (CurrentEquals("NOT") && (LookaheadEquals(1, "GREATER") || LookaheadEquals(1, "LESS") || LookaheadEquals(1, "EQUAL")))
                 {
                     var combined = new Token();
-                    if (LookaheadEquals(1, "GREATER")) 
+                    if (LookaheadEquals(1, "GREATER"))
                         combined = new Token($"NOT >", TokenType.Symbol, Current().line, Current().column);
 
-                    if (LookaheadEquals(1, "LESS")) 
+                    if (LookaheadEquals(1, "LESS"))
                         combined = new Token($"NOT <", TokenType.Symbol, Current().line, Current().column);
 
-                    if (LookaheadEquals(1, "EQUAL")) 
+                    if (LookaheadEquals(1, "EQUAL"))
                         combined = new Token($"<>", TokenType.Symbol, Current().line, Current().column);
 
                     expression.Add(combined);
@@ -2582,7 +2581,7 @@ public static class Analyzer
                 }
             }
 
-            if(!Helpers.IsBalanced(expression))
+            if (!Helpers.IsBalanced(expression))
             {
                 ErrorHandler.Parser.Report(fileName, expression[0], ErrorType.General, """
                 This expression is not balanced, one or more parenthesis to not have their matching opening or closing pair, it is an invalid expression
@@ -2607,7 +2606,7 @@ public static class Analyzer
         }
 
     }
-    
+
 
     // Parser Helper methods.
     // These are the main methods used to interact with and iterate through the List of Tokens.
@@ -2617,7 +2616,7 @@ public static class Analyzer
     {
         ErrorHandler.Parser.AttemptRecovery(anchors);
 
-        while(!CurrentEquals(TokenType.EOF))
+        while (!CurrentEquals(TokenType.EOF))
         {
             if (CurrentEquals("."))
             {
@@ -2628,7 +2627,7 @@ public static class Analyzer
                 Continue();
                 return;
             }
-            
+
             if (CurrentEquals(anchors))
             {
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
@@ -2646,7 +2645,7 @@ public static class Analyzer
     {
         ErrorHandler.Parser.AttemptRecovery(anchor);
 
-        while(!CurrentEquals(TokenType.EOF))
+        while (!CurrentEquals(TokenType.EOF))
         {
             if (CurrentEquals("."))
             {
@@ -2657,7 +2656,7 @@ public static class Analyzer
                 Continue();
                 return;
             }
-            
+
             if (CurrentEquals(anchor))
             {
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
@@ -2847,7 +2846,7 @@ public static class Analyzer
         ErrorHandler.Parser.PrettyError(FileName, token);
         Continue();
     }
-    
+
     /// <summary>
     /// Void <c>Optional</c>: This method checks if the current token is equal to it's first parameter.
     /// <para>If the current token matches the value, it moves to the next token,

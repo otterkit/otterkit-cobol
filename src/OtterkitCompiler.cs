@@ -16,8 +16,8 @@ public struct Options
 
 public static class OtterkitCompiler
 {
-    public static Options Options;
-    public static JsonElement ParsingInfo;
+    internal static Options Options;
+    internal static JsonElement ParsingInfo;
 
     public static void Main(string[] args)
     {

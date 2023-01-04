@@ -45,7 +45,7 @@ public static class Information
 {
     public static class DataItems
     {
-        public static Dictionary<string, DataItemInfo> Data = new();
+        internal static readonly Dictionary<string, DataItemInfo> Data = new();
 
         public static DataItemInfo GetValue(string DataItemHash)
         {
@@ -222,7 +222,7 @@ public static class Information
 
     public static class SourceUnits
     {
-        public static Dictionary<string, SourceUnitSignature> Data = new();
+        internal static readonly Dictionary<string, SourceUnitSignature> Data = new();
 
         public static SourceUnitSignature GetValue(string SourceUnitHash)
         {
@@ -332,7 +332,7 @@ public static class Information
 
     public static class Repositories
     {
-        public static Dictionary<string, RepositorySignature> Data = new();
+        internal static readonly Dictionary<string, RepositorySignature> Data = new();
 
         public static RepositorySignature GetValue(string RepositoryHash)
         {

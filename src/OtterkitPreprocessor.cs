@@ -10,9 +10,9 @@ enum DirectiveType
 
 public static class Preprocessor
 {
-    public static Options Options = OtterkitCompiler.Options;
-    public static List<string> SourceLines = new();
-    public static int Index = 0;
+    internal static Options Options = OtterkitCompiler.Options;
+    internal static List<string> SourceLines = new();
+    internal static int Index = 0;
 
     public static List<string> Preprocess(List<string> sourceLines)
     {

@@ -10,7 +10,7 @@ public enum ErrorType
 
 public static class ErrorHandler
 {
-    public static bool Error = false;
+    internal static bool Error = false;
 
     public static class Compiler
     {

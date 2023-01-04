@@ -663,54 +663,54 @@ public static class DecimalMath
 
 }
 
-public partial class NativeDecimal128
+internal partial class NativeDecimal128
 {
     // Import native C code from libmpdec
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "OtterkitArithmetic")]
-    public static unsafe partial byte* Arithmetic(byte* expression);
+    internal static unsafe partial byte* Arithmetic(byte* expression);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Exp")]
-    public static unsafe partial byte* Exp(byte* exponent);
+    internal static unsafe partial byte* Exp(byte* exponent);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Sqrt")]
-    public static unsafe partial byte* Sqrt(byte* radicand);
+    internal static unsafe partial byte* Sqrt(byte* radicand);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Ln")]
-    public static unsafe partial byte* Ln(byte* argument);
+    internal static unsafe partial byte* Ln(byte* argument);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Log10")]
-    public static unsafe partial byte* Log10(byte* argument);
+    internal static unsafe partial byte* Log10(byte* argument);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Abs")]
-    public static unsafe partial byte* Abs(byte* number);
+    internal static unsafe partial byte* Abs(byte* number);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Plus")]
-    public static unsafe partial byte* Plus(byte* number);
+    internal static unsafe partial byte* Plus(byte* number);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Minus")]
-    public static unsafe partial byte* Minus(byte* number);
+    internal static unsafe partial byte* Minus(byte* number);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Rem")]
-    public static unsafe partial byte* Rem(byte* left, byte* right);
+    internal static unsafe partial byte* Rem(byte* left, byte* right);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Compare")]
-    public static unsafe partial byte* Compare(byte* left, byte* right);
+    internal static unsafe partial byte* Compare(byte* left, byte* right);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Min")]
-    public static unsafe partial byte* Min(byte* left, byte* right);
+    internal static unsafe partial byte* Min(byte* left, byte* right);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Max")]
-    public static unsafe partial byte* Max(byte* left, byte* right);
+    internal static unsafe partial byte* Max(byte* left, byte* right);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Shift")]
-    public static unsafe partial byte* Shift(byte* left, byte* right);
+    internal static unsafe partial byte* Shift(byte* left, byte* right);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128And")]
-    public static unsafe partial byte* And(byte* left, byte* right);
+    internal static unsafe partial byte* And(byte* left, byte* right);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Or")]
-    public static unsafe partial byte* Or(byte* left, byte* right);
+    internal static unsafe partial byte* Or(byte* left, byte* right);
 
     [LibraryImport("OtterkitMath/Decimal128", EntryPoint = "Decimal128Xor")]
-    public static unsafe partial byte* Xor(byte* left, byte* right);
+    internal static unsafe partial byte* Xor(byte* left, byte* right);
 }

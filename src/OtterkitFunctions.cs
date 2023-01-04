@@ -670,7 +670,7 @@ public static class Functions
 
         else
         {
-            DecimalHolder range = argument.Bytes.Slice(0, Math.Min(9, argument.Bytes.Length));
+            DecimalHolder range = argument.Bytes[..Math.Min(9, argument.Bytes.Length)];
             int int_arg = int.Parse(range.Display); // The range variable above makes sure that it fits inside of an Int32
             random = new(int_arg);//what about fractional arguments? Accoridng to the standard, those are not supported
         }

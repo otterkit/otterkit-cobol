@@ -2948,16 +2948,6 @@ public static class Analyzer
         }
         else
         {
-            var DataItemHash = $"{SourceId}#{Current().value}";
-            if (!Information.DataItems.ValueExists(DataItemHash) && CurrentSection == CurrentScope.ProcedureDivision)
-            {
-                var current = Current();
-
-                ErrorHandler.Parser.Report(FileName, current, ErrorType.General, """
-                No data item with this name in this source unit's data division. 
-                """);
-                ErrorHandler.Parser.PrettyError(FileName, current);
-            }
             Continue();
         }
     }
@@ -3078,9 +3068,9 @@ public static class Analyzer
         }
     }
 
-    private static void FunctionCall(string custom = "default", int position = 0)
+    private static void FunctionIdentifier(string custom = "default", int position = 0)
     {
-        var errorMessage = "an intrinsic or user-defined function call";
+        var errorMessage = "an intrinsic or user-defined function identifier";
         var errorType = ErrorType.Expected;
         if (!custom.Equals("default"))
         {

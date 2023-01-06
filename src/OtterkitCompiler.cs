@@ -10,6 +10,7 @@ public struct Options
     public string Type;
     public string BuildMode;
     public string EntryPoint;
+    public List<string> SourceFiles;
     public string SourceFormat;
     public int ColumnLength;
 }
@@ -266,6 +267,7 @@ public static class OtterkitCompiler
 
     private static List<string> ReadSourceFile()
     {
+        const string eofMarker = "       >>IMP-EOF";
         if (!File.Exists(Options.EntryPoint))
         {
             ErrorHandler.Compiler.Report("Otterkit compiler error: File Not Found");
@@ -273,7 +275,30 @@ public static class OtterkitCompiler
             Environment.Exit(1);
         }
 
-        var sourceLines = File.ReadAllLines(Options.EntryPoint).ToList();
+        var sourceLines = new List<string>();
+        Options.SourceFiles = new();
+
+        foreach (var line in File.ReadLines(Options.EntryPoint))
+        {
+            sourceLines.Add(line);
+        }
+
+        sourceLines.Add(eofMarker);
+
+        var allSourceFiles = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.cob", SearchOption.AllDirectories);
+        var excludeEntryPoint = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), Options.EntryPoint);
+        var sourcesWithoutEntryPoint = allSourceFiles.Except(excludeEntryPoint);
+
+        foreach (var file in sourcesWithoutEntryPoint)
+        {
+            foreach (var line in File.ReadLines(file))
+            {
+                sourceLines.Add(line);
+            }
+            
+            sourceLines.Add(eofMarker);
+            Options.SourceFiles.Add(file);
+        }
 
         // Get COBOL reserved keyword information from parsinginfo.json
         var assembly = Assembly.GetCallingAssembly();

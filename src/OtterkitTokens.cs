@@ -14,7 +14,7 @@ public enum TokenType
     Identifier,
     Expression,
     Device,
-    EOF
+    EOF,
 }
 
 public enum TokenScope
@@ -34,7 +34,8 @@ public enum TokenScope
 public enum TokenContext
 {
     IsClause,
-    IsStatement
+    IsStatement,
+    IsEOF
 }
 
 public partial struct Token
@@ -89,7 +90,7 @@ public partial struct Token
         else if (NumericRegex().IsMatch(value))
             return TokenType.Numeric;
         //check if the value is End Of File
-        else if (value == "EOF")
+        else if (value.Equals(">>IMP-EOF"))
             return TokenType.EOF;
         //if none of the above, it's an identifier
         else
@@ -106,6 +107,9 @@ public partial struct Token
         //check if the token is a statement
         else if (tokenJson.GetProperty("statements").EnumerateArray().Any(json => json.GetString() == token.value))
             return TokenContext.IsStatement;
+        //check if the token represents a file separator   
+        else if (token.line is -5)
+            return TokenContext.IsEOF;
         //if none of the above, return null
         else
             return null;
@@ -149,7 +153,10 @@ public partial struct Token
     public static Token FromValue(string value, int line, int column)
     {
         if (FindType(value) == TokenType.String)
-            return new Token(value, FindType(value), line, column);
+            return new Token(value, TokenType.String, line, column);
+
+        if(FindType(value) == TokenType.EOF && value.Equals(">>IMP-EOF"))
+            return new Token("EOF", TokenType.EOF, -5, -5);
 
         return new Token(value.ToUpper(), FindType(value), line, column);
     }
@@ -166,7 +173,7 @@ public partial struct Token
             newTokens.Add(newToken);
             previousToken = newToken;
         }
-        newTokens.Add(FromValue("EOF", -1, -1));
+
         return newTokens;
     }
 

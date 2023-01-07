@@ -1010,7 +1010,7 @@ public static class Analyzer
                 return;
             }
 
-            if (SourceType == SourceUnit.Program && CurrentEquals("END") && LookaheadEquals(1, "PROGRAM"))
+            if (SourceType == SourceUnit.Program && CurrentEquals("END"))
             {
                 Expected("END");
                 Expected("PROGRAM");
@@ -1056,7 +1056,17 @@ public static class Analyzer
         // For other statements, the separator period is required, which is then handled by the ScopeTerminator()
         void Statement(bool isNested = false)
         {
-            while (Current().context == TokenContext.IsStatement)
+            if (Current().context != TokenContext.IsStatement && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, ".") && !isNested))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                Expected the start of a statement. Instead found "{Current().value}"
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                AnchorPoint(TokenContext.IsStatement);
+            }
+
+            while (!CurrentEquals("EOF", "END"))
             {
                 if (CurrentEquals("ACCEPT"))
                     ACCEPT();
@@ -1097,14 +1107,23 @@ public static class Analyzer
                 if (CurrentEquals("IF"))
                     IF();
 
+                if (CurrentEquals("INITIALIZE"))
+                    INITIALIZE();
+
                 if (CurrentEquals("INITIATE"))
                     INITIATE();
+
+                if (CurrentEquals("INVOKE"))
+                    INVOKE();
 
                 if (CurrentEquals("MULTIPLY"))
                     MULTIPLY();
 
                 if (CurrentEquals("MOVE"))
                     MOVE();
+
+                if (CurrentEquals("OPEN"))
+                    OPEN();            
 
                 if (CurrentEquals("EXIT"))
                     EXIT();
@@ -1129,6 +1148,12 @@ public static class Analyzer
 
                 if (CurrentEquals("RAISE"))
                     RAISE();
+
+                if (CurrentEquals("READ"))
+                    READ();
+
+                if (CurrentEquals("RECEIVE"))
+                    RECEIVE();
 
                 if (CurrentEquals("RESUME"))
                     RESUME();
@@ -1157,8 +1182,15 @@ public static class Analyzer
                 if (CurrentEquals("VALIDATE"))
                     VALIDATE();
 
+                if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, ".") && !isNested)
+                    PARAGRAPH();
+
                 ScopeTerminator(isNested);
-                Statement(isNested);
+
+                if (!CurrentEquals("EOF", "END"))
+                {
+                    Statement(isNested);
+                }
             }
         }
 
@@ -1182,33 +1214,43 @@ public static class Analyzer
         void DISPLAY()
         {
             Expected("DISPLAY");
+
+            if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "AT", "LINE", "COLUMN", "COL"))
+            {
+                bool isConditional = false;
+
+                Identifier();
+                Optional("AT");
+                LineColumn();
+                OnException(ref isConditional);
+
+                if (isConditional) Expected("END-COMPUTE");
+                return;
+            }
+
+            if (NotIdentifierOrLiteral())
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "an identifier or a literal");
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                AnchorPoint("UPON", "WITH", "NO");
+            }
+
             switch (Current().type)
             {
-                case TokenType.Identifier:
-                    Identifier();
-                    break;
-                case TokenType.Numeric:
-                    Number();
-                    break;
-                case TokenType.String:
-                    String();
-                    break;
-                default:
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier or literal");
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
-                    break;
+                case TokenType.Identifier: Identifier(); break;
+                case TokenType.Numeric: Number(); break;
+                case TokenType.String: String(); break;
             }
 
             while (CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
             {
-                if (CurrentEquals(TokenType.Identifier))
-                    Identifier();
-
-                if (CurrentEquals(TokenType.Numeric))
-                    Number();
-
-                if (CurrentEquals(TokenType.String))
-                    String();
+                switch (Current().type)
+                {
+                    case TokenType.Identifier: Identifier(); break;
+                    case TokenType.Numeric: Number(); break;
+                    case TokenType.String: String(); break;
+                }
             }
 
             if (CurrentEquals("UPON"))
@@ -1229,6 +1271,8 @@ public static class Analyzer
 
         void ACCEPT()
         {
+            bool isConditional = false;
+
             Expected("ACCEPT");
             Identifier();
             if (CurrentEquals("FROM"))
@@ -1260,8 +1304,21 @@ public static class Analyzer
                         break;
                 }
             }
+            else if (CurrentEquals("AT", "LINE", "COLUMN", "COL"))
+            {
+                Optional("AT");
+                if (!CurrentEquals("LINE", "COLUMN", "COL"))
+                {
+                    ErrorHandler.Parser.Report(FileName, Lookahead(-1), ErrorType.General, """
+                    When specifying the AT keyword, it must be followed by a LINE NUMBER, COLUMN/COL NUMBER or both.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
+                }
+                LineColumn();
+                OnException(ref isConditional);
+            }
 
-            Optional("END-ACCEPT");
+            if (isConditional) Expected("END-ACCEPT");
         }
 
         void ALLOCATE()
@@ -1305,7 +1362,7 @@ public static class Analyzer
             Expected("=");
             if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier, numeric literal or valid arithmetic symbol");
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "an identifier, numeric literal or a valid arithmetic symbol");
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
 
@@ -1319,15 +1376,200 @@ public static class Analyzer
 
             SizeError(ref isConditional);
 
-            if (isConditional)
-                Expected("END-COMPUTE");
+            if (isConditional) Expected("END-COMPUTE");
         }
 
         void CALL()
         {
+            bool isConditional = false;
+            bool isPrototype = false;
+
             Expected("CALL");
-            String();
-            Optional("END-CALL");
+            if (CurrentEquals(TokenType.Identifier, TokenType.String))
+            {
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                }
+                else
+                {
+                    String();
+                }
+                
+                if (CurrentEquals("AS"))
+                {
+                    isPrototype = true;
+                    Expected("AS");
+                }
+            }
+            else
+            {
+                isPrototype = true;
+            }
+            
+            if (isPrototype && CurrentEquals("NESTED"))
+            {
+                Expected("NESTED");
+            }
+            else if (isPrototype && !CurrentEquals("NESTED"))
+            {
+                Identifier();
+            }
+
+            if (!isPrototype && CurrentEquals("USING"))
+            {
+                Expected("USING");
+
+                while (CurrentEquals("BY", "REFERENCE", "CONTENT"))
+                {
+                    if (CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
+                    {
+                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        The USING BY VALUE clause must only be specified in a program prototype call.
+                        """);
+                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                        Continue();
+
+                        AnchorPoint("BY", "REFERENCE", "CONTENT", "RETURNING");
+                        if (CurrentEquals("RETURNING", ".")) break;
+
+                    }
+
+                    if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
+                    {
+                        Optional("BY");
+                        Expected("REFERENCE");
+
+                        if (CurrentEquals("OPTIONAL")) Expected("OPTIONAL");
+
+                        if (!CurrentEquals(TokenType.Identifier))
+                        {
+                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            The USING BY REFERENCE clause must contain at least one data item name.
+                            """);
+                            ErrorHandler.Parser.PrettyError(FileName, Current());
+                        }
+
+                        Identifier();
+                        while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
+                        {
+                            if (CurrentEquals("OPTIONAL")) Expected("OPTIONAL");
+                            Identifier();
+                        }
+                    }
+
+                    if (CurrentEquals("CONTENT") || CurrentEquals("BY") && LookaheadEquals(1, "CONTENT"))
+                    {
+                        Optional("BY");
+                        Expected("CONTENT");
+                        if (!CurrentEquals(TokenType.Identifier))
+                        {
+                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            The USING BY CONTENT clause must contain at least one data item name.
+                            """);
+                            ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                            AnchorPoint("BY", "REFERENCE", "CONTENT", "RETURNING");
+                            if (CurrentEquals("RETURNING", ".")) break;
+                        }
+
+                        Identifier();
+                        while (CurrentEquals(TokenType.Identifier)) Identifier();
+                    }
+                }
+            }
+            else if (isPrototype && CurrentEquals("USING"))
+            {
+                Expected("USING");
+
+                while (CurrentEquals("BY", "REFERENCE", "CONTENT", "VALUE"))
+                {
+                    if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
+                    {
+                        Optional("BY");
+                        Expected("REFERENCE");
+
+                        if (!CurrentEquals(TokenType.Identifier) && !CurrentEquals("OMMITED"))
+                        {
+                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            The USING BY REFERENCE clause must contain at least one data item name.
+                            """);
+                            ErrorHandler.Parser.PrettyError(FileName, Current());
+                        }
+
+                        if (CurrentEquals("OMMITED"))
+                        {
+                            Expected("OMMITED");
+                        }
+                        else
+                        {
+                            Identifier();
+                        }
+                    }
+
+                    if (CurrentEquals("CONTENT") || CurrentEquals("BY") && LookaheadEquals(1, "CONTENT"))
+                    {
+                        Optional("BY");
+                        Expected("CONTENT");
+                        if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+                        {
+                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            The USING BY CONTENT clause must contain at least one data item name or literal.
+                            """);
+                            ErrorHandler.Parser.PrettyError(FileName, Current());
+                        }
+
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else if (CurrentEquals(TokenType.Numeric))
+                        {
+                            Number();
+                        }
+                        else
+                        {
+                            String();
+                        }
+                    }
+
+                    if (CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
+                    {
+                        Optional("BY");
+                        Expected("VALUE");
+                        if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+                        {
+                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            The USING BY VALUE clause must contain at least one data item name or literal.
+                            """);
+                            ErrorHandler.Parser.PrettyError(FileName, Current());
+                        }
+
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else if (CurrentEquals(TokenType.Numeric))
+                        {
+                            Number();
+                        }
+                        else
+                        {
+                            String();
+                        }
+                    }
+                }
+            }
+
+            if (CurrentEquals("RETURNING"))
+            {
+                Expected("RETURNING");
+                Identifier();
+            }
+
+            OnException(ref isConditional);
+
+            if (isConditional) Expected("END-CALL");
         }
 
         void CONTINUE()
@@ -1346,6 +1588,19 @@ public static class Analyzer
             bool isConditional = false;
 
             Expected("ADD");
+
+            if (CurrentEquals("CORRESPONDING", "CORR"))
+            {
+                Continue();
+                Identifier();
+                Expected("TO");
+                Identifier();
+                SizeError(ref isConditional);
+
+                if (isConditional) Expected("END-ADD");
+                return;
+            }
+
             if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric))
             {
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
@@ -1422,8 +1677,7 @@ public static class Analyzer
 
             SizeError(ref isConditional);
 
-            if (isConditional)
-                Expected("END-ADD");
+            if (isConditional) Expected("END-ADD");
         }
 
         void SUBTRACT()
@@ -1524,6 +1778,127 @@ public static class Analyzer
             Expected("END-IF");
         }
 
+        void INITIALIZE()
+        {
+            Expected("INITIALIZE");
+            Identifier();
+            while (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+            }
+            
+            if (CurrentEquals("WITH", "FILLER"))
+            {
+                Optional("WITH");
+                Expected("FILLER");
+            }
+
+            bool IsCategoryName(string value) => value switch
+            {
+                "ALPHABETIC" => true,
+                "ALPHANUMERIC" => true,
+                "ALPHANUMERIC-EDITED" => true,
+                "BOOLEAN" => true,
+                "DATA-POINTER" => true,
+                "FUNCTION-POINTER" => true,
+                "MESSAGE-TAG" => true,
+                "NATIONAL" => true,
+                "NATIONAL-EDITED" => true,
+                "NUMERIC" => true,
+                "NUMERIC-EDITED" => true,
+                "OBJECT-REFERENCE" => true,
+                "PROGRAM-POINTER" => true,
+                _ => false
+            };
+
+            if (IsCategoryName(Current().value))
+            {
+                Expected(Current().value);
+                Optional("TO");
+                Expected("VALUE");
+            } 
+            else if (CurrentEquals("ALL"))
+            {
+                Expected("ALL");
+                Optional("TO");
+                Expected("VALUE");
+            }
+
+            if (CurrentEquals("THEN", "REPLACING"))
+            {
+                Optional("THEN");
+                Expected("REPLACING");
+                if (IsCategoryName(Current().value))
+                {
+                    Expected(Current().value);
+                    Optional("DATA");
+                    Expected("BY");
+
+                    if (NotIdentifierOrLiteral())
+                    {
+                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        Expected an identifier if message tag, object reference or a pointer as specified, and an identifier or literal otherwise
+                        """);
+                        ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                        AnchorPoint(TokenContext.IsStatement);
+                    }
+
+                    if (CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier();
+                    }
+                    else if (CurrentEquals(TokenType.String))
+                    {
+                        String();
+                    }
+                    else if (CurrentEquals(TokenType.Numeric))
+                    {
+                        Number();
+                    }
+
+                    while (IsCategoryName(Current().value))
+                    {
+                        Expected(Current().value);
+                        Optional("DATA");
+                        Expected("BY");
+
+                        if (NotIdentifierOrLiteral())
+                        {
+                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            Expected an identifier if message tag, object reference or a pointer as specified, and an identifier or literal otherwise
+                            """);
+                            ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                            AnchorPoint(TokenContext.IsStatement);
+                        }
+
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else if (CurrentEquals(TokenType.String))
+                        {
+                            String();
+                        }
+                        else if (CurrentEquals(TokenType.Numeric))
+                        {
+                            Number();
+                        }
+
+                    }
+
+                }
+            }
+
+            if (CurrentEquals("THEN", "TO", "DEFAULT"))
+            {
+                Optional("THEN");
+                Optional("TO");
+                Expected("DEFAULT");
+            }
+        }
+
         void INITIATE()
         {
             Expected("INITIATE");
@@ -1545,6 +1920,110 @@ public static class Analyzer
                 """);
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
+        }
+
+        void INVOKE()
+        {
+            Expected("INVOKE");
+            Identifier();
+            if (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+            }
+            else
+            {
+                String();
+            }
+
+            if (CurrentEquals("USING"))
+            {
+                Expected("USING");
+
+                while (CurrentEquals("BY", "REFERENCE", "CONTENT", "VALUE"))
+                {
+                    if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
+                    {
+                        Optional("BY");
+                        Expected("REFERENCE");
+
+                        if (!CurrentEquals(TokenType.Identifier) && !CurrentEquals("OMMITED"))
+                        {
+                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            The USING BY REFERENCE clause must contain at least one data item name.
+                            """);
+                            ErrorHandler.Parser.PrettyError(FileName, Current());
+                        }
+
+                        if (CurrentEquals("OMMITED"))
+                        {
+                            Expected("OMMITED");
+                        }
+                        else
+                        {
+                            Identifier();
+                        }
+                    }
+
+                    if (CurrentEquals("CONTENT") || CurrentEquals("BY") && LookaheadEquals(1, "CONTENT"))
+                    {
+                        Optional("BY");
+                        Expected("CONTENT");
+                        if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+                        {
+                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            The USING BY CONTENT clause must contain at least one data item name or literal.
+                            """);
+                            ErrorHandler.Parser.PrettyError(FileName, Current());
+                        }
+
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else if (CurrentEquals(TokenType.Numeric))
+                        {
+                            Number();
+                        }
+                        else
+                        {
+                            String();
+                        }
+                    }
+
+                    if (CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
+                    {
+                        Optional("BY");
+                        Expected("VALUE");
+                        if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+                        {
+                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            The USING BY VALUE clause must contain at least one data item name or literal.
+                            """);
+                            ErrorHandler.Parser.PrettyError(FileName, Current());
+                        }
+
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else if (CurrentEquals(TokenType.Numeric))
+                        {
+                            Number();
+                        }
+                        else
+                        {
+                            String();
+                        }
+                    }
+                }
+            }
+
+            if (CurrentEquals("RETURNING"))
+            {
+                Expected("RETURNING");
+                Identifier();
+            }
+
         }
 
         void MULTIPLY()
@@ -1668,6 +2147,122 @@ public static class Analyzer
                 The MOVE statement must only contain data item identifiers after the "TO" reserved word.
                 """);
                 ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
+        }
+
+        void OPEN()
+        {
+            Expected("OPEN");
+            Choice("INPUT", "OUTPUT", "I-O", "EXTEND");
+
+            if (CurrentEquals("SHARING"))
+            {
+                Expected("SHARING");
+                Optional("WITH");
+                if (CurrentEquals("ALL"))
+                {
+                    Expected("ALL");
+                    Optional("OTHER");
+                }
+                else if (CurrentEquals("NO"))
+                {
+                    Expected("NO");
+                    Optional("OTHER");
+                }
+                else if (CurrentEquals("READ"))
+                {
+                    Expected("READ");
+                    Expected("ONLY");
+                }
+                else
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    Expected ALL OTHER, NO OTHER or READ ONLY. One of them must be specified in the SHARING clause
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+            }
+            
+            if (CurrentEquals("RETRY"))
+            {
+                RetryPhrase();
+            }
+
+            Identifier();
+            if (CurrentEquals("WITH", "NO"))
+            {
+                Optional("WITH");
+                Expected("NO");
+                Expected("REWIND");
+            }
+
+            while(CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+                if (CurrentEquals("WITH", "NO"))
+                {
+                    Optional("WITH");
+                    Expected("NO");
+                    Expected("REWIND");
+                }
+            }
+
+            while(CurrentEquals("INPUT", "OUTPUT", "I-O", "EXTEND"))
+            {
+                Choice("INPUT", "OUTPUT", "I-O", "EXTEND");
+
+                if (CurrentEquals("SHARING"))
+                {
+                    Expected("SHARING");
+                    Optional("WITH");
+                    if (CurrentEquals("ALL"))
+                    {
+                        Expected("ALL");
+                        Optional("OTHER");
+                    }
+                    else if (CurrentEquals("NO"))
+                    {
+                        Expected("NO");
+                        Optional("OTHER");
+                    }
+                    else if (CurrentEquals("READ"))
+                    {
+                        Expected("READ");
+                        Expected("ONLY");
+                    }
+                    else
+                    {
+                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        Expected ALL OTHER, NO OTHER or READ ONLY. One of them must be specified in the SHARING clause
+                        """);
+                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                    }
+                }
+                
+                if (CurrentEquals("RETRY"))
+                {
+                    RetryPhrase();
+                }
+
+                Identifier();
+                if (CurrentEquals("WITH", "NO"))
+                {
+                    Optional("WITH");
+                    Expected("NO");
+                    Expected("REWIND");
+                }
+
+                while(CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                    if (CurrentEquals("WITH", "NO"))
+                    {
+                        Optional("WITH");
+                        Expected("NO");
+                        Expected("REWIND");
+                    }
+                }
+
             }
         }
 
@@ -1998,6 +2593,108 @@ public static class Analyzer
                 Identifier();
         }
 
+        void READ()
+        {
+            bool isSequential = false;
+            bool isConditional = false;
+
+            Expected("READ");
+            Identifier();
+            if (CurrentEquals("NEXT", "PREVIOUS"))
+            {
+                Expected(Current().value);
+                isSequential = true;
+            }
+
+            Expected("RECORD");
+            if (CurrentEquals("INTO"))
+            {
+                Expected("INTO");
+                Identifier();
+            }
+
+            if (CurrentEquals("ADVANCING"))
+            {
+                Expected("ADVANCING");
+                Optional("ON");
+                Expected("LOCK");
+                isSequential = true;
+            }
+            else if (CurrentEquals("IGNORING"))
+            {
+                Expected("IGNORING");
+                Expected("LOCK");
+            }
+            else if (CurrentEquals("RETRY"))
+            {
+                RetryPhrase();
+            }
+
+            if (CurrentEquals("WITH", "LOCK"))
+            {
+                Optional("WITH");
+                Expected("LOCK");
+            }
+            else if (CurrentEquals("WITH", "NO"))
+            {
+                Optional("WITH");
+                Expected("NO");
+                Expected("LOCK");
+            }
+
+            if (!isSequential && CurrentEquals("KEY"))
+            {
+                Expected("KEY");
+                Optional("IS");
+                Identifier();
+            }
+
+            if (!isSequential && CurrentEquals("INVALID", "NOT"))
+            {
+                InvalidKey(ref isConditional);
+            }
+            else if (!isSequential && CurrentEquals("AT", "END", "NOT"))
+            {
+                AtEnd(ref isConditional);
+            }
+
+            if (isConditional) Expected("END-READ");
+
+        }
+
+        void RECEIVE()
+        {
+            bool isConditional = false;
+
+            Expected("RECEIVE");
+            Optional("FROM");
+            Identifier();
+            Expected("GIVING");
+            Identifier();
+            Identifier();
+
+            if (CurrentEquals("CONTINUE"))
+            {
+                Expected("CONTINUE");
+                Optional("AFTER");
+                if (CurrentEquals("MESSAGE"))
+                {
+                    Expected("MESSAGE");
+                    Expected("RECEIVED");
+                }
+                else
+                {
+                    Arithmetic();
+                    Optional("SECONDS");
+                }
+            }
+
+            OnException(ref isConditional);
+
+            if (isConditional) Expected("END-RECEIVE");
+
+        }
+
         void RELEASE()
         {
             Expected("RELEASE");
@@ -2190,6 +2887,10 @@ public static class Analyzer
             }
         }
 
+        void PARAGRAPH()
+        {
+            Identifier();
+        }
 
         // The following methods are responsible for parsing some commonly repeated pieces of COBOL statements.
         // The ON SIZE ERROR, ON EXCEPTION, INVALID KEY, AT END, and the RETRY phrase are examples of pieces of COBOL syntax
@@ -2450,6 +3151,63 @@ public static class Analyzer
                 Expected("ERROR");
                 Statement(true);
                 SizeError(ref isConditional, onErrorExists, notOnErrorExists);
+            }
+        }
+
+        void LineColumn(bool lineExists = false, bool columnExists = false)
+        {
+            if (CurrentEquals("LINE"))
+            {
+                if (lineExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    LINE NUMBER can only be specified once in this statement. 
+                    The same applies to the COLUMN NUMBER.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                lineExists = true;
+                Expected("LINE");
+                Optional("NUMBER");
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                }
+                else
+                {
+                    Number();
+                }
+
+
+                LineColumn(lineExists, columnExists);
+
+            }
+
+            if (CurrentEquals("COLUMN", "COL"))
+            {
+                if (columnExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    COLUMN NUMBER can only be specified once in this statement. 
+                    The same applies to the LINE NUMBER.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                columnExists = true;
+                Expected(Current().value);
+                Optional("NUMBER");
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                }
+                else
+                {
+                    Number();
+                }
+
+                LineColumn(lineExists, columnExists);
             }
         }
 

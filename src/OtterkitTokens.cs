@@ -177,6 +177,6 @@ public partial struct Token
         return newTokens;
     }
 
-    [GeneratedRegex("^(\\+|-)?\\.?[0-9]+(\\.[0-9]+)?", RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking)]
+    [GeneratedRegex("^(\\+|-)?\\.?[0-9]+(\\.[0-9]+)?$", RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking)]
     private static partial Regex NumericRegex();
 }

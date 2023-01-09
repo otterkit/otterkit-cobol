@@ -1,13 +1,20 @@
 
+using System.Diagnostics;
+
 namespace Otterkit;
 
 public enum SourceUnit
 {
     Program,
+    ProgramPrototype,
     Function,
+    FunctionPrototype,
     Class,
     Interface,
     Method,
+    MethodPrototype,
+    MethodGetter,
+    MethodSetter,
     Object,
     Factory
 }
@@ -55,7 +62,7 @@ public static class Analyzer
     /// SourceUnit <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
     /// <para>This is used when handling certain syntax rules for different <c>-ID</c>s, like the <c>"RETURNING data-name"</c> being required for every <c>FUNCTION-ID</c> source unit.</para>
     /// </summary>
-    private static SourceUnit SourceType;
+    private static Stack<SourceUnit> SourceType = new();
 
     /// <summary>
     /// CurrentSection <c>CurrentSection</c> is used in the parser whenever it needs to know which section it is currently parsing (WORKING-STORAGE and LOCAL-STORAGE for example).
@@ -112,9 +119,33 @@ public static class Analyzer
 
             if (CurrentEquals("DATA")) DATA();
 
-            PROCEDURE();
+            bool ShouldHaveProcedure = SourceType.Peek() switch
+            {
+                SourceUnit.Program => true,
+                SourceUnit.ProgramPrototype => true,
+                SourceUnit.Function => true,
+                SourceUnit.FunctionPrototype => true,
+                SourceUnit.Class => false,
+                SourceUnit.Interface => false,
+                SourceUnit.Method => true,
+                SourceUnit.MethodPrototype => true,
+                SourceUnit.MethodGetter => true,
+                SourceUnit.MethodSetter => true,
+                SourceUnit.Object => false,
+                SourceUnit.Factory => false,
+                _ => throw new UnreachableException()
+            };
 
-            if (CurrentEquals("IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID"))
+            if (ShouldHaveProcedure)
+            {
+                PROCEDURE();
+            }
+            else
+            {
+                FactoryObject();
+            }
+
+            if (CurrentEquals("IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID"))
             {
                 Source();
             }
@@ -144,7 +175,7 @@ public static class Analyzer
                 """, -1, "PROGRAM-ID", "FUNCTION-ID", "ENVIRONMENT", "DATA", "PROCEDURE");
             }
 
-            if (!CurrentEquals("PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "METHOD-ID", "INTERFACE-ID"))
+            if (!CurrentEquals("PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "METHOD-ID", "INTERFACE-ID", "OBJECT", "FACTORY"))
             {
                 Expected("PROGRAM-ID", """
                 Missing source unit ID name (PROGRAM-ID, FUNCTION-ID, CLASS-ID...), the identification division header is optional but every source unit must still have an ID.
@@ -158,13 +189,31 @@ public static class Analyzer
                 FunctionId();
 
             if (CurrentEquals("CLASS-ID"))
+            {
                 ClassId();
+                return;
+            }
 
             if (CurrentEquals("INTERFACE-ID"))
                 InterfaceId();
 
-            if (CurrentEquals("METHOD-ID"))
+            if (SourceType.Peek() is SourceUnit.Class && CurrentEquals("FACTORY"))
+            {
+                Factory();
+                return;
+            }
+
+            if (SourceType.Peek() is SourceUnit.Class && CurrentEquals("OBJECT"))
+            {
+                Object();
+                return;
+            }
+
+            if (SourceType.Peek() is SourceUnit.Object or SourceUnit.Factory && CurrentEquals("METHOD-ID"))
+            {
                 MethodId();
+                return;
+            }
         }
 
 
@@ -179,7 +228,7 @@ public static class Analyzer
             Expected(".");
             ProgramIdentifier = Current();
             SourceId = ProgramIdentifier.value;
-            SourceType = SourceUnit.Program;
+            SourceType.Push(SourceUnit.Program);
             CurrentSection = CurrentScope.ProgramId;
             Identifier();
             if (CurrentEquals("AS"))
@@ -220,6 +269,8 @@ public static class Analyzer
                     if (CurrentEquals("PROTOTYPE"))
                     {
                         Expected("PROTOTYPE");
+                        SourceType.Pop();
+                        SourceType.Push(SourceUnit.ProgramPrototype);
                         isPrototype = true;
                     }
                 }
@@ -253,7 +304,7 @@ public static class Analyzer
             Expected("FUNCTION-ID");
             Expected(".");
             SourceId = Current().value;
-            SourceType = SourceUnit.Function;
+            SourceType.Push(SourceUnit.Function);
             CurrentSection = CurrentScope.FunctionId;
             Identifier();
 
@@ -267,6 +318,8 @@ public static class Analyzer
             {
                 Optional("IS");
                 Expected("PROTOTYPE");
+                SourceType.Pop();
+                SourceType.Push(SourceUnit.FunctionPrototype);
             }
 
             Expected(".", """
@@ -279,7 +332,7 @@ public static class Analyzer
             Expected("CLASS-ID");
             Expected(".");
             SourceId = Current().value;
-            SourceType = SourceUnit.Class;
+            SourceType.Push(SourceUnit.Class);
             CurrentSection = CurrentScope.ClassId;
             Identifier();
 
@@ -336,7 +389,7 @@ public static class Analyzer
             Expected("INTERFACE-ID");
             Expected(".");
             SourceId = Current().value;
-            SourceType = SourceUnit.Interface;
+            SourceType.Push(SourceUnit.Interface);
             CurrentSection = CurrentScope.InterfaceId;
             Identifier();
 
@@ -386,7 +439,7 @@ public static class Analyzer
         {
             Expected("METHOD-ID");
             Expected(".");
-            SourceType = SourceUnit.Method;
+            SourceType.Push(SourceUnit.Method);
             CurrentSection = CurrentScope.MethodId;
 
             if (CurrentEquals(TokenType.Identifier))
@@ -405,6 +458,9 @@ public static class Analyzer
                 Expected("PROPERTY");
                 SourceId = $"GET {Current().value}";
                 Identifier();
+                
+                SourceType.Pop();
+                SourceType.Push(SourceUnit.MethodGetter);
             }
             else if (CurrentEquals("SET"))
             {
@@ -412,6 +468,8 @@ public static class Analyzer
                 Expected("PROPERTY");
                 SourceId = $"SET {Current().value}";
                 Identifier();
+                SourceType.Pop();
+                SourceType.Push(SourceUnit.MethodSetter);
             }
 
             if (CurrentEquals("OVERRIDE")) Expected("OVERRIDE");
@@ -427,6 +485,113 @@ public static class Analyzer
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
         }
 
+        void Factory()
+        {
+            Expected("FACTORY");
+            Expected(".");
+            SourceType.Push(SourceUnit.Factory);
+
+            if (CurrentEquals("IMPLEMENTS"))
+            {
+                Expected("IMPLEMENTS");
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    The IMPLEMENTS clause must contain at least one interface name.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier)) Identifier();
+
+                Expected(".");
+            }
+        }
+
+        void Object()
+        {
+            Expected("OBJECT");
+            Expected(".");
+            SourceType.Push(SourceUnit.Object);
+
+            if (CurrentEquals("IMPLEMENTS"))
+            {
+                Expected("IMPLEMENTS");
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    The IMPLEMENTS clause must contain at least one interface name.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier)) Identifier();
+
+                Expected(".");
+            }
+        }
+
+        void FactoryObject()
+        {
+            if (CurrentEquals("FACTORY") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "FACTORY"))
+            {
+                IDENTIFICATION();
+
+                if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
+
+                if (CurrentEquals("DATA")) DATA();
+                Expected("PROCEDURE");
+                Expected("DIVISION");
+                Expected(".");
+
+                while (CurrentEquals("METHOD-ID") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "METHOD-ID"))
+                {
+                    IDENTIFICATION();
+                    if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
+
+                    if (CurrentEquals("DATA")) DATA();
+
+                    PROCEDURE();
+                }
+
+                Expected("END");
+                Expected("FACTORY");
+                Expected(".");
+            }
+
+            if (CurrentEquals("OBJECT") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "OBJECT"))
+            {
+                IDENTIFICATION();
+
+                if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
+
+                if (CurrentEquals("DATA")) DATA();
+                Expected("PROCEDURE");
+                Expected("DIVISION");
+                Expected(".");
+
+                while (CurrentEquals("METHOD-ID") || (CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "METHOD-ID")))
+                {
+                    IDENTIFICATION();
+                    if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
+
+                    if (CurrentEquals("DATA")) DATA();
+
+                    PROCEDURE();
+                }
+
+                Expected("END");
+                Expected("OBJECT");
+                Expected(".");
+            }
+
+            Expected("END");
+            Expected("CLASS");
+            Identifier();
+            Expected(".");
+        }
 
         // Method responsible for parsing the ENVIRONMENT DIVISION.
         // That includes the CONFIGURATION and the INPUT-OUTPUT sections.
@@ -927,9 +1092,7 @@ public static class Analyzer
             Expected("DIVISION");
             CurrentSection = CurrentScope.ProcedureDivision;
 
-            bool notObjectOrFactory = SourceType is not SourceUnit.Factory and not SourceUnit.Object;
-
-            if (CurrentEquals("USING") && notObjectOrFactory)
+            if (CurrentEquals("USING"))
             {
                 Expected("USING");
 
@@ -976,12 +1139,12 @@ public static class Analyzer
                 }
             }
 
-            if (SourceType == SourceUnit.Function)
+            if (SourceType.Peek() == SourceUnit.Function)
             {
                 Expected("RETURNING");
                 ReturningDataName();
             }
-            else if (CurrentEquals("RETURNING") && notObjectOrFactory)
+            else if (CurrentEquals("RETURNING"))
             {
                 Expected("RETURNING");
                 ReturningDataName();
@@ -993,7 +1156,7 @@ public static class Analyzer
 
             Statement();
 
-            if (CurrentEquals("IDENTIFICATION") || CurrentEquals("PROGRAM-ID") || CurrentEquals("FUNCTION-ID"))
+            if (CurrentEquals("IDENTIFICATION") || CurrentEquals("PROGRAM-ID") || CurrentEquals("FUNCTION-ID") || CurrentEquals("METHOD-ID"))
             {
                 var missingEndMarkerError = $"""
                 Missing END {SourceType} marker. If another source unit is present after the end of the current source unit, the current unit must contain an END marker.
@@ -1003,15 +1166,17 @@ public static class Analyzer
                 Missing END FUNCTION marker. User-defined functions must always end with an END FUNCTION marker.
                 """;
 
-                string errorMessageChoice = SourceType == SourceUnit.Function ? missingEndFunctionMarkerError : missingEndMarkerError;
+                string errorMessageChoice = SourceType.Peek() == SourceUnit.Function ? missingEndFunctionMarkerError : missingEndMarkerError;
 
                 ErrorHandler.Parser.Report(FileName, Lookahead(-1), ErrorType.General, errorMessageChoice);
                 ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
                 return;
             }
 
-            if (SourceType == SourceUnit.Program && CurrentEquals("END"))
+            if (SourceType.Peek() == SourceUnit.Program && CurrentEquals("END"))
             {
+                SourceType.Pop();
+
                 Expected("END");
                 Expected("PROGRAM");
                 Identifier();
@@ -1020,14 +1185,28 @@ public static class Analyzer
                 """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID");
             }
 
-            if (SourceType == SourceUnit.Function)
+            else if (SourceType.Peek() is SourceUnit.Function or SourceUnit.FunctionPrototype)
             {
+                SourceType.Pop();
+
                 Expected("END");
                 Expected("FUNCTION");
                 Identifier();
                 Expected(".", """
                 Missing separator period at the end of this END FUNCTION definition
                 """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID");
+            }
+
+            else if (SourceType.Peek() is SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter)
+            {
+                SourceType.Pop();
+
+                Expected("END");
+                Expected("METHOD");
+                Identifier();
+                Expected(".", """
+                Missing separator period at the end of this END METHOD definition
+                """, -1, "IDENTIFICATION", "METHOD-ID", "OBJECT", "FACTORY");
             }
         }
 
@@ -3644,6 +3823,15 @@ public static class Analyzer
             errorType = ErrorType.General;
         }
 
+        if (CurrentEquals(TokenType.EOF))
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            Unexpected End Of File. Expected {expected} instead.
+            """);
+
+            return;
+        }
+
         if (!CurrentEquals(expected))
         {
             var lookahead = Lookahead(position);
@@ -3669,6 +3857,15 @@ public static class Analyzer
         {
             errorMessage = custom;
             errorType = ErrorType.General;
+        }
+
+        if (CurrentEquals(TokenType.EOF))
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            Unexpected End Of File. Expected {expected} instead.
+            """);
+            
+            return;
         }
 
         if (!CurrentEquals(expected))
@@ -3702,6 +3899,15 @@ public static class Analyzer
         {
             errorMessage = custom;
             errorType = ErrorType.General;
+        }
+
+        if (CurrentEquals(TokenType.EOF))
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            Unexpected End Of File. Expected identifier instead.
+            """);
+            
+            return;
         }
 
         if (!CurrentEquals(TokenType.Identifier))

@@ -6,15 +6,15 @@ Warning: The project is currently in pre-release, so not all of the standard has
 
 ## About
 
-COBOL was created in 1959 by the [CODASYL Committee](https://en.wikipedia.org/wiki/CODASYL)(With Rear Admiral Grace Hopper as a technical consultant to the committee), its design follows Grace Hopper's belief that programs should be written in a language that is close to English. It prioritizes readability, reliability, and long-term maintenance. The language has been implemented throughout the decades on many platforms with many dialects, and the Otterkit COBOL compiler is a free and open source implementation of the ISO COBOL 2022 Standard on the .NET platform.
+COBOL was created in 1959 by the [CODASYL Committee](https://en.wikipedia.org/wiki/CODASYL) (With Rear Admiral Grace Hopper as a technical consultant to the committee), its design follows Grace Hopper's belief that programs should be written in a language that is close to English. It prioritizes readability, reliability, and long-term maintenance. The language has been implemented throughout the decades on many platforms with many dialects, and the Otterkit COBOL compiler is a free and open source implementation of the ISO COBOL 2022 Standard on the .NET platform.
 
 ## Installation
 
 ### Quick Install
 
-Otterkit is available to install on the [Nuget package manager](https://www.nuget.org/packages/Otterkit/)([.NET 7](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) is required). To install, type into the command line:
+Otterkit is available to install on the [Nuget package manager](https://www.nuget.org/packages/Otterkit/) ([.NET 7](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) is required). To install, type into the command line:
 ```
-dotnet tool install --global Otterkit --version 1.0.10-alpha
+dotnet tool install --global Otterkit --version 1.0.15-alpha
 ```
 
 ### Build from Source

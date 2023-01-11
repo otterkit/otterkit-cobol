@@ -59,13 +59,13 @@ public static class Analyzer
     private static string SourceId = string.Empty;
 
     /// <summary>
-    /// SourceUnit <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
+    /// Stack<SourceUnit> <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
     /// <para>This is used when handling certain syntax rules for different <c>-ID</c>s, like the <c>"RETURNING data-name"</c> being required for every <c>FUNCTION-ID</c> source unit.</para>
     /// </summary>
     private static Stack<SourceUnit> SourceType = new();
 
     /// <summary>
-    /// CurrentSection <c>CurrentSection</c> is used in the parser whenever it needs to know which section it is currently parsing (WORKING-STORAGE and LOCAL-STORAGE for example).
+    /// CurrentScope <c>CurrentSection</c> is used in the parser whenever it needs to know which section it is currently parsing (WORKING-STORAGE and LOCAL-STORAGE for example).
     /// <para>This is used when handling certain syntax rules for different sections and to add extra context needed for the DataItemInformation class's variable table.
     /// This will also be used by the DataItemInformation class during codegen to simplify the process to figuring out if a variable is static or not.</para>
     /// </summary>
@@ -119,31 +119,27 @@ public static class Analyzer
 
             if (CurrentEquals("DATA")) DATA();
 
-            bool ShouldHaveProcedure = SourceType.Peek() switch
+            bool notClassOrInterface = SourceType.Peek() switch
             {
-                SourceUnit.Program => true,
-                SourceUnit.ProgramPrototype => true,
-                SourceUnit.Function => true,
-                SourceUnit.FunctionPrototype => true,
                 SourceUnit.Class => false,
                 SourceUnit.Interface => false,
-                SourceUnit.Method => true,
-                SourceUnit.MethodPrototype => true,
-                SourceUnit.MethodGetter => true,
-                SourceUnit.MethodSetter => true,
-                SourceUnit.Object => false,
-                SourceUnit.Factory => false,
-                _ => throw new UnreachableException()
+                _ => true
             };
 
-            if (ShouldHaveProcedure)
+            if (notClassOrInterface)
             {
-                PROCEDURE();
+                if (CurrentEquals("PROCEDURE")) PROCEDURE();
             }
-            else
+            else if (SourceType.Peek() == SourceUnit.Class)
             {
                 FactoryObject();
             }
+            else if (SourceType.Peek() == SourceUnit.Interface)
+            {
+                InterfaceProcedure();
+            }
+
+            EndMarker();
 
             if (CurrentEquals("IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID"))
             {
@@ -156,7 +152,6 @@ public static class Analyzer
                 Continue();
                 Source();
             }
-
         }
 
 
@@ -195,7 +190,10 @@ public static class Analyzer
             }
 
             if (CurrentEquals("INTERFACE-ID"))
+            {
                 InterfaceId();
+                return;
+            }
 
             if (SourceType.Peek() is SourceUnit.Class && CurrentEquals("FACTORY"))
             {
@@ -209,7 +207,7 @@ public static class Analyzer
                 return;
             }
 
-            if (SourceType.Peek() is SourceUnit.Object or SourceUnit.Factory && CurrentEquals("METHOD-ID"))
+            if (SourceType.Peek() is SourceUnit.Object or SourceUnit.Factory or SourceUnit.Interface && CurrentEquals("METHOD-ID"))
             {
                 MethodId();
                 return;
@@ -439,10 +437,28 @@ public static class Analyzer
         {
             Expected("METHOD-ID");
             Expected(".");
-            SourceType.Push(SourceUnit.Method);
             CurrentSection = CurrentScope.MethodId;
+            var currentSource = SourceType.Peek();
 
-            if (CurrentEquals(TokenType.Identifier))
+            if (currentSource != SourceUnit.Interface && CurrentEquals("GET"))
+            {
+                Expected("GET");
+                Expected("PROPERTY");
+                SourceId = $"GET {Current().value}";
+                Identifier();
+                
+                SourceType.Push(SourceUnit.MethodGetter);
+            }
+            else if (currentSource != SourceUnit.Interface && CurrentEquals("SET"))
+            {
+                Expected("SET");
+                Expected("PROPERTY");
+                SourceId = $"SET {Current().value}";
+                Identifier();
+
+                SourceType.Push(SourceUnit.MethodSetter);
+            }
+            else // If not a getter or a setter
             {
                 SourceId = Current().value;
                 Identifier();
@@ -451,25 +467,15 @@ public static class Analyzer
                     Expected("AS");
                     String();
                 }
-            }
-            else if (CurrentEquals("GET"))
-            {
-                Expected("GET");
-                Expected("PROPERTY");
-                SourceId = $"GET {Current().value}";
-                Identifier();
-                
-                SourceType.Pop();
-                SourceType.Push(SourceUnit.MethodGetter);
-            }
-            else if (CurrentEquals("SET"))
-            {
-                Expected("SET");
-                Expected("PROPERTY");
-                SourceId = $"SET {Current().value}";
-                Identifier();
-                SourceType.Pop();
-                SourceType.Push(SourceUnit.MethodSetter);
+
+                if (currentSource == SourceUnit.Interface)
+                {
+                    SourceType.Push(SourceUnit.MethodPrototype);
+                }
+                else
+                {
+                    SourceType.Push(SourceUnit.Method);
+                }
             }
 
             if (CurrentEquals("OVERRIDE")) Expected("OVERRIDE");
@@ -554,11 +560,11 @@ public static class Analyzer
                     if (CurrentEquals("DATA")) DATA();
 
                     PROCEDURE();
+
+                    EndMarker();
                 }
 
-                Expected("END");
-                Expected("FACTORY");
-                Expected(".");
+                EndMarker();
             }
 
             if (CurrentEquals("OBJECT") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "OBJECT"))
@@ -568,6 +574,7 @@ public static class Analyzer
                 if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
 
                 if (CurrentEquals("DATA")) DATA();
+
                 Expected("PROCEDURE");
                 Expected("DIVISION");
                 Expected(".");
@@ -580,17 +587,37 @@ public static class Analyzer
                     if (CurrentEquals("DATA")) DATA();
 
                     PROCEDURE();
+
+                    EndMarker();
                 }
 
-                Expected("END");
-                Expected("OBJECT");
-                Expected(".");
+                EndMarker();
             }
+        }
 
-            Expected("END");
-            Expected("CLASS");
-            Identifier();
-            Expected(".");
+        void InterfaceProcedure()
+        {
+            if (CurrentEquals("PROCEDURE"))
+            {
+                Expected("PROCEDURE");
+                Expected("DIVISION");
+                Expected(".", """
+                Missing separator period at the end of this PROCEDURE DIVISION header, every division header must end with a separator period
+                """, -1, "METHOD-ID", "END");
+
+                while (CurrentEquals("METHOD-ID") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "METHOD-ID"))
+                {
+                    IDENTIFICATION();
+
+                    if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
+
+                    if (CurrentEquals("DATA")) DATA();
+
+                    if (CurrentEquals("PROCEDURE")) PROCEDURE();
+
+                    EndMarker();
+                }
+            }
         }
 
         // Method responsible for parsing the ENVIRONMENT DIVISION.
@@ -1091,6 +1118,7 @@ public static class Analyzer
             Expected("PROCEDURE");
             Expected("DIVISION");
             CurrentSection = CurrentScope.ProcedureDivision;
+            var currentSource = SourceType.Peek();
 
             if (CurrentEquals("USING"))
             {
@@ -1154,60 +1182,26 @@ public static class Analyzer
             Missing separator period at the end of this PROCEDURE DIVISION header, every division header must end with a separator period
             """, -1, TokenContext.IsStatement);
 
-            Statement();
-
-            if (CurrentEquals("IDENTIFICATION") || CurrentEquals("PROGRAM-ID") || CurrentEquals("FUNCTION-ID") || CurrentEquals("METHOD-ID"))
+            bool canContainStatements = currentSource switch
             {
-                var missingEndMarkerError = $"""
-                Missing END {SourceType} marker. If another source unit is present after the end of the current source unit, the current unit must contain an END marker.
-                """;
+                SourceUnit.FunctionPrototype => false,
+                SourceUnit.ProgramPrototype => false,
+                SourceUnit.MethodPrototype => false,
+                _ => true
+            };
 
-                const string missingEndFunctionMarkerError = $"""
-                Missing END FUNCTION marker. User-defined functions must always end with an END FUNCTION marker.
-                """;
+            if (canContainStatements) Statement();
 
-                string errorMessageChoice = SourceType.Peek() == SourceUnit.Function ? missingEndFunctionMarkerError : missingEndMarkerError;
+            if (!canContainStatements && (CurrentEquals(TokenContext.IsStatement) || CurrentEquals(TokenType.Identifier)))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                The procedure division of function, program and method prototypes must not contain any statements, sections or paragraphs
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
 
-                ErrorHandler.Parser.Report(FileName, Lookahead(-1), ErrorType.General, errorMessageChoice);
-                ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
-                return;
+                AnchorPoint("END");
             }
 
-            if (SourceType.Peek() == SourceUnit.Program && CurrentEquals("END"))
-            {
-                SourceType.Pop();
-
-                Expected("END");
-                Expected("PROGRAM");
-                Identifier();
-                Expected(".", """
-                Missing separator period at the end of this END PROGRAM definition
-                """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID");
-            }
-
-            else if (SourceType.Peek() is SourceUnit.Function or SourceUnit.FunctionPrototype)
-            {
-                SourceType.Pop();
-
-                Expected("END");
-                Expected("FUNCTION");
-                Identifier();
-                Expected(".", """
-                Missing separator period at the end of this END FUNCTION definition
-                """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID");
-            }
-
-            else if (SourceType.Peek() is SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter)
-            {
-                SourceType.Pop();
-
-                Expected("END");
-                Expected("METHOD");
-                Identifier();
-                Expected(".", """
-                Missing separator period at the end of this END METHOD definition
-                """, -1, "IDENTIFICATION", "METHOD-ID", "OBJECT", "FACTORY");
-            }
         }
 
         // This method is part of the PROCEDURE DIVISION parsing. It's used to parse the "RETURNING" data item specified in
@@ -1225,6 +1219,146 @@ public static class Analyzer
             }
 
             Identifier();
+        }
+
+        void EndMarker()
+        {
+            SourceUnit currentSource = SourceType.Peek();
+
+            if (currentSource != SourceUnit.Program && !CurrentEquals("END") || currentSource == SourceUnit.Program && (!CurrentEquals(TokenType.EOF) && !CurrentEquals("END")))
+            {
+                string errorMessageChoice = currentSource switch
+                {
+                    SourceUnit.Program or SourceUnit.ProgramPrototype => """
+                    Missing END PROGRAM marker. If another source unit is present after the end of a program or program prototype, the program must contain an END marker.
+                    """,
+
+                    SourceUnit.Function or SourceUnit.FunctionPrototype => """
+                    Missing END FUNCTION marker. User-defined functions and function prototypes must always end with an END FUNCTION marker.
+                    """,
+
+                    SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter => """
+                    Missing END METHOD marker. Method definitions and property getter/setter must always end with an END METHOD marker.
+                    """,
+
+                    SourceUnit.Class => """
+                    Missing END CLASS marker. Class definitions must always end with an END CLASS marker.
+                    """,
+
+                    SourceUnit.Interface => """
+                    Missing END INTERFACE marker. Interface definitions must always end with an END INTERFACE marker.
+                    """,
+
+                    SourceUnit.Factory or SourceUnit.Object => """
+                    Missing END FACTORY and END OBJECT marker. Factory and object definitions must always end with an END FACTORY and END OBJECT marker.
+                    """,
+
+                    _ => throw new UnreachableException()
+                };
+
+                ErrorHandler.Parser.Report(FileName, Lookahead(-1), ErrorType.General, errorMessageChoice);
+                ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
+                return;
+            }
+
+            switch (currentSource)
+            {
+                case SourceUnit.Program:
+                    SourceType.Pop();
+
+                    if (CurrentEquals("END"))
+                    {
+                        Expected("END");
+                        Expected("PROGRAM");
+                        Identifier();
+                        Expected(".", """
+                        Missing separator period at the end of this END PROGRAM definition
+                        """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                    }
+                break;
+
+                case SourceUnit.ProgramPrototype:
+                    SourceType.Pop();
+
+                    Expected("END");
+                    Expected("PROGRAM");
+                    Identifier();
+                    Expected(".", """
+                    Missing separator period at the end of this END PROGRAM definition
+                    """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                break;
+
+                case SourceUnit.Function:
+                case SourceUnit.FunctionPrototype:
+                    SourceType.Pop();
+
+                    Expected("END");
+                    Expected("FUNCTION");
+                    Identifier();
+                    Expected(".", """
+                    Missing separator period at the end of this END FUNCTION definition
+                    """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                break;
+
+                case SourceUnit.Method:
+                case SourceUnit.MethodPrototype:
+                case SourceUnit.MethodGetter:
+                case SourceUnit.MethodSetter:
+                    SourceType.Pop();
+
+                    Expected("END");
+                    Expected("METHOD");
+                    if (currentSource is SourceUnit.Method or SourceUnit.MethodPrototype)
+                        Identifier();
+
+                    Expected(".", """
+                    Missing separator period at the end of this END METHOD definition
+                    """, -1, "IDENTIFICATION", "METHOD-ID", "OBJECT", "FACTORY");
+                break;
+
+                case SourceUnit.Class:
+                    SourceType.Pop();
+
+                    Expected("END");
+                    Expected("CLASS");
+                    Identifier();
+                    Expected(".", """
+                    Missing separator period at the end of this END CLASS definition
+                    """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                break;
+
+                case SourceUnit.Interface:
+                    SourceType.Pop();
+
+                    Expected("END");
+                    Expected("INTERFACE");
+                    Identifier();
+                    Expected(".", """
+                    Missing separator period at the end of this END INTERFACE definition
+                    """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                break;
+
+                case SourceUnit.Factory:
+                    SourceType.Pop();
+
+                    Expected("END");
+                    Expected("FACTORY");
+                    Expected(".", """
+                    Missing separator period at the end of this END FACTORY definition
+                    """, -1, "OBJECT", "IDENTIFICATION",  "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                break;
+
+                case SourceUnit.Object:
+                    SourceType.Pop();
+
+                    Expected("END");
+                    Expected("OBJECT");
+                    Expected(".", """
+                    Missing separator period at the end of this END FACTORY definition
+                    """, -1, "END", "IDENTIFICATION",  "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                break;
+
+            }
         }
 
 

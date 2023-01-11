@@ -4,7 +4,7 @@ Otterkit is a Free and Open Source compiler for the [COBOL Language](https://en.
 
 ## About
 
-First created in 1959, COBOL was created so that managers could communicate with programmer about code. It prioritizes readability, reliability, and long-term maintinence. The language has been implemented throughout the decades on many platforms with many dialects, but the Otterkit compiler is a Free and Open Source implementation of the ISO 2023 Standard on the .NET platform. 
+First created in 1959, COBOL was created so that managers could communicate with programmer about code. It prioritizes readability, reliability, and long-term maintinence. The language has been implemented throughout the decades on many platforms with many dialects, but the Otterkit compiler is a Free and Open Source implementation of the ISO 2022 Standard on the .NET platform. 
 
 ## Installation
 

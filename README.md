@@ -1,4 +1,4 @@
-# Otterkit COBOL Compiler
+# <img width="36" height="36" src="https://raw.githubusercontent.com/otterkit/otterkit/main/Assets/OtterkitIcon.png?sanitize=true&raw=true"> Otterkit COBOL Compiler
 
 Otterkit is a free and open source compiler for the [COBOL Programming Language](https://en.wikipedia.org/wiki/COBOL#History_and_specification) on the .NET platform.
 

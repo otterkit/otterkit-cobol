@@ -1489,6 +1489,9 @@ public static class Analyzer
                 if (CurrentEquals("STOP"))
                     STOP();
 
+                if (CurrentEquals("STRING"))
+                    STRING();
+
                 if (CurrentEquals("SUPPRESS"))
                     SUPPRESS();
 
@@ -3232,6 +3235,67 @@ public static class Analyzer
             }
         }
 
+        void STRING()
+        {
+            bool isConditional = false;
+
+            Expected("STRING");
+            if (CurrentEquals(TokenType.Identifier)) Identifier();
+
+            else String();
+            
+            while (CurrentEquals(TokenType.Identifier, TokenType.String))
+            {
+                if (CurrentEquals(TokenType.Identifier)) Identifier();
+
+                else String();
+            }
+
+            Expected("DELIMITED");
+            Optional("BY");
+            if (CurrentEquals(TokenType.Identifier)) Identifier();
+
+            else if (CurrentEquals("SIZE")) Expected("SIZE");
+
+            else String();
+
+            while (CurrentEquals(TokenType.Identifier, TokenType.String))
+            {
+                if (CurrentEquals(TokenType.Identifier)) Identifier();
+
+                else String();
+                
+                while (CurrentEquals(TokenType.Identifier, TokenType.String))
+                {
+                    if (CurrentEquals(TokenType.Identifier)) Identifier();
+
+                    else String();
+                }
+
+                Expected("DELIMITED");
+                Optional("BY");
+                if (CurrentEquals(TokenType.Identifier)) Identifier();
+
+                else if (CurrentEquals("SIZE")) Expected("SIZE");
+
+                else String();
+            }
+
+            Expected("INTO");
+            Identifier();
+
+            if (CurrentEquals("WITH", "POINTER"))
+            {
+                Optional("WITH");
+                Expected("POINTER");
+                Identifier();
+            }
+
+            OnOverflow(ref isConditional);
+
+            if (isConditional) Expected("END-STRING");
+        }
+
         void SUPPRESS()
         {
             Expected("SUPPRESS");
@@ -3558,6 +3622,47 @@ public static class Analyzer
                 Expected("ERROR");
                 Statement(true);
                 SizeError(ref isConditional, onErrorExists, notOnErrorExists);
+            }
+        }
+
+        void OnOverflow(ref bool isConditional, bool onOverflowExists = false, bool notOnOverflowExists = false)
+        {
+            if (CurrentEquals("ON") || CurrentEquals("OVERFLOW"))
+            {
+                if (onOverflowExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ON OVERFLOW can only be specified once in this statement. 
+                    The same applies to NOT ON OVERFLOW.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                isConditional = true;
+                onOverflowExists = true;
+                Optional("ON");
+                Expected("OVERFLOW");
+                Statement(true);
+                OnOverflow(ref isConditional, onOverflowExists, notOnOverflowExists);
+
+            }
+
+            if (CurrentEquals("NOT"))
+            {
+                if (notOnOverflowExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    NOT ON OVERFLOW can only be specified once in this statement. 
+                    The same applies to ON OVERFLOW.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                isConditional = true;
+                notOnOverflowExists = true;
+                Expected("NOT");
+                Optional("ON");
+                Expected("OVERFLOW");
+                Statement(true);
+                OnOverflow(ref isConditional, onOverflowExists, notOnOverflowExists);
             }
         }
 

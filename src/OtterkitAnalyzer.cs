@@ -1379,7 +1379,7 @@ public static class Analyzer
                 AnchorPoint(TokenContext.IsStatement);
             }
 
-            while (!CurrentEquals("EOF", "END"))
+            while (!isNested ? !CurrentEquals("EOF", "END") : CurrentEquals(TokenContext.IsStatement))
             {
                 if (CurrentEquals("ACCEPT"))
                     ACCEPT();
@@ -1480,6 +1480,12 @@ public static class Analyzer
                 if (CurrentEquals("ROLLBACK"))
                     ROLLBACK();
 
+                if (CurrentEquals("SEND"))
+                    SEND();
+
+                if (CurrentEquals("START"))
+                    START();
+
                 if (CurrentEquals("STOP"))
                     STOP();
 
@@ -1500,6 +1506,8 @@ public static class Analyzer
 
                 ScopeTerminator(isNested);
 
+                if (isNested && !CurrentEquals(TokenContext.IsStatement)) return;
+
                 if (!CurrentEquals("EOF", "END"))
                 {
                     Statement(isNested);
@@ -1513,8 +1521,7 @@ public static class Analyzer
         // since that separator period would mean the end of the containing statement and not the contained statement.
         void ScopeTerminator(bool isNested)
         {
-            if (isNested)
-                return;
+            if (isNested) return;
 
             Expected(".");
         }
@@ -1556,7 +1563,7 @@ public static class Analyzer
                 case TokenType.String: String(); break;
             }
 
-            while (CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+            while (IdentifierOrLiteral())
             {
                 switch (Current().type)
                 {
@@ -1642,7 +1649,7 @@ public static class Analyzer
 
             if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
             {
-                Arithmetic();
+                Arithmetic("CHARACTERS");
                 Expected("CHARACTERS");
             }
 
@@ -1673,13 +1680,13 @@ public static class Analyzer
             }
 
             Expected("=");
-            if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+            if (NotIdentifierOrLiteral())
             {
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "an identifier, numeric literal or a valid arithmetic symbol");
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
 
-            Arithmetic();
+            Arithmetic(".");
 
             if (CurrentEquals("."))
             {
@@ -1824,7 +1831,7 @@ public static class Analyzer
                     {
                         Optional("BY");
                         Expected("CONTENT");
-                        if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+                        if (NotIdentifierOrLiteral())
                         {
                             ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
                             The USING BY CONTENT clause must contain at least one data item name or literal.
@@ -1850,7 +1857,7 @@ public static class Analyzer
                     {
                         Optional("BY");
                         Expected("VALUE");
-                        if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+                        if (NotIdentifierOrLiteral())
                         {
                             ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
                             The USING BY VALUE clause must contain at least one data item name or literal.
@@ -1891,7 +1898,7 @@ public static class Analyzer
             if (CurrentEquals("AFTER"))
             {
                 Expected("AFTER");
-                Arithmetic();
+                Arithmetic("SECONDS");
                 Expected("SECONDS");
             }
         }
@@ -2281,7 +2288,7 @@ public static class Analyzer
                     {
                         Optional("BY");
                         Expected("CONTENT");
-                        if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+                        if (NotIdentifierOrLiteral())
                         {
                             ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
                             The USING BY CONTENT clause must contain at least one data item name or literal.
@@ -2307,7 +2314,7 @@ public static class Analyzer
                     {
                         Optional("BY");
                         Expected("VALUE");
-                        if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+                        if (NotIdentifierOrLiteral())
                         {
                             ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
                             The USING BY VALUE clause must contain at least one data item name or literal.
@@ -2997,7 +3004,7 @@ public static class Analyzer
                 }
                 else
                 {
-                    Arithmetic();
+                    Arithmetic("SECONDS");
                     Optional("SECONDS");
                 }
             }
@@ -3117,6 +3124,90 @@ public static class Analyzer
             Expected("ROLLBACK");
         }
 
+        void SEND()
+        {
+            bool isConditional = false;
+            Expected("SEND");
+            Optional("TO");
+
+            if (LookaheadEquals(3, "RETURNING"))
+            {
+                if (CurrentEquals(TokenType.String))
+                {
+                    String();
+                }
+                else
+                {
+                    Identifier();
+                }
+
+                Expected("FROM");
+                Identifier();
+                Expected("RETURNING");
+                Identifier();
+            }
+            else
+            {
+                Identifier();
+                Expected("FROM");
+                Identifier();
+
+                if (CurrentEquals("RAISING"))
+                {
+                    Expected("RAISING");
+                    if (CurrentEquals("LAST"))
+                    {
+                        Expected("LAST");
+                        Optional("EXCEPTION");
+                    }
+                    else
+                    {
+                        Expected("EXCEPTION");
+                        Identifier();
+                    }
+                }
+            }
+
+            OnException(ref isConditional);
+
+            if (isConditional) Expected("END-SEND");
+        }
+
+        void START()
+        {
+            bool isConditional = false;
+
+            Expected("START");
+            Identifier();
+            
+            if (CurrentEquals("FIRST"))
+            {
+                Expected("FIRST");
+            }
+            else if (CurrentEquals("LAST"))
+            {
+                Expected("LAST");
+            }
+            else if (CurrentEquals("KEY"))
+            {
+                Expected("KEY");
+                StartRelationalOperator();
+                Identifier();
+
+                if (CurrentEquals("WITH", "LENGTH"))
+                {
+                    Optional("WITH");
+                    Expected("LENGTH");
+                    Arithmetic(".");
+                }
+
+            }
+
+            InvalidKey(ref isConditional);
+
+            if (isConditional) Expected("END-START");
+        }
+
         void STOP()
         {
             Expected("STOP");
@@ -3229,12 +3320,15 @@ public static class Analyzer
                 hasFor = true;
             }
 
-            Arithmetic();
+            Arithmetic("SECONDS", "TIMES");
             if (CurrentEquals("SECONDS") || hasFor)
+            {
                 Expected("SECONDS");
-
+            }
             else
+            {
                 Expected("TIMES");
+            }
         }
 
         void InvalidKey(ref bool isConditional, bool invalidKeyExists = false, bool notInvalidKeyExists = false)
@@ -3524,27 +3618,18 @@ public static class Analyzer
             }
         }
 
-        void Arithmetic()
+        void Arithmetic(params string[] delimiter)
         {
-            bool IsArithmeticSymbol(Token current) => current.value switch
-            {
-                "+" => true,
-                "-" => true,
-                "*" => true,
-                "/" => true,
-                "**" => true,
-                "(" => true,
-                ")" => true,
-                _ => false
-            };
+            bool IsArithmeticSymbol(Token current) => Helpers.ArithmeticPrecedence.ContainsKey(current.value);
+            var expression = new List<Token>();
 
-            while (Current().type is TokenType.Identifier or TokenType.Numeric or TokenType.Symbol)
+            while (!CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(delimiter))
             {
-                if (Current().type == TokenType.Identifier)
-                    Identifier();
-
-                if (Current().type == TokenType.Numeric)
-                    Number();
+                if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
+                {
+                    expression.Add(Current());
+                    Continue();
+                }
 
                 if (IsArithmeticSymbol(Current()))
                 {
@@ -3556,7 +3641,7 @@ public static class Analyzer
                         ErrorHandler.Parser.PrettyError(FileName, Current());
                     }
 
-                    if (Lookahead(1).type != TokenType.Numeric && Lookahead(1).type != TokenType.Identifier)
+                    if (!LookaheadEquals(1, TokenType.Numeric, TokenType.Identifier))
                     {
                         ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
                         Invalid arithmetic expression, expected a numeric literal or identifier after this operator.
@@ -3565,13 +3650,11 @@ public static class Analyzer
                         ErrorHandler.Parser.PrettyError(FileName, Current());
                     }
 
-                    Symbol();
+                    expression.Add(Current());
+                    Continue();
                 }
 
-                if (CurrentEquals("."))
-                    return;
-
-                if (Current().type == TokenType.Symbol && !IsArithmeticSymbol(Current()))
+                if (CurrentEquals(TokenType.Symbol) && !CurrentEquals(".") && !IsArithmeticSymbol(Current()))
                 {
                     ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
                     Invalid symbol in this arithmetic expression. Valid operators are: +, -, *, /, **, ( and )
@@ -3579,13 +3662,31 @@ public static class Analyzer
                     ErrorHandler.Parser.PrettyError(FileName, Current());
                 }
             }
+
+            if (!Helpers.IsBalanced(expression))
+            {
+                ErrorHandler.Parser.Report(FileName, expression[0], ErrorType.General, """
+                This expression is not balanced, one or more parenthesis to not have their matching opening or closing pair, it is an invalid expression
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, expression[0]);
+            }
+
+            var shuntingYard = Helpers.ShuntingYard(expression, Helpers.ArithmeticPrecedence);
+
+            if (!Helpers.EvaluatePostfix(shuntingYard, Helpers.ArithmeticPrecedence, out Token error))
+            {
+                ErrorHandler.Parser.Report(FileName, error, ErrorType.General, """
+                This expression cannot be correctly evaluated. Please make sure that all operators have their matching operands.
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, error);
+            } 
         }
 
-        void Condition(string delimiter)
+        void Condition(params string[] delimiter)
         {
             var expression = new List<Token>();
 
-            while (Current().context != TokenContext.IsStatement && !CurrentEquals(delimiter))
+            while (!CurrentEquals(TokenContext.IsStatement) && !CurrentEquals(delimiter))
             {
                 if (CurrentEquals("IS") && (Lookahead(1).value is "GREATER" or "LESS" or "EQUAL" or "NOT" || Lookahead(1).type is TokenType.Symbol))
                 {
@@ -3675,9 +3776,76 @@ public static class Analyzer
             }
         }
 
+        void StartRelationalOperator()
+        {
+            string[] operators = 
+            {
+                "<",
+                ">",
+                "<=",
+                ">=",
+                "="
+            };
+
+            if (CurrentEquals("IS") && (LookaheadEquals(1, "GREATER", "LESS", "EQUAL", "NOT") || LookaheadEquals(1, TokenType.Symbol)))
+            {
+                Continue();
+            }
+
+            if (CurrentEquals("NOT") && LookaheadEquals(1, ">", "<"))
+            {
+                Continue(2);
+            }
+            else if (CurrentEquals("NOT") && LookaheadEquals(1, "GREATER", "LESS"))
+            {
+                Continue(2);
+
+                if (CurrentEquals("THAN", "TO")) Continue();
+            }
+            else if (CurrentEquals("GREATER", "LESS", "EQUAL"))
+            {
+                if (CurrentEquals("GREATER") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
+                {
+                    if (!LookaheadEquals(1, "THAN")) Continue(2);
+
+                    if (LookaheadEquals(1, "THAN")) Continue(3);
+                }
+
+                if (CurrentEquals("LESS") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
+                {
+                    if (LookaheadEquals(1, "THAN")) Continue(3);
+
+                    if (!LookaheadEquals(1, "THAN")) Continue(2);
+
+                }
+
+                Continue();
+
+                if (Current().value is "THAN" or "TO") Continue();
+            }
+            else if (CurrentEquals(operators))
+            {
+                Continue();
+            }
+            else
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                Expected a relational operator. With the exceptions being the "IS NOT EQUAL TO" and "IS NOT =" operators 
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                Continue();
+            }
+        }
+
         bool NotIdentifierOrLiteral()
         {
             return !CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String);
+        }
+
+        bool IdentifierOrLiteral()
+        {
+            return CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String);
         }
 
     }

@@ -61,7 +61,7 @@ public static class Analyzer
     /// Stack<SourceUnit> <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
     /// <para>This is used when handling certain syntax rules for different <c>-ID</c>s, like the <c>"RETURNING data-name"</c> being required for every <c>FUNCTION-ID</c> source unit.</para>
     /// </summary>
-    private static Stack<SourceUnit> SourceType;
+    private static readonly Stack<SourceUnit> SourceType;
 
     /// <summary>
     /// CurrentScope <c>CurrentSection</c> is used in the parser whenever it needs to know which section it is currently parsing (WORKING-STORAGE and LOCAL-STORAGE for example).
@@ -155,7 +155,7 @@ public static class Analyzer
             if (CurrentEquals("EOF") && Index < TokenList.Count - 1)
             {
                 FileName = OtterkitCompiler.Options.SourceFiles[FileIndex++];
-                
+
                 Continue();
                 Source();
             }
@@ -453,7 +453,7 @@ public static class Analyzer
                 Expected("PROPERTY");
                 SourceId = $"GET {Current().value}";
                 Identifier();
-                
+
                 SourceType.Push(SourceUnit.MethodGetter);
             }
             else if (currentSource != SourceUnit.Interface && CurrentEquals("SET"))
@@ -1292,7 +1292,7 @@ public static class Analyzer
                         Missing separator period at the end of this END PROGRAM definition
                         """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
                     }
-                break;
+                    break;
 
                 case SourceUnit.ProgramPrototype:
                     SourceType.Pop();
@@ -1303,7 +1303,7 @@ public static class Analyzer
                     Expected(".", """
                     Missing separator period at the end of this END PROGRAM definition
                     """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
-                break;
+                    break;
 
                 case SourceUnit.Function:
                 case SourceUnit.FunctionPrototype:
@@ -1315,7 +1315,7 @@ public static class Analyzer
                     Expected(".", """
                     Missing separator period at the end of this END FUNCTION definition
                     """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
-                break;
+                    break;
 
                 case SourceUnit.Method:
                 case SourceUnit.MethodPrototype:
@@ -1331,7 +1331,7 @@ public static class Analyzer
                     Expected(".", """
                     Missing separator period at the end of this END METHOD definition
                     """, -1, "IDENTIFICATION", "METHOD-ID", "OBJECT", "FACTORY");
-                break;
+                    break;
 
                 case SourceUnit.Class:
                     SourceType.Pop();
@@ -1342,7 +1342,7 @@ public static class Analyzer
                     Expected(".", """
                     Missing separator period at the end of this END CLASS definition
                     """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
-                break;
+                    break;
 
                 case SourceUnit.Interface:
                     SourceType.Pop();
@@ -1353,7 +1353,7 @@ public static class Analyzer
                     Expected(".", """
                     Missing separator period at the end of this END INTERFACE definition
                     """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
-                break;
+                    break;
 
                 case SourceUnit.Factory:
                     SourceType.Pop();
@@ -1362,8 +1362,8 @@ public static class Analyzer
                     Expected("FACTORY");
                     Expected(".", """
                     Missing separator period at the end of this END FACTORY definition
-                    """, -1, "OBJECT", "IDENTIFICATION",  "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
-                break;
+                    """, -1, "OBJECT", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                    break;
 
                 case SourceUnit.Object:
                     SourceType.Pop();
@@ -1372,8 +1372,8 @@ public static class Analyzer
                     Expected("OBJECT");
                     Expected(".", """
                     Missing separator period at the end of this END FACTORY definition
-                    """, -1, "END", "IDENTIFICATION",  "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
-                break;
+                    """, -1, "END", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                    break;
 
             }
         }
@@ -1446,6 +1446,9 @@ public static class Analyzer
                 if (CurrentEquals("INVOKE"))
                     INVOKE();
 
+                if (CurrentEquals("MERGE"))
+                    MERGE();
+
                 if (CurrentEquals("MULTIPLY"))
                     MULTIPLY();
 
@@ -1453,7 +1456,7 @@ public static class Analyzer
                     MOVE();
 
                 if (CurrentEquals("OPEN"))
-                    OPEN();            
+                    OPEN();
 
                 if (CurrentEquals("EXIT"))
                     EXIT();
@@ -1500,6 +1503,9 @@ public static class Analyzer
                 if (CurrentEquals("SEND"))
                     SEND();
 
+                if (CurrentEquals("SORT"))
+                    SORT();
+
                 if (CurrentEquals("START"))
                     START();
 
@@ -1535,6 +1541,34 @@ public static class Analyzer
             }
         }
 
+        void UseStatement()
+        {
+            Expected("USE");
+
+            bool exceptionObject = CurrentEquals("AFTER") && LookaheadEquals(1, "EXCEPTION") && LookaheadEquals(2, "OBJECT")
+                || CurrentEquals("AFTER") && LookaheadEquals(1, "EO") || CurrentEquals("EXCEPTION") && LookaheadEquals(1, "OBJECT")
+                || CurrentEquals("EO");
+
+            bool exceptionCondition = CurrentEquals("AFTER") && LookaheadEquals(1, "EXCEPTION") && LookaheadEquals(2, "CONDITION")
+                || CurrentEquals("AFTER") && LookaheadEquals(1, "EC") || CurrentEquals("EXCEPTION") && LookaheadEquals(1, "CONDITION")
+                || CurrentEquals("EC");
+
+            if (exceptionObject)
+            {
+                Optional("AFTER");
+                if (CurrentEquals("EO"))
+                {
+                    Expected("EO");
+                }
+                else
+                {
+                    Expected("EXCEPTION");
+                    Expected("OBJECT");
+                }
+
+                Identifier();
+            }
+        }
 
         // This method handles COBOL's slightly inconsistent separator period rules.
         // Statements that are nested inside another statement cannot end with a separator period,
@@ -1735,7 +1769,7 @@ public static class Analyzer
                 {
                     String();
                 }
-                
+
                 if (CurrentEquals("AS"))
                 {
                     isPrototype = true;
@@ -1746,7 +1780,7 @@ public static class Analyzer
             {
                 isPrototype = true;
             }
-            
+
             if (isPrototype && CurrentEquals("NESTED"))
             {
                 Expected("NESTED");
@@ -2126,7 +2160,7 @@ public static class Analyzer
             {
                 Identifier();
             }
-            
+
             if (CurrentEquals("WITH", "FILLER"))
             {
                 Optional("WITH");
@@ -2156,7 +2190,7 @@ public static class Analyzer
                 Expected(Current().value);
                 Optional("TO");
                 Expected("VALUE");
-            } 
+            }
             else if (CurrentEquals("ALL"))
             {
                 Expected("ALL");
@@ -2366,6 +2400,118 @@ public static class Analyzer
 
         }
 
+        void MERGE()
+        {
+            Expected("MERGE");
+            Identifier();
+
+            Optional("ON");
+            if (CurrentEquals("ASCENDING"))
+            {
+                Expected("ASCENDING");
+            }
+            else
+            {
+                Expected("DESCENDING");
+            }
+
+            Optional("KEY");
+
+            if (!CurrentEquals(TokenType.Identifier))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
+
+            Identifier();
+            while (Current().type == TokenType.Identifier)
+                Identifier();
+
+
+            while (CurrentEquals("ON", "ASCENDING", "DESCENDING"))
+            {
+                Optional("ON");
+                if (CurrentEquals("ASCENDING"))
+                {
+                    Expected("ASCENDING");
+                }
+                else
+                {
+                    Expected("DESCENDING");
+                }
+
+                Optional("KEY");
+
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                Identifier();
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+
+            if (CurrentEquals("COLLATING", "SEQUENCE"))
+            {
+                Optional("COLLATING");
+                Expected("SEQUENCE");
+                if (CurrentEquals("IS") && LookaheadEquals(1, TokenType.Identifier) || CurrentEquals(TokenType.Identifier))
+                {
+                    Optional("IS");
+                    Identifier();
+
+                    if (CurrentEquals(TokenType.Identifier)) Identifier();
+                }
+                else
+                {
+                    if (!CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+                    {
+                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        The COLLATING SEQUENCE clause must contain at least 1 alphabet name (max of 2 alphabet names) or at least one FOR ALPHANUMERIC and FOR NATIONAL clauses.
+                        """);
+                        ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                        CombinedAnchorPoint(TokenContext.IsStatement, "USING");
+                    }
+
+                    ForAlphanumericForNational();
+                }
+            }
+
+            Expected("USING");
+            Identifier();
+            Identifier();
+            while (Current().type == TokenType.Identifier)
+                Identifier();
+
+            if (CurrentEquals("OUTPUT"))
+            {
+                Expected("OUTPUT");
+                Expected("PROCEDURE");
+                Optional("IS");
+                Identifier();
+
+                if (CurrentEquals("THROUGH", "THRU"))
+                {
+                    Choice("THROUGH", "THRU");
+                    Identifier();
+                }
+            }
+            else
+            {
+                Expected("GIVING");
+                Identifier();
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+        }
+
         void MULTIPLY()
         {
             bool isConditional = false;
@@ -2522,7 +2668,7 @@ public static class Analyzer
                     ErrorHandler.Parser.PrettyError(FileName, Current());
                 }
             }
-            
+
             if (CurrentEquals("RETRY"))
             {
                 RetryPhrase();
@@ -2536,7 +2682,7 @@ public static class Analyzer
                 Expected("REWIND");
             }
 
-            while(CurrentEquals(TokenType.Identifier))
+            while (CurrentEquals(TokenType.Identifier))
             {
                 Identifier();
                 if (CurrentEquals("WITH", "NO"))
@@ -2547,7 +2693,7 @@ public static class Analyzer
                 }
             }
 
-            while(CurrentEquals("INPUT", "OUTPUT", "I-O", "EXTEND"))
+            while (CurrentEquals("INPUT", "OUTPUT", "I-O", "EXTEND"))
             {
                 Choice("INPUT", "OUTPUT", "I-O", "EXTEND");
 
@@ -2578,7 +2724,7 @@ public static class Analyzer
                         ErrorHandler.Parser.PrettyError(FileName, Current());
                     }
                 }
-                
+
                 if (CurrentEquals("RETRY"))
                 {
                     RetryPhrase();
@@ -2592,7 +2738,7 @@ public static class Analyzer
                     Expected("REWIND");
                 }
 
-                while(CurrentEquals(TokenType.Identifier))
+                while (CurrentEquals(TokenType.Identifier))
                 {
                     Identifier();
                     if (CurrentEquals("WITH", "NO"))
@@ -3193,13 +3339,149 @@ public static class Analyzer
             if (isConditional) Expected("END-SEND");
         }
 
+        void SORT()
+        {
+            Expected("SORT");
+            Identifier();
+
+            Optional("ON");
+            if (CurrentEquals("ASCENDING"))
+            {
+                Expected("ASCENDING");
+            }
+            else
+            {
+                Expected("DESCENDING");
+            }
+
+            Optional("KEY");
+
+            if (!CurrentEquals(TokenType.Identifier))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
+
+            Identifier();
+            while (Current().type == TokenType.Identifier)
+                Identifier();
+
+
+            while (CurrentEquals("ON", "ASCENDING", "DESCENDING"))
+            {
+                Optional("ON");
+                if (CurrentEquals("ASCENDING"))
+                {
+                    Expected("ASCENDING");
+                }
+                else
+                {
+                    Expected("DESCENDING");
+                }
+
+                Optional("KEY");
+
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                Identifier();
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+
+            if (CurrentEquals("WITH", "DUPLICATES"))
+            {
+                Optional("WITH");
+                Expected("DUPLICATES");
+                Optional("IN");
+                Optional("ORDER");
+            }
+
+            if (CurrentEquals("COLLATING", "SEQUENCE"))
+            {
+                Optional("COLLATING");
+                Expected("SEQUENCE");
+                if (CurrentEquals("IS") && LookaheadEquals(1, TokenType.Identifier) || CurrentEquals(TokenType.Identifier))
+                {
+                    Optional("IS");
+                    Identifier();
+
+                    if (CurrentEquals(TokenType.Identifier)) Identifier();
+                }
+                else
+                {
+                    if (!CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+                    {
+                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        The COLLATING SEQUENCE clause must contain at least 1 alphabet name (max of 2 alphabet names) or at least one FOR ALPHANUMERIC and FOR NATIONAL clauses.
+                        """);
+                        ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                        CombinedAnchorPoint(TokenContext.IsStatement, "USING");
+                    }
+
+                    ForAlphanumericForNational();
+                }
+            }
+
+            if (CurrentEquals("INPUT"))
+            {
+                Expected("INPUT");
+                Expected("PROCEDURE");
+                Optional("IS");
+                Identifier();
+
+                if (CurrentEquals("THROUGH", "THRU"))
+                {
+                    Choice("THROUGH", "THRU");
+                    Identifier();
+                }
+            }
+            else
+            {
+                Expected("USING");
+                Identifier();
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+
+            if (CurrentEquals("OUTPUT"))
+            {
+                Expected("OUTPUT");
+                Expected("PROCEDURE");
+                Optional("IS");
+                Identifier();
+
+                if (CurrentEquals("THROUGH", "THRU"))
+                {
+                    Choice("THROUGH", "THRU");
+                    Identifier();
+                }
+            }
+            else
+            {
+                Expected("GIVING");
+                Identifier();
+                while (Current().type == TokenType.Identifier)
+                    Identifier();
+            }
+        }
+
+
         void START()
         {
             bool isConditional = false;
 
             Expected("START");
             Identifier();
-            
+
             if (CurrentEquals("FIRST"))
             {
                 Expected("FIRST");
@@ -3260,7 +3542,7 @@ public static class Analyzer
             if (CurrentEquals(TokenType.Identifier)) Identifier();
 
             else String();
-            
+
             while (CurrentEquals(TokenType.Identifier, TokenType.String))
             {
                 if (CurrentEquals(TokenType.Identifier)) Identifier();
@@ -3281,7 +3563,7 @@ public static class Analyzer
                 if (CurrentEquals(TokenType.Identifier)) Identifier();
 
                 else String();
-                
+
                 while (CurrentEquals(TokenType.Identifier, TokenType.String))
                 {
                     if (CurrentEquals(TokenType.Identifier)) Identifier();
@@ -3683,6 +3965,48 @@ public static class Analyzer
             }
         }
 
+        void ForAlphanumericForNational(bool forAlphanumericExists = false, bool forNationalExists = false)
+        {
+            if (CurrentEquals("FOR") && LookaheadEquals(1, "ALPHANUMERIC") || CurrentEquals("ALPHANUMERIC"))
+            {
+                if (forAlphanumericExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    FOR ALPHANUMERIC can only be specified once in this statement. 
+                    The same applies to FOR NATIONAL.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                forAlphanumericExists = true;
+                Optional("FOR");
+                Expected("ALPHANUMERIC");
+                Optional("IS");
+                Identifier();
+
+                ForAlphanumericForNational(forAlphanumericExists, forNationalExists);
+
+            }
+
+            if (CurrentEquals("FOR") && LookaheadEquals(1, "NATIONAL") || CurrentEquals("NATIONAL"))
+            {
+                if (forNationalExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    FOR NATIONAL can only be specified once in this statement. 
+                    The same applies to FOR ALPHANUMERIC.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                forNationalExists = true;
+                Optional("FOR");
+                Expected("NATIONAL");
+                Optional("IS");
+                Identifier();
+
+                ForAlphanumericForNational(forAlphanumericExists, forNationalExists);
+            }
+        }
+
         void LineColumn(bool lineExists = false, bool columnExists = false)
         {
             if (CurrentEquals("LINE"))
@@ -3801,7 +4125,7 @@ public static class Analyzer
                 This expression cannot be correctly evaluated. Please make sure that all operators have their matching operands.
                 """);
                 ErrorHandler.Parser.PrettyError(FileName, error);
-            } 
+            }
         }
 
         void Condition(params string[] delimiter)
@@ -3900,7 +4224,7 @@ public static class Analyzer
 
         void StartRelationalOperator()
         {
-            string[] operators = 
+            string[] operators =
             {
                 "<",
                 ">",
@@ -4318,7 +4642,7 @@ public static class Analyzer
             ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
             Unexpected End Of File. Expected {expected} instead.
             """);
-            
+
             return;
         }
 
@@ -4360,7 +4684,7 @@ public static class Analyzer
             ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
             Unexpected End Of File. Expected identifier instead.
             """);
-            
+
             return;
         }
 

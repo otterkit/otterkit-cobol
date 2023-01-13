@@ -1,4 +1,3 @@
-
 using System.Diagnostics;
 
 namespace Otterkit;
@@ -49,20 +48,20 @@ public static class Analyzer
     /// String <c>FileName</c> is used in the parser as a parameter for the <c>ErrorHandler</c> method.
     /// <para>The error handler will use this to fetch the file and get the correct line and column when displaying the error message.</para>
     /// </summary>
-    private static string FileName = string.Empty;
+    private static string FileName;
 
     /// <summary>
     /// String <c>SourceId</c> is used in the parser whenever it needs to know the name of the current source unit (The identifier after PROGRAM-ID).
     /// <para>This is used when checking if a variable already exists in the current source unit, and when adding them to the DataItemInformation class's variable table.
     /// The DataItemInformation class is then used to simplify the codegen process of generating data items.</para>
     /// </summary>
-    private static string SourceId = string.Empty;
+    private static string SourceId;
 
     /// <summary>
     /// Stack<SourceUnit> <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
     /// <para>This is used when handling certain syntax rules for different <c>-ID</c>s, like the <c>"RETURNING data-name"</c> being required for every <c>FUNCTION-ID</c> source unit.</para>
     /// </summary>
-    private static Stack<SourceUnit> SourceType = new();
+    private static Stack<SourceUnit> SourceType;
 
     /// <summary>
     /// CurrentScope <c>CurrentSection</c> is used in the parser whenever it needs to know which section it is currently parsing (WORKING-STORAGE and LOCAL-STORAGE for example).
@@ -76,14 +75,22 @@ public static class Analyzer
     /// List of Tokens <c>TokenList</c>: This is the main data structure that the parser will be iterating through.
     /// <para>The parser expects a list of already preprocessed and classified COBOL tokens in the form of full COBOL words (CALL, END-IF, COMPUTE for example)</para>
     /// </summary>
-    private static List<Token> TokenList = new();
+    private static List<Token> TokenList;
 
     /// <summary>
     /// Int <c>Index</c>: This is the index of the current token, used by most helper methods including Continue, Current and Lookahead.
     /// <para>The index should only move forwards, but if the previous token is needed you can use the Lookahead and LookaheadEquals methods with a negative integer parameter</para>
     /// </summary>
     private static int Index;
-    private static int FileIndex = 0;
+    private static int FileIndex;
+
+    static Analyzer()
+    {
+        FileName = string.Empty;
+        SourceId = string.Empty;
+        SourceType = new();
+        TokenList = new();
+    }
 
     /// <summary>
     /// Otterkit COBOL Syntax Analyzer
@@ -94,7 +101,6 @@ public static class Analyzer
     {
         FileName = fileName;
         TokenList = tokenList;
-        Index = 0;
 
         // Call the parser's main method
         // This should only return when the parser reaches the true EOF token

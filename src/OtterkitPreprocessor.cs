@@ -43,7 +43,7 @@ public static class Preprocessor
                     currentLine = " ";
                 }
 
-                currentLine = currentLine[1..];
+                currentLine = currentLine[1..].Insert(0, "       ");
 
                 preprocessedLines.Add(currentLine);
             }

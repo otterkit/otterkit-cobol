@@ -11,6 +11,7 @@ public enum ErrorType
 public static class ErrorHandler
 {
     internal static bool Error = false;
+    internal static Options Options = OtterkitCompiler.Options;
 
     public static class Compiler
     {
@@ -30,8 +31,7 @@ public static class ErrorHandler
             string error = new(' ', line.Length - token.value.Length);
 
             int count = line.TakeWhile(char.IsWhiteSpace).Count();
-            int insertOffset = line.IndexOf(token.value) == token.column ? 0 : 7;
-            error = error.Insert(token.column + insertOffset - count, new string('~', token.value.Length));
+            error = error.Insert(token.column - count - 1, new string('~', token.value.Length));
 
             Console.WriteLine($"{" ",5}|");
             Console.WriteLine($"{token.line,4} | {line.TrimStart()}");
@@ -155,6 +155,16 @@ public static class ErrorHandler
             Console.WriteLine("(Anchor: \"{0}\")\n", token.value);
         }
 
+    }
+
+    public static void SuccessfulParsing()
+    {
+        var filesCount = Options.SourceFiles.Count + 1;
+        var isPlural = filesCount > 1 ? "s" : "";
+
+        Console.ForegroundColor = ConsoleColor.Blue;
+        Console.WriteLine($"Parsing complete, parsed {filesCount} file{isPlural}, no errors found! \n");
+        Console.ResetColor();
     }
 
     public static void Terminate(string errorType)

@@ -9,10 +9,10 @@ public struct Options
     public string Name;
     public string Type;
     public string BuildMode;
-    public string EntryPoint;
-    public List<string> SourceFiles;
-    public string SourceFormat;
     public int ColumnLength;
+    public string EntryPoint;
+    public string SourceFormat;
+    public List<string> SourceFiles;
 }
 
 public static class OtterkitCompiler
@@ -135,13 +135,7 @@ public static class OtterkitCompiler
                 List<Token> classified = Token.FromValue(tokens);
                 List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
 
-                string format = $$"""
-                {0,-5} {1,-3} {2,-35} {3,-16} {4,-10}
-                """;
-                foreach (Token token in analized)
-                {
-                    Console.WriteLine(format, token.line, token.column, token.value, token.type, token.context);
-                }
+                if (!ErrorHandler.Error) ErrorHandler.SuccessfulParsing();
             }
 
             if (Options.BuildMode.Equals("BuildOnly"))

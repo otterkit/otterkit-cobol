@@ -38,7 +38,7 @@ public static partial class Lexer
             {
                 if (token.Value.Equals(">>IMP-EOF")) lineNumber = 0;
                 
-                Token tokenized = new(token.Value, lineNumber, token.Index);
+                Token tokenized = new(token.Value, lineNumber, token.Index + 1);
                 tokens.Add(tokenized);
             }
         }

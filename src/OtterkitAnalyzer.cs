@@ -148,7 +148,8 @@ public static class Analyzer
 
             if (CurrentEquals("EOF") && Index < TokenList.Count - 1)
             {
-                FileName = OtterkitCompiler.Options.SourceFiles[FileIndex + 1];
+                FileName = OtterkitCompiler.Options.SourceFiles[FileIndex++];
+                
                 Continue();
                 Source();
             }
@@ -1126,6 +1127,16 @@ public static class Analyzer
 
                 while (CurrentEquals("BY", "REFERENCE", "VALUE"))
                 {
+                    if (CurrentEquals("BY") && !LookaheadEquals(1, "VALUE", "REFERENCE"))
+                    {
+                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        The USING BY clause in the procedure division header must be followed by "VALUE" or "REFERENCE"
+                        """);
+                        ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                        CombinedAnchorPoint(TokenContext.IsStatement, "RETURNING", ".");
+                    }
+
                     if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
                     {
                         Optional("BY");
@@ -4017,6 +4028,36 @@ public static class Analyzer
             Continue();
         }
     }
+
+    private static void CombinedAnchorPoint(TokenContext anchor, params string[] anchors)
+    {
+        ErrorHandler.Parser.AttemptRecovery(anchors);
+
+        while (!CurrentEquals(TokenType.EOF))
+        {
+            if (CurrentEquals("."))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                Parser recovered at the following anchor point: 
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                Continue();
+                return;
+            }
+
+            if (CurrentEquals(anchors) || CurrentEquals(anchor))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                Parser recovered at the following anchor point: 
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                return;
+            }
+
+            Continue();
+        }
+    }
+
 
     /// <summary>
     /// Token <c>Lookahead</c>: This method returns a Token from an index of Current Index + the amount parameter

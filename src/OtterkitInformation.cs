@@ -1,5 +1,33 @@
 namespace Otterkit;
 
+public enum UsageType
+{
+    Binary,
+    BinaryChar,
+    BinaryShort,
+    BinaryLong,
+    BinaryDouble,
+    Bit,
+    Computational,
+    Display,
+    FloatBinary32,
+    FloatBinary64,
+    FloatBinary128,
+    FloatDecimal16,
+    FloatDecimal32,
+    FloatExtended,
+    FloatLong,
+    FloatShort,
+    Index,
+    MessageTag,
+    National,
+    ObjectReference,
+    PackedDecimal,
+    Pointer,
+    FunctionPointer,
+    ProgramPointer
+}
+
 public struct DataItemInfo
 {
     public CurrentScope Section;
@@ -11,6 +39,8 @@ public struct DataItemInfo
     public string PictureLength;
     public string ExternalName;
     public string DefaultValue;
+    public UsageType UsageType;
+    public List<string> UsageContext;
     public bool IsExternal;
     public bool IsElementary;
     public bool IsGroup;
@@ -27,7 +57,7 @@ public struct SourceUnitSignature
     public List<string> Parameters;
     public List<bool> IsOptional;
     public List<bool> IsByRef;
-    public List<Exception> Exceptions;
+    public List<string> Exceptions;
     public List<string> Properties;
     public List<SourceUnitSignature> Methods;
 }
@@ -86,9 +116,9 @@ public static class Information
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.Type = Type;
                 Data[DataItemHash] = DataItem;
+                return true;
             }
                 
-
             return false;
         }
 
@@ -101,6 +131,7 @@ public static class Information
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.PictureLength = Picture;
                 Data[DataItemHash] = DataItem;
+                return true;
             }
 
             return false;
@@ -115,6 +146,25 @@ public static class Information
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.DefaultValue = Default;
                 Data[DataItemHash] = DataItem;
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool AddUsage(string DataItemHash, UsageType usageType, params string[] usageContext)
+        {
+            bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
+
+            if (AlreadyExists)
+            {
+                DataItemInfo DataItem = Data[DataItemHash];
+                DataItem.UsageType = usageType;
+                if (usageContext.Count() >= 1)
+                    DataItem.UsageContext = usageContext.ToList();
+                    
+                Data[DataItemHash] = DataItem;
+                return true;
             }
 
             return false;
@@ -129,6 +179,7 @@ public static class Information
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.Section = Section;
                 Data[DataItemHash] = DataItem;
+                return true;
             }
 
             return false;
@@ -143,6 +194,7 @@ public static class Information
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.Parent = Parent;
                 Data[DataItemHash] = DataItem;
+                return true;
             }
 
             return false;
@@ -158,6 +210,7 @@ public static class Information
                 DataItem.IsExternal = true;
                 DataItem.ExternalName = ExternalName;
                 Data[DataItemHash] = DataItem;
+                return true;
             }
 
             return false;
@@ -172,6 +225,7 @@ public static class Information
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.IsConstant = true;
                 Data[DataItemHash] = DataItem;
+                return true;
             }
 
             return false;
@@ -186,6 +240,7 @@ public static class Information
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.IsGlobal = true;
                 Data[DataItemHash] = DataItem;
+                return true;
             }
 
             return false;
@@ -200,6 +255,7 @@ public static class Information
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.IsElementary = true;
                 Data[DataItemHash] = DataItem;
+                return true;
             }
 
             return false;
@@ -214,6 +270,7 @@ public static class Information
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.IsGroup = true;
                 Data[DataItemHash] = DataItem;
+                return true;
             }
 
             return false;
@@ -289,7 +346,7 @@ public static class Information
             return false;
         }
 
-        public static bool AddException(string SourceUnitHash, Exception exception)
+        public static bool AddException(string SourceUnitHash, string exception)
         {
             bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out SourceUnitSignature Source);
 

@@ -1184,7 +1184,7 @@ public static class Analyzer
 
                 if (CurrentEquals("USAGE"))
                 {
-                    UsageClause();
+                    UsageClause(DataItemHash);
                 }
 
             }
@@ -5241,7 +5241,7 @@ public static class Analyzer
             }
         }
 
-        void UsageClause()
+        void UsageClause(string dataItemHash)
         {
             Expected("USAGE");
             Optional("IS");
@@ -5249,6 +5249,8 @@ public static class Analyzer
             {
                 case "BINARY":
                     Expected("BINARY");
+                    Information.DataItems
+                        .AddUsage(dataItemHash, UsageType.Binary);
                 break;
 
                 case "BINARY-CHAR":
@@ -5268,15 +5270,21 @@ public static class Analyzer
 
                 case "BIT":
                     Expected("BIT");
+                    Information.DataItems
+                        .AddUsage(dataItemHash, UsageType.Bit);
                 break;
 
                 case "COMP":
                 case "COMPUTATIONAL":
                     Expected(Current().value);
+                    Information.DataItems
+                        .AddUsage(dataItemHash, UsageType.Computational);
                 break;
 
                 case "DISPLAY":
                     Expected("DISPLAY");
+                    Information.DataItems
+                        .AddUsage(dataItemHash, UsageType.Display);
                 break;
 
                 case "FLOAT-BINARY-32":
@@ -5318,10 +5326,14 @@ public static class Analyzer
 
                 case "INDEX":
                     Expected("INDEX");
+                    Information.DataItems
+                        .AddUsage(dataItemHash, UsageType.Index);
                 break;
 
                 case "MESSAGE-TAG":
                     Expected("MESSAGE-TAG");
+                    Information.DataItems
+                        .AddUsage(dataItemHash, UsageType.MessageTag);
                 break;
 
                 case "NATIONAL":
@@ -5333,6 +5345,8 @@ public static class Analyzer
                     Expected("REFERENCE");
                     // Need implement identifier resolution first
                     // To parse the rest of this using clause
+                    Information.DataItems
+                        .AddUsage(dataItemHash, UsageType.ObjectReference);
                 break;
 
                 case "PACKED-DECIMAL":
@@ -5350,13 +5364,23 @@ public static class Analyzer
                     if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
                     {
                         Optional("TO");
+                        Information.DataItems
+                            .AddUsage(dataItemHash, UsageType.Pointer, Current().value);
                         Identifier();
                     }
+                    else
+                    {
+                        Information.DataItems
+                            .AddUsage(dataItemHash, UsageType.Pointer);
+                    }
+
                 break;
 
                 case "FUNCTION-POINTER":
                     Expected("FUNCTION-POINTER");
                     Optional("TO");
+                    Information.DataItems
+                        .AddUsage(dataItemHash, UsageType.Pointer, Current().value);
                     Identifier();
                 break;
 
@@ -5365,7 +5389,14 @@ public static class Analyzer
                     if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
                     {
                         Optional("TO");
+                        Information.DataItems
+                            .AddUsage(dataItemHash, UsageType.Pointer, Current().value);
                         Identifier();
+                    }
+                    else
+                    {
+                        Information.DataItems
+                            .AddUsage(dataItemHash, UsageType.Pointer);
                     }
                 break;
 

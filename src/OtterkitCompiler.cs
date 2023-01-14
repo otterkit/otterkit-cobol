@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
-using System.Text.Json;
 
 namespace Otterkit;
 
@@ -18,10 +16,15 @@ public struct Options
 public static class OtterkitCompiler
 {
     internal static Options Options;
-    internal static JsonElement ParsingInfo;
 
     public static void Main(string[] args)
     {
+        string[] arguments = { "build", "-p", "-e", "test.cob" };
+
+        args = arguments;
+        
+        Directory.SetCurrentDirectory(@"C:\Users\KTSno\Documents\GitHub\otterkit\src");
+
         if (args.Length <= 1 || args[0].Equals("-h") || args[0].Equals("--help"))
         {
             DisplayHelpMessage();
@@ -293,12 +296,6 @@ public static class OtterkitCompiler
             sourceLines.Add(eofMarker);
             Options.SourceFiles.Add(file);
         }
-
-        // Get COBOL reserved keyword information from parsinginfo.json
-        var assembly = Assembly.GetCallingAssembly();
-        var stream = assembly.GetManifestResourceStream("Otterkit.parsinginfo.json");
-        var reader = new StreamReader(stream ?? throw new ArgumentNullException());
-        ParsingInfo = JsonSerializer.Deserialize<JsonElement>(reader.ReadToEnd());
 
         return sourceLines;
     }

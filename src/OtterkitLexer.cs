@@ -29,19 +29,21 @@ public static partial class Lexer
 
     public static List<Token> Tokenize(List<string> sourceLines)
     {
-        int lineNumber = 0;
+        var lineNumber = 0;
         List<Token> tokens = new();
-        foreach (string line in sourceLines)
+
+        foreach (var line in sourceLines)
         {
             lineNumber += 1;
-            foreach (Match token in LexerRegex().Matches(line).Cast<Match>())
+            foreach (Match token in LexerRegex().Matches(line))
             {
                 if (token.Value.Equals(">>IMP-EOF")) lineNumber = 0;
-                
+
                 Token tokenized = new(token.Value, lineNumber, token.Index + 1);
                 tokens.Add(tokenized);
             }
         }
+
         return tokens;
     }
 

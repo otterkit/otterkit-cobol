@@ -69,21 +69,19 @@ public partial struct Token
         context = null;
     }
 
-    public static TokenType FindType(string value)
+    private static TokenType FindType(string value)
     {
-        JsonElement tokenJson = OtterkitCompiler.ParsingInfo;
-    
         //check if the value is a reserved keyword
-        if (tokenJson.GetProperty("reservedKeywords").EnumerateArray().Any(json => json.GetString() == value.ToUpper()))
+        if (ParsingInfo.IsReservedWord(value.ToUpperInvariant()))
             return TokenType.ReservedKeyword;
         //check if the value is a figurative literal
-        else if (tokenJson.GetProperty("figurativeLiteral").EnumerateArray().Any(json => json.GetString() == value.ToUpper()))
+        else if (ParsingInfo.IsReservedFigurativeLiteral(value.ToUpperInvariant()))
             return TokenType.FigurativeLiteral;
         //check if the value is an intrinsic function
-        else if (tokenJson.GetProperty("intrinsicFunctions").EnumerateArray().Any(json => json.GetString() == value.ToUpper()))
+        else if (ParsingInfo.IsIntrinsicFunctionName(value.ToUpperInvariant()))
             return TokenType.IntrinsicFunction;
         //check if the value is a symbol
-        else if (tokenJson.GetProperty("symbols").EnumerateArray().Any(json => json.GetString() == value))
+        else if (ParsingInfo.IsReservedSymbol(value.ToUpperInvariant()))
             return TokenType.Symbol;
         //check if the value is a string
         else if (value.StartsWith("\""))
@@ -99,15 +97,13 @@ public partial struct Token
             return TokenType.Identifier;
     }
 
-    public static TokenContext? FindContext(Token token)
+    private static TokenContext? FindContext(Token token)
     {
-        JsonElement tokenJson = OtterkitCompiler.ParsingInfo;
-        
         //check if the token belongs to a data division clause
-        if (tokenJson.GetProperty("clauses").EnumerateArray().Any(json => json.GetString() == token.value))
+        if (ParsingInfo.IsReservedClause(token.value))
             return TokenContext.IsClause;
         //check if the token is a statement
-        else if (tokenJson.GetProperty("statements").EnumerateArray().Any(json => json.GetString() == token.value))
+        else if (ParsingInfo.IsReservedStatement(token.value))
             return TokenContext.IsStatement;
         //check if the token represents a file separator   
         else if (token.line is -5)
@@ -117,7 +113,7 @@ public partial struct Token
             return null;
     }
 
-    public static TokenScope? FindScope(Token token, Token previousToken)
+    private static TokenScope? FindScope(Token token, Token previousToken)
     {
         if (token.value.Equals("PROGRAM-ID"))
             return TokenScope.ProgramId;

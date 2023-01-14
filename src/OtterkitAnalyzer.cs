@@ -1535,6 +1535,7 @@ public static class Analyzer
                     UNLOCK();
 
                 if (CurrentEquals("UNSTRING"))
+                    UNSTRING();
 
                 if (CurrentEquals("VALIDATE"))
                     VALIDATE();

@@ -1546,12 +1546,19 @@ public static class Analyzer
             Expected("USE");
 
             bool exceptionObject = CurrentEquals("AFTER") && LookaheadEquals(1, "EXCEPTION") && LookaheadEquals(2, "OBJECT")
-                || CurrentEquals("AFTER") && LookaheadEquals(1, "EO") || CurrentEquals("EXCEPTION") && LookaheadEquals(1, "OBJECT")
+                || CurrentEquals("AFTER") && LookaheadEquals(1, "EO") 
+                || CurrentEquals("EXCEPTION") && LookaheadEquals(1, "OBJECT")
                 || CurrentEquals("EO");
 
             bool exceptionCondition = CurrentEquals("AFTER") && LookaheadEquals(1, "EXCEPTION") && LookaheadEquals(2, "CONDITION")
-                || CurrentEquals("AFTER") && LookaheadEquals(1, "EC") || CurrentEquals("EXCEPTION") && LookaheadEquals(1, "CONDITION")
+                || CurrentEquals("AFTER") && LookaheadEquals(1, "EC") 
+                || CurrentEquals("EXCEPTION") && LookaheadEquals(1, "CONDITION")
                 || CurrentEquals("EC");
+
+            bool reporting = CurrentEquals("GLOBAL") && LookaheadEquals(1, "BEFORE") || CurrentEquals("BEFORE");
+
+            bool fileException = CurrentEquals("GLOBAL") && LookaheadEquals(1, "AFTER", "STANDARD", "EXCEPTION", "ERROR") 
+                || CurrentEquals("AFTER", "STANDARD", "EXCEPTION", "ERROR");
 
             if (exceptionObject)
             {
@@ -1568,6 +1575,51 @@ public static class Analyzer
 
                 Identifier();
             }
+            else if (exceptionCondition)
+            {
+                Optional("AFTER");
+                if (CurrentEquals("EO"))
+                {
+                    Expected("EO");
+                }
+                else
+                {
+                    Expected("EXCEPTION");
+                    Expected("OBJECT");
+                }
+
+                Identifier();
+            }
+            else if (reporting)
+            {
+                if (CurrentEquals("GLOBAL")) Expected("GLOBAL");
+
+                Expected("BEFORE");
+                Expected("REPORTING");
+                Identifier();
+            }
+            else if (fileException)
+            {
+                if (CurrentEquals("GLOBAL")) Expected("GLOBAL");
+
+                Optional("AFTER");
+                Optional("STANDARD");
+                Choice("EXCEPTION", "ERROR");
+                Optional("PROCEDURE");
+                Optional("ON");
+
+                if (CurrentEquals("INPUT", "OUTPUT", "I-O", "EXTEND"))
+                {
+                    Choice("INPUT", "OUTPUT", "I-O", "EXTEND");
+                }
+                else
+                {
+                    Identifier();
+                    while (CurrentEquals(TokenType.Identifier))
+                        Identifier();
+                }
+            }
+            
         }
 
         // This method handles COBOL's slightly inconsistent separator period rules.

@@ -1534,8 +1534,13 @@ public static class Analyzer
                 if (CurrentEquals("UNLOCK"))
                     UNLOCK();
 
+                if (CurrentEquals("UNSTRING"))
+
                 if (CurrentEquals("VALIDATE"))
                     VALIDATE();
+
+                if (CurrentEquals("WRITE"))
+                    WRITE();
 
                 if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, ".") && !isNested)
                     PARAGRAPH();
@@ -3249,13 +3254,12 @@ public static class Analyzer
             {
                 InvalidKey(ref isConditional);
             }
-            else if (!isSequential && CurrentEquals("AT", "END", "NOT"))
+            else if (isSequential && CurrentEquals("AT", "END", "NOT"))
             {
                 AtEnd(ref isConditional);
             }
 
             if (isConditional) Expected("END-READ");
-
         }
 
         void RECEIVE()
@@ -3584,7 +3588,6 @@ public static class Analyzer
             }
         }
 
-
         void START()
         {
             bool isConditional = false;
@@ -3741,6 +3744,97 @@ public static class Analyzer
             Choice("RECORD", "RECORDS");
         }
 
+        void UNSTRING()
+        {
+            bool isConditional = false;
+
+            Expected("UNSTRING");
+            Identifier();
+
+            if (CurrentEquals("DELIMITED"))
+            {
+                Expected("DELIMITED");
+                Optional("BY");
+                if (CurrentEquals("ALL")) Expected("ALL");
+
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                }
+                else
+                {
+                    String();
+                }
+
+                while (CurrentEquals("OR"))
+                {
+                    Expected("OR");
+                    if (CurrentEquals("ALL")) Expected("ALL");
+
+                    if (CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier();
+                    }
+                    else
+                    {
+                        String();
+                    }
+                }
+            }
+
+            Expected("INTO");
+            Identifier();
+
+            if (CurrentEquals("DELIMITER"))
+            {
+                Expected("DELIMITER");
+                Optional("IN");
+                Identifier();
+            }
+            if (CurrentEquals("COUNT"))
+            {
+                Expected("COUNT");
+                Optional("IN");
+                Identifier();
+            }
+
+            while (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+
+                if (CurrentEquals("DELIMITER"))
+                {
+                    Expected("DELIMITER");
+                    Optional("IN");
+                    Identifier();
+                }
+                if (CurrentEquals("COUNT"))
+                {
+                    Expected("COUNT");
+                    Optional("IN");
+                    Identifier();
+                }   
+            }
+
+            if (CurrentEquals("WITH", "POINTER"))
+            {
+                Optional("WITH");
+                Expected("POINTER");
+                Identifier();
+            }
+
+            if (CurrentEquals("TALLYING"))
+            {
+                Expected("TALLYING");
+                Optional("IN");
+                Identifier();
+            }
+
+            OnOverflow(ref isConditional);
+
+            if (isConditional) Expected("END-UNSTRING");
+        }
+
         void VALIDATE()
         {
             Expected("VALIDATE");
@@ -3762,6 +3856,84 @@ public static class Analyzer
                 """);
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
+        }
+
+        void WRITE()
+        {
+            bool isSequential = false;
+            bool isConditional = false;
+
+            Expected("WRITE");
+            if (CurrentEquals("FILE"))
+            {
+                Expected("FILE");
+                Identifier();
+            }
+            else
+            {
+                Identifier();
+            }
+
+            if (CurrentEquals("FROM"))
+            {
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                }
+                else
+                {
+                    String();
+                }
+            }
+
+            if (CurrentEquals("BEFORE", "AFTER"))
+            {
+                isSequential = true;
+
+                WriteBeforeAfter();
+                Optional("ADVANCING");
+                if (CurrentEquals("PAGE"))
+                {
+                    Expected("PAGE");
+                    // Missing mnemonic-name handling
+                }
+                else if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
+                {
+                    if (CurrentEquals(TokenType.Identifier)) Identifier();
+
+                    else Number();
+
+                    if (CurrentEquals("LINE", "LINES"))
+                    {
+                        Expected(Current().value);
+                    }
+                }
+            }
+
+            RetryPhrase();
+
+            if (CurrentEquals("WITH", "LOCK"))
+            {
+                Optional("WITH");
+                Expected("LOCK");
+            }
+            else if (CurrentEquals("WITH", "NO"))
+            {
+                Optional("WITH");
+                Expected("NO");
+                Expected("LOCK");
+            }
+
+            if (isSequential && CurrentEquals("AT", "NOT", "END-OF-PAGE", "EOP"))
+            {
+                AtEndOfPage(ref isConditional);
+            }
+            else if (!isSequential && CurrentEquals("INVALID", "NOT"))
+            {
+                InvalidKey(ref isConditional);
+            }
+
+            if (isConditional) Expected("END-WRITE");
         }
 
         void PARAGRAPH()
@@ -4072,6 +4244,83 @@ public static class Analyzer
                 Expected("OVERFLOW");
                 Statement(true);
                 OnOverflow(ref isConditional, onOverflowExists, notOnOverflowExists);
+            }
+        }
+
+        void WriteBeforeAfter(bool beforeExists = false, bool afterExists = false)
+        {
+            if (CurrentEquals("BEFORE"))
+            {
+                if (beforeExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    BEFORE can only be specified once in this statement. 
+                    The same applies to AFTER.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                beforeExists = true;
+                Expected("BEFORE");
+
+                WriteBeforeAfter(beforeExists, afterExists);
+
+            }
+
+            if (CurrentEquals("AFTER"))
+            {
+                if (afterExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    AFTER can only be specified once in this statement. 
+                    The same applies to BEFORE.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                afterExists = true;
+                Expected("AFTER");
+
+                ForAlphanumericForNational(beforeExists, afterExists);
+            }
+        }
+
+        void AtEndOfPage(ref bool isConditional, bool atEndOfPageExists = false, bool notAtEndOfPageExists = false)
+        {
+            if (CurrentEquals("AT", "END-OF-PAGE", "EOP"))
+            {
+                if (atEndOfPageExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    AT END-OF-PAGE can only be specified once in this statement. 
+                    The same applies to NOT AT END-OF-PAGE.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                isConditional = true;
+                atEndOfPageExists = true;
+                Optional("AT");
+                Choice("END-OF-PAGE", "EOP");
+                Statement(true);
+                AtEndOfPage(ref isConditional, atEndOfPageExists, notAtEndOfPageExists);
+
+            }
+
+            if (CurrentEquals("NOT"))
+            {
+                if (notAtEndOfPageExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    NOT AT END-OF-PAGE can only be specified once in this statement. 
+                    The same applies to AT END-OF-PAGE.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                isConditional = true;
+                notAtEndOfPageExists = true;
+                Expected("NOT");
+                Optional("AT");
+                Choice("END-OF-PAGE", "EOP");
+                Statement(true);
+                AtEndOfPage(ref isConditional, atEndOfPageExists, notAtEndOfPageExists);
             }
         }
 

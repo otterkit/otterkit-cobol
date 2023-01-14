@@ -2,7 +2,7 @@ namespace Otterkit;
 
 public struct DataItemInfo
 {
-    public string Section;
+    public CurrentScope Section;
     public string Parent;
     public int Line;
     public int LevelNumber;
@@ -120,7 +120,7 @@ public static class Information
             return false;
         }
 
-        public static bool AddSection(string DataItemHash, string Section)
+        public static bool AddSection(string DataItemHash, CurrentScope Section)
         {
             bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 

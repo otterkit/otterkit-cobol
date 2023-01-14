@@ -185,40 +185,88 @@ public static class Analyzer
             }
 
             if (CurrentEquals("PROGRAM-ID"))
+            {
                 ProgramId();
+            }
 
-            if (CurrentEquals("FUNCTION-ID"))
+            else if (CurrentEquals("FUNCTION-ID"))
+            {
                 FunctionId();
+            }
 
-            if (CurrentEquals("CLASS-ID"))
+            else if (CurrentEquals("CLASS-ID"))
             {
                 ClassId();
-                return;
             }
 
-            if (CurrentEquals("INTERFACE-ID"))
+            else if (CurrentEquals("INTERFACE-ID"))
             {
                 InterfaceId();
-                return;
             }
 
-            if (SourceType.Peek() is SourceUnit.Class && CurrentEquals("FACTORY"))
+            else if (SourceType.Peek() is SourceUnit.Class && CurrentEquals("FACTORY"))
             {
                 Factory();
-                return;
             }
 
-            if (SourceType.Peek() is SourceUnit.Class && CurrentEquals("OBJECT"))
+            else if (SourceType.Peek() is SourceUnit.Class && CurrentEquals("OBJECT"))
             {
                 Object();
-                return;
             }
 
-            if (SourceType.Peek() is SourceUnit.Object or SourceUnit.Factory or SourceUnit.Interface && CurrentEquals("METHOD-ID"))
+            else if (SourceType.Peek() is SourceUnit.Object or SourceUnit.Factory or SourceUnit.Interface && CurrentEquals("METHOD-ID"))
             {
                 MethodId();
-                return;
             }
+
+            if (CurrentEquals("OPTIONS"))
+            {
+                Options();
+            }
+        }
+
+        void Options()
+        {
+            bool shouldHavePeriod = false;
+
+            Expected("OPTIONS");
+            Expected(".");
+
+            if (CurrentEquals("ARITHMETIC"))
+            {
+                Expected("ARITHMETIC");
+                Optional("IS");
+                Choice("NATIVE", "STANDARD-BINARY", "STANDARD-DECIMAL");
+                
+                shouldHavePeriod = true;
+            }
+
+            if (CurrentEquals("DEFAULT"))
+            {
+                Expected("DEFAULT");
+                Expected("ROUNDED");
+                Optional("MODE");
+                Optional("IS");
+                Choice(
+                    "AWAY-FROM-ZERO", "NEAREST-AWAY-FROM-ZERO", 
+                    "NEAREST-EVEN", "NEAREST-TOWARD-ZERO",
+                    "PROHIBITED", "TOWARD-GREATER",
+                    "TOWARD-LESSER", "TRUNCATION"
+                );
+
+                shouldHavePeriod = true;
+            }
+
+            if (CurrentEquals("ENTRY-CONVENTION"))
+            {
+                Expected("ENTRY-CONVENTION");
+                Optional("IS");
+                Expected("COBOL");
+
+                shouldHavePeriod = true;
+            }
+
+            if (shouldHavePeriod) Expected(".");
         }
 
 
@@ -912,7 +960,7 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
             }
 
-            Information.DataItems.AddSection(DataItemHash, CurrentSection.ToString());
+            Information.DataItems.AddSection(DataItemHash, CurrentSection);
 
             if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
             {
@@ -951,7 +999,116 @@ public static class Analyzer
                         Information.DataItems.IsExternal(DataItemHash, true, DataName);
                 }
 
-                if (CurrentEquals("PIC") || CurrentEquals("PICTURE"))
+                if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
+                {
+                    Optional("IS");
+                    Expected("GLOBAL");
+                }
+
+                if ((CurrentEquals("IS") && LookaheadEquals(1, "TYPEDEF")) || CurrentEquals("TYPEDEF"))
+                {
+                    Optional("IS");
+                    Expected("TYPEDEF");
+
+                    if (CurrentEquals("STRONG")) Expected("STRONG");
+                }
+
+                if (CurrentEquals("REDEFINES"))
+                {
+                    Expected("REDEFINES");
+                    Identifier();
+                }
+
+                if (CurrentEquals("ALIGNED")) Expected("ALIGNED");
+
+                if (CurrentEquals("ANY") && LookaheadEquals(1, "LENGTH"))
+                {
+                    Expected("ANY");
+                    Expected("LENGTH");
+                }
+
+                if (CurrentEquals("BASED")) Expected("BASED");
+
+                if (CurrentEquals("BLANK"))
+                {
+                    Expected("BLANK");
+                    Optional("WHEN");
+                    Expected("ZERO");
+                }
+
+                if (CurrentEquals("CONSTANT") && LookaheadEquals(1, "RECORD"))
+                {
+                    Expected("CONSTANT");
+                    Expected("RECORD");
+                }
+
+                if (CurrentEquals("DYNAMIC"))
+                {
+                    Expected("DYNAMIC");
+                    Optional("LENGTH");
+                    
+                    if (CurrentEquals(TokenType.Identifier)) Identifier();
+
+                    if (CurrentEquals("LIMIT"))
+                    {
+                        Expected("LIMIT");
+                        Optional("IS");
+                        Number();
+                    }
+                }
+
+                if (CurrentEquals("GROUP-USAGE"))
+                {
+                    Expected("GROUP-USAGE");
+                    Optional("IS");
+                    Choice("BIT", "NATIONAL");
+                }
+
+                if (CurrentEquals("JUSTIFIED", "JUST"))
+                {
+                    Choice("JUSTIFIED", "JUST");
+                    Optional("RIGHT");
+                }
+
+                if (CurrentEquals("SYNCHRONIZED", "SYNC"))
+                {
+                    Choice("SYNCHRONIZED", "SYNC");
+                    if (CurrentEquals("LEFT")) Expected("LEFT");
+
+                    else if (CurrentEquals("RIGHT")) Expected("RIGHT");
+                }
+
+                if (CurrentEquals("PROPERTY"))
+                {
+                    Expected("PROPERTY");
+                    if (CurrentEquals("WITH", "NO"))
+                    {
+                        Optional("WITH");
+                        Expected("NO");
+                        Choice("GET", "SET");
+                    }
+
+                    if (CurrentEquals("IS", "FINAL"))
+                    {
+                        Optional("IS");
+                        Expected("FINAL");
+                    }
+                }
+
+                if (CurrentEquals("SAME"))
+                {
+                    Expected("SAME");
+                    Expected("AS");
+                    Identifier();
+                }
+
+                if (CurrentEquals("TYPE"))
+                {
+                    Expected("TYPE");
+                    Identifier();
+                }
+
+                if (CurrentEquals("PIC", "PICTURE"))
                 {
                     Choice("PIC", "PICTURE");
                     Optional("IS");
@@ -1004,7 +1161,7 @@ public static class Analyzer
                 {
                     Expected("VALUE");
 
-                    if (Current().type is not TokenType.String and not TokenType.Numeric)
+                    if (CurrentEquals(TokenType.String, TokenType.Numeric))
                     {
                         ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
                         The only tokens allowed after a VALUE clause are type literals, like an Alphanumeric literal ("Hello, World!") or a Numeric literal (123.456).
@@ -1012,17 +1169,22 @@ public static class Analyzer
                         ErrorHandler.Parser.PrettyError(FileName, Current());
                     }
 
-                    if (Current().type is TokenType.String)
+                    if (CurrentEquals(TokenType.String))
                     {
                         Information.DataItems.AddDefault(DataItemHash, Current().value);
                         String();
                     }
 
-                    if (Current().type is TokenType.Numeric)
+                    if (CurrentEquals(TokenType.Numeric))
                     {
                         Information.DataItems.AddDefault(DataItemHash, Current().value);
                         Number();
                     }
+                }
+
+                if (CurrentEquals("USAGE"))
+                {
+                    UsageClause();
                 }
 
             }
@@ -1063,7 +1225,7 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
             }
             Information.DataItems.IsConstant(DataItemHash, true);
-            Information.DataItems.AddSection(DataItemHash, CurrentSection.ToString());
+            Information.DataItems.AddSection(DataItemHash, CurrentSection);
 
             Expected("CONSTANT");
             if (CurrentEquals("IS") || CurrentEquals("GLOBAL"))
@@ -5078,6 +5240,182 @@ public static class Analyzer
                 Continue();
             }
         }
+
+        void UsageClause()
+        {
+            Expected("USAGE");
+            Optional("IS");
+            switch (Current().value)
+            {
+                case "BINARY":
+                    Expected("BINARY");
+                break;
+
+                case "BINARY-CHAR":
+                case "BINARY-SHORT":
+                case "BINARY-LONG":
+                case "BINARY-DOUBLE":
+                    Expected(Current().value);
+                    if (CurrentEquals("SIGNED"))
+                    {
+                        Expected("SIGNED");
+                    }
+                    else if (CurrentEquals("UNSIGNED"))
+                    {
+                        Expected("UNSIGNED");
+                    }
+                break;
+
+                case "BIT":
+                    Expected("BIT");
+                break;
+
+                case "COMP":
+                case "COMPUTATIONAL":
+                    Expected(Current().value);
+                break;
+
+                case "DISPLAY":
+                    Expected("DISPLAY");
+                break;
+
+                case "FLOAT-BINARY-32":
+                    Expected("FLOAT-BINARY-32");
+                    Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+                break;
+
+                case "FLOAT-BINARY-64":
+                    Expected("FLOAT-BINARY-64");
+                    Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+                break;
+
+                case "FLOAT-BINARY-128":
+                    Expected("FLOAT-BINARY-128");
+                    Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+                break;
+
+                case "FLOAT-DECIMAL-16":
+                    Expected("FLOAT-DECIMAL-16");
+                    EncodingEndianness();
+                break;
+
+                case "FLOAT-DECIMAL-32":
+                    Expected("FLOAT-DECIMAL-32");
+                    EncodingEndianness();
+                break;
+
+                case "FLOAT-EXTENDED":
+                    Expected("FLOAT-EXTENDED");
+                break;
+
+                case "FLOAT-LONG":
+                    Expected("FLOAT-LONG");
+                break;
+
+                case "FLOAT-SHORT":
+                    Expected("FLOAT-SHORT");
+                break;
+
+                case "INDEX":
+                    Expected("INDEX");
+                break;
+
+                case "MESSAGE-TAG":
+                    Expected("MESSAGE-TAG");
+                break;
+
+                case "NATIONAL":
+                    Expected("NATIONAL");
+                break;
+
+                case "OBJECT":
+                    Expected("OBJECT");
+                    Expected("REFERENCE");
+                    // Need implement identifier resolution first
+                    // To parse the rest of this using clause
+                break;
+
+                case "PACKED-DECIMAL":
+                    Expected("PACKED-DECIMAL");
+                    if (CurrentEquals("WITH", "NO"))
+                    {
+                        Optional("WITH");
+                        Expected("NO");
+                        Expected("SIGN");
+                    }
+                break;
+
+                case "POINTER":
+                    Expected("POINTER");
+                    if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
+                    {
+                        Optional("TO");
+                        Identifier();
+                    }
+                break;
+
+                case "FUNCTION-POINTER":
+                    Expected("FUNCTION-POINTER");
+                    Optional("TO");
+                    Identifier();
+                break;
+
+                case "PROGRAM-POINTER":
+                    Expected("PROGRAM-POINTER");
+                    if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
+                    {
+                        Optional("TO");
+                        Identifier();
+                    }
+                break;
+
+                default:
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                    Unrecognized USAGE clause. This could be due to an unsupported third-party extension. 
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+
+                    AnchorPoint(TokenContext.IsClause);
+                break;
+            }
+        }
+
+        void EncodingEndianness(bool encodingExists = false, bool endiannessExists = false)
+        {
+            if (CurrentEquals("BINARY-ENCODING", "DECIMAL-ENCODING"))
+            {
+                if (encodingExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    The encoding phrase can only be specified once in this clause. 
+                    The same applies to the endianness phrase.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                encodingExists = true;
+                Expected(Current().value);
+
+                WriteBeforeAfter(encodingExists, endiannessExists);
+
+            }
+
+            if (CurrentEquals("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT"))
+            {
+                if (endiannessExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    The endianness phrase can only be specified once in this clause. 
+                    The same applies to the encoding phrase.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                endiannessExists = true;
+                Expected(Current().value);
+
+                WriteBeforeAfter(encodingExists, endiannessExists);
+            }
+        }
+
 
         bool NotIdentifierOrLiteral()
         {

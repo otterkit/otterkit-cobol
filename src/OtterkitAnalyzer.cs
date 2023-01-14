@@ -1199,6 +1199,9 @@ public static class Analyzer
             Missing separator period at the end of this PROCEDURE DIVISION header, every division header must end with a separator period
             """, -1, TokenContext.IsStatement);
 
+            bool isProcedureDeclarative = CurrentEquals("DECLARATIVES") 
+                || CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION");
+
             bool canContainStatements = currentSource switch
             {
                 SourceUnit.FunctionPrototype => false,
@@ -1207,7 +1210,9 @@ public static class Analyzer
                 _ => true
             };
 
-            if (canContainStatements) Statement();
+            if (canContainStatements && !isProcedureDeclarative) Statement();
+
+            if (canContainStatements && isProcedureDeclarative) DeclarativeProcedure();
 
             if (!canContainStatements && (CurrentEquals(TokenContext.IsStatement) || CurrentEquals(TokenType.Identifier)))
             {
@@ -1386,7 +1391,12 @@ public static class Analyzer
         // For other statements, the separator period is required, which is then handled by the ScopeTerminator()
         void Statement(bool isNested = false)
         {
-            if (Current().context != TokenContext.IsStatement && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, ".") && !isNested))
+            bool errorCheck = Current().context != TokenContext.IsStatement 
+                && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, ".") && !isNested)
+                && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION") && !isNested);
+
+
+            if (errorCheck)
             {
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
                 Expected the start of a statement. Instead found "{Current().value}"
@@ -1396,7 +1406,7 @@ public static class Analyzer
                 AnchorPoint(TokenContext.IsStatement);
             }
 
-            while (!isNested ? !CurrentEquals("EOF", "END") : CurrentEquals(TokenContext.IsStatement))
+            while (!isNested ? (!CurrentEquals("EOF", "END") && !CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "SECTION")) : CurrentEquals(TokenContext.IsStatement))
             {
                 if (CurrentEquals("ACCEPT"))
                     ACCEPT();
@@ -1534,10 +1544,48 @@ public static class Analyzer
 
                 if (isNested && !CurrentEquals(TokenContext.IsStatement)) return;
 
+                if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION")) return;
+
                 if (!CurrentEquals("EOF", "END"))
                 {
                     Statement(isNested);
                 }
+            }
+        }
+
+        void DeclarativeProcedure()
+        {
+            if (CurrentEquals("DECLARATIVES"))
+            {
+                Expected("DECLARATIVES");
+                Expected(".");
+
+                Identifier();
+                Expected("SECTION");
+                Expected(".");
+                UseStatement();
+                Statement();
+
+                while (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION"))
+                {
+                    Identifier();
+                    Expected("SECTION");
+                    Expected(".");
+                    UseStatement();
+                    Statement();
+                }
+
+                Expected("END");
+                Expected("DECLARATIVES");
+                Expected(".");
+            }
+
+            while (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION"))
+            {
+                Identifier();
+                Expected("SECTION");
+                Expected(".");
+                Statement();
             }
         }
 
@@ -1619,7 +1667,17 @@ public static class Analyzer
                         Identifier();
                 }
             }
-            
+            else 
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Expected AFTER EXCEPTION OBJECT, AFTER EXCEPTION CONDITION, BEFORE REPORTING or AFTER EXCEPTION/ERROR
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                AnchorPoint(TokenContext.IsStatement);
+            }
+
+            ScopeTerminator(false);
         }
 
         // This method handles COBOL's slightly inconsistent separator period rules.

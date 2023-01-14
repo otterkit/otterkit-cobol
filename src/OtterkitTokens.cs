@@ -35,6 +35,8 @@ public enum TokenContext
 {
     IsClause,
     IsStatement,
+    IsResolved,
+    IsNotResolved,
     IsEOF
 }
 

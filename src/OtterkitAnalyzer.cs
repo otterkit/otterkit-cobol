@@ -1199,7 +1199,7 @@ public static class Analyzer
             Missing separator period at the end of this PROCEDURE DIVISION header, every division header must end with a separator period
             """, -1, TokenContext.IsStatement);
 
-            bool isProcedureDeclarative = CurrentEquals("DECLARATIVES") 
+            bool isProcedureDeclarative = CurrentEquals("DECLARATIVES")
                 || CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION");
 
             bool canContainStatements = currentSource switch
@@ -1391,7 +1391,7 @@ public static class Analyzer
         // For other statements, the separator period is required, which is then handled by the ScopeTerminator()
         void Statement(bool isNested = false)
         {
-            bool errorCheck = Current().context != TokenContext.IsStatement 
+            bool errorCheck = Current().context != TokenContext.IsStatement
                 && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, ".") && !isNested)
                 && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION") && !isNested);
 
@@ -1452,6 +1452,9 @@ public static class Analyzer
 
                 if (CurrentEquals("INITIATE"))
                     INITIATE();
+
+                if (CurrentEquals("INSPECT"))
+                    INSPECT();
 
                 if (CurrentEquals("INVOKE"))
                     INVOKE();
@@ -1600,18 +1603,18 @@ public static class Analyzer
             Expected("USE");
 
             bool exceptionObject = CurrentEquals("AFTER") && LookaheadEquals(1, "EXCEPTION") && LookaheadEquals(2, "OBJECT")
-                || CurrentEquals("AFTER") && LookaheadEquals(1, "EO") 
+                || CurrentEquals("AFTER") && LookaheadEquals(1, "EO")
                 || CurrentEquals("EXCEPTION") && LookaheadEquals(1, "OBJECT")
                 || CurrentEquals("EO");
 
             bool exceptionCondition = CurrentEquals("AFTER") && LookaheadEquals(1, "EXCEPTION") && LookaheadEquals(2, "CONDITION")
-                || CurrentEquals("AFTER") && LookaheadEquals(1, "EC") 
+                || CurrentEquals("AFTER") && LookaheadEquals(1, "EC")
                 || CurrentEquals("EXCEPTION") && LookaheadEquals(1, "CONDITION")
                 || CurrentEquals("EC");
 
             bool reporting = CurrentEquals("GLOBAL") && LookaheadEquals(1, "BEFORE") || CurrentEquals("BEFORE");
 
-            bool fileException = CurrentEquals("GLOBAL") && LookaheadEquals(1, "AFTER", "STANDARD", "EXCEPTION", "ERROR") 
+            bool fileException = CurrentEquals("GLOBAL") && LookaheadEquals(1, "AFTER", "STANDARD", "EXCEPTION", "ERROR")
                 || CurrentEquals("AFTER", "STANDARD", "EXCEPTION", "ERROR");
 
             if (exceptionObject)
@@ -1673,7 +1676,7 @@ public static class Analyzer
                         Identifier();
                 }
             }
-            else 
+            else
             {
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
                 Expected AFTER EXCEPTION OBJECT, AFTER EXCEPTION CONDITION, BEFORE REPORTING or AFTER EXCEPTION/ERROR
@@ -2409,6 +2412,54 @@ public static class Analyzer
                 The INITIATE statement must only contain report entry identifiers defined in the report section.
                 """);
                 ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
+        }
+
+        void INSPECT()
+        {
+            Expected("INSPECT");
+            if (CurrentEquals("BACKWARD")) Expected("BACKWARD");
+
+            Identifier();
+
+            if (CurrentEquals("CONVERTING"))
+            {
+                Expected("CONVERTING");
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                }
+                else
+                {
+                    String();
+                }
+
+                Expected("TO");
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                }
+                else
+                {
+                    String();
+                }
+
+                AfterBeforePhrase();
+            }
+            else if (CurrentEquals("REPLACING"))
+            {
+                Expected("REPLACING");
+                ReplacingPhrase();
+            }
+            else if (CurrentEquals("TALLYING"))
+            {
+                Expected("TALLYING");
+                TallyingPhrase();
+                if (CurrentEquals("REPLACING"))
+                {
+                    Expected("REPLACING");
+                    ReplacingPhrase();
+                }
             }
         }
 
@@ -3814,7 +3865,7 @@ public static class Analyzer
                     Expected("COUNT");
                     Optional("IN");
                     Identifier();
-                }   
+                }
             }
 
             if (CurrentEquals("WITH", "POINTER"))
@@ -3974,6 +4025,390 @@ public static class Analyzer
             else
             {
                 Expected("TIMES");
+            }
+        }
+
+        void TallyingPhrase()
+        {
+            if (!CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "FOR"))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                The tallying phrase must start with a data item identifier, which must be followed by the FOR keyword
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
+
+            while (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "FOR"))
+            {
+                Identifier();
+                Expected("FOR");
+
+                if (!CurrentEquals("CHARACTERS", "ALL", "LEADING"))
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    The tallying phrase must contain at least one of the following clauses: CHARACTERS, ALL or LEADING
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                while (CurrentEquals("CHARACTERS", "ALL", "LEADING"))
+                {
+                    if (CurrentEquals("CHARACTERS"))
+                    {
+                        Expected("CHARACTERS");
+                        if (CurrentEquals("AFTER", "BEFORE"))
+                        {
+                            AfterBeforePhrase();
+                        }
+                    }
+                    else if (CurrentEquals("ALL"))
+                    {
+                        Expected("ALL");
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else
+                        {
+                            String();
+                        }
+
+                        if (CurrentEquals("AFTER", "BEFORE"))
+                        {
+                            AfterBeforePhrase();
+                        }
+
+                        while (CurrentEquals(TokenType.Identifier, TokenType.String))
+                        {
+                            if (CurrentEquals(TokenType.Identifier))
+                            {
+                                Identifier();
+                            }
+                            else
+                            {
+                                String();
+                            }
+
+                            if (CurrentEquals("AFTER", "BEFORE"))
+                            {
+                                AfterBeforePhrase();
+                            }
+                        }
+                    }
+                    else if (CurrentEquals("LEADING"))
+                    {
+                        Expected("LEADING");
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else
+                        {
+                            String();
+                        }
+
+                        if (CurrentEquals("AFTER", "BEFORE"))
+                        {
+                            AfterBeforePhrase();
+                        }
+
+                        while (CurrentEquals(TokenType.Identifier, TokenType.String))
+                        {
+                            if (CurrentEquals(TokenType.Identifier))
+                            {
+                                Identifier();
+                            }
+                            else
+                            {
+                                String();
+                            }
+
+                            if (CurrentEquals("AFTER", "BEFORE"))
+                            {
+                                AfterBeforePhrase();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        void ReplacingPhrase()
+        {
+            if (!CurrentEquals("CHARACTERS", "ALL", "LEADING", "FIRST"))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                The replacing phrase must contain at least one of the following clauses: CHARACTERS, ALL, LEADING or FIRST
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
+
+            while (CurrentEquals("CHARACTERS", "ALL", "LEADING", "FIRST"))
+            {
+                if (CurrentEquals("CHARACTERS"))
+                {
+                    Expected("CHARACTERS");
+                    Expected("BY");
+
+                    if (CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier();
+                    }
+                    else
+                    {
+                        String();
+                    }
+
+                    if (CurrentEquals("AFTER", "BEFORE"))
+                    {
+                        AfterBeforePhrase();
+                    }
+                }
+                else if (CurrentEquals("ALL"))
+                {
+                    Expected("ALL");
+                    if (CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier();
+                    }
+                    else
+                    {
+                        String();
+                    }
+
+                    Expected("BY");
+                    if (CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier();
+                    }
+                    else
+                    {
+                        String();
+                    }
+
+                    if (CurrentEquals("AFTER", "BEFORE"))
+                    {
+                        AfterBeforePhrase();
+                    }
+
+                    while (CurrentEquals(TokenType.Identifier, TokenType.String))
+                    {
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else
+                        {
+                            String();
+                        }
+
+                        Expected("BY");
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else
+                        {
+                            String();
+                        }
+
+                        if (CurrentEquals("AFTER", "BEFORE"))
+                        {
+                            AfterBeforePhrase();
+                        }
+
+                        if (CurrentEquals("AFTER", "BEFORE"))
+                        {
+                            AfterBeforePhrase();
+                        }
+                    }
+                }
+                else if (CurrentEquals("LEADING"))
+                {
+                    Expected("LEADING");
+                    if (CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier();
+                    }
+                    else
+                    {
+                        String();
+                    }
+
+                    Expected("BY");
+                    if (CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier();
+                    }
+                    else
+                    {
+                        String();
+                    }
+
+                    if (CurrentEquals("AFTER", "BEFORE"))
+                    {
+                        AfterBeforePhrase();
+                    }
+
+                    if (CurrentEquals("AFTER", "BEFORE"))
+                    {
+                        AfterBeforePhrase();
+                    }
+
+                    while (CurrentEquals(TokenType.Identifier, TokenType.String))
+                    {
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else
+                        {
+                            String();
+                        }
+
+                        Expected("BY");
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else
+                        {
+                            String();
+                        }
+
+                        if (CurrentEquals("AFTER", "BEFORE"))
+                        {
+                            AfterBeforePhrase();
+                        }
+
+                        if (CurrentEquals("AFTER", "BEFORE"))
+                        {
+                            AfterBeforePhrase();
+                        }
+                    }
+                }
+                else if (CurrentEquals("FIRST"))
+                {
+                    Expected("FIRST");
+                    if (CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier();
+                    }
+                    else
+                    {
+                        String();
+                    }
+
+                    Expected("BY");
+                    if (CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier();
+                    }
+                    else
+                    {
+                        String();
+                    }
+
+                    if (CurrentEquals("AFTER", "BEFORE"))
+                    {
+                        AfterBeforePhrase();
+                    }
+
+                    if (CurrentEquals("AFTER", "BEFORE"))
+                    {
+                        AfterBeforePhrase();
+                    }
+
+                    while (CurrentEquals(TokenType.Identifier, TokenType.String))
+                    {
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else
+                        {
+                            String();
+                        }
+
+                        Expected("BY");
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier();
+                        }
+                        else
+                        {
+                            String();
+                        }
+
+                        if (CurrentEquals("AFTER", "BEFORE"))
+                        {
+                            AfterBeforePhrase();
+                        }
+
+                        if (CurrentEquals("AFTER", "BEFORE"))
+                        {
+                            AfterBeforePhrase();
+                        }
+                    }
+                }
+            }
+        }
+
+        void AfterBeforePhrase(bool beforeExists = false, bool afterExists = false)
+        {
+            if (CurrentEquals("AFTER"))
+            {
+                if (afterExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    AFTER can only be specified once in this part of the statement. 
+                    The same applies to BEFORE.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                afterExists = true;
+                Expected("AFTER");
+                Optional("INITIAL");
+
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                }
+                else
+                {
+                    String();
+                }
+
+                AfterBeforePhrase(beforeExists, afterExists);
+
+            }
+
+            if (CurrentEquals("BEFORE"))
+            {
+                if (beforeExists)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    BEFORE can only be specified once in this part of the statement. 
+                    The same applies to AFTER.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                beforeExists = true;
+                Expected("BEFORE");
+                Optional("INITIAL");
+
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                }
+                else
+                {
+                    String();
+                }
+
+                AfterBeforePhrase(beforeExists, afterExists);
             }
         }
 
@@ -4280,7 +4715,7 @@ public static class Analyzer
                 afterExists = true;
                 Expected("AFTER");
 
-                ForAlphanumericForNational(beforeExists, afterExists);
+                WriteBeforeAfter(beforeExists, afterExists);
             }
         }
 

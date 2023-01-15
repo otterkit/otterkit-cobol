@@ -36,11 +36,13 @@ public static partial class Lexer
         foreach (var line in CollectionsMarshal.AsSpan(sourceLines))
         {
             lineNumber += 1;
-            foreach (Match token in LexerRegex().Matches(line))
+            var values = LexerRegex().EnumerateMatches(line);
+            foreach (var token in values)
             {
-                if (token.Value.Equals(">>IMP-EOF")) lineNumber = 0;
+                var currentMatch = line.Substring(token.Index, token.Length);
+                if (currentMatch.Equals(">>IMP-EOF")) lineNumber = 0;
 
-                Token tokenized = new(token.Value, lineNumber, token.Index + 1);
+                Token tokenized = new(currentMatch, lineNumber, token.Index + 1);
                 tokens.Add(tokenized);
             }
         }

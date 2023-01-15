@@ -84,10 +84,10 @@ public partial struct Token
         else if (ParsingInfo.IsReservedSymbol(value.ToUpperInvariant()))
             return TokenType.Symbol;
         //check if the value is a string
-        else if (value.StartsWith("\""))
+        else if (value.StartsWith('"'))
             return TokenType.String;
         //check if the value is a numeric
-        else if (NumericRegex().IsMatch(value))
+        else if (IsNumeric(value) && NumericRegex().IsMatch(value))
             return TokenType.Numeric;
         //check if the value is End Of File
         else if (value.Equals(">>IMP-EOF"))
@@ -173,6 +173,18 @@ public partial struct Token
         }
 
         return newTokens;
+    }
+
+    public static bool IsNumeric(ReadOnlySpan<char> value)
+    {
+        return value switch
+        {
+            ['+' or '-', '0' or '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9', .. _] => true,
+            ['.', '0' or '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9', .. _] => true,
+            ['0' or '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9', .. _] => true,
+            [..] => false
+        };
+
     }
 
     [GeneratedRegex("^(\\+|-)?\\.?[0-9]+(\\.[0-9]+)?$", RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking)]

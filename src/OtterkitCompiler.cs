@@ -2,20 +2,29 @@
 
 namespace Otterkit;
 
-public struct Options
+public record Options
 {
-    public string Name;
-    public string Type;
-    public string BuildMode;
-    public int ColumnLength;
-    public string EntryPoint;
-    public string SourceFormat;
-    public List<string> SourceFiles;
+    public required string Name;
+    public required string Type;
+    public required string BuildMode;
+    public required int ColumnLength;
+    public required string EntryPoint;
+    public required string SourceFormat;
+    public required List<string> FileNames;
 }
 
 public static class OtterkitCompiler
 {
-    internal static Options Options;
+    internal static Options Options = new()
+    {
+        Name = "OtterkitExport",
+        Type = "app",
+        BuildMode = "BuildOnly",
+        EntryPoint = "main.cob",
+        SourceFormat = "fixed",
+        ColumnLength = 80,
+        FileNames = new()
+    };
 
     public static void Main(string[] args)
     {
@@ -47,9 +56,6 @@ public static class OtterkitCompiler
         // the command line argument, like the entry point file.
         if (args[0].Equals("new"))
         {
-            Options.Type = "app";
-            Options.Name = "OtterkitExport";
-
             var index = 0;
             foreach (string argument in args)
             {
@@ -76,11 +82,6 @@ public static class OtterkitCompiler
 
         if (args[0].Equals("build"))
         {
-            Options.BuildMode = "BuildOnly";
-            Options.EntryPoint = "main.cob";
-            Options.SourceFormat = "fixed";
-            Options.ColumnLength = 80;
-
             var index = 0;
             foreach (string argument in args)
             {
@@ -130,7 +131,7 @@ public static class OtterkitCompiler
                 List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
                 List<Token> tokens = Lexer.Tokenize(preprocessedLines);
                 List<Token> classified = Token.FromValue(tokens);
-                List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
+                Analyzer.Analyze(classified, Options.EntryPoint);
 
                 if (!ErrorHandler.Error) ErrorHandler.SuccessfulParsing();
             }
@@ -172,7 +173,7 @@ public static class OtterkitCompiler
             {
                 "app" => "otterkit-export",
                 "mod" => "otterkit-module-export",
-                _ => "app"
+                _ => "otterkit-export"
             };
 
             var otterkitConfig = $$"""
@@ -267,7 +268,6 @@ public static class OtterkitCompiler
         }
 
         var sourceLines = new List<string>();
-        Options.SourceFiles = new();
 
         foreach (var line in File.ReadLines(Options.EntryPoint))
         {
@@ -288,7 +288,7 @@ public static class OtterkitCompiler
             }
             
             sourceLines.Add(eofMarker);
-            Options.SourceFiles.Add(file);
+            Options.FileNames.Add(file);
         }
 
         return sourceLines;

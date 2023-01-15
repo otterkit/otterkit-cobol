@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../libotterkit/src/OtterkitLibrary.csproj" />
-    <EmbeddedResource Include="parsinginfo.json" />
   </ItemGroup>
 
   <ItemGroup>

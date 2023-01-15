@@ -1,44 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Otterkit;
-
-public enum TokenType
-{
-    ReservedKeyword,
-    FigurativeLiteral,
-    IntrinsicFunction,
-    Symbol,
-    String,
-    Numeric,
-    Identifier,
-    Expression,
-    Device,
-    EOF,
-}
-
-public enum TokenScope
-{
-    ProgramId,
-    FunctionId,
-    InterfaceId,
-    ClassId,
-    MethodId,
-    Factory,
-    Object,
-    EnvironmentDivision,
-    DataDivision,
-    ProcedureDivision
-}
-
-public enum TokenContext
-{
-    IsClause,
-    IsStatement,
-    IsResolved,
-    IsNotResolved,
-    IsEOF
-}
+namespace Otterkit; 
 
 public partial struct Token
 {

@@ -1,33 +1,5 @@
 namespace Otterkit;
 
-public enum UsageType
-{
-    Binary,
-    BinaryChar,
-    BinaryShort,
-    BinaryLong,
-    BinaryDouble,
-    Bit,
-    Computational,
-    Display,
-    FloatBinary32,
-    FloatBinary64,
-    FloatBinary128,
-    FloatDecimal16,
-    FloatDecimal32,
-    FloatExtended,
-    FloatLong,
-    FloatShort,
-    Index,
-    MessageTag,
-    National,
-    ObjectReference,
-    PackedDecimal,
-    Pointer,
-    FunctionPointer,
-    ProgramPointer
-}
-
 public record DataItemInfo
 {
     public CurrentScope Section;
@@ -106,11 +78,13 @@ public static class Information
 
         public static bool AddDataItem(string DataItemHash, string Identifier, int LevelNumber, Token token)
         {
-            DataItemInfo DataItem = new();
-
-            DataItem.LevelNumber = LevelNumber;
-            DataItem.Identifier = Identifier;
-            DataItem.Line = token.line;
+            DataItemInfo DataItem = new()
+            {
+                LevelNumber = LevelNumber,
+                Identifier = Identifier,
+                Line = token.line
+            };
+            
             Data.Add(DataItemHash, DataItem);
             return true;
         }
@@ -168,7 +142,7 @@ public static class Information
             {
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.UsageType = usageType;
-                if (usageContext.Count() >= 1)
+                if (usageContext.Length >= 1)
                     DataItem.UsageContext = usageContext.ToList();
                     
                 Data[DataItemHash] = DataItem;
@@ -215,7 +189,7 @@ public static class Information
             if (AlreadyExists)
             {
                 DataItemInfo DataItem = Data[DataItemHash];
-                DataItem.IsExternal = true;
+                DataItem.IsExternal = IsExternal;
                 DataItem.ExternalName = ExternalName;
                 Data[DataItemHash] = DataItem;
                 return true;
@@ -231,7 +205,7 @@ public static class Information
             if (AlreadyExists)
             {
                 DataItemInfo DataItem = Data[DataItemHash];
-                DataItem.IsConstant = true;
+                DataItem.IsConstant = IsConstant;
                 Data[DataItemHash] = DataItem;
                 return true;
             }
@@ -246,7 +220,7 @@ public static class Information
             if (AlreadyExists)
             {
                 DataItemInfo DataItem = Data[DataItemHash];
-                DataItem.IsGlobal = true;
+                DataItem.IsGlobal = IsGlobal;
                 Data[DataItemHash] = DataItem;
                 return true;
             }
@@ -261,7 +235,7 @@ public static class Information
             if (AlreadyExists)
             {
                 DataItemInfo DataItem = Data[DataItemHash];
-                DataItem.IsElementary = true;
+                DataItem.IsElementary = IsElementary;
                 DataItem.IsGroup = false;
                 Data[DataItemHash] = DataItem;
                 return true;
@@ -277,7 +251,7 @@ public static class Information
             if (AlreadyExists)
             {
                 DataItemInfo DataItem = Data[DataItemHash];
-                DataItem.IsGroup = true;
+                DataItem.IsGroup = IsGroup;
                 DataItem.IsElementary = false;
                 Data[DataItemHash] = DataItem;
                 return true;
@@ -293,7 +267,7 @@ public static class Information
             if (AlreadyExists)
             {
                 DataItemInfo DataItem = Data[DataItemHash];
-                DataItem.IsPicture = true;
+                DataItem.IsPicture = IsPicture;
                 Data[DataItemHash] = DataItem;
                 return true;
             }

@@ -1,13 +1,5 @@
 namespace Otterkit;
 
-public enum ErrorType
-{
-    General,
-    Expected,
-    Choice,
-    Recovery,
-}
-
 public static class ErrorHandler
 {
     internal static bool Error = false;
@@ -159,7 +151,7 @@ public static class ErrorHandler
 
     public static void SuccessfulParsing()
     {
-        var filesCount = Options.SourceFiles.Count + 1;
+        var filesCount = Options.FileNames.Count + 1;
         var isPlural = filesCount > 1 ? "s" : "";
 
         Console.ForegroundColor = ConsoleColor.Blue;

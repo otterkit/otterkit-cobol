@@ -2,41 +2,6 @@ using System.Diagnostics;
 
 namespace Otterkit;
 
-public enum SourceUnit
-{
-    Program,
-    ProgramPrototype,
-    Function,
-    FunctionPrototype,
-    Class,
-    Interface,
-    Method,
-    MethodPrototype,
-    MethodGetter,
-    MethodSetter,
-    Object,
-    Factory
-}
-
-public enum CurrentScope
-{
-    ProgramId,
-    FunctionId,
-    InterfaceId,
-    ClassId,
-    MethodId,
-    EnvironmentDivision,
-    Repository,
-    DataDivision,
-    WorkingStorage,
-    LocalStorage,
-    LinkageSection,
-    ProcedureDivision,
-    Factory,
-    Object,
-}
-
-
 /// <summary>
 /// Otterkit COBOL Syntax Analyzer
 /// <para>This parser was built to be easily extensible, with some reusable COBOL parts.</para>
@@ -154,7 +119,7 @@ public static class Analyzer
 
             if (CurrentEquals("EOF") && Index < TokenList.Count - 1)
             {
-                FileName = OtterkitCompiler.Options.SourceFiles[FileIndex++];
+                FileName = OtterkitCompiler.Options.FileNames[FileIndex++];
 
                 Continue();
                 Source();

@@ -2,12 +2,6 @@ using System.Text.RegularExpressions;
 
 namespace Otterkit;
 
-enum DirectiveType
-{
-    SourceFormat,
-    None,
-}
-
 public static class Preprocessor
 {
     internal static Options Options = OtterkitCompiler.Options;

@@ -36,8 +36,7 @@ public static partial class Lexer
         foreach (var line in CollectionsMarshal.AsSpan(sourceLines))
         {
             lineNumber += 1;
-            var values = LexerRegex().EnumerateMatches(line);
-            foreach (var token in values)
+            foreach (var token in LexerRegex().EnumerateMatches(line))
             {
                 var currentMatch = line.Substring(token.Index, token.Length);
                 if (currentMatch.Equals(">>IMP-EOF")) lineNumber = 0;

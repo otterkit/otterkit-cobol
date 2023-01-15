@@ -19,12 +19,6 @@ public static class OtterkitCompiler
 
     public static void Main(string[] args)
     {
-        string[] arguments = { "build", "-p", "-e", "test.cob" };
-
-        args = arguments;
-        
-        Directory.SetCurrentDirectory(@"C:\Users\KTSno\Documents\GitHub\otterkit\src");
-
         if (args.Length <= 1 || args[0].Equals("-h") || args[0].Equals("--help"))
         {
             DisplayHelpMessage();

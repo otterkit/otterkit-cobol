@@ -28,25 +28,36 @@ public enum UsageType
     ProgramPointer
 }
 
-public struct DataItemInfo
+public record DataItemInfo
 {
     public CurrentScope Section;
-    public string Parent;
+    public string? Parent;
     public int Line;
     public int LevelNumber;
-    public string Identifier;
-    public string Type;
-    public string PictureLength;
-    public string ExternalName;
-    public string DefaultValue;
+    public string? Identifier;
+    public string? Type;
+    public string? PictureLength;
+    public string? ExternalName;
+    public string? DefaultValue;
     public UsageType UsageType;
-    public List<string> UsageContext;
+    public List<string>? UsageContext;
     public bool IsExternal;
     public bool IsElementary;
     public bool IsGroup;
     public bool IsConstant;
     public bool IsGlobal;
     public bool IsBased;
+    public bool IsTypedef;
+    public bool IsAnyLength;
+    public bool IsRedefines;
+    public bool IsRenames;
+    public bool IsBlank;
+    public bool IsAligned;
+    public bool IsConstantRecord;
+    public bool IsProperty;
+    public bool IsPicture;
+    public bool IsValue;
+
 }
 
 public struct SourceUnitSignature
@@ -79,12 +90,12 @@ public static class Information
 
         public static DataItemInfo GetValue(string DataItemHash)
         {
-            bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItemInfo DataItem);
+            bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
 
             if (!AlreadyExists)
                 throw new ArgumentException($"FAILED TO GET DATA ITEM HASH FOR {DataItemHash}: THIS SHOULD NOT HAVE HAPPENED, PLEASE REPORT THIS ISSUE ON OTTERKIT'S REPO");
             
-            return DataItem;
+            return Data[DataItemHash];
         }
 
         public static bool ValueExists(string DataItemHash)
@@ -95,10 +106,7 @@ public static class Information
 
         public static bool AddDataItem(string DataItemHash, string Identifier, int LevelNumber, Token token)
         {
-            bool AlreadyExists = Data.TryGetValue(DataItemHash, out DataItemInfo DataItem);
-
-            if (AlreadyExists)
-                return false;
+            DataItemInfo DataItem = new();
 
             DataItem.LevelNumber = LevelNumber;
             DataItem.Identifier = Identifier;
@@ -254,6 +262,7 @@ public static class Information
             {
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.IsElementary = true;
+                DataItem.IsGroup = false;
                 Data[DataItemHash] = DataItem;
                 return true;
             }
@@ -269,6 +278,22 @@ public static class Information
             {
                 DataItemInfo DataItem = Data[DataItemHash];
                 DataItem.IsGroup = true;
+                DataItem.IsElementary = false;
+                Data[DataItemHash] = DataItem;
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsPicture(string DataItemHash, bool IsPicture)
+        {
+            bool AlreadyExists = Data.TryGetValue(DataItemHash, out _);
+
+            if (AlreadyExists)
+            {
+                DataItemInfo DataItem = Data[DataItemHash];
+                DataItem.IsPicture = true;
                 Data[DataItemHash] = DataItem;
                 return true;
             }

@@ -931,11 +931,11 @@ public static class Analyzer
         void RecordEntry()
         {
             BaseEntry();
-            _ = int.TryParse(Current().value, out int OutInt);
-            while (OutInt > 1 && OutInt < 50)
+            _ = int.TryParse(Current().value, out int outInt);
+            while (outInt > 1 && outInt < 50)
             {
                 BaseEntry();
-                _ = int.TryParse(Current().value, out OutInt);
+                _ = int.TryParse(Current().value, out outInt);
             }
         }
 
@@ -945,19 +945,20 @@ public static class Analyzer
             int LevelNumber = int.Parse(Current().value);
             Number();
 
-            string DataName = Current().value;
+            Token DataItem = Current();
+            string DataName = DataItem.value;
             Identifier();
 
             string DataItemHash = $"{SourceId}#{DataName}";
-            if (!Information.DataItems.AddDataItem(DataItemHash, DataName, LevelNumber, Current()))
+            if (!Information.DataItems.AddDataItem(DataItemHash, DataName, LevelNumber, DataItem))
             {
                 DataItemInfo originalItem = Information.DataItems.GetValue(DataItemHash);
 
-                ErrorHandler.Parser.Report(FileName, Lookahead(-1), ErrorType.General, $"""
+                ErrorHandler.Parser.Report(FileName, DataItem, ErrorType.General, $"""
                 A data item with this name already exists in this program, data items in a program must have a unique name.
                 The original {originalItem.Identifier} data item can be found at line {originalItem.Line}. 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
+                ErrorHandler.Parser.PrettyError(FileName, DataItem);
             }
 
             Information.DataItems.AddSection(DataItemHash, CurrentSection);
@@ -1132,7 +1133,7 @@ public static class Analyzer
                     }
 
                     Information.DataItems.AddType(DataItemHash, dataType);
-                    Information.DataItems.IsElementary(DataItemHash, true);
+                    Information.DataItems.IsPicture(DataItemHash, true);
                     Choice("S9", "9", "X", "A", "N", "1");
 
                     Expected("(");
@@ -1189,8 +1190,22 @@ public static class Analyzer
 
             }
 
-            if (!Information.DataItems.GetValue(DataItemHash).IsElementary)
-                Information.DataItems.IsGroup(DataItemHash, true);
+            if (CurrentEquals(".") && LookaheadEquals(1, TokenType.Numeric))
+            {
+                _ = int.TryParse(Lookahead(1).value, out int outInt);
+                int currentLevelNumber = Information.DataItems.GetValue(DataItemHash).LevelNumber;
+
+                if (currentLevelNumber == 1 && outInt >= 2 && outInt <= 49 || outInt >= 2 && outInt <= 49 && outInt > currentLevelNumber)
+                {
+                    Information.DataItems.IsGroup(DataItemHash, true);
+                }
+                else
+                {
+                    Information.DataItems.IsElementary(DataItemHash, true);
+                }
+            }
+
+            CheckClauses(DataItemHash, DataItem);
 
             Expected(".", """
             Missing separator period at the end of this data item definition, each data item must end with a separator period
@@ -1277,6 +1292,80 @@ public static class Analyzer
             Expected(".");
         }
 
+        void CheckClauses(string dataItemHash, Token itemToken)
+        {
+            DataItemInfo dataItem = Information.DataItems.GetValue(dataItemHash);
+
+            bool usageCannotHavePicture = dataItem.UsageType switch
+            {
+                UsageType.BinaryChar => true,
+                UsageType.BinaryDouble => true,
+                UsageType.BinaryLong => true,
+                UsageType.BinaryShort => true,
+                UsageType.FloatShort => true,
+                UsageType.FloatLong => true,
+                UsageType.FloatExtended => true,
+                UsageType.Index => true,
+                UsageType.MessageTag => true,
+                UsageType.ObjectReference => true,
+                UsageType.Pointer => true,
+                UsageType.FunctionPointer => true,
+                UsageType.ProgramPointer => true,
+                _ => false
+            };
+
+            if (usageCannotHavePicture && dataItem.IsPicture)
+            {
+                ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, $"""
+                Data items defined with USAGE {dataItem.UsageType} cannot contain a PICTURE clause
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, itemToken);
+            }
+
+            if (!usageCannotHavePicture && dataItem.IsElementary && !dataItem.IsPicture && !dataItem.IsValue)
+            {
+                ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, """
+                Elementary data items must contain a PICTURE clause. Except when an alphanumeric, boolean, or national literal is defined in the VALUE clause 
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, itemToken);  
+            }
+
+            if (dataItem.IsGroup && dataItem.IsPicture)
+            {
+                ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, """
+                Group items must not contain a PICTURE clause. The PICTURE clause can only be specified on elementary data items
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, itemToken);  
+            }
+
+            if (dataItem.IsRenames && dataItem.IsPicture)
+            {
+                ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, """
+                Data items with a RENAMES clause must not contain a PICTURE clause
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, itemToken);  
+            }
+
+            bool usageCannotHaveValue = dataItem.UsageType switch
+            {
+                UsageType.Index => true,
+                UsageType.MessageTag => true,
+                UsageType.ObjectReference => true,
+                UsageType.Pointer => true,
+                UsageType.FunctionPointer => true,
+                UsageType.ProgramPointer => true,
+                _ => false
+            };
+
+            if (usageCannotHaveValue && dataItem.IsValue)
+            {
+                ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, $"""
+                Data items defined with USAGE {dataItem.UsageType} cannot contain a VALUE clause
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, itemToken);
+            }
+
+        }
 
         // Method responsible for parsing the PROCEDURE DIVISION.
         // That includes the user-defined paragraphs, sections and declaratives

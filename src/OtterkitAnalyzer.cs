@@ -58,7 +58,7 @@ public static class Analyzer
     private static string SourceId;
 
     /// <summary>
-    /// Stack<SourceUnit> <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
+    /// Stack SourceUnit <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
     /// <para>This is used when handling certain syntax rules for different <c>-ID</c>s, like the <c>"RETURNING data-name"</c> being required for every <c>FUNCTION-ID</c> source unit.</para>
     /// </summary>
     private static readonly Stack<SourceUnit> SourceType;
@@ -1372,7 +1372,7 @@ public static class Analyzer
                 _ => true
             };
 
-            if (canContainStatements && !isProcedureDeclarative) Statement();
+            if (canContainStatements && !isProcedureDeclarative) ParseStatements();
 
             if (canContainStatements && isProcedureDeclarative) DeclarativeProcedure();
 
@@ -1546,17 +1546,11 @@ public static class Analyzer
         }
 
 
-        // Recursive method responsible for parsing ALL COBOL statements.
-        // The while loop continues parsing statements while the current token is a statement reserved word,
-        // This might look like it could cause issues by parsing two statements in a single loop, but that
-        // can only happen on nested statements, and in those cases it still parses every statement correctly.
-        // For other statements, the separator period is required, which is then handled by the ScopeTerminator()
-        void Statement(bool isNested = false)
+        void ParseStatements(bool isNested = false)
         {
             bool errorCheck = Current().context != TokenContext.IsStatement
                 && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, ".") && !isNested)
                 && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION") && !isNested);
-
 
             if (errorCheck)
             {
@@ -1570,158 +1564,163 @@ public static class Analyzer
 
             while (!isNested ? (!CurrentEquals("EOF", "END") && !CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "SECTION")) : CurrentEquals(TokenContext.IsStatement))
             {
-                if (CurrentEquals("ACCEPT"))
-                    ACCEPT();
-
-                if (CurrentEquals("ADD"))
-                    ADD();
-
-                if (CurrentEquals("ALLOCATE"))
-                    ALLOCATE();
-
-                if (CurrentEquals("CALL"))
-                    CALL();
-
-                if (CurrentEquals("CANCEL"))
-                    CANCEL();
-
-                if (CurrentEquals("CLOSE"))
-                    CLOSE();
-
-                if (CurrentEquals("COMMIT"))
-                    COMMIT();
-
-                if (CurrentEquals("CONTINUE"))
-                    CONTINUE();
-
-                if (CurrentEquals("COMPUTE"))
-                    COMPUTE();
-
-                if (CurrentEquals("DISPLAY"))
-                    DISPLAY();
-
-                if (CurrentEquals("DIVIDE"))
-                    DIVIDE();
-
-                if (CurrentEquals("DELETE"))
-                    DELETE();
-
-                if (CurrentEquals("IF"))
-                    IF();
-
-                if (CurrentEquals("INITIALIZE"))
-                    INITIALIZE();
-
-                if (CurrentEquals("INITIATE"))
-                    INITIATE();
-
-                if (CurrentEquals("INSPECT"))
-                    INSPECT();
-
-                if (CurrentEquals("INVOKE"))
-                    INVOKE();
-
-                if (CurrentEquals("MERGE"))
-                    MERGE();
-
-                if (CurrentEquals("MULTIPLY"))
-                    MULTIPLY();
-
-                if (CurrentEquals("MOVE"))
-                    MOVE();
-
-                if (CurrentEquals("OPEN"))
-                    OPEN();
-
-                if (CurrentEquals("EXIT"))
-                    EXIT();
-
-                if (CurrentEquals("FREE"))
-                    FREE();
-
-                if (CurrentEquals("GENERATE"))
-                    GENERATE();
-
-                if (CurrentEquals("GO"))
-                    GO();
-
-                if (CurrentEquals("GOBACK"))
-                    GOBACK();
-
-                if (CurrentEquals("SUBTRACT"))
-                    SUBTRACT();
-
-                if (CurrentEquals("RELEASE"))
-                    RELEASE();
-
-                if (CurrentEquals("RAISE"))
-                    RAISE();
-
-                if (CurrentEquals("READ"))
-                    READ();
-
-                if (CurrentEquals("RECEIVE"))
-                    RECEIVE();
-
-                if (CurrentEquals("RESUME"))
-                    RESUME();
-
-                if (CurrentEquals("RETURN"))
-                    RETURN();
-
-                if (CurrentEquals("REWRITE"))
-                    REWRITE();
-
-                if (CurrentEquals("ROLLBACK"))
-                    ROLLBACK();
-
-                if (CurrentEquals("SEND"))
-                    SEND();
-
-                if (CurrentEquals("SORT"))
-                    SORT();
-
-                if (CurrentEquals("START"))
-                    START();
-
-                if (CurrentEquals("STOP"))
-                    STOP();
-
-                if (CurrentEquals("STRING"))
-                    STRING();
-
-                if (CurrentEquals("SUPPRESS"))
-                    SUPPRESS();
-
-                if (CurrentEquals("TERMINATE"))
-                    TERMINATE();
-
-                if (CurrentEquals("UNLOCK"))
-                    UNLOCK();
-
-                if (CurrentEquals("UNSTRING"))
-                    UNSTRING();
-
-                if (CurrentEquals("VALIDATE"))
-                    VALIDATE();
-
-                if (CurrentEquals("WRITE"))
-                    WRITE();
-
-                if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, ".") && !isNested)
-                    PARAGRAPH();
-
+                Statement(isNested);
+                
                 ScopeTerminator(isNested);
 
                 if (isNested && !CurrentEquals(TokenContext.IsStatement)) return;
 
                 if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION")) return;
-
-                if (!CurrentEquals("EOF", "END"))
-                {
-                    Statement(isNested);
-                }
             }
+        } 
+
+        // Recursive method responsible for parsing ALL COBOL statements.
+        // The while loop continues parsing statements while the current token is a statement reserved word,
+        // This might look like it could cause issues by parsing two statements in a single loop, but that
+        // can only happen on nested statements, and in those cases it still parses every statement correctly.
+        // For other statements, the separator period is required, which is then handled by the ScopeTerminator()
+        void Statement(bool isNested = false)
+        {
+            if (CurrentEquals("ACCEPT"))
+                ACCEPT();
+
+            else if (CurrentEquals("ADD"))
+                ADD();
+
+            else if (CurrentEquals("ALLOCATE"))
+                ALLOCATE();
+
+            else if (CurrentEquals("CALL"))
+                CALL();
+
+            else if (CurrentEquals("CANCEL"))
+                CANCEL();
+
+            else if (CurrentEquals("CLOSE"))
+                CLOSE();
+
+            else if (CurrentEquals("COMMIT"))
+                COMMIT();
+
+            else if (CurrentEquals("CONTINUE"))
+                CONTINUE();
+
+            else if (CurrentEquals("COMPUTE"))
+                COMPUTE();
+
+            else if (CurrentEquals("DISPLAY"))
+                DISPLAY();
+
+            else if (CurrentEquals("DIVIDE"))
+                DIVIDE();
+
+            else if (CurrentEquals("DELETE"))
+                DELETE();
+
+            else if (CurrentEquals("IF"))
+                IF();
+
+            else if (CurrentEquals("INITIALIZE"))
+                INITIALIZE();
+
+            else if (CurrentEquals("INITIATE"))
+                INITIATE();
+
+            else if (CurrentEquals("INSPECT"))
+                INSPECT();
+
+            else if (CurrentEquals("INVOKE"))
+                INVOKE();
+
+            else if (CurrentEquals("MERGE"))
+                MERGE();
+
+            else if (CurrentEquals("MULTIPLY"))
+                MULTIPLY();
+
+            else if (CurrentEquals("MOVE"))
+                MOVE();
+
+            else if (CurrentEquals("OPEN"))
+                OPEN();
+
+            else if (CurrentEquals("EXIT"))
+                EXIT();
+
+            else if (CurrentEquals("FREE"))
+                FREE();
+
+            else if (CurrentEquals("GENERATE"))
+                GENERATE();
+
+            else if (CurrentEquals("GO"))
+                GO();
+
+            else if (CurrentEquals("GOBACK"))
+                GOBACK();
+
+            else if (CurrentEquals("SUBTRACT"))
+                SUBTRACT();
+
+            else if (CurrentEquals("RELEASE"))
+                RELEASE();
+
+            else if (CurrentEquals("RAISE"))
+                RAISE();
+
+            else if (CurrentEquals("READ"))
+                READ();
+
+            else if (CurrentEquals("RECEIVE"))
+                RECEIVE();
+
+            else if (CurrentEquals("RESUME"))
+                RESUME();
+
+            else if (CurrentEquals("RETURN"))
+                RETURN();
+
+            else if (CurrentEquals("REWRITE"))
+                REWRITE();
+
+            else if (CurrentEquals("ROLLBACK"))
+                ROLLBACK();
+
+            else if (CurrentEquals("SEND"))
+                SEND();
+
+            else if (CurrentEquals("SORT"))
+                SORT();
+
+            else if (CurrentEquals("START"))
+                START();
+
+            else if (CurrentEquals("STOP"))
+                STOP();
+
+            else if (CurrentEquals("STRING"))
+                STRING();
+
+            else if (CurrentEquals("SUPPRESS"))
+                SUPPRESS();
+
+            else if (CurrentEquals("TERMINATE"))
+                TERMINATE();
+
+            else if (CurrentEquals("UNLOCK"))
+                UNLOCK();
+
+            else if (CurrentEquals("UNSTRING"))
+                UNSTRING();
+
+            else if (CurrentEquals("VALIDATE"))
+                VALIDATE();
+
+            else if (CurrentEquals("WRITE"))
+                WRITE();
+
+            else if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, ".") && !isNested)
+                PARAGRAPH();
         }
 
         void DeclarativeProcedure()
@@ -1735,7 +1734,7 @@ public static class Analyzer
                 Expected("SECTION");
                 Expected(".");
                 UseStatement();
-                Statement();
+                ParseStatements();
 
                 while (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION"))
                 {
@@ -1743,7 +1742,7 @@ public static class Analyzer
                     Expected("SECTION");
                     Expected(".");
                     UseStatement();
-                    Statement();
+                    ParseStatements();
                 }
 
                 Expected("END");
@@ -1756,7 +1755,7 @@ public static class Analyzer
                 Identifier();
                 Expected("SECTION");
                 Expected(".");
-                Statement();
+                ParseStatements();
             }
         }
 
@@ -2423,11 +2422,11 @@ public static class Analyzer
                 """);
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
-            Statement(true);
+            ParseStatements(true);
             if (CurrentEquals("ELSE"))
             {
                 Expected("ELSE");
-                Statement(true);
+                ParseStatements(true);
             }
 
             Expected("END-IF");
@@ -4590,7 +4589,7 @@ public static class Analyzer
                 invalidKeyExists = true;
                 Expected("INVALID");
                 Optional("KEY");
-                Statement(true);
+                ParseStatements(true);
                 InvalidKey(ref isConditional, invalidKeyExists, notInvalidKeyExists);
 
             }
@@ -4610,7 +4609,7 @@ public static class Analyzer
                 Expected("NOT");
                 Expected("INVALID");
                 Optional("KEY");
-                Statement(true);
+                ParseStatements(true);
                 InvalidKey(ref isConditional, invalidKeyExists, notInvalidKeyExists);
             }
         }
@@ -4631,7 +4630,7 @@ public static class Analyzer
                 onExceptionExists = true;
                 Optional("ON");
                 Expected("EXCEPTION");
-                Statement(true);
+                ParseStatements(true);
                 OnException(ref isConditional, onExceptionExists, notOnExceptionExists);
 
             }
@@ -4651,7 +4650,7 @@ public static class Analyzer
                 Expected("NOT");
                 Optional("ON");
                 Expected("EXCEPTION");
-                Statement(true);
+                ParseStatements(true);
                 OnException(ref isConditional, onExceptionExists, notOnExceptionExists);
             }
         }
@@ -4736,7 +4735,7 @@ public static class Analyzer
                 atEndExists = true;
                 Optional("AT");
                 Expected("END");
-                Statement(true);
+                ParseStatements(true);
                 AtEnd(ref isConditional, atEndExists, notAtEndExists);
 
             }
@@ -4756,7 +4755,7 @@ public static class Analyzer
                 Expected("NOT");
                 Optional("AT");
                 Expected("END");
-                Statement(true);
+                ParseStatements(true);
                 AtEnd(ref isConditional, atEndExists, notAtEndExists);
             }
         }
@@ -4778,7 +4777,7 @@ public static class Analyzer
                 Optional("ON");
                 Expected("SIZE");
                 Expected("ERROR");
-                Statement(true);
+                ParseStatements(true);
                 SizeError(ref isConditional, onErrorExists, notOnErrorExists);
 
             }
@@ -4799,7 +4798,7 @@ public static class Analyzer
                 Optional("ON");
                 Expected("SIZE");
                 Expected("ERROR");
-                Statement(true);
+                ParseStatements(true);
                 SizeError(ref isConditional, onErrorExists, notOnErrorExists);
             }
         }
@@ -4820,7 +4819,7 @@ public static class Analyzer
                 onOverflowExists = true;
                 Optional("ON");
                 Expected("OVERFLOW");
-                Statement(true);
+                ParseStatements(true);
                 OnOverflow(ref isConditional, onOverflowExists, notOnOverflowExists);
 
             }
@@ -4840,7 +4839,7 @@ public static class Analyzer
                 Expected("NOT");
                 Optional("ON");
                 Expected("OVERFLOW");
-                Statement(true);
+                ParseStatements(true);
                 OnOverflow(ref isConditional, onOverflowExists, notOnOverflowExists);
             }
         }
@@ -4897,7 +4896,7 @@ public static class Analyzer
                 atEndOfPageExists = true;
                 Optional("AT");
                 Choice("END-OF-PAGE", "EOP");
-                Statement(true);
+                ParseStatements(true);
                 AtEndOfPage(ref isConditional, atEndOfPageExists, notAtEndOfPageExists);
 
             }
@@ -4917,7 +4916,7 @@ public static class Analyzer
                 Expected("NOT");
                 Optional("AT");
                 Choice("END-OF-PAGE", "EOP");
-                Statement(true);
+                ParseStatements(true);
                 AtEndOfPage(ref isConditional, atEndOfPageExists, notAtEndOfPageExists);
             }
         }
@@ -5373,7 +5372,6 @@ public static class Analyzer
                         Information.DataItems
                             .AddUsage(dataItemHash, UsageType.Pointer);
                     }
-
                 break;
 
                 case "FUNCTION-POINTER":

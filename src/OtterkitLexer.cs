@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace Otterkit;
@@ -32,7 +33,7 @@ public static partial class Lexer
         var lineNumber = 0;
         List<Token> tokens = new();
 
-        foreach (var line in sourceLines)
+        foreach (var line in CollectionsMarshal.AsSpan(sourceLines))
         {
             lineNumber += 1;
             foreach (Match token in LexerRegex().Matches(line))

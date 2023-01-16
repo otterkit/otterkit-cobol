@@ -28,6 +28,8 @@ public static class Analyzer
     /// </summary>
     private static readonly Stack<SourceUnit> SourceType;
 
+    private static readonly Stack<int> LevelStack;
+
     /// <summary>
     /// CurrentScope <c>CurrentSection</c> is used in the parser whenever it needs to know which section it is currently parsing (WORKING-STORAGE and LOCAL-STORAGE for example).
     /// <para>This is used when handling certain syntax rules for different sections and to add extra context needed for the DataItemInformation class's variable table.
@@ -55,6 +57,7 @@ public static class Analyzer
         SourceId = string.Empty;
         SourceType = new();
         TokenList = new();
+        LevelStack = new();
     }
 
     /// <summary>
@@ -902,12 +905,15 @@ public static class Analyzer
                 BaseEntry();
                 _ = int.TryParse(Current().value, out outInt);
             }
+
+            LevelStack.Clear();
         }
 
         void BaseEntry()
         {
             string dataType;
             int LevelNumber = int.Parse(Current().value);
+            CheckLevelNumber(LevelNumber);
             Number();
 
             Token DataItem = Current();
@@ -915,15 +921,19 @@ public static class Analyzer
             Identifier();
 
             string DataItemHash = $"{SourceId}#{DataName}";
-            if (!Information.DataItems.AddDataItem(DataItemHash, DataName, LevelNumber, DataItem))
+            if (Information.DataItems.ValueExists(DataItemHash))
             {
                 DataItemInfo originalItem = Information.DataItems.GetValue(DataItemHash);
 
                 ErrorHandler.Parser.Report(FileName, DataItem, ErrorType.General, $"""
-                A data item with this name already exists in this program, data items in a program must have a unique name.
+                A data item with this name already exists in this source unit, data items must have a unique name.
                 The original {originalItem.Identifier} data item can be found at line {originalItem.Line}. 
                 """);
                 ErrorHandler.Parser.PrettyError(FileName, DataItem);
+            }
+            else
+            {
+                Information.DataItems.AddDataItem(DataItemHash, DataName, LevelNumber, DataItem);
             }
 
             Information.DataItems.AddSection(DataItemHash, CurrentSection);
@@ -1157,16 +1167,23 @@ public static class Analyzer
 
             if (CurrentEquals(".") && LookaheadEquals(1, TokenType.Numeric))
             {
-                _ = int.TryParse(Lookahead(1).value, out int outInt);
-                int currentLevelNumber = Information.DataItems.GetValue(DataItemHash).LevelNumber;
-
-                if (currentLevelNumber == 1 && outInt >= 2 && outInt <= 49 || outInt >= 2 && outInt <= 49 && outInt > currentLevelNumber)
+                if (LevelStack.Count == 0)
                 {
-                    Information.DataItems.IsGroup(DataItemHash, true);
+                    Information.DataItems.IsElementary(DataItemHash, true);
                 }
                 else
                 {
-                    Information.DataItems.IsElementary(DataItemHash, true);
+                    _ = int.TryParse(Lookahead(1).value, out int outInt);
+                    var currentLevel = LevelStack.Peek();
+
+                    if (currentLevel == 1 && outInt >= 2 && outInt <= 49 || outInt >= 2 && outInt <= 49 && outInt > currentLevel)
+                    {
+                        Information.DataItems.IsGroup(DataItemHash, true);
+                    }
+                    else
+                    {
+                        Information.DataItems.IsElementary(DataItemHash, true);
+                    }
                 }
             }
 
@@ -1194,16 +1211,21 @@ public static class Analyzer
             Identifier();
 
             var DataItemHash = $"{SourceId}#{DataName}";
-            if (!Information.DataItems.AddDataItem(DataItemHash, DataName, LevelNumber, Current()))
+            if (Information.DataItems.ValueExists(DataItemHash))
             {
                 var originalItem = Information.DataItems.GetValue(DataItemHash);
 
                 ErrorHandler.Parser.Report(FileName, Lookahead(-1), ErrorType.General, $"""
                 A data item with this name already exists in this program, data items in a program must have a unique name.
-                The original {originalItem.Identifier} data item can be found at line {originalItem.Line}. 
+                The original {originalItem.Identifier} data item can be found on line {originalItem.Line}. 
                 """);
                 ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
             }
+            else
+            {
+                Information.DataItems.AddDataItem(DataItemHash, DataName, LevelNumber, Lookahead(-1));
+            }
+
             Information.DataItems.IsConstant(DataItemHash, true);
             Information.DataItems.AddSection(DataItemHash, CurrentSection);
 
@@ -1257,6 +1279,43 @@ public static class Analyzer
             Expected(".");
         }
 
+        void CheckLevelNumber(int level)
+        {
+            if (level is 77) return;
+
+            if (level is 1)
+            {
+                LevelStack.Push(level);
+                return;
+            }
+
+            var currentLevel = LevelStack.Peek();
+
+            if (level == currentLevel) return;
+            
+            if (level > currentLevel && level <= 49)
+            {
+                LevelStack.Push(level);
+                return;
+            }
+
+            if (level < currentLevel)
+            {
+                var current = LevelStack.Pop();
+                var lowerLevel = LevelStack.Peek();
+                if (level == lowerLevel) return;
+
+                if (level != lowerLevel)
+                {
+                    LevelStack.Push(current);
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    All data items that are immediate members of a group item must have equal level numbers, and it should be greater than the level number used for that group item. 
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current()); 
+                }
+            }
+        }
+
         void CheckClauses(string dataItemHash, Token itemToken)
         {
             DataItemInfo dataItem = Information.DataItems.GetValue(dataItemHash);
@@ -1273,7 +1332,7 @@ public static class Analyzer
                 UsageType.Index => true,
                 UsageType.MessageTag => true,
                 UsageType.ObjectReference => true,
-                UsageType.Pointer => true,
+                UsageType.DataPointer => true,
                 UsageType.FunctionPointer => true,
                 UsageType.ProgramPointer => true,
                 _ => false
@@ -1316,7 +1375,7 @@ public static class Analyzer
                 UsageType.Index => true,
                 UsageType.MessageTag => true,
                 UsageType.ObjectReference => true,
-                UsageType.Pointer => true,
+                UsageType.DataPointer => true,
                 UsageType.FunctionPointer => true,
                 UsageType.ProgramPointer => true,
                 _ => false
@@ -2681,7 +2740,7 @@ public static class Analyzer
         void INVOKE()
         {
             Expected("INVOKE");
-            Identifier();
+            Identifier(UsageType.ObjectReference);
             if (CurrentEquals(TokenType.Identifier))
             {
                 Identifier();
@@ -2779,7 +2838,6 @@ public static class Analyzer
                 Expected("RETURNING");
                 Identifier();
             }
-
         }
 
         void MERGE()
@@ -5418,13 +5476,13 @@ public static class Analyzer
                     {
                         Optional("TO");
                         Information.DataItems
-                            .AddUsage(dataItemHash, UsageType.Pointer, Current().value);
+                            .AddUsage(dataItemHash, UsageType.DataPointer, Current().value);
                         Identifier();
                     }
                     else
                     {
                         Information.DataItems
-                            .AddUsage(dataItemHash, UsageType.Pointer);
+                            .AddUsage(dataItemHash, UsageType.DataPointer);
                     }
                 break;
 
@@ -5432,7 +5490,7 @@ public static class Analyzer
                     Expected("FUNCTION-POINTER");
                     Optional("TO");
                     Information.DataItems
-                        .AddUsage(dataItemHash, UsageType.Pointer, Current().value);
+                        .AddUsage(dataItemHash, UsageType.FunctionPointer, Current().value);
                     Identifier();
                 break;
 
@@ -5442,13 +5500,13 @@ public static class Analyzer
                     {
                         Optional("TO");
                         Information.DataItems
-                            .AddUsage(dataItemHash, UsageType.Pointer, Current().value);
+                            .AddUsage(dataItemHash, UsageType.ProgramPointer, Current().value);
                         Identifier();
                     }
                     else
                     {
                         Information.DataItems
-                            .AddUsage(dataItemHash, UsageType.Pointer);
+                            .AddUsage(dataItemHash, UsageType.ProgramPointer);
                     }
                 break;
 
@@ -5885,7 +5943,7 @@ public static class Analyzer
     /// if the current token's type is TokenType.Identifier it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
 
-    private static void Identifier(string custom = "default", int position = 0)
+    private static void Identifier(UsageType usage = UsageType.None, string custom = "default", int position = 0)
     {
         var errorMessage = "Identifier";
         var errorType = ErrorType.Expected;
@@ -5911,11 +5969,36 @@ public static class Analyzer
             ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
             ErrorHandler.Parser.PrettyError(FileName, lookahead);
             Continue();
+            return;
         }
-        else
+
+        if (CurrentSection is CurrentScope.ProcedureDivision)
         {
-            Continue();
+            string dataItemHash = $"{SourceId}#{Current().value}";
+
+            if (!Information.DataItems.ValueExists(dataItemHash))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                The name "{Current().value}" does not exist in the context of the current source unit
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
         }
+
+        if (usage != UsageType.None)
+        {
+            string dataItemHash = $"{SourceId}#{Current().value}";
+
+            if (Information.DataItems.GetValue(dataItemHash).UsageType != usage)
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                Expected a data item defined with the "{usage}" USAGE clause
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
+        }
+
+        Continue();
     }
 
     /// <summary>

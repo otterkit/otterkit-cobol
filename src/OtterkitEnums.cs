@@ -42,6 +42,7 @@ public enum CurrentScope
 
 public enum UsageType
 {
+    None,
     Binary,
     BinaryChar,
     BinaryShort,
@@ -63,7 +64,7 @@ public enum UsageType
     National,
     ObjectReference,
     PackedDecimal,
-    Pointer,
+    DataPointer,
     FunctionPointer,
     ProgramPointer
 }

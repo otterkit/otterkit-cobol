@@ -5992,7 +5992,7 @@ public static class Analyzer
             if (Information.DataItems.GetValue(dataItemHash).UsageType != usage)
             {
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
-                Expected a data item defined with the "{usage}" USAGE clause
+                Expected a data item defined with the "{usage.Display()}" USAGE clause
                 """);
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }

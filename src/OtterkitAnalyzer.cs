@@ -16,11 +16,11 @@ public static class Analyzer
     private static string FileName;
 
     /// <summary>
-    /// String <c>SourceId</c> is used in the parser whenever it needs to know the name of the current source unit (The identifier after PROGRAM-ID).
+    /// Stack string <c>SourceId</c> is used in the parser whenever it needs to know the name of the current source unit (The identifier after PROGRAM-ID).
     /// <para>This is used when checking if a variable already exists in the current source unit, and when adding them to the DataItemInformation class's variable table.
     /// The DataItemInformation class is then used to simplify the codegen process of generating data items.</para>
     /// </summary>
-    private static Stack<string> SourceId;
+    private static readonly Stack<string> SourceId;
 
     /// <summary>
     /// Stack SourceUnit <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
@@ -28,6 +28,10 @@ public static class Analyzer
     /// </summary>
     private static readonly Stack<SourceUnit> SourceType;
 
+    /// <summary>
+    /// Stack int <c>LevelStack</c> is used in the parser whenever it needs to know which data item level it is currently parsing.
+    /// <para>This is used when handling the level number syntax rules, like which clauses are allowed for a particular level number or group item level number rules</para>
+    /// </summary>
     private static readonly Stack<int> LevelStack;
 
     /// <summary>
@@ -35,7 +39,6 @@ public static class Analyzer
     /// <para>This is used when handling certain syntax rules for different sections and to add extra context needed for the DataItemInformation class's variable table.
     /// This will also be used by the DataItemInformation class during codegen to simplify the process to figuring out if a variable is static or not.</para>
     /// </summary>
-
     private static CurrentScope CurrentSection;
 
     /// <summary>
@@ -49,6 +52,11 @@ public static class Analyzer
     /// <para>The index should only move forwards, but if the previous token is needed you can use the Lookahead and LookaheadEquals methods with a negative integer parameter</para>
     /// </summary>
     private static int Index;
+
+    /// <summary>
+    /// Int <c>FileIndex</c>: This is the index of the current file name, used by the parser to point to the correct file name when showing error messages.
+    /// <para>The file index should only move forwards.</para>
+    /// </summary>
     private static int FileIndex;
 
     static Analyzer()
@@ -1115,7 +1123,7 @@ public static class Analyzer
                     string DataLength = Current().value;
                     Number();
                     Expected(")");
-                    if (CurrentEquals("V9") && (dataType != "S9" && (dataType != "9")))
+                    if (CurrentEquals("V9") && dataType != "S9" && dataType != "9")
                     {
                         ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, "V9 cannot be used with non-numeric types");
                         ErrorHandler.Parser.PrettyError(FileName, Current());

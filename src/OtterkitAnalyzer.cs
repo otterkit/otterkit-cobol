@@ -20,7 +20,7 @@ public static class Analyzer
     /// <para>This is used when checking if a variable already exists in the current source unit, and when adding them to the DataItemInformation class's variable table.
     /// The DataItemInformation class is then used to simplify the codegen process of generating data items.</para>
     /// </summary>
-    private static string SourceId;
+    private static Stack<string> SourceId;
 
     /// <summary>
     /// Stack SourceUnit <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
@@ -54,7 +54,7 @@ public static class Analyzer
     static Analyzer()
     {
         FileName = string.Empty;
-        SourceId = string.Empty;
+        SourceId = new();
         SourceType = new();
         TokenList = new();
         LevelStack = new();
@@ -248,7 +248,7 @@ public static class Analyzer
             Expected("PROGRAM-ID");
             Expected(".");
             ProgramIdentifier = Current();
-            SourceId = ProgramIdentifier.value;
+            SourceId.Push(ProgramIdentifier.value);
             SourceType.Push(SourceUnit.Program);
             CurrentSection = CurrentScope.ProgramId;
             Identifier();
@@ -324,7 +324,7 @@ public static class Analyzer
         {
             Expected("FUNCTION-ID");
             Expected(".");
-            SourceId = Current().value;
+            SourceId.Push(Current().value);
             SourceType.Push(SourceUnit.Function);
             CurrentSection = CurrentScope.FunctionId;
             Identifier();
@@ -352,7 +352,7 @@ public static class Analyzer
         {
             Expected("CLASS-ID");
             Expected(".");
-            SourceId = Current().value;
+            SourceId.Push(Current().value);
             SourceType.Push(SourceUnit.Class);
             CurrentSection = CurrentScope.ClassId;
             Identifier();
@@ -409,7 +409,7 @@ public static class Analyzer
         {
             Expected("INTERFACE-ID");
             Expected(".");
-            SourceId = Current().value;
+            SourceId.Push(Current().value);
             SourceType.Push(SourceUnit.Interface);
             CurrentSection = CurrentScope.InterfaceId;
             Identifier();
@@ -467,7 +467,7 @@ public static class Analyzer
             {
                 Expected("GET");
                 Expected("PROPERTY");
-                SourceId = $"GET {Current().value}";
+                SourceId.Push($"GET {Current().value}");
                 Identifier();
 
                 SourceType.Push(SourceUnit.MethodGetter);
@@ -476,14 +476,14 @@ public static class Analyzer
             {
                 Expected("SET");
                 Expected("PROPERTY");
-                SourceId = $"SET {Current().value}";
+                SourceId.Push($"SET {Current().value}");
                 Identifier();
 
                 SourceType.Push(SourceUnit.MethodSetter);
             }
             else // If not a getter or a setter
             {
-                SourceId = Current().value;
+                SourceId.Push(Current().value);
                 Identifier();
                 if (CurrentEquals("AS"))
                 {
@@ -1561,25 +1561,12 @@ public static class Analyzer
             switch (currentSource)
             {
                 case SourceUnit.Program:
-                    SourceType.Pop();
-
-                    if (CurrentEquals("END"))
-                    {
-                        Expected("END");
-                        Expected("PROGRAM");
-                        Identifier();
-                        Expected(".", """
-                        Missing separator period at the end of this END PROGRAM definition
-                        """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
-                    }
-                    break;
-
                 case SourceUnit.ProgramPrototype:
                     SourceType.Pop();
 
                     Expected("END");
                     Expected("PROGRAM");
-                    Identifier();
+                    Identifier(SourceId.Pop());
                     Expected(".", """
                     Missing separator period at the end of this END PROGRAM definition
                     """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
@@ -1591,7 +1578,7 @@ public static class Analyzer
 
                     Expected("END");
                     Expected("FUNCTION");
-                    Identifier();
+                    Identifier(SourceId.Pop());
                     Expected(".", """
                     Missing separator period at the end of this END FUNCTION definition
                     """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
@@ -1606,7 +1593,10 @@ public static class Analyzer
                     Expected("END");
                     Expected("METHOD");
                     if (currentSource is SourceUnit.Method or SourceUnit.MethodPrototype)
-                        Identifier();
+                        Identifier(SourceId.Pop());
+
+                    if (currentSource is SourceUnit.MethodGetter or SourceUnit.MethodSetter)
+                        SourceId.Pop();
 
                     Expected(".", """
                     Missing separator period at the end of this END METHOD definition
@@ -1618,7 +1608,7 @@ public static class Analyzer
 
                     Expected("END");
                     Expected("CLASS");
-                    Identifier();
+                    Identifier(SourceId.Pop());
                     Expected(".", """
                     Missing separator period at the end of this END CLASS definition
                     """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
@@ -1629,7 +1619,7 @@ public static class Analyzer
 
                     Expected("END");
                     Expected("INTERFACE");
-                    Identifier();
+                    Identifier(SourceId.Pop());
                     Expected(".", """
                     Missing separator period at the end of this END INTERFACE definition
                     """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
@@ -5942,17 +5932,8 @@ public static class Analyzer
     /// <para>If the current token's type is TokenType.Identifier, it moves to the next token,
     /// if the current token's type is TokenType.Identifier it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-
-    private static void Identifier(UsageType usage = UsageType.None, string custom = "default", int position = 0)
+    private static void Identifier(UsageType usage = UsageType.None)
     {
-        var errorMessage = "Identifier";
-        var errorType = ErrorType.Expected;
-        if (!custom.Equals("default"))
-        {
-            errorMessage = custom;
-            errorType = ErrorType.General;
-        }
-
         if (CurrentEquals(TokenType.EOF))
         {
             ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
@@ -5964,10 +5945,10 @@ public static class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            var lookahead = Lookahead(position);
-
-            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, """
+            a user-defined name or word (an identifier)
+            """);
+            ErrorHandler.Parser.PrettyError(FileName, Current());
             Continue();
             return;
         }
@@ -5996,6 +5977,38 @@ public static class Analyzer
                 """);
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
+        }
+
+        Continue();
+    }
+
+    private static void Identifier(string identifierString)
+    {
+        if (CurrentEquals(TokenType.EOF))
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            Unexpected End Of File. Expected identifier instead.
+            """);
+
+            return;
+        }
+
+        if (!CurrentEquals(TokenType.Identifier))
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, """
+            a user-defined name or word (an identifier)
+            """);
+            ErrorHandler.Parser.PrettyError(FileName, Current());
+            Continue();
+            return;
+        }
+
+        if (!CurrentEquals(identifierString))
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            Expected a user-defined name (an identifier) with value: "{identifierString}"
+            """);
+            ErrorHandler.Parser.PrettyError(FileName, Current());
         }
 
         Continue();

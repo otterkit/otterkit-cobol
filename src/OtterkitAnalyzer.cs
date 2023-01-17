@@ -255,10 +255,12 @@ public static class Analyzer
 
             Expected("PROGRAM-ID");
             Expected(".");
+
             ProgramIdentifier = Current();
             SourceId.Push(ProgramIdentifier.value);
             SourceType.Push(SourceUnit.Program);
             CurrentSection = CurrentScope.ProgramId;
+
             Identifier();
             if (CurrentEquals("AS"))
             {
@@ -332,9 +334,11 @@ public static class Analyzer
         {
             Expected("FUNCTION-ID");
             Expected(".");
+
             SourceId.Push(Current().value);
             SourceType.Push(SourceUnit.Function);
             CurrentSection = CurrentScope.FunctionId;
+
             Identifier();
 
             if (CurrentEquals("AS"))
@@ -360,9 +364,11 @@ public static class Analyzer
         {
             Expected("CLASS-ID");
             Expected(".");
+
             SourceId.Push(Current().value);
             SourceType.Push(SourceUnit.Class);
             CurrentSection = CurrentScope.ClassId;
+
             Identifier();
 
             if (CurrentEquals("AS"))
@@ -417,9 +423,11 @@ public static class Analyzer
         {
             Expected("INTERFACE-ID");
             Expected(".");
+
             SourceId.Push(Current().value);
             SourceType.Push(SourceUnit.Interface);
             CurrentSection = CurrentScope.InterfaceId;
+
             Identifier();
 
             if (CurrentEquals("AS"))
@@ -468,6 +476,7 @@ public static class Analyzer
         {
             Expected("METHOD-ID");
             Expected(".");
+
             CurrentSection = CurrentScope.MethodId;
             var currentSource = SourceType.Peek();
 
@@ -526,6 +535,7 @@ public static class Analyzer
         {
             Expected("FACTORY");
             Expected(".");
+
             SourceType.Push(SourceUnit.Factory);
 
             if (CurrentEquals("IMPLEMENTS"))
@@ -550,6 +560,7 @@ public static class Analyzer
         {
             Expected("OBJECT");
             Expected(".");
+
             SourceType.Push(SourceUnit.Object);
 
             if (CurrentEquals("IMPLEMENTS"))
@@ -1796,6 +1807,9 @@ public static class Analyzer
 
             else if (CurrentEquals("ROLLBACK"))
                 ROLLBACK();
+
+            else if (CurrentEquals("SEARCH"))
+                SEARCH();
 
             else if (CurrentEquals("SEND"))
                 SEND();
@@ -3725,6 +3739,149 @@ public static class Analyzer
         void ROLLBACK()
         {
             Expected("ROLLBACK");
+        }
+
+        void SEARCH()
+        {
+            Expected("SEARCH");
+            if (!CurrentEquals("ALL"))
+            {
+                Identifier();
+                if (CurrentEquals("VARYING"))
+                {
+                    Expected("VARYING");
+                    Identifier();
+                }
+
+                if (CurrentEquals("AT", "END"))
+                {
+                    Optional("AT");
+                    Expected("END");
+                    ParseStatements(true);
+                }
+
+                if (!CurrentEquals("WHEN"))
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    The SEARCH statement must contain at least one WHEN condition
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                while (CurrentEquals("WHEN"))
+                {
+                    Expected("WHEN");
+                    Condition();
+                    if (CurrentEquals("NEXT") && LookaheadEquals(1, "SENTENCE"))
+                    {
+                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        Unsupported phrase: NEXT SENTENCE is an archaic feature. This phrase can be confusing and is a common source of errors.
+                        The CONTINUE statement can be used to accomplish the same functionality while being much clearer and less prone to error
+                        """);
+                        ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                        AnchorPoint("WHEN", "END-SEARCH");
+                    }
+
+                    ParseStatements(true);
+                }
+
+                Expected("END-SEARCH");
+                return;
+            }
+
+            Expected("ALL");
+            Identifier();
+            if (CurrentEquals("AT", "END"))
+            {
+                Optional("AT");
+                Expected("END");
+                ParseStatements(true);
+            }
+
+            Expected("WHEN");
+            Identifier();
+            if (CurrentEquals("IS", "EQUAL", "="))
+            {
+                Optional("IS");
+                if (CurrentEquals("EQUAL"))
+                {
+                    Expected("EQUAL");
+                    Optional("TO");
+                }
+                else
+                {
+                    Expected("=");
+                }
+            }
+
+            if (CurrentEquals(TokenType.Identifier, TokenType.String, TokenType.Numeric) && LookaheadEquals(1, TokenType.Symbol))
+            {
+                Arithmetic();
+            }
+            else if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Symbol))
+            {
+                Identifier();
+            }
+            else if (CurrentEquals(TokenType.Numeric))
+            {
+                Number();
+            }
+            else
+            {
+                String();
+            }
+
+            while (CurrentEquals("AND"))
+            {
+                Expected("AND");
+                Identifier();
+                if (CurrentEquals("IS", "EQUAL", "="))
+                {
+                    Optional("IS");
+                    if (CurrentEquals("EQUAL"))
+                    {
+                        Expected("EQUAL");
+                        Optional("TO");
+                    }
+                    else
+                    {
+                        Expected("=");
+                    }
+                }
+
+                if (CurrentEquals(TokenType.Identifier, TokenType.String, TokenType.Numeric) && LookaheadEquals(1, TokenType.Symbol))
+                {
+                    Arithmetic();
+                }
+                else if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Symbol))
+                {
+                    Identifier();
+                }
+                else if (CurrentEquals(TokenType.Numeric))
+                {
+                    Number();
+                }
+                else
+                {
+                    String();
+                }
+
+            }
+
+            if (CurrentEquals("NEXT") && LookaheadEquals(1, "SENTENCE"))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Unsupported phrase: NEXT SENTENCE is an archaic feature. This phrase can be confusing and is a common source of errors.
+                The CONTINUE statement can be used to accomplish the same functionality while being much clearer and less prone to error
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+
+                AnchorPoint("END-SEARCH");
+            }
+
+            ParseStatements(true);
+            Expected("END-SEARCH");
         }
 
         void SEND()

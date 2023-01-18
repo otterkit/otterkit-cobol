@@ -1577,6 +1577,12 @@ public static class Analyzer
                 return;
             }
 
+            if (currentSource == SourceUnit.Program && CurrentEquals("EOF"))
+            {
+                SourceType.Pop();
+                return;
+            }
+
             switch (currentSource)
             {
                 case SourceUnit.Program:
@@ -1684,7 +1690,7 @@ public static class Analyzer
                 AnchorPoint(TokenContext.IsStatement);
             }
 
-            while (!isNested ? (!CurrentEquals("EOF", "END") && !CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "SECTION")) : CurrentEquals(TokenContext.IsStatement))
+            while (!isNested ? !CurrentEquals("EOF", "END") && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION")) : CurrentEquals(TokenContext.IsStatement))
             {
                 Statement(isNested);
 
@@ -1786,6 +1792,9 @@ public static class Analyzer
 
             else if (CurrentEquals("SUBTRACT"))
                 SUBTRACT();
+
+            else if (CurrentEquals("PERFORM"))
+                PERFORM();
 
             else if (CurrentEquals("RELEASE"))
                 RELEASE();
@@ -3576,6 +3585,182 @@ public static class Analyzer
             }
         }
 
+        void PERFORM()
+        {
+            bool isExceptionChecking = false;
+            bool isInline = false;
+
+            Expected("PERFORM");
+            if (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+                if (CurrentEquals("THROUGH", "THRU"))
+                {
+                    Choice("THROUGH", "THRU");
+                    Identifier();
+                }
+
+                if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
+                {
+                    TimesPhrase();
+                }
+                else if (CurrentEquals("WITH", "TEST", "VARYING", "UNTIL"))
+                {
+                    WithTest();
+                    if (CurrentEquals("VARYING"))
+                    {
+                        VaryingPhrase();
+                    }
+                    else if (CurrentEquals("UNTIL"))
+                    {
+                        UntilPhrase();
+                    }
+                }
+            }
+            else
+            {
+                if (CurrentEquals("LOCATION") || CurrentEquals("WITH") && LookaheadEquals(1, "LOCATION"))
+                {
+                    isExceptionChecking = true;
+                    Optional("WITH");
+                    Expected("LOCATION");
+                }
+                else if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
+                {
+                    isInline = true;
+
+                    TimesPhrase();
+                }
+                else if (CurrentEquals("TEST", "VARYING", "UNTIL") || CurrentEquals("WITH") && LookaheadEquals(1, "TEST"))
+                {
+                    isInline = true;
+
+                    WithTest();
+                    if (CurrentEquals("VARYING"))
+                    {
+                        VaryingPhrase();
+                    }
+                    else if (CurrentEquals("UNTIL"))
+                    {
+                        UntilPhrase();
+                    }
+                }
+
+                ParseStatements(true);
+
+                if (isInline && CurrentEquals("WHEN"))
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                    An inline PERFORM with a TIMES, VARYING or UNTIL phrase cannot contain an exception checking WHEN phrase 
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+
+                    AnchorPoint("END-PERFORM");
+                }
+                
+                if (isExceptionChecking || !isInline && CurrentEquals("WHEN"))
+                {
+                    isExceptionChecking = true;
+
+                    Expected("WHEN");
+                    if (CurrentEquals("EXCEPTION") && LookaheadEquals(1, TokenType.Identifier))
+                    {
+                        Expected("EXCEPTION");
+
+                        Identifier();
+                        while (CurrentEquals(TokenType.Identifier))
+                            Identifier();
+
+                        ParseStatements(true);
+                    }
+                    else if (CurrentEquals("EXCEPTION"))
+                    {
+                        Expected("EXCEPTION");
+                        Choice("INPUT", "OUTPUT", "IO", "EXTEND");
+                        ParseStatements(true);
+                    }
+                    else if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "FILE"))
+                    {
+                        Identifier();
+                        Expected("FILE");
+                        Identifier();
+
+                        while (CurrentEquals(TokenType.Identifier))
+                            Identifier();
+                    }
+                    else if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "FILE"))
+                    {
+                        Identifier();
+                        while (CurrentEquals(TokenType.Identifier))
+                            Identifier();
+                    }
+
+                    while (CurrentEquals("WHEN"))
+                    {
+                        Expected("WHEN");
+                        if (CurrentEquals("EXCEPTION") && LookaheadEquals(1, TokenType.Identifier))
+                        {
+                            Expected("EXCEPTION");
+
+                            Identifier();
+                            while (CurrentEquals(TokenType.Identifier))
+                                Identifier();
+
+                            ParseStatements(true);
+                        }
+                        else if (CurrentEquals("EXCEPTION"))
+                        {
+                            Expected("EXCEPTION");
+                            Choice("INPUT", "OUTPUT", "IO", "EXTEND");
+                            ParseStatements(true);
+                        }
+                        else if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "FILE"))
+                        {
+                            Identifier();
+                            Expected("FILE");
+                            Identifier();
+
+                            while (CurrentEquals(TokenType.Identifier))
+                                Identifier();
+                        }
+                        else if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "FILE"))
+                        {
+                            Identifier();
+                            while (CurrentEquals(TokenType.Identifier))
+                                Identifier();
+                        }
+                    }
+                }
+
+                if (isExceptionChecking && CurrentEquals("WHEN") && LookaheadEquals(1, "OTHER"))
+                {
+                    Expected("WHEN");
+                    Expected("OTHER");
+                    Optional("EXCEPTION");
+
+                    ParseStatements(true);
+                }
+
+                if (isExceptionChecking && CurrentEquals("WHEN", "COMMON"))
+                {
+                    Optional("WHEN");
+                    Expected("COMMON");
+                    Optional("EXCEPTION");
+
+                    ParseStatements(true);
+                }
+
+                if (isExceptionChecking && CurrentEquals("FINALLY"))
+                {
+                    Expected("FINALLY");
+
+                    ParseStatements(true);
+                }
+
+                Expected("END-PERFORM");
+            }
+        }
+
         void RAISE()
         {
             Expected("RAISE");
@@ -4475,7 +4660,7 @@ public static class Analyzer
 
         void PARAGRAPH()
         {
-            Identifier();
+            Identifier(Current().value);
         }
 
         // The following methods are responsible for parsing some commonly repeated pieces of COBOL statements.
@@ -4485,6 +4670,105 @@ public static class Analyzer
         // The Arithmetic() and Condition() methods are responsible for parsing expressions and verifying if those expressions were
         // written correctly. This is using a combination of the Shunting Yard algorithm, and some methods to verify if the 
         // parentheses are balanced and if it can be evaluated correctly.
+        void TimesPhrase()
+        {
+            if (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+            }
+            else
+            {
+                Number();
+            }
+
+            Expected("TIMES");
+        }
+
+        void UntilPhrase()
+        {
+            Expected("UNTIL");
+            if (CurrentEquals("EXIT"))
+            {
+                Expected("EXIT");
+            }
+            else
+            {
+                Condition();
+            }
+        }
+
+        void VaryingPhrase()
+        {
+            Expected("VARYING");
+            Identifier();
+            Expected("FROM");
+            if (CurrentEquals(TokenType.Numeric))
+            {
+                Number();
+            }
+            else
+            {
+                Identifier();
+            }
+
+            if (CurrentEquals("BY"))
+            {
+                Expected("BY");
+                if (CurrentEquals(TokenType.Numeric))
+                {
+                    Number();
+                }
+                else
+                {
+                    Identifier();
+                }
+            }
+
+            Expected("UNTIL");
+            Condition("AFTER");
+
+            while (CurrentEquals("AFTER"))
+            {
+                Expected("AFTER");
+                Identifier();
+                Expected("FROM");
+                if (CurrentEquals(TokenType.Numeric))
+                {
+                    Number();
+                }
+                else
+                {
+                    Identifier();
+                }
+
+                if (CurrentEquals("BY"))
+                {
+                    Expected("BY");
+                    if (CurrentEquals(TokenType.Numeric))
+                    {
+                        Number();
+                    }
+                    else
+                    {
+                        Identifier();
+                    }
+                }
+
+                Expected("UNTIL");
+                Condition("AFTER");
+            }
+        }
+
+        void WithTest()
+        {
+            if (CurrentEquals("WITH", "TEST"))
+            {
+                Optional("WITH");
+                Expected("TEST");
+                Choice("BEFORE", "AFTER");
+            }
+        }
+
         void RetryPhrase()
         {
             var hasFor = false;
@@ -6466,30 +6750,6 @@ public static class Analyzer
         }
 
         if (!CurrentEquals(TokenType.Symbol))
-        {
-            var lookahead = Lookahead(position);
-
-            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, lookahead);
-            Continue();
-        }
-        else
-        {
-            Continue();
-        }
-    }
-
-    private static void FunctionIdentifier(string custom = "default", int position = 0)
-    {
-        var errorMessage = "an intrinsic or user-defined function identifier";
-        var errorType = ErrorType.Expected;
-        if (!custom.Equals("default"))
-        {
-            errorMessage = custom;
-            errorType = ErrorType.General;
-        }
-
-        if (!CurrentEquals("FUNCTION") && !CurrentEquals(TokenType.IntrinsicFunction, TokenType.Identifier))
         {
             var lookahead = Lookahead(position);
 

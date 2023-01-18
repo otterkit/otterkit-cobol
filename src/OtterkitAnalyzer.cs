@@ -213,7 +213,7 @@ public static class Analyzer
                 Expected("ARITHMETIC");
                 Optional("IS");
                 Choice("NATIVE", "STANDARD-BINARY", "STANDARD-DECIMAL");
-                
+
                 shouldHavePeriod = true;
             }
 
@@ -224,7 +224,7 @@ public static class Analyzer
                 Optional("MODE");
                 Optional("IS");
                 Choice(
-                    "AWAY-FROM-ZERO", "NEAREST-AWAY-FROM-ZERO", 
+                    "AWAY-FROM-ZERO", "NEAREST-AWAY-FROM-ZERO",
                     "NEAREST-EVEN", "NEAREST-TOWARD-ZERO",
                     "PROHIBITED", "TOWARD-GREATER",
                     "TOWARD-LESSER", "TRUNCATION"
@@ -1041,7 +1041,7 @@ public static class Analyzer
                 {
                     Expected("DYNAMIC");
                     Optional("LENGTH");
-                    
+
                     if (CurrentEquals(TokenType.Identifier)) Identifier();
 
                     if (CurrentEquals("LIMIT"))
@@ -1311,7 +1311,7 @@ public static class Analyzer
             var currentLevel = LevelStack.Peek();
 
             if (level == currentLevel) return;
-            
+
             if (level > currentLevel && level <= 49)
             {
                 LevelStack.Push(level);
@@ -1330,7 +1330,7 @@ public static class Analyzer
                     ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
                     All data items that are immediate members of a group item must have equal level numbers, and it should be greater than the level number used for that group item. 
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current()); 
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
                 }
             }
         }
@@ -1370,7 +1370,7 @@ public static class Analyzer
                 ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, """
                 Elementary data items must contain a PICTURE clause. Except when an alphanumeric, boolean, or national literal is defined in the VALUE clause 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, itemToken);  
+                ErrorHandler.Parser.PrettyError(FileName, itemToken);
             }
 
             if (dataItem.IsGroup && dataItem.IsPicture)
@@ -1378,7 +1378,7 @@ public static class Analyzer
                 ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, """
                 Group items must not contain a PICTURE clause. The PICTURE clause can only be specified on elementary data items
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, itemToken);  
+                ErrorHandler.Parser.PrettyError(FileName, itemToken);
             }
 
             if (dataItem.IsRenames && dataItem.IsPicture)
@@ -1386,7 +1386,7 @@ public static class Analyzer
                 ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, """
                 Data items with a RENAMES clause must not contain a PICTURE clause
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, itemToken);  
+                ErrorHandler.Parser.PrettyError(FileName, itemToken);
             }
 
             bool usageCannotHaveValue = dataItem.UsageType switch
@@ -1687,14 +1687,14 @@ public static class Analyzer
             while (!isNested ? (!CurrentEquals("EOF", "END") && !CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "SECTION")) : CurrentEquals(TokenContext.IsStatement))
             {
                 Statement(isNested);
-                
+
                 ScopeTerminator(isNested);
 
                 if (isNested && !CurrentEquals(TokenContext.IsStatement)) return;
 
                 if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION")) return;
             }
-        } 
+        }
 
         // Recursive method responsible for parsing ALL COBOL statements.
         // The while loop continues parsing statements while the current token is a statement reserved word,
@@ -1768,6 +1768,9 @@ public static class Analyzer
 
             else if (CurrentEquals("EXIT"))
                 EXIT();
+
+            else if (CurrentEquals("EVALUATE"))
+                EVALUATE();
 
             else if (CurrentEquals("FREE"))
                 FREE();
@@ -3079,7 +3082,7 @@ public static class Analyzer
             while (Current().type == TokenType.Identifier)
                 Identifier();
 
-            if (!CurrentEquals("."))
+            if (!CurrentEquals(".") && !CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(TokenContext.IsStatement))
             {
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
                 The MOVE statement must only contain data item identifiers after the "TO" reserved word.
@@ -3334,6 +3337,60 @@ public static class Analyzer
 
             if (isConditional)
                 Expected("END-DELETE");
+        }
+
+        void EVALUATE()
+        {
+            var conditions = new List<EvaluateOperand>();
+            var conditionsIndex = 0;
+            Expected("EVALUATE");
+
+            conditions.Add(SelectionSubject());
+            while (CurrentEquals("ALSO"))
+            {
+                Expected("ALSO");
+                conditions.Add(SelectionSubject());
+            }
+
+            Expected("WHEN");
+            SelectionObject(conditions[conditionsIndex]);
+            conditionsIndex++;
+
+            while (CurrentEquals("ALSO"))
+            {
+                Expected("ALSO");
+                SelectionObject(conditions[conditionsIndex]);
+                conditionsIndex++;
+            }
+            conditionsIndex = 0;
+
+            ParseStatements(true);
+
+            while (CurrentEquals("WHEN") && !LookaheadEquals(1, "OTHER"))
+            {
+                Expected("WHEN");
+                SelectionObject(conditions[conditionsIndex]);
+                conditionsIndex++;
+
+                while (CurrentEquals("ALSO"))
+                {
+                    Expected("ALSO");
+                    SelectionObject(conditions[conditionsIndex]);
+                    conditionsIndex++;
+                }
+                conditionsIndex = 0;
+
+                ParseStatements(true);
+            }
+
+            if (CurrentEquals("WHEN") && LookaheadEquals(1, "OTHER"))
+            {
+                Expected("WHEN");
+                Expected("OTHER");
+                ParseStatements(true);
+            }
+
+            Expected("END-EVALUATE");
         }
 
         void EXIT()
@@ -5302,23 +5359,6 @@ public static class Analyzer
 
                 if (IsArithmeticSymbol(Current()))
                 {
-                    if (IsArithmeticSymbol(Lookahead(-1)))
-                    {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
-                        Invalid token after an arithmetic operator, expected a numeric literal or identifier instead of another arithmetic operator
-                        """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
-                    }
-
-                    if (!LookaheadEquals(1, TokenType.Numeric, TokenType.Identifier))
-                    {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
-                        Invalid arithmetic expression, expected a numeric literal or identifier after this operator.
-                        Arithmetic expressions cannot end with an operator
-                        """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
-                    }
-
                     expression.Add(Current());
                     Continue();
                 }
@@ -5517,7 +5557,7 @@ public static class Analyzer
                     Expected("BINARY");
                     Information.DataItems
                         .AddUsage(dataItemHash, UsageType.Binary);
-                break;
+                    break;
 
                 case "BINARY-CHAR":
                 case "BINARY-SHORT":
@@ -5532,79 +5572,79 @@ public static class Analyzer
                     {
                         Expected("UNSIGNED");
                     }
-                break;
+                    break;
 
                 case "BIT":
                     Expected("BIT");
                     Information.DataItems
                         .AddUsage(dataItemHash, UsageType.Bit);
-                break;
+                    break;
 
                 case "COMP":
                 case "COMPUTATIONAL":
                     Expected(Current().value);
                     Information.DataItems
                         .AddUsage(dataItemHash, UsageType.Computational);
-                break;
+                    break;
 
                 case "DISPLAY":
                     Expected("DISPLAY");
                     Information.DataItems
                         .AddUsage(dataItemHash, UsageType.Display);
-                break;
+                    break;
 
                 case "FLOAT-BINARY-32":
                     Expected("FLOAT-BINARY-32");
                     Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
-                break;
+                    break;
 
                 case "FLOAT-BINARY-64":
                     Expected("FLOAT-BINARY-64");
                     Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
-                break;
+                    break;
 
                 case "FLOAT-BINARY-128":
                     Expected("FLOAT-BINARY-128");
                     Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
-                break;
+                    break;
 
                 case "FLOAT-DECIMAL-16":
                     Expected("FLOAT-DECIMAL-16");
                     EncodingEndianness();
-                break;
+                    break;
 
                 case "FLOAT-DECIMAL-32":
                     Expected("FLOAT-DECIMAL-32");
                     EncodingEndianness();
-                break;
+                    break;
 
                 case "FLOAT-EXTENDED":
                     Expected("FLOAT-EXTENDED");
-                break;
+                    break;
 
                 case "FLOAT-LONG":
                     Expected("FLOAT-LONG");
-                break;
+                    break;
 
                 case "FLOAT-SHORT":
                     Expected("FLOAT-SHORT");
-                break;
+                    break;
 
                 case "INDEX":
                     Expected("INDEX");
                     Information.DataItems
                         .AddUsage(dataItemHash, UsageType.Index);
-                break;
+                    break;
 
                 case "MESSAGE-TAG":
                     Expected("MESSAGE-TAG");
                     Information.DataItems
                         .AddUsage(dataItemHash, UsageType.MessageTag);
-                break;
+                    break;
 
                 case "NATIONAL":
                     Expected("NATIONAL");
-                break;
+                    break;
 
                 case "OBJECT":
                     Expected("OBJECT");
@@ -5613,7 +5653,7 @@ public static class Analyzer
                     // To parse the rest of this using clause
                     Information.DataItems
                         .AddUsage(dataItemHash, UsageType.ObjectReference);
-                break;
+                    break;
 
                 case "PACKED-DECIMAL":
                     Expected("PACKED-DECIMAL");
@@ -5623,7 +5663,7 @@ public static class Analyzer
                         Expected("NO");
                         Expected("SIGN");
                     }
-                break;
+                    break;
 
                 case "POINTER":
                     Expected("POINTER");
@@ -5639,7 +5679,7 @@ public static class Analyzer
                         Information.DataItems
                             .AddUsage(dataItemHash, UsageType.DataPointer);
                     }
-                break;
+                    break;
 
                 case "FUNCTION-POINTER":
                     Expected("FUNCTION-POINTER");
@@ -5647,7 +5687,7 @@ public static class Analyzer
                     Information.DataItems
                         .AddUsage(dataItemHash, UsageType.FunctionPointer, Current().value);
                     Identifier();
-                break;
+                    break;
 
                 case "PROGRAM-POINTER":
                     Expected("PROGRAM-POINTER");
@@ -5663,7 +5703,7 @@ public static class Analyzer
                         Information.DataItems
                             .AddUsage(dataItemHash, UsageType.ProgramPointer);
                     }
-                break;
+                    break;
 
                 default:
                     ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
@@ -5672,7 +5712,7 @@ public static class Analyzer
                     ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
 
                     AnchorPoint(TokenContext.IsClause);
-                break;
+                    break;
             }
         }
 
@@ -5712,6 +5752,150 @@ public static class Analyzer
             }
         }
 
+        EvaluateOperand SelectionSubject()
+        {
+            if (CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && !LookaheadEquals(1, TokenType.Symbol))
+            {
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                    return EvaluateOperand.Identifier;
+                }
+
+                ParseLiteral(true, true);
+                return EvaluateOperand.Literal;
+            }
+            else if (CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && LookaheadEquals(1, TokenType.Symbol))
+            {
+                if (Helpers.ArithmeticPrecedence.ContainsKey(Lookahead(1).value))
+                {
+                    Arithmetic("ALSO", "WHEN");
+                    return EvaluateOperand.Arithmetic;
+                }
+                else
+                {
+                    Condition("ALSO", "WHEN");
+                    return EvaluateOperand.Condition;
+                }
+            }
+            else if (CurrentEquals("TRUE", "FALSE"))
+            {
+                Choice("TRUE", "FALSE");
+                return EvaluateOperand.TrueOrFalse;
+            }
+
+            return EvaluateOperand.Invalid;
+        }
+
+        void SelectionObject(EvaluateOperand operand)
+        {
+            bool identifier = operand is
+                EvaluateOperand.Identifier or EvaluateOperand.Literal or
+                EvaluateOperand.Arithmetic or EvaluateOperand.Boolean;
+
+            bool literal = operand is
+                EvaluateOperand.Identifier or EvaluateOperand.Arithmetic or 
+                EvaluateOperand.Boolean;
+
+            bool arithmetic = operand is
+                EvaluateOperand.Identifier or EvaluateOperand.Literal or 
+                EvaluateOperand.Arithmetic;
+
+            bool boolean = operand is
+                EvaluateOperand.Identifier or EvaluateOperand.Literal or 
+                EvaluateOperand.Boolean;
+
+            bool range = operand is
+                EvaluateOperand.Identifier or EvaluateOperand.Literal or 
+                EvaluateOperand.Arithmetic;
+
+            bool condition = operand is 
+                EvaluateOperand.Condition or EvaluateOperand.TrueOrFalse;
+                
+            bool truefalse = operand is
+                EvaluateOperand.Condition or EvaluateOperand.TrueOrFalse;
+
+            if (identifier || literal && CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && !LookaheadEquals(1, TokenType.Symbol))
+            {
+                if (identifier && CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                    RangeExpression(range, EvaluateOperand.Identifier);
+                }
+                else
+                {
+                    ParseLiteral(true, true);
+                    RangeExpression(range, EvaluateOperand.Literal);
+                }
+            }
+            else if (arithmetic || condition && CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && LookaheadEquals(1, TokenType.Symbol))
+            {
+                if (arithmetic && Helpers.ArithmeticPrecedence.ContainsKey(Lookahead(1).value))
+                {
+                    Arithmetic("ALSO", "WHEN");
+                    RangeExpression(range, EvaluateOperand.Arithmetic);
+                }
+                else
+                {
+                    Condition("ALSO", "WHEN");
+                }
+            }
+            else if (truefalse && CurrentEquals("TRUE", "FALSE"))
+            {
+                Choice("TRUE", "FALSE");
+            }
+            else if (CurrentEquals("ANY"))
+            {
+                Expected("ANY");
+            }
+        }
+
+        void RangeExpression(bool canHaveRange, EvaluateOperand rangeType)
+        {
+            if (canHaveRange && CurrentEquals("THROUGH", "THRU"))
+            {
+                Choice("THROUGH", "THRU");
+                if (rangeType is EvaluateOperand.Identifier)
+                {
+                    Identifier();
+                }
+                else if (rangeType is EvaluateOperand.Literal)
+                {
+                    ParseLiteral(true, true);
+                }
+                else if (rangeType is EvaluateOperand.Arithmetic)
+                {
+                    Arithmetic("ALSO", "WHEN");
+                }
+
+                if (CurrentEquals("IS", "UTF-8"))
+                {
+                    Optional("IS");
+                    // Need to implement other alphabet support
+                    Expected("UTF-8");
+                }
+            }
+        }
+
+        void ParseLiteral(bool numeric, bool @string)
+        {
+            if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Expected an identifier or a literal
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
+
+            if (numeric && CurrentEquals(TokenType.Numeric))
+            {
+                Number();
+            }
+            else if (@string && CurrentEquals(TokenType.String))
+            {
+                String();
+            }
+        }
 
         bool NotIdentifierOrLiteral()
         {

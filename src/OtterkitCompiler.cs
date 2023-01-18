@@ -299,7 +299,7 @@ public static class OtterkitCompiler
         const string helpMessage = """
 
         Otterkit COBOL Compiler
-        Copyright Otterkit Project 2022
+        Copyright Otterkit Project 2023
         Licensed under Apache 2.0
 
         Command line options:

@@ -14,8 +14,8 @@
     <ToolCommandName>otterkit</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.0.15-alpha</Version>
-    <Copyright>Copyright (c) Otterkit 2022</Copyright>
+    <Version>1.0.25-alpha</Version>
+    <Copyright>Copyright (c) Otterkit 2023</Copyright>
     <Authors>Otterkit Authors</Authors>
     <Company>Otterkit Project</Company>
     <PackageIcon>OtterkitIcon.png</PackageIcon>
@@ -28,10 +28,6 @@
       Main package for the Otterkit COBOL compiler. This package installs the compiler as a dotnet global tool.
     </Description>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="../libotterkit/src/OtterkitLibrary.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Include="../Assets/OtterkitIcon.png" Pack="true" PackagePath="/" />

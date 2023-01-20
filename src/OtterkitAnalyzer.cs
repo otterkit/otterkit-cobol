@@ -3,6 +3,17 @@ using System.Text;
 
 namespace Otterkit;
 
+struct SetLcValues
+{
+    public bool LC_ALL;
+    public bool LC_COLLATE;
+    public bool LC_CTYPE;
+    public bool LC_MESSAGES;
+    public bool LC_MONETARY;
+    public bool LC_NUMERIC;
+    public bool LC_TIME;
+}
+
 /// <summary>
 /// Otterkit COBOL Syntax Analyzer
 /// <para>This parser was built to be easily extensible, with some reusable COBOL parts.</para>
@@ -1826,6 +1837,9 @@ public static class Analyzer
 
             else if (CurrentEquals("SEND"))
                 SEND();
+
+            else if (CurrentEquals("SET"))
+                SET();
 
             else if (CurrentEquals("SORT"))
                 SORT();
@@ -4172,6 +4186,155 @@ public static class Analyzer
             if (isConditional) Expected("END-SEND");
         }
 
+        void SET()
+        {
+            Expected("SET");
+
+            if (CurrentEquals(TokenType.Identifier) || CurrentEquals("SIZE"))
+            {
+                string dataItemHash = $"{SourceId}#{Current().value}";
+                DataItemInfo dataItem = Information.DataItems.GetValue(dataItemHash);
+
+                if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "UP", "DOWN", "TO"))
+                {
+                    Identifier();
+                    if (CurrentEquals("UP"))
+                    {
+                        Expected("UP");
+                        Expected("BY");
+                    }
+                    else if (CurrentEquals("DOWN"))
+                    {
+                        Expected("DOWN");
+                        Expected("BY");
+                    }
+                    else
+                    {
+                        Expected("TO");
+                    }
+
+                    if (CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier(UsageType.Integer);
+                    }
+                    else
+                    {
+                        Arithmetic();
+                    }
+                }
+                else if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "TO") && LookaheadEquals(2, "LOCALE"))
+                {
+                    Identifier();
+                    Expected("TO");
+                    Expected("LOCALE");
+                    Choice("LC_ALL", "LOCALE");
+                }
+                else if (dataItem.UsageType == UsageType.MessageTag)
+                {
+                    Identifier(UsageType.MessageTag);
+                    Expected("TO");
+                    if (CurrentEquals("NULL"))
+                    {
+                        Expected("NULL");
+                    }
+                    else
+                    {
+                        Identifier(UsageType.MessageTag);
+                    }
+                }
+                else if (dataItem.IsDynamicLength || CurrentEquals("SIZE"))
+                {
+                    if (CurrentEquals("SIZE"))
+                    {
+                        Expected("SIZE");
+                        Optional("OF");
+                    }
+
+                    Identifier();
+                    Expected("TO");
+                    if (CurrentEquals(TokenType.Numeric))
+                    {
+                        Number();
+                    }
+                    else
+                    {
+                        Arithmetic();
+                    }
+                }
+                else if (dataItem.UsageType == UsageType.DataPointer)
+                {
+                    Identifier(UsageType.DataPointer);
+                    while (CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier(UsageType.DataPointer);
+                    }
+
+                    Choice("UP", "DOWN");
+                    Expected("BY");
+                    Arithmetic();
+                }
+                else if (dataItem.UsageType is UsageType.Integer or UsageType.Index)
+                {
+
+                    Identifier();
+                    bool checkUsage = true;
+
+                    while (CurrentEquals(TokenType.Identifier))
+                        checkUsage = Identifier(true, UsageType.Index, UsageType.Integer);
+
+                    if (CurrentEquals("TO"))
+                    {
+                        Expected("TO");
+                        if (CurrentEquals(TokenType.Identifier))
+                        {
+                            Identifier(UsageType.Integer, UsageType.Index);
+                        }
+                        else
+                        {
+                            Arithmetic();
+                        }
+                    }
+                    else if (checkUsage && CurrentEquals("UP", "DOWN"))
+                    {
+                        Choice("UP", "DOWN");
+                        Expected("BY");
+                        Arithmetic();
+                    }
+
+                }
+            }
+            else if (CurrentEquals("LAST"))
+            {
+                Expected("LAST");
+                Expected("EXCEPTION");
+                Expected("TO");
+                Expected("OFF");
+            }
+            else if (CurrentEquals("LOCALE"))
+            {
+                Expected("LOCALE");
+                if (CurrentEquals("USER-DEFAULT"))
+                {
+                    Expected("USER-DEFAULT");
+                }
+                else
+                {
+                    SetLocale();
+                }
+
+                Expected("TO");
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                }
+                else
+                {
+                    Choice("USER-DEFAULT", "SYSTEM-DEFAULT");
+                }
+            }
+
+        }
+
         void SORT()
         {
             Expected("SORT");
@@ -5485,6 +5648,128 @@ public static class Analyzer
             }
         }
 
+        void SetLocale(SetLcValues locales = new())
+        {
+            if (CurrentEquals("LC_ALL"))
+            {
+                if (locales.LC_ALL)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    LC_ALL can only be specified once in this statement. 
+                    The same applies to each of the other locale names.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                locales.LC_ALL = true;
+                Expected("LC_ALL");
+
+                SetLocale(locales);
+
+            }
+
+            if (CurrentEquals("LC_COLLATE"))
+            {
+                if (locales.LC_COLLATE)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    LC_COLLATE can only be specified once in this statement. 
+                    The same applies to each of the other locale names.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                locales.LC_COLLATE = true;
+                Expected("LC_COLLATE");
+
+                SetLocale(locales);
+
+            }
+
+            if (CurrentEquals("LC_CTYPE"))
+            {
+                if (locales.LC_CTYPE)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    LC_CTYPE can only be specified once in this statement. 
+                    The same applies to each of the other locale names.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                locales.LC_CTYPE = true;
+                Expected("LC_CTYPE");
+
+                SetLocale(locales);
+
+            }
+
+            if (CurrentEquals("LC_MESSAGES"))
+            {
+                if (locales.LC_MESSAGES)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    LC_MESSAGES can only be specified once in this statement. 
+                    The same applies to each of the other locale names.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                locales.LC_MESSAGES = true;
+                Expected("LC_MESSAGES");
+
+                SetLocale(locales);
+
+            }
+
+            if (CurrentEquals("LC_MONETARY"))
+            {
+                if (locales.LC_MONETARY)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    LC_MONETARY can only be specified once in this statement. 
+                    The same applies to each of the other locale names.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                locales.LC_MONETARY = true;
+                Expected("LC_MONETARY");
+
+                SetLocale(locales);
+
+            }
+
+            if (CurrentEquals("LC_NUMERIC"))
+            {
+                if (locales.LC_NUMERIC)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    LC_NUMERIC can only be specified once in this statement. 
+                    The same applies to each of the other locale names.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                locales.LC_NUMERIC = true;
+                Expected("LC_NUMERIC");
+
+                SetLocale(locales);
+
+            }
+
+            if (CurrentEquals("LC_TIME"))
+            {
+                if (locales.LC_TIME)
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    LC_TIME can only be specified once in this statement. 
+                    The same applies to each of the other locale names.
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+                locales.LC_TIME = true;
+                Expected("LC_TIME");
+
+                SetLocale(locales);
+
+            }
+        }
+
         void AtEndOfPage(ref bool isConditional, bool atEndOfPageExists = false, bool notAtEndOfPageExists = false)
         {
             if (CurrentEquals("AT", "END-OF-PAGE", "EOP"))
@@ -6626,6 +6911,76 @@ public static class Analyzer
         }
 
         Continue();
+    }
+
+    private static bool Identifier(bool checkFirstUsage, params UsageType[] allowedUsage)
+    {
+        if (CurrentEquals(TokenType.EOF))
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            Unexpected End Of File. Expected identifier instead.
+            """);
+
+            return false;
+        }
+
+        if (!CurrentEquals(TokenType.Identifier))
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, """
+            a user-defined name or word (an identifier)
+            """);
+            ErrorHandler.Parser.PrettyError(FileName, Current());
+            Continue();
+            return false;
+        }
+
+        string dataItemHash = $"{SourceId}#{Current().value}";
+
+        if (CurrentSection is CurrentScope.ProcedureDivision)
+        {
+            if (!Information.DataItems.ValueExists(dataItemHash))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                The name "{Current().value}" does not exist in the context of the current source unit
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
+        }
+
+        if (allowedUsage.Length >= 1)
+        {
+            bool hasAllowedUsage = false;
+            DataItemInfo dataItem = Information.DataItems.GetValue(dataItemHash);
+            foreach (var usage in allowedUsage)
+            {
+                if (dataItem.UsageType == usage) 
+                    hasAllowedUsage = true;
+
+                if (usage != allowedUsage[0])
+                    checkFirstUsage = false;
+            }
+
+            if (!hasAllowedUsage)
+            {
+                StringBuilder errorBuilder = new();
+                string separator = string.Empty;
+
+                foreach (var usage in allowedUsage)
+                {
+                    errorBuilder.Append(separator);
+                    errorBuilder.Append(usage.Display());
+                    separator = ",";
+                }
+
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                Expected a data item defined with the following: {errorBuilder.ToString()} USAGE clauses or PICTURE types
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
+        }
+
+        Continue();
+        return checkFirstUsage;
     }
 
     private static void Identifier(string identifierString)

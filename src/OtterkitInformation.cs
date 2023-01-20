@@ -21,6 +21,7 @@ public record DataItemInfo
     public bool IsBased;
     public bool IsTypedef;
     public bool IsAnyLength;
+    public bool IsDynamicLength;
     public bool IsRedefines;
     public bool IsRenames;
     public bool IsBlank;

@@ -254,4 +254,31 @@ public static class Helpers
         return true;
     }
 
+    public static int ParsePictureString(ReadOnlySpan<char> pictureString)
+    {
+        List<char> list = new List<char>();
+
+        for (int i = 0; i < pictureString.Length; i++)
+        {
+            if (pictureString[i] == '(')
+            {
+                int start = i;
+                while (pictureString[i] != ')') i++;
+                int end = i;
+                int count = int.Parse(pictureString.Slice(start + 1, end - start - 1));
+                char c = pictureString[i - 3];
+                for (int j = 0; j < count - 1; j++)
+                {
+                    list.Add(c);
+                }
+            }
+            else
+            {
+                list.Add(pictureString[i]);
+            }
+        }
+
+        return list.Count;
+    }
+
 }

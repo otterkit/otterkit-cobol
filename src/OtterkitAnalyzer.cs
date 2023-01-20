@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace Otterkit;
 
@@ -2159,11 +2160,7 @@ public static class Analyzer
 
             Arithmetic(".");
 
-            if (CurrentEquals("."))
-            {
-                Expected(".");
-                return;
-            }
+            if (CurrentEquals(".")) return;
 
             SizeError(ref isConditional);
 
@@ -6565,7 +6562,7 @@ public static class Analyzer
     /// <para>If the current token's type is TokenType.Identifier, it moves to the next token,
     /// if the current token's type is TokenType.Identifier it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void Identifier(UsageType usage = UsageType.None)
+    private static void Identifier(params UsageType[] allowedUsage)
     {
         if (CurrentEquals(TokenType.EOF))
         {
@@ -6586,10 +6583,10 @@ public static class Analyzer
             return;
         }
 
+        string dataItemHash = $"{SourceId}#{Current().value}";
+
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
-            string dataItemHash = $"{SourceId}#{Current().value}";
-
             if (!Information.DataItems.ValueExists(dataItemHash))
             {
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
@@ -6599,14 +6596,30 @@ public static class Analyzer
             }
         }
 
-        if (usage != UsageType.None)
+        if (allowedUsage.Length >= 1)
         {
-            string dataItemHash = $"{SourceId}#{Current().value}";
+            bool hasAllowedUsage = false;
 
-            if (Information.DataItems.GetValue(dataItemHash).UsageType != usage)
+            foreach (var usage in allowedUsage)
             {
+                if (Information.DataItems.GetValue(dataItemHash).UsageType == usage) 
+                    hasAllowedUsage = true;
+            }
+
+            if (!hasAllowedUsage)
+            {
+                StringBuilder errorBuilder = new();
+                string separator = string.Empty;
+
+                foreach (var usage in allowedUsage)
+                {
+                    errorBuilder.Append(separator);
+                    errorBuilder.Append(usage.Display());
+                    separator = ",";
+                }
+
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
-                Expected a data item defined with the "{usage.Display()}" USAGE clause
+                Expected a data item defined with the following: {errorBuilder.ToString()} USAGE clauses or PICTURE types
                 """);
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }

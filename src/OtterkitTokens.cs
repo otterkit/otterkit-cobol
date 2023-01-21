@@ -35,16 +35,16 @@ public partial struct Token
     private static TokenType FindType(string value)
     {
         //check if the value is a reserved keyword
-        if (ParsingInfo.IsReservedWord(value.ToUpperInvariant()))
+        if (ParsingInfo.IsReservedWord(value))
             return TokenType.ReservedKeyword;
         //check if the value is a figurative literal
-        else if (ParsingInfo.IsReservedFigurativeLiteral(value.ToUpperInvariant()))
+        else if (ParsingInfo.IsReservedFigurativeLiteral(value))
             return TokenType.FigurativeLiteral;
         //check if the value is an intrinsic function
-        else if (ParsingInfo.IsIntrinsicFunctionName(value.ToUpperInvariant()))
+        else if (ParsingInfo.IsIntrinsicFunctionName(value))
             return TokenType.IntrinsicFunction;
         //check if the value is a symbol
-        else if (ParsingInfo.IsReservedSymbol(value.ToUpperInvariant()))
+        else if (ParsingInfo.IsReservedSymbol(value))
             return TokenType.Symbol;
         //check if the value is a string
         else if (value.StartsWith('"'))
@@ -78,34 +78,34 @@ public partial struct Token
 
     private static TokenScope? FindScope(Token token, Token previousToken)
     {
-        if (token.value.Equals("PROGRAM-ID"))
+        if (token.value.Equals("PROGRAM-ID", StringComparison.OrdinalIgnoreCase))
             return TokenScope.ProgramId;
 
-        if (token.value.Equals("FUNCTION-ID"))
+        if (token.value.Equals("FUNCTION-ID", StringComparison.OrdinalIgnoreCase))
             return TokenScope.FunctionId;
 
-        if (token.value.Equals("INTERFACE-ID"))
+        if (token.value.Equals("INTERFACE-ID", StringComparison.OrdinalIgnoreCase))
             return TokenScope.InterfaceId;
 
-        if (token.value.Equals("CLASS-ID"))
+        if (token.value.Equals("CLASS-ID", StringComparison.OrdinalIgnoreCase))
             return TokenScope.ClassId;
 
-        if (token.value.Equals("METHOD-ID"))
+        if (token.value.Equals("METHOD-ID", StringComparison.OrdinalIgnoreCase))
             return TokenScope.MethodId;
 
-        if (token.value.Equals("ENVIRONMENT"))
+        if (token.value.Equals("ENVIRONMENT", StringComparison.OrdinalIgnoreCase))
             return TokenScope.EnvironmentDivision;
 
-        if (token.value.Equals("DATA"))
+        if (token.value.Equals("DATA", StringComparison.OrdinalIgnoreCase))
             return TokenScope.DataDivision;
 
-        if (token.value.Equals("PROCEDURE"))
+        if (token.value.Equals("PROCEDURE", StringComparison.OrdinalIgnoreCase))
             return TokenScope.ProcedureDivision;
 
-        if (token.value.Equals("FACTORY"))
+        if (token.value.Equals("FACTORY", StringComparison.OrdinalIgnoreCase))
             return TokenScope.Factory;
 
-        if (token.value.Equals("OBJECT"))
+        if (token.value.Equals("OBJECT", StringComparison.OrdinalIgnoreCase))
             return TokenScope.Object;
 
         return previousToken.scope;
@@ -119,7 +119,7 @@ public partial struct Token
         if(FindType(value) == TokenType.EOF && value.Equals(">>IMP-EOF"))
             return new Token("EOF", TokenType.EOF, -5, -5);
 
-        return new Token(value.ToUpper(), FindType(value), line, column);
+        return new Token(value, FindType(value), line, column);
     }
 
     public static List<Token> FromValue(List<Token> tokens)

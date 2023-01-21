@@ -1,10 +1,12 @@
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Otterkit;
 
-public static class Preprocessor
+public static partial class Preprocessor
 {
     internal static Options Options = OtterkitCompiler.Options;
+    internal static DirectiveType lastDirective = DirectiveType.None;
     internal static List<string> SourceLines = new();
     internal static int Index = 0;
 
@@ -13,45 +15,52 @@ public static class Preprocessor
         List<string> preprocessedLines = new();
         SourceLines = sourceLines;
 
-        DirectiveType lastDirective = DirectiveType.None;
-
         while (Index <= SourceLines.Count - 1)
         {
-            string currentLine = SourceLines[Index];
-            (currentLine, lastDirective) = PreprocessDirectives(currentLine);
+            StringBuilder currentLine = new(PreprocessDirectives(SourceLines[Index]));
 
             if (Options.SourceFormat == "fixed")
             {
                 if (currentLine.Length >= Options.ColumnLength)
                 {
                     // Removes everything after the max column length
-                    currentLine = currentLine[..Options.ColumnLength];
+                    currentLine.Remove(Options.ColumnLength, currentLine.Length);
                 }
 
                 // Removes the sequence number area
-                currentLine = currentLine.PadRight(7)[6..];
-
-                if (currentLine.StartsWith("*"))
+                if (currentLine.Length >= 7)
                 {
-                    // Removes all fixed format comment lines
-                    currentLine = " ";
+                    currentLine.Remove(0, 6);
+                }
+                else
+                {
+                    currentLine.Remove(0, currentLine.Length);
                 }
 
-                currentLine = currentLine[1..].Insert(0, "       ");
 
-                preprocessedLines.Add(currentLine);
+                if (currentLine[0].Equals('*'))
+                {
+                    // Removes all fixed format comment lines
+                    currentLine.Clear();
+                }
+
+                if (currentLine.Length >= 1)
+                {
+                    currentLine = currentLine.Remove(0, 1).Insert(0, "       ");
+                    preprocessedLines.Add(currentLine.ToString());
+                }
             }
 
             if (Options.SourceFormat == "free")
             {
-                int commentIndex = currentLine.IndexOf("*>");
+                int commentIndex = currentLine.ToString().IndexOf("*>");
                 if (commentIndex > -1)
                 {
                     // Removes all free format comments
-                    currentLine = currentLine[..commentIndex];
+                    currentLine = currentLine.Remove(commentIndex, currentLine.Length);
                 }
 
-                preprocessedLines.Add(currentLine);
+                preprocessedLines.Add(currentLine.ToString());
             }
 
             NextLine();
@@ -60,15 +69,11 @@ public static class Preprocessor
         return preprocessedLines;
     }
 
-    private static (string, DirectiveType) PreprocessDirectives(string currentLine)
+    private static string PreprocessDirectives(string currentLine)
     {
         int index = 0;
-        string directivePattern = """
-        ^\s*>>SOURCE
-        """;
-
-        if (!Regex.IsMatch(currentLine, directivePattern, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture))
-            return (currentLine, DirectiveType.None);
+        if (!PreprocessorRegex().IsMatch(currentLine))
+            return currentLine;
         
         List<Token> lexedLine = Lexer.TokenizeLine(currentLine);
 
@@ -85,17 +90,17 @@ public static class Preprocessor
             if (CurrentEquals("FREE"))
             {
                 Options.SourceFormat = "free";
-                return ("", DirectiveType.SourceFormat);
+                return "";
             }
 
             if (CurrentEquals("FIXED"))
             {
                 Options.SourceFormat = "fixed";
-                return ("", DirectiveType.SourceFormat);
+                return "";
             }
         }
 
-        return (currentLine, DirectiveType.None);
+        return currentLine;
 
         // Token Lookahead(int amount)
         // {
@@ -128,4 +133,7 @@ public static class Preprocessor
     {
         Index++;
     }
+
+    [GeneratedRegex("""^\s*>>SOURCE""", RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex PreprocessorRegex();
 }

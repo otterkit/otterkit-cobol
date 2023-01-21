@@ -59,7 +59,7 @@ public static class Information
 {
     public static class DataItems
     {
-        internal static readonly Dictionary<string, DataItemInfo> Data = new();
+        internal static readonly Dictionary<string, DataItemInfo> Data = new(StringComparer.OrdinalIgnoreCase);
 
         public static DataItemInfo GetValue(string DataItemHash)
         {
@@ -279,7 +279,7 @@ public static class Information
 
     public static class SourceUnits
     {
-        internal static readonly Dictionary<string, SourceUnitSignature> Data = new();
+        internal static readonly Dictionary<string, SourceUnitSignature> Data = new(StringComparer.OrdinalIgnoreCase);
 
         public static SourceUnitSignature GetValue(string SourceUnitHash)
         {
@@ -389,7 +389,7 @@ public static class Information
 
     public static class Repositories
     {
-        internal static readonly Dictionary<string, RepositorySignature> Data = new();
+        internal static readonly Dictionary<string, RepositorySignature> Data = new(StringComparer.OrdinalIgnoreCase);
 
         public static RepositorySignature GetValue(string RepositoryHash)
         {

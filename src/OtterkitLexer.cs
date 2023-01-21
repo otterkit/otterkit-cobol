@@ -25,7 +25,7 @@ public static partial class Lexer
     private const string StringPattern = "|(\")(.*?)(\"|$)|(\')(.*?)(\'|$)";
     private const string NumberPattern = @"|(\+|-)?\.?[0-9]\d*(\.\d+)?";
     private const string EOFPattern = @"|(>>IMP-EOF)";
-    private const string SymbolPattern = @"|(\+|\-|\*\*|\*|=|\/|\$|,|;| :: |\.|\(|\)|>>|<>|>=|<=|>|<|&|_)";
+    private const string SymbolPattern = @"|(\+|\-|\*\*|\*|=|\/|\$|,|;|::|\.|\(|\)|>>|<>|>=|<=|>|<|&|_)";
     private const string AllPatterns = WordsPattern + StringPattern + NumberPattern + EOFPattern + SymbolPattern;
 
     public static List<Token> Tokenize(List<string> sourceLines)
@@ -56,6 +56,6 @@ public static partial class Lexer
         return Tokenize(sourceLines);
     }
 
-    [GeneratedRegex(AllPatterns, RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking | RegexOptions.IgnoreCase)]
+    [GeneratedRegex(AllPatterns, RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex LexerRegex();
 }

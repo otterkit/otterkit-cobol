@@ -951,7 +951,7 @@ public static class Analyzer
             string DataName = DataItem.value;
             Identifier();
 
-            string DataItemHash = $"{SourceId}#{DataName}";
+            string DataItemHash = $"{SourceId.Peek()}#{DataName}";
             if (Information.DataItems.ValueExists(DataItemHash))
             {
                 DataItemInfo originalItem = Information.DataItems.GetValue(DataItemHash);
@@ -1241,7 +1241,7 @@ public static class Analyzer
             var DataName = Current().value;
             Identifier();
 
-            var DataItemHash = $"{SourceId}#{DataName}";
+            var DataItemHash = $"{SourceId.Peek()}#{DataName}";
             if (Information.DataItems.ValueExists(DataItemHash))
             {
                 var originalItem = Information.DataItems.GetValue(DataItemHash);
@@ -2084,30 +2084,29 @@ public static class Analyzer
             if (CurrentEquals("FROM"))
             {
                 Expected("FROM");
-                switch (Current().value)
+                
+                if (CurrentEquals("STANDARD-INPUT", "COMMAND-LINE"))
                 {
-                    case "STANDARD-INPUT":
-                    case "COMMAND-LINE":
                         Choice("STANDARD-INPUT", "COMMAND-LINE");
-                        break;
+                }
+                else if (CurrentEquals("DATE"))
+                {
+                    Expected("DATE");
+                    Optional("YYYYMMDD"); 
+                }
+                else if (CurrentEquals("DAY"))
+                {
+                    Expected("DAY");
+                    Optional("YYYYDDD");   
+                }
+                else if (CurrentEquals("DAY-OF-WEEK"))
+                {
+                    Expected("DAY-OF-WEEK");
+                }
+                else if (CurrentEquals("TIME"))
+                {
+                    Expected("TIME");
 
-                    case "DATE":
-                        Expected("DATE");
-                        Optional("YYYYMMDD");
-                        break;
-
-                    case "DAY":
-                        Expected("DAY");
-                        Optional("YYYYDDD");
-                        break;
-
-                    case "DAY-OF-WEEK":
-                        Expected("DAY-OF-WEEK");
-                        break;
-
-                    case "TIME":
-                        Expected("TIME");
-                        break;
                 }
             }
             else if (CurrentEquals("AT", "LINE", "COLUMN", "COL"))
@@ -2595,25 +2594,28 @@ public static class Analyzer
                 Expected("FILLER");
             }
 
-            bool IsCategoryName(string value) => value switch
+            bool IsCategoryName()
             {
-                "ALPHABETIC" => true,
-                "ALPHANUMERIC" => true,
-                "ALPHANUMERIC-EDITED" => true,
-                "BOOLEAN" => true,
-                "DATA-POINTER" => true,
-                "FUNCTION-POINTER" => true,
-                "MESSAGE-TAG" => true,
-                "NATIONAL" => true,
-                "NATIONAL-EDITED" => true,
-                "NUMERIC" => true,
-                "NUMERIC-EDITED" => true,
-                "OBJECT-REFERENCE" => true,
-                "PROGRAM-POINTER" => true,
-                _ => false
+                if (CurrentEquals(
+                "ALPHABETIC",
+                "ALPHANUMERIC",
+                "ALPHANUMERIC-EDITED",
+                "BOOLEAN",
+                "DATA-POINTER",
+                "FUNCTION-POINTER",
+                "MESSAGE-TAG",
+                "NATIONAL",
+                "NATIONAL-EDITED",
+                "NUMERIC",
+                "NUMERIC-EDITED",
+                "OBJECT-REFERENCE",
+                "PROGRAM-POINTER"
+                )) return true;
+
+                return false;
             };
 
-            if (IsCategoryName(Current().value))
+            if (IsCategoryName())
             {
                 Expected(Current().value);
                 Optional("TO");
@@ -2630,7 +2632,7 @@ public static class Analyzer
             {
                 Optional("THEN");
                 Expected("REPLACING");
-                if (IsCategoryName(Current().value))
+                if (IsCategoryName())
                 {
                     Expected(Current().value);
                     Optional("DATA");
@@ -2659,7 +2661,7 @@ public static class Analyzer
                         Number();
                     }
 
-                    while (IsCategoryName(Current().value))
+                    while (IsCategoryName())
                     {
                         Expected(Current().value);
                         Optional("DATA");
@@ -4190,9 +4192,9 @@ public static class Analyzer
         {
             Expected("SET");
 
-            if (CurrentEquals(TokenType.Identifier) || CurrentEquals("SIZE"))
+            if (CurrentEquals(TokenType.Identifier) || CurrentEquals("SIZE", "ADDRESS"))
             {
-                string dataItemHash = $"{SourceId}#{Current().value}";
+                string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
                 DataItemInfo dataItem = Information.DataItems.GetValue(dataItemHash);
 
                 if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "UP", "DOWN", "TO"))
@@ -4261,17 +4263,48 @@ public static class Analyzer
                         Arithmetic();
                     }
                 }
-                else if (dataItem.UsageType == UsageType.DataPointer)
+                else if (dataItem.UsageType == UsageType.DataPointer || CurrentEquals("ADDRESS"))
                 {
-                    Identifier(UsageType.DataPointer);
-                    while (CurrentEquals(TokenType.Identifier))
+                    bool hasAddress = false;
+
+                    if (CurrentEquals("ADDRESS"))
+                    {
+                        hasAddress = true;
+                        Expected("ADDRESS");
+                        Optional("OF");
+                        Identifier();
+                    }
+                    else
                     {
                         Identifier(UsageType.DataPointer);
                     }
 
-                    Choice("UP", "DOWN");
-                    Expected("BY");
-                    Arithmetic();
+                    while (CurrentEquals(TokenType.Identifier) || CurrentEquals("ADDRESS"))
+                    {
+                        if (CurrentEquals("ADDRESS"))
+                        {
+                            hasAddress = true;
+                            Expected("ADDRESS");
+                            Optional("OF");
+                            Identifier();
+                        }
+                        else
+                        {
+                            Identifier(UsageType.DataPointer);
+                        }
+                    }
+
+                    if (hasAddress || CurrentEquals("TO"))
+                    {
+                        Expected("TO");
+                        Identifier(UsageType.DataPointer);
+                    }
+                    else if (!hasAddress && CurrentEquals("UP", "DOWN"))
+                    {
+                        Choice("UP", "DOWN");
+                        Expected("BY");
+                        Arithmetic();
+                    }
                 }
                 else if (dataItem.UsageType is UsageType.Integer or UsageType.Index)
                 {
@@ -5988,7 +6021,7 @@ public static class Analyzer
                     expression.Add(combined);
                     Continue(2);
 
-                    if (Current().value is "THAN" or "TO") Continue();
+                    if (CurrentEquals("THAN", "TO")) Continue();
                 }
                 else if (CurrentEquals("GREATER") || CurrentEquals("LESS") || CurrentEquals("EQUAL"))
                 {
@@ -6023,7 +6056,7 @@ public static class Analyzer
                     expression.Add(converted);
                     Continue();
 
-                    if (Current().value is "THAN" or "TO") Continue();
+                    if (CurrentEquals("THAN", "TO")) Continue();
                 }
                 else
                 {
@@ -6096,7 +6129,7 @@ public static class Analyzer
 
                 Continue();
 
-                if (Current().value is "THAN" or "TO") Continue();
+                if (CurrentEquals("THAN", "TO")) Continue();
             }
             else if (CurrentEquals(operators))
             {
@@ -6591,7 +6624,7 @@ public static class Analyzer
     {
         foreach (var value in valuesToCompare)
         {
-            if (Lookahead(lookahead).value.Equals(value)) return true;
+            if (Lookahead(lookahead).value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
         }
 
         return false;
@@ -6663,7 +6696,7 @@ public static class Analyzer
     {
         foreach (var value in valuesToCompare)
         {
-            if (Current().value.Equals(value)) return true;
+            if (Current().value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
         }
 
         return false;
@@ -6868,7 +6901,7 @@ public static class Analyzer
             return;
         }
 
-        string dataItemHash = $"{SourceId}#{Current().value}";
+        string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
 
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
@@ -6934,7 +6967,7 @@ public static class Analyzer
             return false;
         }
 
-        string dataItemHash = $"{SourceId}#{Current().value}";
+        string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
 
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {

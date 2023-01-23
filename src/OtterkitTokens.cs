@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Otterkit; 
 
-public partial struct Token
+public partial record Token
 {
     public int line;
     public int column;
@@ -125,7 +125,7 @@ public partial struct Token
     public static List<Token> FromValue(List<Token> tokens)
     {
         List<Token> newTokens = new();
-        Token previousToken = new();
+        Token previousToken = tokens[0];
         foreach (Token token in tokens)
         {
             Token newToken = FromValue(token.value, token.line, token.column);

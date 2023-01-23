@@ -37,8 +37,7 @@ public static partial class Preprocessor
                     currentLine.Remove(0, currentLine.Length);
                 }
 
-
-                if (currentLine[0].Equals('*'))
+                if (currentLine.Length != 0 && currentLine[0].Equals('*'))
                 {
                     // Removes all fixed format comment lines
                     currentLine.Clear();

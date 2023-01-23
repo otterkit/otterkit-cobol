@@ -6008,32 +6008,47 @@ public static class Analyzer
                 }
                 else if (CurrentEquals("NOT") && (LookaheadEquals(1, "GREATER") || LookaheadEquals(1, "LESS") || LookaheadEquals(1, "EQUAL")))
                 {
-                    var combined = new Token();
                     if (LookaheadEquals(1, "GREATER"))
-                        combined = new Token($"NOT >", TokenType.Symbol, Current().line, Current().column);
+                    {
+                        var combined = new Token($"NOT >", TokenType.Symbol, Current().line, Current().column);
+                        expression.Add(combined);
+                    }
 
                     if (LookaheadEquals(1, "LESS"))
-                        combined = new Token($"NOT <", TokenType.Symbol, Current().line, Current().column);
+                    {
+                        var combined = new Token($"NOT <", TokenType.Symbol, Current().line, Current().column);
+                        expression.Add(combined);
+                    }
 
                     if (LookaheadEquals(1, "EQUAL"))
-                        combined = new Token($"<>", TokenType.Symbol, Current().line, Current().column);
+                    {
+                        var combined = new Token($"<>", TokenType.Symbol, Current().line, Current().column);
+                        expression.Add(combined);
+                    }
 
-                    expression.Add(combined);
                     Continue(2);
 
                     if (CurrentEquals("THAN", "TO")) Continue();
                 }
                 else if (CurrentEquals("GREATER") || CurrentEquals("LESS") || CurrentEquals("EQUAL"))
                 {
-                    var converted = new Token();
                     if (CurrentEquals("GREATER"))
-                        converted = new Token($">", TokenType.Symbol, Current().line, Current().column);
+                    {
+                        var converted = new Token($">", TokenType.Symbol, Current().line, Current().column);
+                        expression.Add(converted);
+                    }
 
                     if (CurrentEquals("LESS"))
-                        converted = new Token($"<", TokenType.Symbol, Current().line, Current().column);
+                    {
+                        var converted = new Token($"<", TokenType.Symbol, Current().line, Current().column);
+                        expression.Add(converted);
+                    }
 
                     if (CurrentEquals("EQUAL"))
-                        converted = new Token($"=", TokenType.Symbol, Current().line, Current().column);
+                    {
+                        var converted = new Token($"=", TokenType.Symbol, Current().line, Current().column);
+                        expression.Add(converted);
+                    }
 
                     if (CurrentEquals("GREATER") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
                     {
@@ -6041,7 +6056,8 @@ public static class Analyzer
 
                         if (LookaheadEquals(1, "THAN")) Continue(3);
 
-                        converted = new Token($">=", TokenType.Symbol, Current().line, Current().column);
+                        var converted = new Token($">=", TokenType.Symbol, Current().line, Current().column);
+                        expression.Add(converted);
                     }
 
                     if (CurrentEquals("LESS") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
@@ -6050,10 +6066,10 @@ public static class Analyzer
 
                         if (!LookaheadEquals(1, "THAN")) Continue(2);
 
-                        converted = new Token($"<=", TokenType.Symbol, Current().line, Current().column);
+                        var converted = new Token($"<=", TokenType.Symbol, Current().line, Current().column);
+                        expression.Add(converted);
                     }
 
-                    expression.Add(converted);
                     Continue();
 
                     if (CurrentEquals("THAN", "TO")) Continue();

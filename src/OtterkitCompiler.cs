@@ -6,7 +6,7 @@ public record Options
 {
     public required string Name;
     public required string Type;
-    public required string BuildMode;
+    public required BuildType BuildMode;
     public required int ColumnLength;
     public required string EntryPoint;
     public required string SourceFormat;
@@ -19,7 +19,7 @@ public static class OtterkitCompiler
     {
         Name = "OtterkitExport",
         Type = "app",
-        BuildMode = "BuildOnly",
+        BuildMode = BuildType.BuildOnly,
         EntryPoint = "main.cob",
         SourceFormat = "fixed",
         ColumnLength = 80,
@@ -106,12 +106,17 @@ public static class OtterkitCompiler
 
                     case "-p":
                     case "--parse":
-                        Options.BuildMode = "ParseOnly";
+                        Options.BuildMode = BuildType.ParseOnly;
+                        break;
+
+                    case "-p:tokens":
+                    case "--parse:tokens":
+                        Options.BuildMode = BuildType.PrintTokens;
                         break;
 
                     case "-r":
                     case "--run":
-                        Options.BuildMode = "Build&Run";
+                        Options.BuildMode = BuildType.BuildAndRun;
                         break;
 
                     // --Fixed meaning Fixed Format
@@ -125,37 +130,48 @@ public static class OtterkitCompiler
                 }
             }
 
-            if (Options.BuildMode.Equals("ParseOnly"))
+            List<string> preprocessedLines = Preprocessor.Preprocess(ReadSourceFile());
+            List<Token> tokens = Lexer.Tokenize(preprocessedLines);
+            List<Token> classified = Token.FromValue(tokens);
+            List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
+
+            if (Options.BuildMode is BuildType.ParseOnly)
             {
-                List<string> sourceLines = ReadSourceFile();
-                List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
-                List<Token> tokens = Lexer.Tokenize(preprocessedLines);
-                List<Token> classified = Token.FromValue(tokens);
-                Analyzer.Analyze(classified, Options.EntryPoint);
+                if (!ErrorHandler.Error) ErrorHandler.SuccessfulParsing();
+            }
+
+            if (Options.BuildMode is BuildType.PrintTokens)
+            {
+                bool colorToggle = true;
+
+                foreach (var token in analized)
+                {
+                    if (colorToggle)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                    }
+
+                    colorToggle = !colorToggle;
+                    Console.WriteLine(token);
+                }
 
                 if (!ErrorHandler.Error) ErrorHandler.SuccessfulParsing();
             }
 
-            if (Options.BuildMode.Equals("BuildOnly"))
+            if (Options.BuildMode is BuildType.BuildOnly)
             {
-                List<string> sourceLines = ReadSourceFile();
-                List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
-                List<Token> tokens = Lexer.Tokenize(preprocessedLines);
-                List<Token> classified = Token.FromValue(tokens);
-                List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
                 Codegen.Generate(analized, Options.EntryPoint);
 
                 Directory.CreateDirectory(".otterkit/Build");
                 CallDotnetCompiler("build");
             }
             
-            if (Options.BuildMode.Equals("Build&Run"))
+            if (Options.BuildMode is BuildType.BuildAndRun)
             {
-                List<string> sourceLines = ReadSourceFile();
-                List<string> preprocessedLines = Preprocessor.Preprocess(sourceLines);
-                List<Token> tokens = Lexer.Tokenize(preprocessedLines);
-                List<Token> classified = Token.FromValue(tokens);
-                List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
                 Codegen.Generate(analized, Options.EntryPoint);
 
                 Directory.CreateDirectory(".otterkit/Build");

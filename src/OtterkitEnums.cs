@@ -42,6 +42,14 @@ public static class EnumExtensions
     }
 }
 
+public enum BuildType
+{
+    ParseOnly,
+    PrintTokens,
+    BuildOnly,
+    BuildAndRun,
+}
+
 public enum DirectiveType
 {
     SourceFormat,

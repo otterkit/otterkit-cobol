@@ -277,7 +277,9 @@ public static class Analyzer
             if (CurrentEquals("AS"))
             {
                 Expected("AS");
+                SourceId.Pop();
                 String();
+                SourceId.Push(Lookahead(-1).value);
             }
 
             if (CurrentEquals("IS", "COMMON", "INITIAL", "RECURSIVE", "PROTOTYPE"))
@@ -337,6 +339,7 @@ public static class Analyzer
                 if (!isPrototype) Optional("PROGRAM");
             }
 
+            Information.SourceUnits.AddSourceUnit($"{SourceType.Peek()}#{SourceId.Peek()}", SourceId.Peek(), SourceType.Peek());
             Expected(".", """
             Missing separator period at the end of this program definition
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
@@ -367,6 +370,7 @@ public static class Analyzer
                 SourceType.Push(SourceUnit.FunctionPrototype);
             }
 
+            Information.SourceUnits.AddSourceUnit($"{SourceType.Peek()}#{SourceId.Peek()}", SourceId.Peek(), SourceType.Peek());
             Expected(".", """
             Missing separator period at the end of this function definition
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
@@ -426,6 +430,7 @@ public static class Analyzer
                 while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
+            Information.SourceUnits.AddSourceUnit($"{SourceType.Peek()}#{SourceId.Peek()}", SourceId.Peek(), SourceType.Peek());
             Expected(".", """
             Missing separator period at the end of this class definition
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "FACTORY", "OBJECT");
@@ -479,6 +484,7 @@ public static class Analyzer
                 while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
+            Information.SourceUnits.AddSourceUnit($"{SourceType.Peek()}#{SourceId.Peek()}", SourceId.Peek(), SourceType.Peek());
             Expected(".", """
             Missing separator period at the end of this interface definition
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "FACTORY", "OBJECT");
@@ -491,12 +497,14 @@ public static class Analyzer
 
             CurrentSection = CurrentScope.MethodId;
             var currentSource = SourceType.Peek();
+            var currentId = SourceId.Peek();
 
             if (currentSource != SourceUnit.Interface && CurrentEquals("GET"))
             {
                 Expected("GET");
                 Expected("PROPERTY");
                 SourceId.Push($"GET {Current().value}");
+                Information.SourceUnits.AddProperty($"{currentSource}#{currentId}", SourceId.Peek());
                 Identifier();
 
                 SourceType.Push(SourceUnit.MethodGetter);
@@ -506,19 +514,20 @@ public static class Analyzer
                 Expected("SET");
                 Expected("PROPERTY");
                 SourceId.Push($"SET {Current().value}");
+                Information.SourceUnits.AddProperty($"{currentSource}#{currentId}", SourceId.Peek());
                 Identifier();
 
                 SourceType.Push(SourceUnit.MethodSetter);
             }
             else // If not a getter or a setter
             {
-                SourceId.Push(Current().value);
                 Identifier();
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
                     String();
                 }
+                SourceId.Push(Lookahead(-1).value);
 
                 if (currentSource == SourceUnit.Interface)
                 {
@@ -528,6 +537,12 @@ public static class Analyzer
                 {
                     SourceType.Push(SourceUnit.Method);
                 }
+
+                Information.SourceUnits.AddMethod($"{currentSource}#{currentId}", 
+                new SourceUnitSignature(){
+                    Identifier = Lookahead(-1).value,
+                    SourceType = SourceType.Peek()
+                });
             }
 
             if (CurrentEquals("OVERRIDE")) Expected("OVERRIDE");
@@ -1451,23 +1466,35 @@ public static class Analyzer
 
                     if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
                     {
+                        var optional = false;
                         Optional("BY");
                         Expected("REFERENCE");
 
-                        if (CurrentEquals("OPTIONAL")) Expected("OPTIONAL");
+                        if (CurrentEquals("OPTIONAL"))
+                        {
+                            optional = true;
+                            Expected("OPTIONAL");
+                        }
 
                         if (!CurrentEquals(TokenType.Identifier))
                         {
                             ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
-                            The USING BY VALUE clause must contain at least one data item name.
+                            The USING BY REFERENCE clause must contain at least one data item name.
                             """);
                             ErrorHandler.Parser.PrettyError(FileName, Current());
                         }
 
+                        Information.SourceUnits.AddParameter($"{SourceType.Peek()}#{SourceId.Peek()}", Current().value, optional, true);
                         Identifier();
                         while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
                         {
-                            if (CurrentEquals("OPTIONAL")) Expected("OPTIONAL");
+                            optional = false;
+                            if (CurrentEquals("OPTIONAL"))
+                            {
+                                optional = true;
+                                Expected("OPTIONAL");
+                            }
+                            Information.SourceUnits.AddParameter($"{SourceType.Peek()}#{SourceId.Peek()}", Current().value, optional, true);
                             Identifier();
                         }
                     }
@@ -1484,13 +1511,18 @@ public static class Analyzer
                             ErrorHandler.Parser.PrettyError(FileName, Current());
                         }
 
+                        Information.SourceUnits.AddParameter($"{SourceType.Peek()}#{SourceId.Peek()}", Current().value, false, false);
                         Identifier();
-                        while (CurrentEquals(TokenType.Identifier)) Identifier();
+                        while (CurrentEquals(TokenType.Identifier))
+                        {
+                            Information.SourceUnits.AddParameter($"{SourceType.Peek()}#{SourceId.Peek()}", Current().value, false, false);
+                            Identifier();
+                        }
                     }
                 }
             }
 
-            if (SourceType.Peek() == SourceUnit.Function)
+            if (SourceType.Peek() is SourceUnit.Function or SourceUnit.FunctionPrototype)
             {
                 Expected("RETURNING");
                 ReturningDataName();
@@ -1546,6 +1578,7 @@ public static class Analyzer
                 return;
             }
 
+            Information.SourceUnits.AddReturning($"{SourceType.Peek()}#{SourceId.Peek()}", Current().value);
             Identifier();
         }
 

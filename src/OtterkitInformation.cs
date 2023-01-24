@@ -283,12 +283,12 @@ public static class Information
 
         public static SourceUnitSignature GetValue(string SourceUnitHash)
         {
-            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out SourceUnitSignature DataItem);
+            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out _);
 
             if (!AlreadyExists)
                 throw new ArgumentException($"FAILED TO GET SOURCE UNIT HASH FOR {SourceUnitHash}: THIS SHOULD NOT HAVE HAPPENED, PLEASE REPORT THIS ISSUE ON OTTERKIT'S REPO");
             
-            return DataItem;
+            return Data[SourceUnitHash];
         }
 
         public static bool ValueExists(string SourceUnitHash)
@@ -297,22 +297,24 @@ public static class Information
             return AlreadyExists;
         }
 
-        public static bool AddSourceUnit(string SourceUnitHash, string Identifier, SourceUnit SourceType)
+        public static bool AddSourceUnit(string SourceUnitHash, string identifier, SourceUnit SourceType)
         {
-            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out SourceUnitSignature sourceUnitSignature);
+            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out _);
 
             if (AlreadyExists)
                 return false;
 
-            sourceUnitSignature.Identifier = Identifier;
-            sourceUnitSignature.SourceType = SourceType;
-
-            sourceUnitSignature.Methods = new();
-            sourceUnitSignature.Properties = new();
-            sourceUnitSignature.Exceptions = new();
-            sourceUnitSignature.Parameters = new();
-            sourceUnitSignature.IsByRef = new();
-            sourceUnitSignature.IsOptional = new();
+            SourceUnitSignature sourceUnitSignature = new()
+            {
+                Identifier = identifier,
+                SourceType = SourceType,
+                Methods = new(),
+                Properties = new(),
+                Exceptions = new(),
+                Parameters = new(),
+                IsByRef = new(),
+                IsOptional = new()
+            };
 
             Data.Add(SourceUnitHash, sourceUnitSignature);
             return true;
@@ -320,12 +322,11 @@ public static class Information
 
         public static bool AddReturning(string SourceUnitHash, string Returning)
         {
-            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out SourceUnitSignature Source);
+            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out _);
 
             if (AlreadyExists)
             {
-                Source.Returning = Returning;
-                Data[SourceUnitHash] = Source;
+                Data[SourceUnitHash].Returning = Returning;
             }
                 
             return false;
@@ -333,14 +334,14 @@ public static class Information
 
         public static bool AddParameter(string SourceUnitHash, string Parameter, bool IsOptional, bool IsByRef)
         {
-            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out SourceUnitSignature Source);
+            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out _);
 
             if (AlreadyExists)
             {
-                Source.Parameters.Add(Parameter);
-                Source.IsOptional.Add(IsOptional);
-                Source.IsByRef.Add(IsByRef);
-                Data[SourceUnitHash] = Source;
+                SourceUnitSignature Source = Data[SourceUnitHash];
+                Source.Parameters!.Add(Parameter);
+                Source.IsOptional!.Add(IsOptional);
+                Source.IsByRef!.Add(IsByRef);
             }
                 
             return false;
@@ -348,12 +349,12 @@ public static class Information
 
         public static bool AddException(string SourceUnitHash, string exception)
         {
-            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out SourceUnitSignature Source);
+            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out _);
 
             if (AlreadyExists)
             {
-                Source.Exceptions.Add(exception);
-                Data[SourceUnitHash] = Source;
+                SourceUnitSignature Source = Data[SourceUnitHash];
+                Source.Exceptions!.Add(exception);
             }
                 
             return false;
@@ -361,12 +362,12 @@ public static class Information
 
         public static bool AddProperty(string SourceUnitHash, string Property)
         {
-            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out SourceUnitSignature Source);
+            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out _);
 
             if (AlreadyExists)
             {
-                Source.Properties.Add(Property);
-                Data[SourceUnitHash] = Source;
+                SourceUnitSignature Source = Data[SourceUnitHash];
+                Source.Properties!.Add(Property);
             }
                 
             return false;
@@ -374,12 +375,12 @@ public static class Information
 
         public static bool AddMethod(string SourceUnitHash, SourceUnitSignature Method)
         {
-            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out SourceUnitSignature Source);
+            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out _);
 
             if (AlreadyExists)
             {
-                Source.Methods.Add(Method);
-                Data[SourceUnitHash] = Source;
+                SourceUnitSignature Source = Data[SourceUnitHash];
+                Source.Methods!.Add(Method);
             }
                 
             return false;
@@ -393,12 +394,12 @@ public static class Information
 
         public static RepositorySignature GetValue(string RepositoryHash)
         {
-            bool AlreadyExists = Data.TryGetValue(RepositoryHash, out RepositorySignature Repository);
+            bool AlreadyExists = Data.TryGetValue(RepositoryHash, out _);
 
             if (!AlreadyExists)
                 throw new ArgumentException($"FAILED TO GET REPOSITORY HASH FOR {RepositoryHash}: THIS SHOULD NOT HAVE HAPPENED, PLEASE REPORT THIS ISSUE ON OTTERKIT'S REPO");
             
-            return Repository;
+            return Data[RepositoryHash];
         }
 
         public static bool ValueExists(string RepositoryHash)
@@ -409,10 +410,11 @@ public static class Information
 
         public static bool AddToRepository(string RepositoryHash, string Identifier, SourceUnit SourceType, string ExternalizedIdentifier, string Expands, params string[] Using)
         {
-            bool AlreadyExists = Data.TryGetValue(RepositoryHash, out RepositorySignature Repository);
+            bool AlreadyExists = Data.TryGetValue(RepositoryHash, out _);
 
             if (AlreadyExists) return false;
 
+            RepositorySignature Repository = new();
             Repository.Identifier = Identifier;
             Repository.SourceType = SourceType;
             Repository.ExternalizedIdentifier = ExternalizedIdentifier;

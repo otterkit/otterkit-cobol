@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace Otterkit; 
@@ -111,31 +110,24 @@ public partial record Token
         return previousToken.scope;
     }
 
-    public static Token FromValue(string value, int line, int column)
-    {
-        if (FindType(value) == TokenType.String)
-            return new Token(value, TokenType.String, line, column);
-
-        if(FindType(value) == TokenType.EOF && value.Equals(">>IMP-EOF"))
-            return new Token("EOF", TokenType.EOF, -5, -5);
-
-        return new Token(value, FindType(value), line, column);
-    }
-
     public static List<Token> FromValue(List<Token> tokens)
     {
-        List<Token> newTokens = new();
         Token previousToken = tokens[0];
         foreach (Token token in tokens)
         {
-            Token newToken = FromValue(token.value, token.line, token.column);
-            newToken.scope = FindScope(newToken, previousToken);
-            newToken.context = FindContext(newToken);
-            newTokens.Add(newToken);
-            previousToken = newToken;
+            token.type = FindType(token.value);
+            if(token.type == TokenType.EOF && token.value.Equals(">>IMP-EOF"))
+            {
+                token.value = "EOF";
+                token.line = -5;
+                token.column = -5;
+            }
+            token.scope = FindScope(token, previousToken);
+            token.context = FindContext(token);
+            previousToken = token;
         }
 
-        return newTokens;
+        return tokens;
     }
 
     public static bool IsNumeric(ReadOnlySpan<char> value)

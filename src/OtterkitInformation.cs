@@ -33,26 +33,26 @@ public record DataItemInfo
 
 }
 
-public struct SourceUnitSignature
+public record SourceUnitSignature
 {
-    public string Identifier;
+    public string? Identifier;
     public SourceUnit SourceType;
-    public string Returning;
-    public List<string> Parameters;
-    public List<bool> IsOptional;
-    public List<bool> IsByRef;
-    public List<string> Exceptions;
-    public List<string> Properties;
-    public List<SourceUnitSignature> Methods;
+    public string? Returning;
+    public List<string>? Parameters;
+    public List<bool>? IsOptional;
+    public List<bool>? IsByRef;
+    public List<string>? Exceptions;
+    public List<string>? Properties;
+    public List<SourceUnitSignature>? Methods;
 }
 
-public struct RepositorySignature
+public record RepositorySignature
 {
-    public string Identifier;
+    public string? Identifier;
     public SourceUnit SourceType;
-    public string ExternalizedIdentifier;
-    public string Expands;
-    public List<string> Using;
+    public string? ExternalizedIdentifier;
+    public string? Expands;
+    public List<string>? Using;
 }
 
 public static class Information

@@ -504,20 +504,34 @@ public static class Analyzer
                 Expected("GET");
                 Expected("PROPERTY");
                 SourceId.Push($"GET {Current().value}");
-                Information.SourceUnits.AddProperty($"{currentSource}#{currentId}", SourceId.Peek());
+                SourceType.Push(SourceUnit.MethodGetter);
+
+                Information.SourceUnits.AddMethod($"{currentSource}#{currentId}", 
+                new SourceUnitSignature()
+                {
+                    Identifier = $"GET {Current().value}",
+                    SourceType = SourceUnit.MethodGetter
+                });
+
                 Identifier();
 
-                SourceType.Push(SourceUnit.MethodGetter);
             }
             else if (currentSource != SourceUnit.Interface && CurrentEquals("SET"))
             {
                 Expected("SET");
                 Expected("PROPERTY");
-                SourceId.Push($"SET {Current().value}");
-                Information.SourceUnits.AddProperty($"{currentSource}#{currentId}", SourceId.Peek());
-                Identifier();
 
+                SourceId.Push($"SET {Current().value}");
                 SourceType.Push(SourceUnit.MethodSetter);
+
+                Information.SourceUnits.AddMethod($"{currentSource}#{currentId}", 
+                new SourceUnitSignature()
+                {
+                    Identifier = $"SET {Current().value}",
+                    SourceType = SourceUnit.MethodSetter
+                });
+
+                Identifier();
             }
             else // If not a getter or a setter
             {
@@ -539,7 +553,8 @@ public static class Analyzer
                 }
 
                 Information.SourceUnits.AddMethod($"{currentSource}#{currentId}", 
-                new SourceUnitSignature(){
+                new SourceUnitSignature()
+                {
                     Identifier = Lookahead(-1).value,
                     SourceType = SourceType.Peek()
                 });

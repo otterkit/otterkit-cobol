@@ -42,7 +42,6 @@ public record SourceUnitSignature
     public List<bool>? IsOptional;
     public List<bool>? IsByRef;
     public List<string>? Exceptions;
-    public List<string>? Properties;
     public List<SourceUnitSignature>? Methods;
 }
 
@@ -309,7 +308,6 @@ public static class Information
                 Identifier = identifier,
                 SourceType = SourceType,
                 Methods = new(),
-                Properties = new(),
                 Exceptions = new(),
                 Parameters = new(),
                 IsByRef = new(),
@@ -355,19 +353,6 @@ public static class Information
             {
                 SourceUnitSignature Source = Data[SourceUnitHash];
                 Source.Exceptions!.Add(exception);
-            }
-                
-            return false;
-        }
-
-        public static bool AddProperty(string SourceUnitHash, string Property)
-        {
-            bool AlreadyExists = Data.TryGetValue(SourceUnitHash, out _);
-
-            if (AlreadyExists)
-            {
-                SourceUnitSignature Source = Data[SourceUnitHash];
-                Source.Properties!.Add(Property);
             }
                 
             return false;

@@ -4,6 +4,13 @@ using System.Buffers;
 
 namespace OtterkitLibrary;
 
+public interface COBOLType
+{
+    Memory<byte> Memory { get; init; }
+    ReadOnlySpan<byte> Bytes { get; set; }
+    string Display { get; }
+}
+
 public sealed unsafe class OtterkitNativeMemory<TBytes>
     : MemoryManager<TBytes>
     where TBytes : unmanaged
@@ -52,7 +59,7 @@ public sealed unsafe class OtterkitNativeMemory<TBytes>
     }
 }
 
-public sealed class DataItem
+public sealed class DataItem : COBOLType
 {
     public Memory<byte> Memory { get; init; }
     public int Length { get; init; }
@@ -224,7 +231,7 @@ public sealed unsafe class BasedDataItem
 
 public sealed class Constant
 {
-    public ReadOnlyMemory<byte> Memory { get; init; }
+    public Memory<byte> Memory { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
 
     public Constant(ReadOnlySpan<byte> bytes)
@@ -235,14 +242,6 @@ public sealed class Constant
     public Constant(string bytes)
     {
         this.Memory = encoding.GetBytes(bytes);
-    }
-
-    public ReadOnlySpan<char> Chars
-    {
-        get
-        {
-            return MemoryMarshal.Cast<byte, char>(Memory.Span);
-        }
     }
 
     public ReadOnlySpan<byte> Bytes
@@ -262,7 +261,7 @@ public sealed class Constant
     }
 }
 
-public sealed class Numeric
+public sealed class Numeric : COBOLType
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }
@@ -436,7 +435,7 @@ public sealed class Numeric
     }
 }
 
-public sealed class Alphanumeric
+public sealed class Alphanumeric : COBOLType
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }
@@ -608,7 +607,7 @@ public sealed class BasedAlphanumeric
     }
 }
 
-public sealed class Alphabetic
+public sealed class Alphabetic : COBOLType
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }
@@ -764,7 +763,7 @@ public sealed class BasedAlphabetic
     }
 }
 
-public sealed class National
+public sealed class National : COBOLType
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }
@@ -790,6 +789,13 @@ public sealed class National
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
+    }
+
+    public National(ReadOnlySpan<byte> national)
+    {
+        this.Length = national.Length;
+        this.Memory = new byte[Length];
+        national.CopyTo(Memory.Span);
     }
 
     public ReadOnlySpan<char> Chars
@@ -905,14 +911,14 @@ public sealed class BasedNational
     }
 }
 
-public sealed class OtterkitBoolean
+public sealed class COBOLBoolean : COBOLType
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }
     public int Length { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
 
-    public OtterkitBoolean(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
+    public COBOLBoolean(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
     {
         foreach (byte bytes in value)
         {
@@ -932,7 +938,7 @@ public sealed class OtterkitBoolean
         value[..byteLength].CopyTo(Memory.Span);
     }
 
-    public OtterkitBoolean(Memory<byte> memory, int offset, int length)
+    public COBOLBoolean(Memory<byte> memory, int offset, int length)
     {
         this.Offset = offset;
         this.Length = length;

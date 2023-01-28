@@ -4,6 +4,28 @@ namespace OtterkitLibrary;
 
 public static class Functions
 {
+    internal static COBOLType GenericTest(COBOLType argument)
+    {
+        if (argument is Alphanumeric)
+        {
+            argument.Bytes = "From Interface"u8;
+
+            return new Alphanumeric("Hello, Alphanumeric!"u8);
+        }
+
+        if (argument is National)
+        {
+            return new National("Hello, National!"u8);
+        }
+
+        if (argument is not Alphanumeric or National or Numeric)
+        {
+            throw new EcArgumentFunction("GenericTest function argument must be Alphanumeric, National, Numeric");
+        }
+
+        return new Numeric("1.55"u8, true);
+    }
+
     public static Numeric ABS(Numeric argument)
     {
         DecimalHolder input = new(Encoding.UTF8.GetBytes(argument.Display));
@@ -452,7 +474,7 @@ public static class Functions
         return new Numeric(HighestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 2]);
     }
 
-    public static Numeric INTEGER_OF_BOOLEAN(OtterkitBoolean argument)
+    public static Numeric INTEGER_OF_BOOLEAN(COBOLBoolean argument)
     {
         string str = Convert.ToInt64(argument.Display, 2).ToString();
         ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(str);

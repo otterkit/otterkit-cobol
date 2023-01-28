@@ -4,21 +4,19 @@ namespace OtterkitLibrary;
 
 public static class Functions
 {
-    internal static COBOLType GenericTest(COBOLType argument)
+    internal static COBOLType GenericTest<T>(T argument) where T : COBOLType
     {
         if (argument is Alphanumeric)
         {
-            argument.Bytes = "From Interface"u8;
-
-            return new Alphanumeric("Hello, Alphanumeric!"u8);
+            Console.WriteLine("IS ALPHANUMERIC");
         }
 
         if (argument is National)
         {
-            return new National("Hello, National!"u8);
+            Console.WriteLine("IS NATIONAL");
         }
 
-        if (argument is not Alphanumeric or National or Numeric)
+        if (argument is not Alphanumeric and not National and not Numeric)
         {
             throw new EcArgumentFunction("GenericTest function argument must be Alphanumeric, National, Numeric");
         }

@@ -4,26 +4,6 @@ namespace OtterkitLibrary;
 
 public static class Functions
 {
-    internal static COBOLType GenericTest<T>(T argument) where T : COBOLType
-    {
-        if (argument is Alphanumeric)
-        {
-            Console.WriteLine("IS ALPHANUMERIC");
-        }
-
-        if (argument is National)
-        {
-            Console.WriteLine("IS NATIONAL");
-        }
-
-        if (argument is not Alphanumeric and not National and not Numeric)
-        {
-            throw new EcArgumentFunction("GenericTest function argument must be Alphanumeric, National, Numeric");
-        }
-
-        return new Numeric("1.55"u8, true);
-    }
-
     public static Numeric ABS(Numeric argument)
     {
         DecimalHolder input = new(Encoding.UTF8.GetBytes(argument.Display));

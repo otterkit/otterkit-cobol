@@ -632,9 +632,19 @@ public static class Functions
         // TODO: Implement NUMVAL-F
     }
 
-    public static void ORD(Alphanumeric argument)
+    public static Numeric ORD(COBOLType argument) //recieves an alphanumeric, alphabetic, or national
     {
-        // TODO: Implement ORD
+        // TODO: return error if argument is not alphabetic, alphanumeric, or national
+        // TODO: return error if argument is not a single character
+
+        uint one = 1;
+        uint value = argument.Bytes[0] + one; 
+        //should this be signed?
+        //there might be a more efficient conversion here, just wanted to play it safe
+
+        DecimalHolder DecValue = new DecimalHolder(Encoding.UTF8.GetBytes(value.ToString()));
+
+        return new Numeric(DecValue, false);
     }
 
     public static void ORD_MAX(Alphanumeric argument)

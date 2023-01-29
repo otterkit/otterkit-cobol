@@ -408,6 +408,162 @@ public sealed class Numeric : COBOLType
         Format(bytes, true);
     }
 
+    public static bool operator >(Numeric left, Numeric right)
+    {
+        DecimalHolder Ldec = left;
+        DecimalHolder Rdec = right;
+
+        return (Ldec > Rdec);
+    }
+
+    public static bool operator <(Numeric left, Numeric right)
+    {
+        DecimalHolder Ldec = left;
+        DecimalHolder Rdec = right;
+
+        return (Ldec < Rdec);
+    }
+
+    public static bool operator <=(Numeric left, Numeric right)
+    {
+        DecimalHolder Ldec = left;
+        DecimalHolder Rdec = right;
+
+        return (Ldec <= Rdec);
+    }
+
+    public static bool operator >=(Numeric left, Numeric right)
+    {
+        DecimalHolder Ldec = left;
+        DecimalHolder Rdec = right;
+
+        return (Ldec >= Rdec);
+    }
+
+    public static bool operator ==(Numeric left, Numeric right)
+    {
+        DecimalHolder Ldec = left;
+        DecimalHolder Rdec = right;
+
+        return (Ldec == Rdec);
+    }
+
+    public static bool operator !=(Numeric left, Numeric right)
+    {
+        DecimalHolder Ldec = left;
+        DecimalHolder Rdec = right;
+
+        return (Ldec != Rdec);
+    }
+
+    public static Numeric operator +(Numeric left, Numeric right)
+    {
+        DecimalHolder Ldec = left;
+        DecimalHolder Rdec = right;
+
+        DecimalHolder Dres = Ldec + Rdec;
+
+        Numeric result = new Numeric(Dres, true);
+
+        return result;
+    }
+
+    public static Numeric operator ++(Numeric number)
+    {
+        DecimalHolder num = number;
+
+        num = num++;
+
+        Numeric result = new Numeric(num, true);
+
+        return result;
+    }
+
+    public static Numeric operator -(Numeric left, Numeric right)
+    {
+        DecimalHolder Ldec = left;
+        DecimalHolder Rdec = right;
+
+        DecimalHolder Dres = Ldec - Rdec;
+
+        Numeric result = new Numeric(Dres, true);
+
+        return result;
+    }
+
+    public static Numeric operator -(Numeric number)
+    {
+        DecimalHolder num = number;
+
+        num = -num;
+
+        Numeric result = new Numeric(num, true);
+
+        return result;
+    }
+
+    public static Numeric operator --(Numeric number)
+    {
+        DecimalHolder num = number;
+
+        num = num--;
+
+        Numeric result = new Numeric(num, true);
+
+        return result;
+    }
+
+    public static Numeric operator *(Numeric left, Numeric right)
+    {
+        DecimalHolder Ldec = left;
+        DecimalHolder Rdec = right;
+
+        DecimalHolder Dres = Ldec * Rdec;
+
+        Numeric result = new Numeric(Dres, true);
+
+        return result;
+    }
+
+    public static Numeric operator /(Numeric left, Numeric right)
+    {
+        DecimalHolder Ldec = left;
+        DecimalHolder Rdec = right;
+
+        DecimalHolder Dres = Ldec / Rdec;
+
+        Numeric result = new Numeric(Dres, true);
+
+        return result;
+    }
+
+    public static Numeric operator %(Numeric left, Numeric right)
+    {
+        DecimalHolder Ldec = left;
+        DecimalHolder Rdec = right;
+
+        DecimalHolder Dres = Ldec % Rdec;
+
+        Numeric result = new Numeric(Dres, true);
+
+        return result;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null || GetType() != obj.GetType())
+        {
+            return false;
+        }
+        
+        return this == (Numeric)obj;
+    }
+    
+    public override int GetHashCode()
+    {
+        return Memory.Span[0].GetHashCode();
+    }
+
     public ReadOnlySpan<byte> Bytes
     {
         get

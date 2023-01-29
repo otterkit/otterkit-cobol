@@ -974,7 +974,7 @@ public static class Functions
         //TODO: Implement runtime exceptions for invalid inputs
         window ??= new Numeric(new DecimalHolder(Encoding.UTF8.GetBytes("50")), false);
         
-        if (current == null)
+        if (current is null)
         {
             //TODO: make sure NUMVAL works fully
             String slice = CURRENT_DATE().Display[..4];

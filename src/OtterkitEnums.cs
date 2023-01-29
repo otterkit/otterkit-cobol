@@ -90,6 +90,24 @@ public enum CurrentScope
     Object,
 }
 
+[Flags] public enum IdentifierType : short
+{
+    None = 0,
+    Function = 1,
+    ReferenceMod = 2,
+    MethodInvocation = 4,
+    ObjectView = 8,
+    ExceptionObject = 16,
+    NullObject = 34,
+    Super = 64,
+    NullAddress = 128,
+    DataAddress = 256,
+    FunctionAddress = 512,
+    ProgramAddress = 1024,
+    LinageCounter = 2048,
+    ReportCounter = 4096,
+}
+
 public enum UsageType
 {
     None,

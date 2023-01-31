@@ -46,7 +46,7 @@ public partial record Token
         else if (ParsingInfo.IsReservedSymbol(value))
             return TokenType.Symbol;
         //check if the value is a string
-        else if (value.StartsWith('"'))
+        else if (value.StartsWith('"') || value.StartsWith('\''))
             return TokenType.String;
         //check if the value is a numeric
         else if (IsNumeric(value) && NumericRegex().IsMatch(value))

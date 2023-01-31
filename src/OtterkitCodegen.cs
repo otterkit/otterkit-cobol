@@ -9,7 +9,7 @@ public static class Codegen
         ProgramBuilder compiled = new();
         int index = 0;
 
-        while (!CurrentEquals("DATA"))
+        while (Current().scope is not TokenScope.EnvironmentDivision and not TokenScope.DataDivision and not TokenScope.ProcedureDivision)
         {
             if (CurrentEquals("PROGRAM-ID"))
             {
@@ -27,7 +27,7 @@ public static class Codegen
         }
 
         string scope = string.Empty;
-        while (!CurrentEquals("PROCEDURE"))
+        while (Current().scope is not TokenScope.ProcedureDivision)
         {
             if (CurrentEquals("WORKING-STORAGE") || CurrentEquals("LOCAL-STORAGE"))
                 scope = Current().value;

@@ -4361,7 +4361,7 @@ public static class Analyzer
                     bool checkUsage = true;
 
                     while (CurrentEquals(TokenType.Identifier))
-                        checkUsage = Identifier(true, UsageType.Index, UsageType.Integer);
+                        Identifier(out checkUsage, UsageType.Index, UsageType.Integer);
 
                     if (CurrentEquals("TO"))
                     {
@@ -7010,15 +7010,18 @@ public static class Analyzer
         Continue();
     }
 
-    private static bool Identifier(bool checkFirstUsage, params UsageType[] allowedUsage)
+    private static void Identifier(out bool checkFirstUsage, params UsageType[] allowedUsage)
     {
+        checkFirstUsage = true;
+
         if (CurrentEquals(TokenType.EOF))
         {
             ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
             Unexpected End Of File. Expected identifier instead.
             """);
 
-            return false;
+            checkFirstUsage =  false;
+            return;
         }
 
         if (!CurrentEquals(TokenType.Identifier))
@@ -7028,7 +7031,9 @@ public static class Analyzer
             """);
             ErrorHandler.Parser.PrettyError(FileName, Current());
             Continue();
-            return false;
+
+            checkFirstUsage =  false;
+            return;
         }
 
         string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
@@ -7077,7 +7082,102 @@ public static class Analyzer
         }
 
         Continue();
-        return checkFirstUsage;
+    }
+
+    private static void Identifier(IdentifierType allowedTypes = IdentifierType.None)
+    {
+        if (CurrentEquals(TokenType.EOF))
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            Unexpected End Of File. Expected identifier instead.
+            """);
+
+            return;
+        }
+
+        if (!CurrentEquals(TokenType.Identifier))
+        {
+            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, """
+            a user-defined name or word (an identifier)
+            """);
+            ErrorHandler.Parser.PrettyError(FileName, Current());
+            Continue();
+            return;
+        }
+
+        string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
+
+        if (CurrentSection is CurrentScope.ProcedureDivision)
+        {
+            if (!Information.DataItems.ValueExists(dataItemHash))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                The name "{Current().value}" does not exist in the context of the current source unit
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
+        }
+
+        if (allowedTypes is not IdentifierType.None)
+        {
+            bool HasFlag(Enum flag) => allowedTypes.HasFlag(flag);
+
+
+            if (HasFlag(IdentifierType.Function))
+            {
+
+            }
+            else if (HasFlag(IdentifierType.ReferenceMod))
+            {
+
+            }
+            else if (HasFlag(IdentifierType.MethodInvocation))
+            {
+                
+            }
+            else if (HasFlag(IdentifierType.ObjectView))
+            {
+
+            }
+            else if (HasFlag(IdentifierType.ExceptionObject))
+            {
+
+            }
+            else if (HasFlag(IdentifierType.NullObject))
+            {
+
+            }
+            else if (HasFlag(IdentifierType.Super))
+            {
+
+            }
+            else if (HasFlag(IdentifierType.NullAddress))
+            {
+
+            }
+            else if (HasFlag(IdentifierType.DataAddress))
+            {
+
+            }
+            else if (HasFlag(IdentifierType.FunctionAddress))
+            {
+
+            }
+            else if (HasFlag(IdentifierType.ProgramAddress))
+            {
+
+            }
+            else if (HasFlag(IdentifierType.LinageCounter))
+            {
+
+            }
+            else if (HasFlag(IdentifierType.ReportCounter))
+            {
+
+            }
+        }
+
+        Continue();
     }
 
     private static void Identifier(string identifierString)

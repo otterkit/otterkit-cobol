@@ -25,7 +25,7 @@ public readonly ref struct DecimalHolder
 
     public static implicit operator DecimalHolder(Numeric numeric)
     {
-        if (numeric.IsSigned && numeric.Bytes[0] == 45)
+        if (numeric.IsSigned && numeric.Bytes[0] == 43)
         {
             return new DecimalHolder(numeric.Bytes[1..]);
         }

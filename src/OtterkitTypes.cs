@@ -328,12 +328,14 @@ public sealed class Numeric : COBOLType
 
         if (DecimalPointIndex >= 0)
         {
-            this.Length = isSigned ? DecimalPointIndex : DecimalPointIndex;
-            this.FractionalLength = decimalHolder.Bytes.Length - Length - 1;
+            int minusSignOffset = decimalHolder.Bytes[0] != 45 ? 0 : 1;
+
+            this.Length = isSigned ? DecimalPointIndex - minusSignOffset : DecimalPointIndex;
+            this.FractionalLength = isSigned ? decimalHolder.Bytes.Length - Length - (minusSignOffset + 1) : decimalHolder.Bytes.Length - Length - 1;
         }
         else
         {
-            this.Length = isSigned ? decimalHolder.Bytes.Length : decimalHolder.Bytes.Length;
+            this.Length = isSigned ? decimalHolder.Bytes.Length - 1 : decimalHolder.Bytes.Length;
             this.FractionalLength = 0;
         }
 
@@ -370,13 +372,13 @@ public sealed class Numeric : COBOLType
         int indexOfDecimal = bytes.IndexOf("."u8);
 
         int isDecimal = Math.Min(FractionalLength, 1);
-        int startIndex = Math.Max(0, indexOfDecimal - Length);
+        int startIndex = Math.Max(0, indexOfDecimal - Length - (isSigned ? 1 : 0));
         int endIndex = Math.Min(bytes.Length - startIndex, Length + FractionalLength + isDecimal);
         
-        ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex);
+        ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex + (isSigned ? 1 : 0));
 
-        int offset = Math.Max(0, Length - indexOfDecimal) + (isSigned ? 1 : 0);
-        if (indexOfDecimal < 0) offset = Math.Max(0, Length - bytes.Length) + (isSigned ? 1 : 0);
+        int offset = Math.Max(0, Length - indexOfDecimal);
+        if (indexOfDecimal < 0) offset = Math.Max(0, Length - bytes.Length);
 
         temporary.CopyTo(formatted[offset..]);
 
@@ -401,6 +403,16 @@ public sealed class Numeric : COBOLType
         {
             IsNegative = true;
             Format(bytes, true);
+            return;
+        }
+
+        if (bytes[0] != 43)
+        {
+            Span<byte> withSign = stackalloc byte[bytes.Length + 1];
+            bytes.CopyTo(withSign[1..]);
+            withSign[0] = 43;
+            IsNegative = false;
+            Format(withSign, true);
             return;
         }
 

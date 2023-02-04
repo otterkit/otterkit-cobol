@@ -7105,19 +7105,6 @@ public static class Analyzer
             return;
         }
 
-        string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
-
-        if (CurrentSection is CurrentScope.ProcedureDivision)
-        {
-            if (!Information.DataItems.ValueExists(dataItemHash))
-            {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
-                The name "{Current().value}" does not exist in the context of the current source unit
-                """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
-            }
-        }
-
         if (allowedTypes is not IdentifierType.None)
         {
             bool HasFlag(Enum flag) => allowedTypes.HasFlag(flag);
@@ -7129,7 +7116,17 @@ public static class Analyzer
             }
             else if (HasFlag(IdentifierType.ReferenceMod))
             {
+                string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
 
+                if (CurrentSection is CurrentScope.ProcedureDivision && !Information.DataItems.ValueExists(dataItemHash))
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                    The name "{Current().value}" does not exist in the context of the current source unit
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                Continue();
             }
             else if (HasFlag(IdentifierType.MethodInvocation))
             {
@@ -7139,25 +7136,37 @@ public static class Analyzer
             {
 
             }
-            else if (HasFlag(IdentifierType.ExceptionObject))
+            else if (HasFlag(IdentifierType.ExceptionObject) && CurrentEquals("EXCEPTION-OBJECT"))
             {
-
+                Expected("EXCEPTION-OBJECT");
             }
-            else if (HasFlag(IdentifierType.NullObject))
+            else if (HasFlag(IdentifierType.NullObject) && CurrentEquals("NULL"))
             {
-
+                Expected("NULL");
             }
             else if (HasFlag(IdentifierType.Super))
             {
 
             }
-            else if (HasFlag(IdentifierType.NullAddress))
+            else if (HasFlag(IdentifierType.NullAddress) && CurrentEquals("NULL"))
             {
-
+                Expected("NULL");
             }
-            else if (HasFlag(IdentifierType.DataAddress))
+            else if (HasFlag(IdentifierType.DataAddress) && CurrentEquals("ADDRESS"))
             {
+                Expected("ADDRESS");
+                Optional("OF");
+                string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
 
+                if (CurrentSection is CurrentScope.ProcedureDivision && !Information.DataItems.ValueExists(dataItemHash))
+                {
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                    The name "{Current().value}" does not exist in the context of the current source unit
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                }
+
+                Continue();
             }
             else if (HasFlag(IdentifierType.FunctionAddress))
             {

@@ -335,7 +335,15 @@ public sealed class Numeric : COBOLType
         }
         else
         {
-            this.Length = isSigned ? decimalHolder.Bytes.Length - 1 : decimalHolder.Bytes.Length;
+            if (decimalHolder.Bytes[0] is 45 or 43)
+            {
+                this.Length = decimalHolder.Bytes.Length - 1;
+            }
+            else
+            {
+                this.Length = decimalHolder.Bytes.Length;
+            }
+
             this.FractionalLength = 0;
         }
 
@@ -372,13 +380,13 @@ public sealed class Numeric : COBOLType
         int indexOfDecimal = bytes.IndexOf("."u8);
 
         int isDecimal = Math.Min(FractionalLength, 1);
-        int startIndex = Math.Max(0, indexOfDecimal - Length - (isSigned ? 1 : 0));
-        int endIndex = Math.Min(bytes.Length - startIndex, Length + FractionalLength + isDecimal);
-        
-        ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex + (isSigned ? 1 : 0));
+        int startIndex = Math.Max(0, indexOfDecimal - Memory.Length);
+        int endIndex = Math.Min(bytes.Length - startIndex, Memory.Length + FractionalLength + isDecimal);
+  
+        ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex);
 
         int offset = Math.Max(0, Length - indexOfDecimal);
-        if (indexOfDecimal < 0) offset = Math.Max(0, Length - bytes.Length);
+        if (indexOfDecimal < 0) offset = Math.Max(0, Memory.Length - bytes.Length);
 
         temporary.CopyTo(formatted[offset..]);
 

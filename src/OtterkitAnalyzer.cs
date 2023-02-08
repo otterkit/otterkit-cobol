@@ -6124,8 +6124,19 @@ public static class Analyzer
                 }
                 else
                 {
-                    expression.Add(Current());
-                    Expected(Current().value);
+                    if (CurrentEquals("FUNCTION") || CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "("))
+                    {
+                        var current = Current();
+                        while (!CurrentEquals(")")) Continue();
+
+                        Continue();
+                        expression.Add(new Token("FUNCTION-CALL", TokenType.Identifier, current.line, current.column));
+                    }
+                    else
+                    {
+                        expression.Add(Current());
+                        Continue();
+                    }
                 }
             }
 
@@ -7086,8 +7097,9 @@ public static class Analyzer
 
     private static void Identifier(IdentifierType allowedTypes = IdentifierType.None)
     {
-        IdentifierType currentType = IdentifierType.None;
-
+        // TODO:
+        // All Identifiers here need a check from the symbol table.
+        // The symbol table itself needs to be refactored to accommodate this.
         if (CurrentEquals(TokenType.EOF))
         {
             ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
@@ -7122,7 +7134,18 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
 
-            currentType = IdentifierType.Function;
+            Continue();
+            if (CurrentEquals("("))
+            {
+                // TODO:
+                // This needs a check from the symbol table to verify the number and type
+                // of the function's parameters.
+                Expected("(");
+                while (!CurrentEquals(")")) Continue();
+                Expected(")");
+            }
+
+            return;
         }
         else if (CurrentEquals("EXCEPTION-OBJECT"))
         {
@@ -7179,7 +7202,8 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
 
-            currentType = IdentifierType.DataAddress;
+            Continue();
+            return;
         }
         else if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "FUNCTION") && !LookaheadEquals(2, "FUNCTION"))
         {
@@ -7195,7 +7219,16 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
 
-            currentType = IdentifierType.FunctionAddress;
+            if (CurrentEquals(TokenType.Identifier))
+            {
+                Continue();
+            }
+            else
+            {
+                String();
+            }
+
+            return;
         }
         else if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "PROGRAM") && !LookaheadEquals(2, "PROGRAM"))
         {
@@ -7211,7 +7244,16 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
 
-            currentType = IdentifierType.ProgramAddress;
+            if (CurrentEquals(TokenType.Identifier))
+            {
+                Continue();
+            }
+            else
+            {
+                String();
+            }
+
+            return;
         }
         else if (CurrentEquals("LINAGE-COUNTER"))
         {
@@ -7226,7 +7268,8 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
 
-            currentType = IdentifierType.LinageCounter;
+            Continue();
+            return;
         }
         else if (CurrentEquals("PAGE-COUNTER", "LINE-COUNTER"))
         {
@@ -7241,7 +7284,8 @@ public static class Analyzer
                 ErrorHandler.Parser.PrettyError(FileName, Current());
             }
 
-            currentType = IdentifierType.ReportCounter;
+            Continue();
+            return;
         }
 
         Continue();

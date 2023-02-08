@@ -66,8 +66,6 @@ public class ProgramBuilder
         // PROGRAM-ID. {{UnformattedID}}.
         public class {{Identification}}
         {
-            private static readonly Encoding encoding = Encoding.UTF8;
-        
         """;
 
         Compiled += ID;
@@ -332,7 +330,7 @@ public class DataItemBuilder
             if (CurrentEquals("OF")) Continue(1);
 
             string FormattedValue = FormatIdentifier(Current().value);
-            CompiledDataItem += $"new(encoding.GetBytes({FormattedValue}.Length.ToString()));";
+            CompiledDataItem += $"new(Encoding.UTF8.GetBytes({FormattedValue}.Length.ToString()));";
         }
 
         if (CurrentEquals("BYTE-LENGTH"))
@@ -341,7 +339,7 @@ public class DataItemBuilder
             if (CurrentEquals("OF")) Continue(1);
 
             string FormattedValue = FormatIdentifier(Current().value);
-            CompiledDataItem += $"new(encoding.GetBytes({FormattedValue}.Bytes.Length.ToString()));";
+            CompiledDataItem += $"new(Encoding.UTF8.GetBytes({FormattedValue}.Bytes.Length.ToString()));";
         }
 
         if (Current().type == TokenType.String)
@@ -444,12 +442,12 @@ public class DataItemBuilder
 
     bool LookaheadEquals(int lookahead, string stringToCompare)
     {
-        return Lookahead(lookahead).value.Equals(stringToCompare);
+        return Lookahead(lookahead).value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
     }
 
     bool CurrentEquals(string stringToCompare)
     {
-        return Current().value.Equals(stringToCompare);
+        return Current().value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
     }
 }
 
@@ -482,23 +480,21 @@ public class StatementBuilder
 
     private void Statement()
     {
-        switch (Current().value)
+        if (CurrentEquals("DISPLAY"))
         {
-            case "DISPLAY":
-                DISPLAY();
-                break;
-
-            case "CALL":
-                CALL();
-                break;
-
-            case "ACCEPT":
-                ACCEPT();
-                break;
-
-            case "STOP":
-                STOP();
-                break;
+            DISPLAY();
+        }
+        else if (CurrentEquals("CALL"))
+        {
+            CALL();
+        }
+        else if (CurrentEquals("ACCEPT"))
+        {
+            ACCEPT();
+        }
+        else if (CurrentEquals("STOP"))
+        {
+            STOP();
         }
     }
 
@@ -674,5 +670,15 @@ public class StatementBuilder
         string FormattedIdentifier = Identifier;
         FormattedIdentifier = "_" + FormattedIdentifier.Replace("-", "_");
         return FormattedIdentifier;
+    }
+
+    bool LookaheadEquals(int lookahead, string stringToCompare)
+    {
+        return Lookahead(lookahead).value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
+    }
+
+    bool CurrentEquals(string stringToCompare)
+    {
+        return Current().value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
     }
 }

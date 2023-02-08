@@ -97,7 +97,7 @@ public static class Codegen
 
         bool LookaheadEquals(int lookahead, string stringToCompare)
         {
-            return Lookahead(lookahead).value.Equals(stringToCompare);
+            return Lookahead(lookahead).value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
         }
 
         Token Current()
@@ -107,7 +107,7 @@ public static class Codegen
 
         bool CurrentEquals(string stringToCompare)
         {
-            return Current().value.Equals(stringToCompare);
+            return Current().value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
         }
 
         void Continue(int amount = 1)

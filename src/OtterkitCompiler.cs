@@ -218,9 +218,16 @@ public static class OtterkitCompiler
         {
             CallDotnetCompiler("build", false);
 
+            var binaryName = ".otterkit/Build/OtterkitExport";
+
+            if (OperatingSystem.IsWindows())
+            {
+                binaryName = @".otterkit\Build\OtterkitExport.exe";
+            }
+
             using Process otterkitExport = new();
-            otterkitExport.StartInfo.FileName = ".otterkit/Build/OtterkitExport";
-            otterkitExport.StartInfo.UseShellExecute = true;
+            otterkitExport.StartInfo.FileName = binaryName;
+            otterkitExport.StartInfo.UseShellExecute = false;
             otterkitExport.Start();
 
             otterkitExport.WaitForExit();

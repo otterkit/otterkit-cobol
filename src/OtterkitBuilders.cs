@@ -496,6 +496,10 @@ public class StatementBuilder
         {
             STOP();
         }
+        else if (CurrentEquals("IF"))
+        {
+            IF();
+        }
     }
 
     private void DISPLAY()
@@ -611,7 +615,26 @@ public class StatementBuilder
 
     private void IF()
     {
-        
+        List<Token> expression = new();
+        Continue(1);
+        while (!CurrentEquals("THEN") && !CurrentEquals(TokenContext.IsStatement))
+        {
+            expression.Add(Current());
+            Continue(1);
+        }
+
+        expression = Helpers.ShuntingYard(expression, Helpers.BooleanPrecedence);
+
+        foreach (var item in expression)
+        {
+            Console.WriteLine(item);
+        }
+
+        var compiledExpression = Helpers.PostfixToCSharpInfix(expression, Helpers.BooleanPrecedence);
+
+        CompiledStatement += $"if ({compiledExpression}) {{";
+
+        ExportStatement();
     }
 
     private void STOP()
@@ -681,5 +704,10 @@ public class StatementBuilder
     bool CurrentEquals(string stringToCompare)
     {
         return Current().value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
+    }
+
+    bool CurrentEquals(TokenContext contextToCompare)
+    {
+        return Current().context == contextToCompare;
     }
 }

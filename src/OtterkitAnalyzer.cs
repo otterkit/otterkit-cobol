@@ -1198,7 +1198,7 @@ public static class Analyzer
                 {
                     Expected("VALUE");
 
-                    if (CurrentEquals(TokenType.String, TokenType.Numeric))
+                    if (!CurrentEquals(TokenType.String, TokenType.Numeric))
                     {
                         ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
                         The only tokens allowed after a VALUE clause are type literals, like an Alphanumeric literal ("Hello, World!") or a Numeric literal (123.456).

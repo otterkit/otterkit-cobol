@@ -504,10 +504,7 @@ public class StatementBuilder
         string displayStrings = string.Empty;
         Continue(1);
 
-        while (Current().type == TokenType.Identifier
-            || Current().type == TokenType.Numeric
-            || Current().type == TokenType.String
-        )
+        while (Current().type is TokenType.Identifier or TokenType.Numeric or TokenType.String)
         {
             string identifier;
             if (Current().type == TokenType.Identifier)
@@ -525,26 +522,26 @@ public class StatementBuilder
             Continue(1);
         }
 
-        if (Current().value.Equals("UPON"))
+        if (CurrentEquals("UPON"))
         {
             Continue(1);
-            if (Current().value.Equals("STANDARD-OUTPUT"))
+            if (CurrentEquals("STANDARD-OUTPUT"))
                 CompiledStatement += $"\"{Current().value}\", ";
 
-            if (Current().value.Equals("STANDARD-ERROR"))
+            if (CurrentEquals("STANDARD-ERROR"))
                 CompiledStatement += $"\"{Current().value}\", ";
 
             Continue(1);
         }
-        else if (!Current().value.Equals("UPON"))
+        else if (!CurrentEquals("UPON"))
         {
             CompiledStatement += $"\" \", ";
         }
 
-        if (Current().value.Equals("WITH") || Current().value.Equals("NO"))
+        if (CurrentEquals("WITH") || CurrentEquals("NO"))
             CompiledStatement += "false, ";
 
-        if (!Current().value.Equals("WITH") && !Current().value.Equals("NO"))
+        if (!CurrentEquals("WITH") && !CurrentEquals("NO"))
             CompiledStatement += "true, ";
 
         CompiledStatement += $"{displayStrings}String.Empty);";
@@ -569,13 +566,13 @@ public class StatementBuilder
         CompiledStatement += $"{FormatIdentifier(Current().value)}, ";
         Continue(1);
 
-        if (!Current().value.Equals("FROM"))
+        if (!CurrentEquals("FROM"))
             CompiledStatement += "\"STANDARD-INPUT\");";
 
-        if (Current().value.Equals("FROM"))
+        if (CurrentEquals("FROM"))
         {
             Continue(1);
-            switch (Current().value)
+            switch (Current().value.ToUpperInvariant())
             {
                 case "STANDARD-INPUT":
                 case "COMMAND-LINE":
@@ -584,19 +581,19 @@ public class StatementBuilder
 
                 case "DATE":
                     CompiledStatement += $"\"{Current().value}\"";
-                    if (Lookahead(1).value.Equals("YYYYMMDD"))
+                    if (LookaheadEquals(1, "YYYYMMDD"))
                         CompiledStatement += $", \"{Lookahead(1).value}\");";
 
-                    if (!Lookahead(1).value.Equals("YYYYMMDD"))
+                    if (!LookaheadEquals(1, "YYYYMMDD"))
                         CompiledStatement += ");";
                     break;
 
                 case "DAY":
                     CompiledStatement += $"\"{Current().value}\"";
-                    if (Lookahead(1).value.Equals("YYYYDDD"))
+                    if (LookaheadEquals(1, "YYYYDDD"))
                         CompiledStatement += $", \"{Lookahead(1).value}\");";
 
-                    if (!Lookahead(1).value.Equals("YYYYDDD"))
+                    if (!LookaheadEquals(1, "YYYYDDD"))
                         CompiledStatement += ");";
                     break;
 
@@ -624,31 +621,35 @@ public class StatementBuilder
         CompiledStatement += "Statements.STOP(";
         Continue(2);
 
-        if (Current().value.Equals("."))
+        if (CurrentEquals("."))
         {
             CompiledStatement += ");";
             ExportStatement();
             return;
         }
 
-        if (Current().value.Equals("WITH"))
+        if (CurrentEquals("WITH"))
             Continue(1);
 
-        if (Current().value.Equals("NORMAL"))
+        if (CurrentEquals("NORMAL"))
             CompiledStatement += "false, ";
 
-        if (Current().value.Equals("ERROR"))
+        if (CurrentEquals("ERROR"))
             CompiledStatement += "true, ";
 
         Continue(1);
-        if (Current().value.Equals("."))
+        if (CurrentEquals("."))
         {
             CompiledStatement += "\"0\");";
             ExportStatement();
             return;
         }
 
-        Continue(1);
+        if (CurrentEquals("STATUS"))
+        {
+            Continue(1);
+        }
+
         switch (Current().type)
         {
             case TokenType.Identifier:

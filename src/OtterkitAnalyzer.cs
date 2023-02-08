@@ -7086,6 +7086,8 @@ public static class Analyzer
 
     private static void Identifier(IdentifierType allowedTypes = IdentifierType.None)
     {
+        IdentifierType currentType = IdentifierType.None;
+
         if (CurrentEquals(TokenType.EOF))
         {
             ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
@@ -7101,89 +7103,145 @@ public static class Analyzer
             a user-defined name or word (an identifier)
             """);
             ErrorHandler.Parser.PrettyError(FileName, Current());
+
             Continue();
             return;
         }
 
-        if (allowedTypes is not IdentifierType.None)
+        bool HasFlag(Enum currentFlags, Enum flag) => currentFlags.HasFlag(flag);
+
+        if (CurrentEquals("FUNCTION"))
         {
-            bool HasFlag(Enum flag) => allowedTypes.HasFlag(flag);
-
-
-            if (HasFlag(IdentifierType.Function))
+            Expected("FUNCTION");
+            if (!HasFlag(allowedTypes, IdentifierType.Function))
             {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Unexpected FUNCTION call. 
+                NOTE: Function calls cannot be specified as a receiving operand
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
 
-            }
-            else if (HasFlag(IdentifierType.ReferenceMod))
+            currentType = IdentifierType.Function;
+        }
+        else if (CurrentEquals("EXCEPTION-OBJECT"))
+        {
+            Expected("EXCEPTION-OBJECT");
+            if (!HasFlag(allowedTypes, IdentifierType.ExceptionObject))
             {
-                string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Unexpected reference to EXCEPTION-OBJECT. 
+                NOTE: EXCEPTION-OBJECT cannot be specified as a receiving operand
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
 
-                if (CurrentSection is CurrentScope.ProcedureDivision && !Information.DataItems.ValueExists(dataItemHash))
-                {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
-                    The name "{Current().value}" does not exist in the context of the current source unit
-                    """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
-                }
+            return;
+        }
+        else if (CurrentEquals("SELF"))
+        {
+            Expected("SELF");
+            if (!HasFlag(allowedTypes, IdentifierType.Self))
+            {
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Unexpected reference to SELF.
+                NOTE: SELF cannot be specified as a receiving operand
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
+            }
 
-                Continue();
-            }
-            else if (HasFlag(IdentifierType.MethodInvocation))
+            return;
+        }
+        else if (CurrentEquals("NULL"))
+        {
+            Expected("NULL");
+            if (!HasFlag(allowedTypes, IdentifierType.NullAddress) && !HasFlag(allowedTypes, IdentifierType.NullObject))
             {
-                
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Unexpected reference to a NULL address or NULL object.
+                NOTE: NULL cannot be specified as a receiving operand
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
             }
-            else if (HasFlag(IdentifierType.ObjectView))
-            {
 
-            }
-            else if (HasFlag(IdentifierType.ExceptionObject) && CurrentEquals("EXCEPTION-OBJECT"))
+            return;
+        }
+        else if (CurrentEquals("ADDRESS") && !LookaheadEquals(1, "PROGRAM", "FUNCTION") && !LookaheadEquals(2, "PROGRAM", "FUNCTION"))
+        {
+            Expected("ADDRESS");
+            Optional("OF");
+            if (!HasFlag(allowedTypes, IdentifierType.DataAddress))
             {
-                Expected("EXCEPTION-OBJECT");
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Unexpected reference to the address of a data item. 
+                NOTE: Data item addresses cannot be specified as a receiving operand
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
             }
-            else if (HasFlag(IdentifierType.NullObject) && CurrentEquals("NULL"))
-            {
-                Expected("NULL");
-            }
-            else if (HasFlag(IdentifierType.Super))
-            {
 
-            }
-            else if (HasFlag(IdentifierType.NullAddress) && CurrentEquals("NULL"))
+            currentType = IdentifierType.DataAddress;
+        }
+        else if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "FUNCTION") && !LookaheadEquals(2, "FUNCTION"))
+        {
+            Expected("ADDRESS");
+            Optional("OF");
+            Expected("FUNCTION");
+            if (!HasFlag(allowedTypes, IdentifierType.FunctionAddress))
             {
-                Expected("NULL");
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Unexpected reference to the address of a function. 
+                NOTE: Function addresses cannot be specified as a receiving operand
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
             }
-            else if (HasFlag(IdentifierType.DataAddress) && CurrentEquals("ADDRESS"))
+
+            currentType = IdentifierType.FunctionAddress;
+        }
+        else if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "PROGRAM") && !LookaheadEquals(2, "PROGRAM"))
+        {
+            Expected("ADDRESS");
+            Optional("OF");
+            Expected("PROGRAM");
+            if (!HasFlag(allowedTypes, IdentifierType.ProgramAddress))
             {
-                Expected("ADDRESS");
-                Optional("OF");
-                string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
-
-                if (CurrentSection is CurrentScope.ProcedureDivision && !Information.DataItems.ValueExists(dataItemHash))
-                {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
-                    The name "{Current().value}" does not exist in the context of the current source unit
-                    """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
-                }
-
-                Continue();
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Unexpected reference to the address of a program. 
+                NOTE: Program addresses cannot be specified as a receiving operand
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
             }
-            else if (HasFlag(IdentifierType.FunctionAddress))
+
+            currentType = IdentifierType.ProgramAddress;
+        }
+        else if (CurrentEquals("LINAGE-COUNTER"))
+        {
+            Expected("LINAGE-COUNTER");
+            Choice("IN", "OF");
+            if (!HasFlag(allowedTypes, IdentifierType.LinageCounter))
             {
-
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Unexpected reference to a LINAGE-COUNTER. 
+                NOTE: LINAGE-COUNTER cannot be specified as a receiving operand
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
             }
-            else if (HasFlag(IdentifierType.ProgramAddress))
+
+            currentType = IdentifierType.LinageCounter;
+        }
+        else if (CurrentEquals("PAGE-COUNTER", "LINE-COUNTER"))
+        {
+            Choice("PAGE-COUNTER", "LINE-COUNTER");
+            Choice("IN", "OF");
+            if (!HasFlag(allowedTypes, IdentifierType.ReportCounter))
             {
-
+                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                Unexpected reference to a report counter. 
+                NOTE: Report counters cannot be specified as a receiving operand
+                """);
+                ErrorHandler.Parser.PrettyError(FileName, Current());
             }
-            else if (HasFlag(IdentifierType.LinageCounter))
-            {
 
-            }
-            else if (HasFlag(IdentifierType.ReportCounter))
-            {
-
-            }
+            currentType = IdentifierType.ReportCounter;
         }
 
         Continue();

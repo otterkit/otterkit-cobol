@@ -99,13 +99,14 @@ public enum CurrentScope
     ObjectView = 8,
     ExceptionObject = 16,
     NullObject = 34,
-    Super = 64,
-    NullAddress = 128,
-    DataAddress = 256,
-    FunctionAddress = 512,
-    ProgramAddress = 1024,
-    LinageCounter = 2048,
-    ReportCounter = 4096,
+    Self = 64,
+    Super = 128,
+    NullAddress = 256,
+    DataAddress = 512,
+    FunctionAddress = 1024,
+    ProgramAddress = 2048,
+    LinageCounter = 4096,
+    ReportCounter = 8192,
 }
 
 public enum UsageType

@@ -14,9 +14,9 @@ COBOL was created in 1959 by the [CODASYL Committee](https://en.wikipedia.org/wi
 
 Otterkit is available to install on the [Nuget package manager](https://www.nuget.org/packages/Otterkit/) ([.NET 7](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) is required). To install, type these two lines into the command line:
 ```
-dotnet new install Otterkit.Templates::1.0.1-alpha
+dotnet new install Otterkit.Templates::1.0.5-alpha
 
-dotnet tool install --global Otterkit --version 1.0.30-alpha
+dotnet tool install --global Otterkit --version 1.0.40-alpha
 ```
 
 ### Build from Source

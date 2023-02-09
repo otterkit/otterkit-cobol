@@ -112,7 +112,7 @@ public class DataItemBuilder
     private int Length = 0;
     private int FractionalLength = 0;
     private string DataValue = string.Empty;
-    private string Section = string.Empty;
+    private CurrentScope Section;
     private readonly ProgramBuilder ProgramBuilder;
     private readonly Action<int> Continue;
     private readonly Func<Token> Current;
@@ -128,14 +128,14 @@ public class DataItemBuilder
 
     public void ExportDataItem()
     {
-        if (Section == "WORKING-STORAGE")
+        if (Section == CurrentScope.WorkingStorage)
             ProgramBuilder.AppendWorkingStorage(CompiledDataItem);
 
-        if (Section == "LOCAL-STORAGE")
+        if (Section == CurrentScope.LocalStorage)
             ProgramBuilder.AppendLocalStorage(CompiledDataItem);
     }
 
-    public void BuildDataItem(string section = "WORKING-STORAGE")
+    public void BuildDataItem(CurrentScope section = CurrentScope.WorkingStorage)
     {
         Section = section;
         if (Current().type != TokenType.Numeric)
@@ -237,10 +237,10 @@ public class DataItemBuilder
             };
         }
 
-        if (Section.Equals("WORKING-STORAGE") && isElementary)
+        if (Section == CurrentScope.WorkingStorage && isElementary)
             CompiledDataItem = $"\n    private static {ConvertType(DataType)} {FormatIdentifier(Identifier)} = ";
 
-        if (Section.Equals("LOCAL-STORAGE") && isElementary)
+        if (Section == CurrentScope.LocalStorage && isElementary)
             CompiledDataItem = $"\n    private {ConvertType(DataType)} {FormatIdentifier(Identifier)} = ";
 
         string value;
@@ -288,22 +288,22 @@ public class DataItemBuilder
         }
 
 
-        if (Section.Equals("WORKING-STORAGE") && isLevelOne && isExternal)
+        if (Section == CurrentScope.WorkingStorage && isLevelOne && isExternal)
             CompiledDataItem = $"""
             private static DataItem _{FormatIdentifier(Identifier)} = new(External.Resolver("{Identifier}", {TotalLength}));{CompiledDataItem}
             """;
 
-        if (Section.Equals("LOCAL-STORAGE") && isLevelOne && isExternal)
+        if (Section == CurrentScope.LocalStorage && isLevelOne && isExternal)
             CompiledDataItem = $"""
             private DataItem _{FormatIdentifier(Identifier)} = new(External.Resolver("{Identifier}", {TotalLength}));{CompiledDataItem}
             """;
 
-        if (Section.Equals("WORKING-STORAGE") && isLevelOne && !isExternal)
+        if (Section == CurrentScope.WorkingStorage && isLevelOne && !isExternal)
             CompiledDataItem = $"""
             private static DataItem _{FormatIdentifier(Identifier)} = new({TotalLength});{CompiledDataItem}
             """;
 
-        if (Section.Equals("LOCAL-STORAGE") && isLevelOne && !isExternal)
+        if (Section == CurrentScope.LocalStorage && isLevelOne && !isExternal)
             CompiledDataItem = $"""
             private DataItem _{FormatIdentifier(Identifier)} = new({TotalLength});{CompiledDataItem}
             """;
@@ -314,10 +314,10 @@ public class DataItemBuilder
     {
         string sectionAccessModifier = string.Empty;
 
-        if (Section.Equals("WORKING-STORAGE"))
+        if (Section == CurrentScope.WorkingStorage)
             CompiledDataItem = $"private static readonly Constant {FormatIdentifier(Identifier)} = ";
 
-        if (Section.Equals("LOCAL-STORAGE"))
+        if (Section == CurrentScope.LocalStorage)
             CompiledDataItem = $"private readonly Constant {FormatIdentifier(Identifier)} = ";
 
         while (!CurrentEquals("AS")) Continue(1);
@@ -373,21 +373,22 @@ public class DataItemBuilder
             };
         }
 
-        while (!Current().value.Equals("."))
+        while (!CurrentEquals("."))
         {
-            if (Current().value.Equals("PIC") || Current().value.Equals("PICTURE"))
+            if (CurrentEquals("PIC") || CurrentEquals("PICTURE"))
             {
                 Continue(1);
-                if (Current().value.Equals("IS")) Continue(1);
+                if (CurrentEquals("IS")) Continue(1);
 
                 DataType = dataTypes(Current());
-                if (Current().value.Equals("S9")) isSigned = true;
+                if (CurrentEquals("S9")) isSigned = true;
 
                 Continue(2);
 
                 Length = int.Parse(Current().value);
 
-                if (Lookahead(2).value == "V9") FractionalLength = int.Parse(Lookahead(4).value);
+                if (Lookahead(1).value.Equals("V9")) FractionalLength = int.Parse(Lookahead(4).value);
+
             }
 
             if (CurrentEquals("VALUE"))
@@ -399,10 +400,10 @@ public class DataItemBuilder
             Continue(1);
         }
 
-        if (Section.Equals("WORKING-STORAGE"))
+        if (Section == CurrentScope.WorkingStorage)
             CompiledDataItem = $"private static {DataType} {FormatIdentifier(Identifier)} = ";
 
-        if (Section.Equals("LOCAL-STORAGE"))
+        if (Section == CurrentScope.LocalStorage)
             CompiledDataItem = $"private {DataType} {FormatIdentifier(Identifier)} = ";
 
         string value;

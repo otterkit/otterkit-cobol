@@ -26,11 +26,14 @@ public static class Codegen
             Continue();
         }
 
-        string scope = string.Empty;
+        CurrentScope scope = CurrentScope.WorkingStorage;
         while (Current().scope is not TokenScope.ProcedureDivision)
         {
-            if (CurrentEquals("WORKING-STORAGE") || CurrentEquals("LOCAL-STORAGE"))
-                scope = Current().value;
+            if (CurrentEquals("WORKING-STORAGE"))
+                scope = CurrentScope.WorkingStorage;
+
+            if (CurrentEquals("LOCAL-STORAGE"))
+                scope = CurrentScope.LocalStorage;
 
             if (Current().type == TokenType.Numeric && (CurrentEquals("01") || CurrentEquals("1")) && !LookaheadEquals(2, "CONSTANT"))
             {

@@ -14,7 +14,7 @@
     <ToolCommandName>otterkit</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.0.35-alpha</Version>
+    <Version>1.0.40-alpha</Version>
     <Copyright>Copyright (c) Otterkit 2023</Copyright>
     <Authors>Otterkit Authors</Authors>
     <Company>Otterkit Project</Company>

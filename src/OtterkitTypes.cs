@@ -380,7 +380,7 @@ public sealed class Numeric : COBOLType
         int indexOfDecimal = bytes.IndexOf("."u8);
 
         int isDecimal = Math.Min(FractionalLength, 1);
-        int startIndex = Math.Max(0, indexOfDecimal - Memory.Length);
+        int startIndex = Math.Max(0, indexOfDecimal - Length);
         int endIndex = Math.Min(bytes.Length - startIndex, Memory.Length + FractionalLength + isDecimal);
   
         ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex);

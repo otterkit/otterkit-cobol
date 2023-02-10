@@ -379,20 +379,48 @@ public sealed class Numeric : COBOLType
 
         int indexOfDecimal = bytes.IndexOf("."u8);
 
-        int isDecimal = Math.Min(FractionalLength, 1);
-        int startIndex = Math.Max(0, indexOfDecimal - Length);
-        int endIndex = Math.Min(bytes.Length - startIndex, Memory.Length + FractionalLength + isDecimal);
-  
+        if (FractionalLength > 0 && indexOfDecimal < 0)
+        {
+            indexOfDecimal = bytes.Length;
+            formatted[Length] = 46;
+        }
+
+        int startIndex;
+        if (FractionalLength > 0 || indexOfDecimal > -1)
+        {
+            startIndex = Math.Max(0, indexOfDecimal - Length);
+        }
+        else
+        {
+            startIndex = Math.Max(0, bytes.Length - Length);
+        }
+        
+        int endIndex;
+        if (FractionalLength > 0)
+        {
+            endIndex = Math.Min(bytes.Length - startIndex, Length + FractionalLength + 1);
+        }
+        else
+        {
+            endIndex = Math.Min(Length, bytes.Length);
+        }
+
         ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex);
 
-        int offset = Math.Max(0, Length - indexOfDecimal);
-        if (indexOfDecimal < 0) offset = Math.Max(0, Memory.Length - bytes.Length);
-
+        int offset;
+        if (indexOfDecimal < 0)
+        {
+            offset = Math.Max(0, Memory.Length - bytes.Length);
+        }
+        else
+        {
+            offset = Math.Max(0, Length - indexOfDecimal);
+        }
+            
         temporary.CopyTo(formatted[offset..]);
 
         int indexOfSign = formatted.IndexOfAny("+-"u8);
-        if (indexOfSign > -1)
-            formatted[indexOfSign] = 48;
+        if (indexOfSign > -1) formatted[indexOfSign] = 48;
 
         if (isSigned)
         {

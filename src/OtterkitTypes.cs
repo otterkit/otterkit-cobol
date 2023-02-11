@@ -267,6 +267,7 @@ public sealed class Numeric : COBOLType
     public int Offset { get; init; }
     public int Length { get; init; }
     public int FractionalLength { get; init; }
+    public bool IsInteger { get; private set; }
     public bool IsSigned { get; private set; }
     public bool IsNegative { get; private set; }
     private readonly Encoding encoding = Encoding.UTF8;
@@ -277,6 +278,8 @@ public sealed class Numeric : COBOLType
         this.Offset = offset;
         this.Length = length;
         this.FractionalLength = fractionalLength;
+        this.IsInteger = fractionalLength == 0;
+
         if (fractionalLength == 0)
         {
             int signedSpace = IsSigned ? 1 : 0;
@@ -306,6 +309,7 @@ public sealed class Numeric : COBOLType
         this.Length = length;
         this.FractionalLength = fractionalLength;
         this.IsSigned = isSigned;
+        this.IsInteger = fractionalLength == 0;
 
         if (fractionalLength == 0)
         {
@@ -348,6 +352,7 @@ public sealed class Numeric : COBOLType
         }
 
         this.IsSigned = isSigned;
+        this.IsInteger = FractionalLength == 0;
 
         if (this.FractionalLength == 0)
         {
@@ -379,14 +384,14 @@ public sealed class Numeric : COBOLType
 
         int indexOfDecimal = bytes.IndexOf("."u8);
 
-        if (FractionalLength > 0 && indexOfDecimal < 0)
+        if (!IsInteger && indexOfDecimal < 0)
         {
             indexOfDecimal = bytes.Length;
-            formatted[Length] = 46;
+            formatted[Length + (IsSigned ? 1 : 0)] = 46;
         }
 
         int startIndex;
-        if (FractionalLength > 0 || indexOfDecimal > -1)
+        if (!IsInteger || indexOfDecimal > -1)
         {
             startIndex = Math.Max(0, indexOfDecimal - Length);
         }
@@ -396,17 +401,17 @@ public sealed class Numeric : COBOLType
         }
         
         int endIndex;
-        if (FractionalLength > 0)
+        if (!IsInteger) 
         {
             endIndex = Math.Min(bytes.Length - startIndex, Length + FractionalLength + 1);
         }
         else
         {
-            endIndex = Math.Min(Length, bytes.Length);
+            endIndex = indexOfDecimal < 0
+            ? Math.Min(Length, bytes.Length)
+            : Math.Min(Length, indexOfDecimal);
         }
-
-        ReadOnlySpan<byte> temporary = bytes.Slice(startIndex, endIndex);
-
+        
         int offset;
         if (indexOfDecimal < 0)
         {
@@ -416,21 +421,27 @@ public sealed class Numeric : COBOLType
         {
             offset = Math.Max(0, Length - indexOfDecimal);
         }
-            
-        temporary.CopyTo(formatted[offset..]);
+
+        if (isSigned)
+        {
+            offset++;
+        }
+
+        endIndex += startIndex;
+
+        bytes[startIndex..endIndex].CopyTo(formatted[offset..]);
 
         int indexOfSign = formatted.IndexOfAny("+-"u8);
         if (indexOfSign > -1) formatted[indexOfSign] = 48;
 
-        if (isSigned)
+        if (!isSigned)
         {
             formatted.CopyTo(Memory.Span);
-            byte sign = (byte)(IsNegative ? 45 : 43);
-            Memory.Span[0] = sign;
             return;
         }
 
         formatted.CopyTo(Memory.Span);
+        Memory.Span[0] = (byte)(IsNegative ? 45 : 43);
     }
 
     private void FormatSigned(ReadOnlySpan<byte> bytes)

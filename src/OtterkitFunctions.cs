@@ -569,29 +569,69 @@ public static class Functions
         return new Numeric(LowestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 2]);
     }
 
-    public static void MAX(Numeric[] argument)
+    public static Numeric MAX(Numeric[] argument)
     {
-        // TODO: Implement MAX
+        Numeric max = new Numeric("-9999999999999999999999999999999999"u8, 0, 34, 0, new byte[35]);
+        foreach(Numeric element in argument){
+            if (element > max){
+                max = element;
+            }
+        }
+        return max;
     }
 
-    public static void MEAN(Numeric[] argument)
+    public static Numeric MEAN(Numeric[] argument)
     {
-        // TODO: Implement MEAN
+        Numeric sum = new Numeric("+0"u8, 0, 1, 0, new byte[2]);
+        foreach (Numeric element in argument){
+            sum = sum + element;
+        }
+        DecimalHolder d_len = new DecimalHolder(Encoding.UTF8.GetBytes(argument.Length.ToString()));
+        Numeric len = new Numeric(d_len, false);
+        Numeric avg = sum/len;
+
+        return avg;
+
     }
 
-    public static void MEDIAN(Numeric[] argument)
+    public static Numeric MEDIAN(Numeric[] argument)
     {
-        // TODO: Implement MEDIAN
+        Numeric[] copy = new Numeric[argument.Length];
+        Numeric two = new Numeric("2"u8, 0, 1, 0, new byte[1]);
+        Numeric result;
+        Array.Copy(argument, copy, argument.Length);
+        Array.Sort(copy);
+        if ((copy.Length % 2) == 0 ){
+            int left = copy.Length/2-1;
+            int right = ((copy.Length)/2);
+            Numeric lower = copy[left];
+            Numeric upper = copy[right];
+            result = ((lower+upper)/two);
+        } else {
+            int index = (int)Math.Ceiling((double)copy.Length/2)-1;
+            result = copy[index];
+        }
+        return result;
     }
 
-    public static void MIDRANGE(Numeric[] argument)
+    public static Numeric MIDRANGE(Numeric[] argument)
     {
-        // TODO: Implement MIDRANGE
+        Numeric two = new Numeric("2"u8, 0, 1, 0, new byte[1]);
+        Numeric min = MIN(argument);
+        Numeric max = MAX(argument);
+        return ((min + max)/two);
     }
 
-    public static void MIN(Numeric[] argument)
+    public static Numeric MIN(Numeric[] argument)
     {
-        // TODO: Implement MIN
+        Numeric min = new Numeric("9999999999999999999999999999999999"u8, 0, 34, 0, new byte[34]);
+        foreach(Numeric element in argument){
+            if (element < min){
+                min = element;
+            }
+        }
+        return min;
+
     }
 
     public static Numeric MOD(Numeric left, Numeric right)

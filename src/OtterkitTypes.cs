@@ -261,7 +261,7 @@ public sealed class Constant
     }
 }
 
-public sealed class Numeric : COBOLType
+public sealed class Numeric : COBOLType, IComparable<Numeric>
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }
@@ -616,6 +616,16 @@ public sealed class Numeric : COBOLType
         }
         
         return this == (Numeric)obj;
+    }
+
+    public int CompareTo(Numeric? other){ //for implementing default C# sorting
+        if (other is null || this > other){
+            return 1;
+        } else if (this.Equals(other)){
+            return 0;
+        } else {
+            return -1;
+        }
     }
     
     public override int GetHashCode()

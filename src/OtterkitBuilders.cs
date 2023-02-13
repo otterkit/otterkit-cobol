@@ -147,7 +147,7 @@ public class DataItemBuilder
         Identifier = Current().value;
         Continue(1);
 
-        DataItemInfo Item = Information.DataItems.GetValue($"{ProgramBuilder.UnformattedID}#{Identifier}");
+        DataItemInfo Item = SymbolTable.DataItems.GetValue($"{ProgramBuilder.UnformattedID}#{Identifier}");
 
         if (LevelNumber.Equals("77"))
         {

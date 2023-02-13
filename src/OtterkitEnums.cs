@@ -56,6 +56,13 @@ public enum DirectiveType
     None,
 }
 
+public enum SymbolType
+{
+    DataItem,
+    SourceUnitSignature,
+    RepositorySignature,
+}
+
 public enum SourceUnit
 {
     Program,

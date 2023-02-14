@@ -913,7 +913,7 @@ public static partial class Analyzer
             Expected("FILLER");
         }
 
-        bool IsCategoryName()
+        static bool IsCategoryName()
         {
             if (CurrentEquals(
             "ALPHABETIC",

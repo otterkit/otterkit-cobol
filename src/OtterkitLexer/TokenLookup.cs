@@ -1,6 +1,6 @@
 ﻿namespace Otterkit;
 
-public static class ParsingInfo
+public static class TokenLookup
 {
     public static bool IsReservedWord(string value)
     {

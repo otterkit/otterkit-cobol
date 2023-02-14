@@ -34,16 +34,16 @@ public partial record Token
     private static TokenType FindType(string value)
     {
         //check if the value is a reserved keyword
-        if (ParsingInfo.IsReservedWord(value))
+        if (TokenLookup.IsReservedWord(value))
             return TokenType.ReservedKeyword;
         //check if the value is a figurative literal
-        else if (ParsingInfo.IsReservedFigurativeLiteral(value))
+        else if (TokenLookup.IsReservedFigurativeLiteral(value))
             return TokenType.FigurativeLiteral;
         //check if the value is an intrinsic function
-        else if (ParsingInfo.IsIntrinsicFunctionName(value))
+        else if (TokenLookup.IsIntrinsicFunctionName(value))
             return TokenType.IntrinsicFunction;
         //check if the value is a symbol
-        else if (ParsingInfo.IsReservedSymbol(value))
+        else if (TokenLookup.IsReservedSymbol(value))
             return TokenType.Symbol;
         //check if the value is a string
         else if (value.StartsWith('"') || value.StartsWith('\''))
@@ -62,10 +62,10 @@ public partial record Token
     private static TokenContext? FindContext(Token token)
     {
         //check if the token belongs to a data division clause
-        if (ParsingInfo.IsReservedClause(token.value))
+        if (TokenLookup.IsReservedClause(token.value))
             return TokenContext.IsClause;
         //check if the token is a statement
-        else if (ParsingInfo.IsReservedStatement(token.value))
+        else if (TokenLookup.IsReservedStatement(token.value))
             return TokenContext.IsStatement;
         //check if the token represents a file separator   
         else if (token.line is -5)

@@ -129,9 +129,9 @@ public static class SymbolTable
 
     public static SymbolPointer GetPointer(string symbolHash)
     {
-        if (Symbols.ContainsKey(symbolHash))
+        if (Symbols.TryGetValue(symbolHash, out SymbolPointer value))
         {
-            return Symbols[symbolHash];
+            return value;
         }
 
         throw new ArgumentException($"Symbol table key \"{symbolHash}\" does not exist.");

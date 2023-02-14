@@ -256,7 +256,7 @@ public static class Helpers
 
     public static int ParsePictureString(ReadOnlySpan<char> pictureString)
     {
-        List<char> list = new List<char>();
+        List<char> list = new();
 
         for (int i = 0; i < pictureString.Length; i++)
         {

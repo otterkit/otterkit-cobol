@@ -4,7 +4,7 @@ using System.Buffers;
 
 namespace OtterkitLibrary;
 
-public interface COBOLType
+public interface ICOBOLType
 {
     Memory<byte> Memory { get; init; }
     ReadOnlySpan<byte> Bytes { get; set; }
@@ -59,7 +59,7 @@ public sealed unsafe class OtterkitNativeMemory<TBytes>
     }
 }
 
-public sealed class DataItem : COBOLType
+public sealed class DataItem : ICOBOLType
 {
     public Memory<byte> Memory { get; init; }
     public int Length { get; init; }
@@ -261,7 +261,7 @@ public sealed class Constant
     }
 }
 
-public sealed class Numeric : COBOLType, IComparable<Numeric>
+public sealed class Numeric : ICOBOLType, IComparable<Numeric>
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }
@@ -522,7 +522,7 @@ public sealed class Numeric : COBOLType, IComparable<Numeric>
 
         DecimalHolder Dres = Ldec + Rdec;
 
-        Numeric result = new Numeric(Dres, true);
+        Numeric result = new(Dres, true);
 
         return result;
     }
@@ -533,7 +533,7 @@ public sealed class Numeric : COBOLType, IComparable<Numeric>
 
         num = num++;
 
-        Numeric result = new Numeric(num, true);
+        Numeric result = new(num, true);
 
         return result;
     }
@@ -545,7 +545,7 @@ public sealed class Numeric : COBOLType, IComparable<Numeric>
 
         DecimalHolder Dres = Ldec - Rdec;
 
-        Numeric result = new Numeric(Dres, true);
+        Numeric result = new(Dres, true);
 
         return result;
     }
@@ -556,7 +556,7 @@ public sealed class Numeric : COBOLType, IComparable<Numeric>
 
         num = -num;
 
-        Numeric result = new Numeric(num, true);
+        Numeric result = new(num, true);
 
         return result;
     }
@@ -567,7 +567,7 @@ public sealed class Numeric : COBOLType, IComparable<Numeric>
 
         num = num--;
 
-        Numeric result = new Numeric(num, true);
+        Numeric result = new(num, true);
 
         return result;
     }
@@ -579,7 +579,7 @@ public sealed class Numeric : COBOLType, IComparable<Numeric>
 
         DecimalHolder Dres = Ldec * Rdec;
 
-        Numeric result = new Numeric(Dres, true);
+        Numeric result = new(Dres, true);
 
         return result;
     }
@@ -591,7 +591,7 @@ public sealed class Numeric : COBOLType, IComparable<Numeric>
 
         DecimalHolder Dres = Ldec / Rdec;
 
-        Numeric result = new Numeric(Dres, true);
+        Numeric result = new(Dres, true);
 
         return result;
     }
@@ -603,7 +603,7 @@ public sealed class Numeric : COBOLType, IComparable<Numeric>
 
         DecimalHolder Dres = Ldec % Rdec;
 
-        Numeric result = new Numeric(Dres, true);
+        Numeric result = new(Dres, true);
 
         return result;
     }
@@ -660,7 +660,7 @@ public sealed class Numeric : COBOLType, IComparable<Numeric>
     }
 }
 
-public sealed class Alphanumeric : COBOLType
+public sealed class Alphanumeric : ICOBOLType
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }
@@ -832,7 +832,7 @@ public sealed class BasedAlphanumeric
     }
 }
 
-public sealed class Alphabetic : COBOLType
+public sealed class Alphabetic : ICOBOLType
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }
@@ -988,7 +988,7 @@ public sealed class BasedAlphabetic
     }
 }
 
-public sealed class National : COBOLType
+public sealed class National : ICOBOLType
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }
@@ -1136,7 +1136,7 @@ public sealed class BasedNational
     }
 }
 
-public sealed class COBOLBoolean : COBOLType
+public sealed class COBOLBoolean : ICOBOLType
 {
     public Memory<byte> Memory { get; init; }
     public int Offset { get; init; }

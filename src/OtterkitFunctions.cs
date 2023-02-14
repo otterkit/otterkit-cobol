@@ -672,7 +672,7 @@ public static class Functions
         // TODO: Implement NUMVAL-F
     }
 
-    public static Numeric ORD(COBOLType argument) //recieves an alphanumeric, alphabetic, or national
+    public static Numeric ORD(ICOBOLType argument) //recieves an alphanumeric, alphabetic, or national
     {
         // TODO: return error if argument is not alphabetic, alphanumeric, or national
         // TODO: return error if argument is not a single character
@@ -682,7 +682,7 @@ public static class Functions
         //should this be signed?
         //there might be a more efficient conversion here, just wanted to play it safe
 
-        DecimalHolder DecValue = new DecimalHolder(Encoding.UTF8.GetBytes(value.ToString()));
+        DecimalHolder DecValue = new(Encoding.UTF8.GetBytes(value.ToString()));
 
         return new Numeric(DecValue, false);
     }

@@ -2,7 +2,7 @@ namespace OtterkitLibrary;
 
 public static class RuntimeHelpers
 {
-    public static COBOLType GenericTest<T>(T argument) where T : COBOLType
+    public static ICOBOLType GenericTest<T>(T argument) where T : ICOBOLType
     {
         if (argument is Alphanumeric)
         {

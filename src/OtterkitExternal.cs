@@ -2,7 +2,7 @@ using System.Text;
 
 namespace OtterkitLibrary;
 
-struct ExternalDataItem
+readonly struct ExternalDataItem
 {
     public readonly Memory<byte> ExternalMemory;
     public readonly string ExternalDefault;

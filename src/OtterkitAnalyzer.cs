@@ -339,7 +339,7 @@ public static class Analyzer
                 if (!isPrototype) Optional("PROGRAM");
             }
 
-            SymbolTable.SourceUnits.AddSourceUnit($"{SourceType.Peek()}#{SourceId.Peek()}", SourceId.Peek(), SourceType.Peek());
+            SymbolTable.AddSymbol($"{SourceId.Peek()}", SymbolType.SourceUnitSignature);
             Expected(".", """
             Missing separator period at the end of this program definition
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
@@ -370,7 +370,7 @@ public static class Analyzer
                 SourceType.Push(SourceUnit.FunctionPrototype);
             }
 
-            SymbolTable.SourceUnits.AddSourceUnit($"{SourceType.Peek()}#{SourceId.Peek()}", SourceId.Peek(), SourceType.Peek());
+            SymbolTable.AddSymbol($"{SourceId.Peek()}", SymbolType.SourceUnitSignature);
             Expected(".", """
             Missing separator period at the end of this function definition
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
@@ -430,7 +430,7 @@ public static class Analyzer
                 while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
-            SymbolTable.SourceUnits.AddSourceUnit($"{SourceType.Peek()}#{SourceId.Peek()}", SourceId.Peek(), SourceType.Peek());
+            SymbolTable.AddSymbol($"{SourceId.Peek()}", SymbolType.SourceUnitSignature);
             Expected(".", """
             Missing separator period at the end of this class definition
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "FACTORY", "OBJECT");
@@ -484,7 +484,7 @@ public static class Analyzer
                 while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
-            SymbolTable.SourceUnits.AddSourceUnit($"{SourceType.Peek()}#{SourceId.Peek()}", SourceId.Peek(), SourceType.Peek());
+            SymbolTable.AddSymbol($"{SourceId.Peek()}", SymbolType.SourceUnitSignature);
             Expected(".", """
             Missing separator period at the end of this interface definition
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "FACTORY", "OBJECT");
@@ -506,12 +506,7 @@ public static class Analyzer
                 SourceId.Push($"GET {Current().value}");
                 SourceType.Push(SourceUnit.MethodGetter);
 
-                SymbolTable.SourceUnits.AddMethod($"{currentSource}#{currentId}", 
-                new SourceUnitSignature()
-                {
-                    Identifier = $"GET {Current().value}",
-                    SourceType = SourceUnit.MethodGetter
-                });
+                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek()}", SymbolType.SourceUnitSignature);
 
                 Identifier();
 
@@ -524,12 +519,7 @@ public static class Analyzer
                 SourceId.Push($"SET {Current().value}");
                 SourceType.Push(SourceUnit.MethodSetter);
 
-                SymbolTable.SourceUnits.AddMethod($"{currentSource}#{currentId}", 
-                new SourceUnitSignature()
-                {
-                    Identifier = $"SET {Current().value}",
-                    SourceType = SourceUnit.MethodSetter
-                });
+                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek()}", SymbolType.SourceUnitSignature);
 
                 Identifier();
             }
@@ -552,12 +542,7 @@ public static class Analyzer
                     SourceType.Push(SourceUnit.Method);
                 }
 
-                SymbolTable.SourceUnits.AddMethod($"{currentSource}#{currentId}", 
-                new SourceUnitSignature()
-                {
-                    Identifier = Lookahead(-1).value,
-                    SourceType = SourceType.Peek()
-                });
+                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek()}", SymbolType.SourceUnitSignature);
             }
 
             if (CurrentEquals("OVERRIDE")) Expected("OVERRIDE");
@@ -982,9 +967,9 @@ public static class Analyzer
             Identifier();
 
             string DataItemHash = $"{SourceId.Peek()}#{DataName}";
-            if (SymbolTable.DataItems.ValueExists(DataItemHash))
+            if (SymbolTable.SymbolExists(DataItemHash))
             {
-                DataItemInfo originalItem = SymbolTable.DataItems.GetValue(DataItemHash);
+                DataItemInfo originalItem = SymbolTable.GetDataItem(DataItemHash);
 
                 ErrorHandler.Parser.Report(FileName, DataItem, ErrorType.General, $"""
                 A data item with this name already exists in this source unit, data items must have a unique name.
@@ -994,10 +979,14 @@ public static class Analyzer
             }
             else
             {
-                SymbolTable.DataItems.AddDataItem(DataItemHash, DataName, LevelNumber, DataItem);
+                SymbolTable.AddSymbol(DataItemHash, SymbolType.DataItem);
             }
 
-            SymbolTable.DataItems.AddSection(DataItemHash, CurrentSection);
+            DataItemInfo dataItem = SymbolTable.GetDataItem(DataItemHash);
+
+            dataItem.Identifier = DataName;
+            dataItem.LevelNumber = LevelNumber;
+            dataItem.Section = CurrentSection;
 
             if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
             {
@@ -1025,7 +1014,8 @@ public static class Analyzer
                     if (CurrentEquals("AS"))
                     {
                         Expected("AS");
-                        SymbolTable.DataItems.IsExternal(DataItemHash, true, Current().value);
+                        dataItem.IsExternal = true;
+                        dataItem.ExternalName = Current().value;
 
                         String("""
                         Missing externalized name, the "AS" word on the EXTERNAL clause must be followed by an alphanumeric or national literal
@@ -1033,19 +1023,24 @@ public static class Analyzer
                     }
 
                     if (!CurrentEquals("AS"))
-                        SymbolTable.DataItems.IsExternal(DataItemHash, true, DataName);
+                    {
+                        dataItem.IsExternal = true;
+                        dataItem.ExternalName = Current().value;
+                    }
                 }
 
                 if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
                 {
                     Optional("IS");
                     Expected("GLOBAL");
+                    dataItem.IsGlobal = true;
                 }
 
                 if ((CurrentEquals("IS") && LookaheadEquals(1, "TYPEDEF")) || CurrentEquals("TYPEDEF"))
                 {
                     Optional("IS");
                     Expected("TYPEDEF");
+                    dataItem.IsTypedef = true;
 
                     if (CurrentEquals("STRONG")) Expected("STRONG");
                 }
@@ -1054,6 +1049,7 @@ public static class Analyzer
                 {
                     Expected("REDEFINES");
                     Identifier();
+                    dataItem.IsRedefines = true;
                 }
 
                 if (CurrentEquals("ALIGNED")) Expected("ALIGNED");
@@ -1062,6 +1058,7 @@ public static class Analyzer
                 {
                     Expected("ANY");
                     Expected("LENGTH");
+                    dataItem.IsAnyLength = true;
                 }
 
                 if (CurrentEquals("BASED")) Expected("BASED");
@@ -1071,18 +1068,21 @@ public static class Analyzer
                     Expected("BLANK");
                     Optional("WHEN");
                     Expected("ZERO");
+                    dataItem.IsBlank = true;
                 }
 
                 if (CurrentEquals("CONSTANT") && LookaheadEquals(1, "RECORD"))
                 {
                     Expected("CONSTANT");
                     Expected("RECORD");
+                    dataItem.IsConstantRecord = true;
                 }
 
                 if (CurrentEquals("DYNAMIC"))
                 {
                     Expected("DYNAMIC");
                     Optional("LENGTH");
+                    dataItem.IsDynamicLength = true;
 
                     if (CurrentEquals(TokenType.Identifier)) Identifier();
 
@@ -1118,6 +1118,7 @@ public static class Analyzer
                 if (CurrentEquals("PROPERTY"))
                 {
                     Expected("PROPERTY");
+                    dataItem.IsProperty = true;
                     if (CurrentEquals("WITH", "NO"))
                     {
                         Optional("WITH");
@@ -1168,8 +1169,8 @@ public static class Analyzer
                         ErrorHandler.Parser.PrettyError(FileName, Current());
                     }
 
-                    SymbolTable.DataItems.AddType(DataItemHash, dataType);
-                    SymbolTable.DataItems.IsPicture(DataItemHash, true);
+                    dataItem.Type = dataType;
+                    dataItem.IsPicture = true;
                     Choice("S9", "9", "X", "A", "N", "1");
 
                     Expected("(");
@@ -1191,7 +1192,7 @@ public static class Analyzer
                         Expected(")");
                     }
 
-                    SymbolTable.DataItems.AddPicture(DataItemHash, DataLength);
+                    dataItem.PictureLength = DataLength;
                 }
 
                 if (CurrentEquals("VALUE"))
@@ -1208,20 +1209,20 @@ public static class Analyzer
 
                     if (CurrentEquals(TokenType.String))
                     {
-                        SymbolTable.DataItems.AddDefault(DataItemHash, Current().value);
+                        dataItem.DefaultValue = Current().value;
                         String();
                     }
 
                     if (CurrentEquals(TokenType.Numeric))
                     {
-                        SymbolTable.DataItems.AddDefault(DataItemHash, Current().value);
+                        dataItem.DefaultValue = Current().value;
                         Number();
                     }
                 }
 
                 if (CurrentEquals("USAGE"))
                 {
-                    UsageClause(DataItemHash);
+                    UsageClause(dataItem);
                 }
 
             }
@@ -1230,7 +1231,7 @@ public static class Analyzer
             {
                 if (LevelStack.Count == 0)
                 {
-                    SymbolTable.DataItems.IsElementary(DataItemHash, true);
+                    dataItem.IsElementary = true;
                 }
                 else
                 {
@@ -1239,11 +1240,11 @@ public static class Analyzer
 
                     if (currentLevel == 1 && outInt >= 2 && outInt <= 49 || outInt >= 2 && outInt <= 49 && outInt > currentLevel)
                     {
-                        SymbolTable.DataItems.IsGroup(DataItemHash, true);
+                        dataItem.IsGroup = true;
                     }
                     else
                     {
-                        SymbolTable.DataItems.IsElementary(DataItemHash, true);
+                        dataItem.IsElementary = true;
                     }
                 }
             }
@@ -1272,9 +1273,9 @@ public static class Analyzer
             Identifier();
 
             var DataItemHash = $"{SourceId.Peek()}#{DataName}";
-            if (SymbolTable.DataItems.ValueExists(DataItemHash))
+            if (SymbolTable.SymbolExists(DataItemHash))
             {
-                var originalItem = SymbolTable.DataItems.GetValue(DataItemHash);
+                var originalItem = SymbolTable.GetDataItem(DataItemHash);
 
                 ErrorHandler.Parser.Report(FileName, Lookahead(-1), ErrorType.General, $"""
                 A data item with this name already exists in this program, data items in a program must have a unique name.
@@ -1284,18 +1285,22 @@ public static class Analyzer
             }
             else
             {
-                SymbolTable.DataItems.AddDataItem(DataItemHash, DataName, LevelNumber, Lookahead(-1));
+                SymbolTable.AddSymbol(DataItemHash, SymbolType.DataItem);
             }
 
-            SymbolTable.DataItems.IsConstant(DataItemHash, true);
-            SymbolTable.DataItems.AddSection(DataItemHash, CurrentSection);
+            DataItemInfo dataItem = SymbolTable.GetDataItem(DataItemHash);
+
+            dataItem.Identifier = DataName;
+            dataItem.LevelNumber = LevelNumber;
+            dataItem.Section = CurrentSection;
+            dataItem.IsConstant = true;
 
             Expected("CONSTANT");
             if (CurrentEquals("IS") || CurrentEquals("GLOBAL"))
             {
                 Optional("IS");
                 Expected("GLOBAL");
-                SymbolTable.DataItems.IsGlobal(DataItemHash, true);
+                 dataItem.IsGlobal = true;
             }
 
             if (CurrentEquals("FROM"))
@@ -1379,7 +1384,7 @@ public static class Analyzer
 
         void CheckClauses(string dataItemHash, Token itemToken)
         {
-            DataItemInfo dataItem = SymbolTable.DataItems.GetValue(dataItemHash);
+            DataItemInfo dataItem = SymbolTable.GetDataItem(dataItemHash);
 
             bool usageCannotHavePicture = dataItem.UsageType switch
             {
@@ -1498,8 +1503,24 @@ public static class Analyzer
                             """);
                             ErrorHandler.Parser.PrettyError(FileName, Current());
                         }
+                        
+                        SourceUnitSignature signature;
 
-                        SymbolTable.SourceUnits.AddParameter($"{SourceType.Peek()}#{SourceId.Peek()}", Current().value, optional, true);
+                        if (SourceType.Peek() is SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter)
+                        {
+                            var currentId = SourceId.Pop();
+                            signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}->{currentId}");
+                            SourceId.Push(currentId);
+                        }
+                        else
+                        {
+                            signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}");
+                        }
+
+                        signature.Parameters.Add(Current().value);
+                        signature.IsOptional.Add(optional);
+                        signature.IsByRef.Add(true);
+
                         Identifier();
                         while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
                         {
@@ -1509,7 +1530,9 @@ public static class Analyzer
                                 optional = true;
                                 Expected("OPTIONAL");
                             }
-                            SymbolTable.SourceUnits.AddParameter($"{SourceType.Peek()}#{SourceId.Peek()}", Current().value, optional, true);
+                            signature.Parameters.Add(Current().value);
+                            signature.IsOptional.Add(optional);
+                            signature.IsByRef.Add(true);
                             Identifier();
                         }
                     }
@@ -1525,12 +1548,29 @@ public static class Analyzer
                             """);
                             ErrorHandler.Parser.PrettyError(FileName, Current());
                         }
+                        
+                        SourceUnitSignature signature;
 
-                        SymbolTable.SourceUnits.AddParameter($"{SourceType.Peek()}#{SourceId.Peek()}", Current().value, false, false);
+                        if (SourceType.Peek() is SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter)
+                        {
+                            var currentId = SourceId.Pop();
+                            signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}->{currentId}");
+                            SourceId.Push(currentId);
+                        }
+                        else
+                        {
+                            signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}");
+                        }
+
+                        signature.Parameters.Add(Current().value);
+                        signature.IsOptional.Add(false);
+                        signature.IsByRef.Add(false);
                         Identifier();
                         while (CurrentEquals(TokenType.Identifier))
                         {
-                            SymbolTable.SourceUnits.AddParameter($"{SourceType.Peek()}#{SourceId.Peek()}", Current().value, false, false);
+                            signature.Parameters.Add(Current().value);
+                            signature.IsOptional.Add(false);
+                            signature.IsByRef.Add(false);
                             Identifier();
                         }
                     }
@@ -1593,7 +1633,20 @@ public static class Analyzer
                 return;
             }
 
-            SymbolTable.SourceUnits.AddReturning($"{SourceType.Peek()}#{SourceId.Peek()}", Current().value);
+            SourceUnitSignature signature;
+
+            if (SourceType.Peek() is SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter)
+            {
+                var currentId = SourceId.Pop();
+                signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}->{currentId}");
+                SourceId.Push(currentId);
+            }
+            else
+            {
+                signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}");
+            }
+
+            signature.Returning = Current().value;
             Identifier();
         }
 
@@ -4243,7 +4296,7 @@ public static class Analyzer
             if (CurrentEquals(TokenType.Identifier) || CurrentEquals("SIZE", "ADDRESS"))
             {
                 string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
-                DataItemInfo dataItem = SymbolTable.DataItems.GetValue(dataItemHash);
+                DataItemInfo dataItem = SymbolTable.GetDataItem(dataItemHash);
 
                 if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "UP", "DOWN", "TO"))
                 {
@@ -6221,16 +6274,16 @@ public static class Analyzer
             }
         }
 
-        void UsageClause(string dataItemHash)
+        void UsageClause(DataItemInfo dataitem)
         {
             Expected("USAGE");
             Optional("IS");
             switch (Current().value)
             {
+                
                 case "BINARY":
                     Expected("BINARY");
-                    SymbolTable.DataItems
-                        .AddUsage(dataItemHash, UsageType.Binary);
+                    dataitem.UsageType = UsageType.Binary;
                     break;
 
                 case "BINARY-CHAR":
@@ -6250,21 +6303,18 @@ public static class Analyzer
 
                 case "BIT":
                     Expected("BIT");
-                    SymbolTable.DataItems
-                        .AddUsage(dataItemHash, UsageType.Bit);
+                    dataitem.UsageType = UsageType.Bit;
                     break;
 
                 case "COMP":
                 case "COMPUTATIONAL":
                     Expected(Current().value);
-                    SymbolTable.DataItems
-                        .AddUsage(dataItemHash, UsageType.Computational);
+                    dataitem.UsageType = UsageType.Computational;
                     break;
 
                 case "DISPLAY":
                     Expected("DISPLAY");
-                    SymbolTable.DataItems
-                        .AddUsage(dataItemHash, UsageType.Display);
+                    dataitem.UsageType = UsageType.Display;
                     break;
 
                 case "FLOAT-BINARY-32":
@@ -6306,14 +6356,12 @@ public static class Analyzer
 
                 case "INDEX":
                     Expected("INDEX");
-                    SymbolTable.DataItems
-                        .AddUsage(dataItemHash, UsageType.Index);
+                    dataitem.UsageType = UsageType.Index;
                     break;
 
                 case "MESSAGE-TAG":
                     Expected("MESSAGE-TAG");
-                    SymbolTable.DataItems
-                        .AddUsage(dataItemHash, UsageType.MessageTag);
+                    dataitem.UsageType = UsageType.MessageTag;
                     break;
 
                 case "NATIONAL":
@@ -6325,8 +6373,7 @@ public static class Analyzer
                     Expected("REFERENCE");
                     // Need implement identifier resolution first
                     // To parse the rest of this using clause
-                    SymbolTable.DataItems
-                        .AddUsage(dataItemHash, UsageType.ObjectReference);
+                    dataitem.UsageType = UsageType.ObjectReference;
                     break;
 
                 case "PACKED-DECIMAL":
@@ -6344,22 +6391,21 @@ public static class Analyzer
                     if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
                     {
                         Optional("TO");
-                        SymbolTable.DataItems
-                            .AddUsage(dataItemHash, UsageType.DataPointer, Current().value);
+                        dataitem.UsageType = UsageType.DataPointer;
+                        dataitem.UsageContext = Current().value;
                         Identifier();
                     }
                     else
                     {
-                        SymbolTable.DataItems
-                            .AddUsage(dataItemHash, UsageType.DataPointer);
+                        dataitem.UsageType = UsageType.DataPointer;
                     }
                     break;
 
                 case "FUNCTION-POINTER":
                     Expected("FUNCTION-POINTER");
                     Optional("TO");
-                    SymbolTable.DataItems
-                        .AddUsage(dataItemHash, UsageType.FunctionPointer, Current().value);
+                    dataitem.UsageType = UsageType.FunctionPointer;
+                    dataitem.UsageContext = Current().value;
                     Identifier();
                     break;
 
@@ -6368,14 +6414,13 @@ public static class Analyzer
                     if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
                     {
                         Optional("TO");
-                        SymbolTable.DataItems
-                            .AddUsage(dataItemHash, UsageType.ProgramPointer, Current().value);
+                        dataitem.UsageType = UsageType.ProgramPointer;
+                        dataitem.UsageContext = Current().value;
                         Identifier();
                     }
                     else
                     {
-                        SymbolTable.DataItems
-                            .AddUsage(dataItemHash, UsageType.ProgramPointer);
+                        dataitem.UsageType = UsageType.ProgramPointer;
                     }
                     break;
 
@@ -6980,7 +7025,7 @@ public static class Analyzer
 
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
-            if (!SymbolTable.DataItems.ValueExists(dataItemHash))
+            if (!SymbolTable.SymbolExists(dataItemHash))
             {
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
                 The name "{Current().value}" does not exist in the context of the current source unit
@@ -6995,7 +7040,7 @@ public static class Analyzer
 
             foreach (var usage in allowedUsage)
             {
-                if (SymbolTable.DataItems.GetValue(dataItemHash).UsageType == usage) 
+                if (SymbolTable.GetDataItem(dataItemHash).UsageType == usage) 
                     hasAllowedUsage = true;
             }
 
@@ -7051,7 +7096,7 @@ public static class Analyzer
 
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
-            if (!SymbolTable.DataItems.ValueExists(dataItemHash))
+            if (!SymbolTable.SymbolExists(dataItemHash))
             {
                 ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
                 The name "{Current().value}" does not exist in the context of the current source unit
@@ -7063,7 +7108,7 @@ public static class Analyzer
         if (allowedUsage.Length >= 1)
         {
             bool hasAllowedUsage = false;
-            DataItemInfo dataItem = SymbolTable.DataItems.GetValue(dataItemHash);
+            DataItemInfo dataItem = SymbolTable.GetDataItem(dataItemHash);
             foreach (var usage in allowedUsage)
             {
                 if (dataItem.UsageType == usage) 

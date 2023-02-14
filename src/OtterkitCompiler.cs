@@ -114,6 +114,11 @@ public static class OtterkitCompiler
                         Options.BuildMode = BuildType.PrintTokens;
                         break;
 
+                    case "-p:symbols":
+                    case "--parse:symbols":
+                        Options.BuildMode = BuildType.PrintSymbols;
+                        break;
+
                     case "-r":
                     case "--run":
                         Options.BuildMode = BuildType.BuildAndRun;
@@ -157,6 +162,28 @@ public static class OtterkitCompiler
 
                     colorToggle = !colorToggle;
                     Console.WriteLine(token);
+                }
+
+                if (!ErrorHandler.Error) ErrorHandler.SuccessfulParsing();
+            }
+
+            if (Options.BuildMode is BuildType.PrintSymbols)
+            {
+                bool colorToggle = true;
+
+                foreach (var symbol in SymbolTable.Symbols)
+                {
+                    if (colorToggle)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                    }
+
+                    colorToggle = !colorToggle;
+                    Console.WriteLine($"{symbol.Key}  =>  {symbol.Value.SymbolType}");
                 }
 
                 if (!ErrorHandler.Error) ErrorHandler.SuccessfulParsing();

@@ -1437,6 +1437,190 @@ public static partial class Analyzer
 
         }
 
+        void UsageClause(DataItemInfo dataitem)
+        {
+            Expected("USAGE");
+            Optional("IS");
+            switch (Current().value)
+            {
+                
+                case "BINARY":
+                    Expected("BINARY");
+                    dataitem.UsageType = UsageType.Binary;
+                    break;
+
+                case "BINARY-CHAR":
+                case "BINARY-SHORT":
+                case "BINARY-LONG":
+                case "BINARY-DOUBLE":
+                    Expected(Current().value);
+                    if (CurrentEquals("SIGNED"))
+                    {
+                        Expected("SIGNED");
+                    }
+                    else if (CurrentEquals("UNSIGNED"))
+                    {
+                        Expected("UNSIGNED");
+                    }
+                    break;
+
+                case "BIT":
+                    Expected("BIT");
+                    dataitem.UsageType = UsageType.Bit;
+                    break;
+
+                case "COMP":
+                case "COMPUTATIONAL":
+                    Expected(Current().value);
+                    dataitem.UsageType = UsageType.Computational;
+                    break;
+
+                case "DISPLAY":
+                    Expected("DISPLAY");
+                    dataitem.UsageType = UsageType.Display;
+                    break;
+
+                case "FLOAT-BINARY-32":
+                    Expected("FLOAT-BINARY-32");
+                    Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+                    break;
+
+                case "FLOAT-BINARY-64":
+                    Expected("FLOAT-BINARY-64");
+                    Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+                    break;
+
+                case "FLOAT-BINARY-128":
+                    Expected("FLOAT-BINARY-128");
+                    Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+                    break;
+
+                case "FLOAT-DECIMAL-16":
+                    Expected("FLOAT-DECIMAL-16");
+                    EncodingEndianness();
+                    break;
+
+                case "FLOAT-DECIMAL-32":
+                    Expected("FLOAT-DECIMAL-32");
+                    EncodingEndianness();
+                    break;
+
+                case "FLOAT-EXTENDED":
+                    Expected("FLOAT-EXTENDED");
+                    break;
+
+                case "FLOAT-LONG":
+                    Expected("FLOAT-LONG");
+                    break;
+
+                case "FLOAT-SHORT":
+                    Expected("FLOAT-SHORT");
+                    break;
+
+                case "INDEX":
+                    Expected("INDEX");
+                    dataitem.UsageType = UsageType.Index;
+                    break;
+
+                case "MESSAGE-TAG":
+                    Expected("MESSAGE-TAG");
+                    dataitem.UsageType = UsageType.MessageTag;
+                    break;
+
+                case "NATIONAL":
+                    Expected("NATIONAL");
+                    break;
+
+                case "OBJECT":
+                    Expected("OBJECT");
+                    Expected("REFERENCE");
+                    var isFactory = false;
+                    var isStronglyTyped = false;
+                    // Need implement identifier resolution first
+                    // To parse the rest of this using clause
+                    dataitem.UsageType = UsageType.ObjectReference;
+                    if (CurrentEquals("Factory"))
+                    {
+                        Expected("FACTORY");
+                        Optional("OF");
+                        isFactory = true;
+                    }
+
+                    if (CurrentEquals("ACTIVE-CLASS"))
+                    {
+                        Expected("ACTIVE-CLASS");
+                        break;
+                    }
+
+                    Continue();
+
+                    if (CurrentEquals("ONLY"))
+                    {
+                        Expected("ONLY");
+                        isStronglyTyped = true;
+                    }
+
+                    break;
+
+                case "PACKED-DECIMAL":
+                    Expected("PACKED-DECIMAL");
+                    if (CurrentEquals("WITH", "NO"))
+                    {
+                        Optional("WITH");
+                        Expected("NO");
+                        Expected("SIGN");
+                    }
+                    break;
+
+                case "POINTER":
+                    Expected("POINTER");
+                    if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
+                    {
+                        Optional("TO");
+                        dataitem.UsageType = UsageType.DataPointer;
+                        dataitem.UsageContext = Current().value;
+                        Identifier();
+                    }
+                    else
+                    {
+                        dataitem.UsageType = UsageType.DataPointer;
+                    }
+                    break;
+
+                case "FUNCTION-POINTER":
+                    Expected("FUNCTION-POINTER");
+                    Optional("TO");
+                    dataitem.UsageType = UsageType.FunctionPointer;
+                    dataitem.UsageContext = Current().value;
+                    Identifier();
+                    break;
+
+                case "PROGRAM-POINTER":
+                    Expected("PROGRAM-POINTER");
+                    if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
+                    {
+                        Optional("TO");
+                        dataitem.UsageType = UsageType.ProgramPointer;
+                        dataitem.UsageContext = Current().value;
+                        Identifier();
+                    }
+                    else
+                    {
+                        dataitem.UsageType = UsageType.ProgramPointer;
+                    }
+                    break;
+
+                default:
+                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                    Unrecognized USAGE clause. This could be due to an unsupported third-party extension. 
+                    """);
+                    ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+
+                    AnchorPoint(TokenContext.IsClause);
+                    break;
+            }
+        }
+
         // Method responsible for parsing the PROCEDURE DIVISION.
         // That includes the user-defined paragraphs, sections and declaratives
         // or when parsing OOP COBOL code, it's responsible for parsing COBOL methods, objects and factories. 

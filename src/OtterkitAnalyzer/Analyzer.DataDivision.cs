@@ -114,6 +114,7 @@ public static partial class Analyzer
         }
 
         LevelStack.Clear();
+        GroupStack.Clear();
     }
 
     private static void BaseEntry()
@@ -724,6 +725,7 @@ public static partial class Analyzer
 
             case "NATIONAL":
                 Expected("NATIONAL");
+                dataitem.UsageType = UsageType.National;
                 break;
 
             case "OBJECT":

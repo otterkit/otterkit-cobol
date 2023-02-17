@@ -10,7 +10,7 @@ public static partial class Analyzer
     // All of these methods are responsible *ONLY* for statements, paragraphs and sections inside the procedure division.
     // There shouldn't be any identification, environment or data division methods here.
 
-    public static void ParseStatements(bool isNested = false)
+    private static void ParseStatements(bool isNested = false)
     {
         bool errorCheck = Current().context != TokenContext.IsStatement
             && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, ".") && !isNested)
@@ -38,7 +38,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void Statement(bool isNested = false)
+    private static void Statement(bool isNested = false)
     {
         if (CurrentEquals("ACCEPT"))
             ACCEPT();
@@ -194,7 +194,7 @@ public static partial class Analyzer
             PARAGRAPH();
     }
 
-    public static void DeclarativeProcedure()
+    private static void DeclarativeProcedure()
     {
         if (CurrentEquals("DECLARATIVES"))
         {
@@ -230,7 +230,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void UseStatement()
+    private static void UseStatement()
     {
         Expected("USE");
 
@@ -324,7 +324,7 @@ public static partial class Analyzer
     // This method handles COBOL's slightly inconsistent separator period rules.
     // Statements that are nested inside another statement cannot end with a separator period,
     // since that separator period would mean the end of the containing statement and not the contained statement.
-    public static void ScopeTerminator(bool isNested)
+    private static void ScopeTerminator(bool isNested)
     {
         if (isNested) return;
 
@@ -336,7 +336,7 @@ public static partial class Analyzer
     // All the following uppercased methods are responsible for parsing a single COBOL statement
     // When a new method is added here to parse a new statement, we need to add it to the Statement() method as well.
     // Adding extra statements to the parser only requires a new method here, and an if statement added to the Statement() method
-    public static void DISPLAY()
+    private static void DISPLAY()
     {
         Expected("DISPLAY");
 
@@ -394,7 +394,7 @@ public static partial class Analyzer
         Optional("END-DISPLAY");
     }
 
-    public static void ACCEPT()
+    private static void ACCEPT()
     {
         bool isConditional = false;
 
@@ -445,7 +445,7 @@ public static partial class Analyzer
         if (isConditional) Expected("END-ACCEPT");
     }
 
-    public static void ALLOCATE()
+    private static void ALLOCATE()
     {
         Expected("ALLOCATE");
         if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "CHARACTERS") && !LookaheadEquals(1, TokenType.Symbol))
@@ -467,7 +467,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void COMPUTE()
+    private static void COMPUTE()
     {
         bool isConditional = false;
 
@@ -499,7 +499,7 @@ public static partial class Analyzer
         if (isConditional) Expected("END-COMPUTE");
     }
 
-    public static void CALL()
+    private static void CALL()
     {
         bool isConditional = false;
         bool isPrototype = false;
@@ -692,7 +692,7 @@ public static partial class Analyzer
         if (isConditional) Expected("END-CALL");
     }
 
-    public static void CONTINUE()
+    private static void CONTINUE()
     {
         Expected("CONTINUE");
         if (CurrentEquals("AFTER"))
@@ -703,7 +703,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void ADD()
+    private static void ADD()
     {
         bool isConditional = false;
 
@@ -800,7 +800,7 @@ public static partial class Analyzer
         if (isConditional) Expected("END-ADD");
     }
 
-    public static void SUBTRACT()
+    private static void SUBTRACT()
     {
         bool isConditional = false;
 
@@ -875,7 +875,7 @@ public static partial class Analyzer
             Expected("END-SUBTRACT");
     }
 
-    public static void IF()
+    private static void IF()
     {
         Expected("IF");
         Condition("THEN");
@@ -898,7 +898,7 @@ public static partial class Analyzer
         Expected("END-IF");
     }
 
-    public static void INITIALIZE()
+    private static void INITIALIZE()
     {
         Expected("INITIALIZE");
         Identifier();
@@ -1022,7 +1022,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void INITIATE()
+    private static void INITIATE()
     {
         Expected("INITIATE");
         if (Current().type != TokenType.Identifier)
@@ -1045,7 +1045,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void INSPECT()
+    private static void INSPECT()
     {
         Expected("INSPECT");
         if (CurrentEquals("BACKWARD")) Expected("BACKWARD");
@@ -1093,7 +1093,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void INVOKE()
+    private static void INVOKE()
     {
         Expected("INVOKE");
         Identifier(UsageType.ObjectReference);
@@ -1196,7 +1196,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void MERGE()
+    private static void MERGE()
     {
         Expected("MERGE");
         Identifier();
@@ -1308,7 +1308,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void MULTIPLY()
+    private static void MULTIPLY()
     {
         bool isConditional = false;
 
@@ -1382,7 +1382,7 @@ public static partial class Analyzer
             Expected("END-MULTIPLY");
     }
 
-    public static void MOVE()
+    private static void MOVE()
     {
         Expected("MOVE");
         if (CurrentEquals("CORRESPONDING") || CurrentEquals("CORR"))
@@ -1432,7 +1432,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void OPEN()
+    private static void OPEN()
     {
         Expected("OPEN");
         Choice("INPUT", "OUTPUT", "I-O", "EXTEND");
@@ -1548,7 +1548,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void DIVIDE()
+    private static void DIVIDE()
     {
         bool isConditional = false;
 
@@ -1646,7 +1646,7 @@ public static partial class Analyzer
             Expected("END-MULTIPLY");
     }
 
-    public static void DELETE()
+    private static void DELETE()
     {
         bool isConditional = false;
         bool isFile = false;
@@ -1680,7 +1680,7 @@ public static partial class Analyzer
             Expected("END-DELETE");
     }
 
-    public static void EVALUATE()
+    private static void EVALUATE()
     {
         var conditions = new List<EvaluateOperand>();
         var conditionsIndex = 0;
@@ -1734,7 +1734,7 @@ public static partial class Analyzer
         Expected("END-EVALUATE");
     }
 
-    public static void EXIT()
+    private static void EXIT()
     {
         Expected("EXIT");
         if (CurrentEquals("PERFORM"))
@@ -1770,7 +1770,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void FREE()
+    private static void FREE()
     {
         Expected("FREE");
         Identifier();
@@ -1786,13 +1786,13 @@ public static partial class Analyzer
 
     }
 
-    public static void GENERATE()
+    private static void GENERATE()
     {
         Expected("GENERATE");
         Identifier();
     }
 
-    public static void GO()
+    private static void GO()
     {
         Expected("GO");
         Optional("TO");
@@ -1807,18 +1807,18 @@ public static partial class Analyzer
         }
     }
 
-    public static void GOBACK()
+    private static void GOBACK()
     {
         Expected("GOBACK");
         RaisingStatus();
     }
 
-    public static void COMMIT()
+    private static void COMMIT()
     {
         Expected("COMMIT");
     }
 
-    public static void CLOSE()
+    private static void CLOSE()
     {
         Expected("CLOSE");
         if (Current().type == TokenType.Identifier)
@@ -1881,7 +1881,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void CANCEL()
+    private static void CANCEL()
     {
         Expected("CANCEL");
         if (Current().type == TokenType.Identifier)
@@ -1917,7 +1917,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void PERFORM()
+    private static void PERFORM()
     {
         bool isExceptionChecking = false;
         bool isInline = false;
@@ -2093,7 +2093,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void RAISE()
+    private static void RAISE()
     {
         Expected("RAISE");
         if (CurrentEquals("EXCEPTION"))
@@ -2105,7 +2105,7 @@ public static partial class Analyzer
             Identifier();
     }
 
-    public static void READ()
+    private static void READ()
     {
         bool isSequential = false;
         bool isConditional = false;
@@ -2173,7 +2173,7 @@ public static partial class Analyzer
         if (isConditional) Expected("END-READ");
     }
 
-    public static void RECEIVE()
+    private static void RECEIVE()
     {
         bool isConditional = false;
 
@@ -2206,7 +2206,7 @@ public static partial class Analyzer
 
     }
 
-    public static void RELEASE()
+    private static void RELEASE()
     {
         Expected("RELEASE");
         Identifier();
@@ -2225,7 +2225,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void RETURN()
+    private static void RETURN()
     {
         bool isConditional = false;
 
@@ -2244,7 +2244,7 @@ public static partial class Analyzer
             Expected("END-RETURN");
     }
 
-    public static void REWRITE()
+    private static void REWRITE()
     {
         bool isConditional = false;
         bool isFile = false;
@@ -2295,7 +2295,7 @@ public static partial class Analyzer
             Expected("END-REWRITE");
     }
 
-    public static void RESUME()
+    private static void RESUME()
     {
         Expected("RESUME");
         Optional("AT");
@@ -2310,12 +2310,12 @@ public static partial class Analyzer
         }
     }
 
-    public static void ROLLBACK()
+    private static void ROLLBACK()
     {
         Expected("ROLLBACK");
     }
 
-    public static void SEARCH()
+    private static void SEARCH()
     {
         Expected("SEARCH");
         if (!CurrentEquals("ALL"))
@@ -2458,7 +2458,7 @@ public static partial class Analyzer
         Expected("END-SEARCH");
     }
 
-    public static void SEND()
+    private static void SEND()
     {
         bool isConditional = false;
         Expected("SEND");
@@ -2507,7 +2507,7 @@ public static partial class Analyzer
         if (isConditional) Expected("END-SEND");
     }
 
-    public static void SET()
+    private static void SET()
     {
         Expected("SET");
 
@@ -2687,7 +2687,7 @@ public static partial class Analyzer
 
     }
 
-    public static void SORT()
+    private static void SORT()
     {
         Expected("SORT");
         Identifier();
@@ -2822,7 +2822,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void START()
+    private static void START()
     {
         bool isConditional = false;
 
@@ -2857,7 +2857,7 @@ public static partial class Analyzer
         if (isConditional) Expected("END-START");
     }
 
-    public static void STOP()
+    private static void STOP()
     {
         Expected("STOP");
         Expected("RUN");
@@ -2881,7 +2881,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void STRING()
+    private static void STRING()
     {
         bool isConditional = false;
 
@@ -2942,13 +2942,13 @@ public static partial class Analyzer
         if (isConditional) Expected("END-STRING");
     }
 
-    public static void SUPPRESS()
+    private static void SUPPRESS()
     {
         Expected("SUPPRESS");
         Optional("PRINTING");
     }
 
-    public static void TERMINATE()
+    private static void TERMINATE()
     {
         Expected("TERMINATE");
         if (Current().type != TokenType.Identifier)
@@ -2971,14 +2971,14 @@ public static partial class Analyzer
         }
     }
 
-    public static void UNLOCK()
+    private static void UNLOCK()
     {
         Expected("UNLOCK");
         Identifier();
         Choice("RECORD", "RECORDS");
     }
 
-    public static void UNSTRING()
+    private static void UNSTRING()
     {
         bool isConditional = false;
 
@@ -3069,7 +3069,7 @@ public static partial class Analyzer
         if (isConditional) Expected("END-UNSTRING");
     }
 
-    public static void VALIDATE()
+    private static void VALIDATE()
     {
         Expected("VALIDATE");
         if (Current().type != TokenType.Identifier)
@@ -3092,7 +3092,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void WRITE()
+    private static void WRITE()
     {
         bool isSequential = false;
         bool isConditional = false;
@@ -3170,7 +3170,7 @@ public static partial class Analyzer
         if (isConditional) Expected("END-WRITE");
     }
 
-    public static void PARAGRAPH()
+    private static void PARAGRAPH()
     {
         Identifier(Current().value);
     }

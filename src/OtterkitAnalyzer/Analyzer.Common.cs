@@ -24,7 +24,7 @@ public static partial class Analyzer
     // written correctly. This is using a combination of the Shunting Yard algorithm, and some methods to verify if the 
     // parentheses are balanced and if it can be evaluated correctly.
     
-    public static void TimesPhrase()
+    private static void TimesPhrase()
     {
         if (CurrentEquals(TokenType.Identifier))
         {
@@ -38,7 +38,7 @@ public static partial class Analyzer
         Expected("TIMES");
     }
 
-    public static void UntilPhrase()
+    private static void UntilPhrase()
     {
         Expected("UNTIL");
         if (CurrentEquals("EXIT"))
@@ -51,7 +51,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void VaryingPhrase()
+    private static void VaryingPhrase()
     {
         Expected("VARYING");
         Identifier();
@@ -113,7 +113,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void WithTest()
+    private static void WithTest()
     {
         if (CurrentEquals("WITH", "TEST"))
         {
@@ -123,7 +123,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void RetryPhrase()
+    private static void RetryPhrase()
     {
         var hasFor = false;
 
@@ -151,7 +151,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void TallyingPhrase()
+    private static void TallyingPhrase()
     {
         if (!CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "FOR"))
         {
@@ -256,7 +256,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void ReplacingPhrase()
+    private static void ReplacingPhrase()
     {
         if (!CurrentEquals("CHARACTERS", "ALL", "LEADING", "FIRST"))
         {
@@ -477,7 +477,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void AfterBeforePhrase(bool beforeExists = false, bool afterExists = false)
+    private static void AfterBeforePhrase(bool beforeExists = false, bool afterExists = false)
     {
         if (CurrentEquals("AFTER"))
         {
@@ -535,7 +535,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void InvalidKey(ref bool isConditional, bool invalidKeyExists = false, bool notInvalidKeyExists = false)
+    private static void InvalidKey(ref bool isConditional, bool invalidKeyExists = false, bool notInvalidKeyExists = false)
     {
         if (CurrentEquals("INVALID"))
         {
@@ -576,7 +576,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void OnException(ref bool isConditional, bool onExceptionExists = false, bool notOnExceptionExists = false)
+    private static void OnException(ref bool isConditional, bool onExceptionExists = false, bool notOnExceptionExists = false)
     {
         if (CurrentEquals("ON") || CurrentEquals("EXCEPTION"))
         {
@@ -617,7 +617,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void RaisingStatus(bool raisingExists = false, bool statusExists = false)
+    private static void RaisingStatus(bool raisingExists = false, bool statusExists = false)
     {
         if (CurrentEquals("RAISING"))
         {
@@ -681,7 +681,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void AtEnd(ref bool isConditional, bool atEndExists = false, bool notAtEndExists = false)
+    private static void AtEnd(ref bool isConditional, bool atEndExists = false, bool notAtEndExists = false)
     {
         if (CurrentEquals("AT") || CurrentEquals("END"))
         {
@@ -722,7 +722,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void SizeError(ref bool isConditional, bool onErrorExists = false, bool notOnErrorExists = false)
+    private static void SizeError(ref bool isConditional, bool onErrorExists = false, bool notOnErrorExists = false)
     {
         if (CurrentEquals("ON") || CurrentEquals("SIZE"))
         {
@@ -765,7 +765,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void OnOverflow(ref bool isConditional, bool onOverflowExists = false, bool notOnOverflowExists = false)
+    private static void OnOverflow(ref bool isConditional, bool onOverflowExists = false, bool notOnOverflowExists = false)
     {
         if (CurrentEquals("ON") || CurrentEquals("OVERFLOW"))
         {
@@ -806,7 +806,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void WriteBeforeAfter(bool beforeExists = false, bool afterExists = false)
+    private static void WriteBeforeAfter(bool beforeExists = false, bool afterExists = false)
     {
         if (CurrentEquals("BEFORE"))
         {
@@ -842,7 +842,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void SetLocale(SetLcValues locales = new())
+    private static void SetLocale(SetLcValues locales = new())
     {
         if (CurrentEquals("LC_ALL"))
         {
@@ -964,7 +964,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void AtEndOfPage(ref bool isConditional, bool atEndOfPageExists = false, bool notAtEndOfPageExists = false)
+    private static void AtEndOfPage(ref bool isConditional, bool atEndOfPageExists = false, bool notAtEndOfPageExists = false)
     {
         if (CurrentEquals("AT", "END-OF-PAGE", "EOP"))
         {
@@ -1005,7 +1005,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void ForAlphanumericForNational(bool forAlphanumericExists = false, bool forNationalExists = false)
+    private static void ForAlphanumericForNational(bool forAlphanumericExists = false, bool forNationalExists = false)
     {
         if (CurrentEquals("FOR") && LookaheadEquals(1, "ALPHANUMERIC") || CurrentEquals("ALPHANUMERIC"))
         {
@@ -1047,7 +1047,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void LineColumn(bool lineExists = false, bool columnExists = false)
+    private static void LineColumn(bool lineExists = false, bool columnExists = false)
     {
         if (CurrentEquals("LINE"))
         {
@@ -1104,7 +1104,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void Arithmetic(params string[] delimiter)
+    private static void Arithmetic(params string[] delimiter)
     {
         static bool IsArithmeticSymbol(Token current)
         {
@@ -1155,7 +1155,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void Condition(params string[] delimiter)
+    private static void Condition(params string[] delimiter)
     {
         var expression = new List<Token>();
 
@@ -1276,7 +1276,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void StartRelationalOperator()
+    private static void StartRelationalOperator()
     {
         string[] operators =
         {
@@ -1338,7 +1338,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void EncodingEndianness(bool encodingExists = false, bool endiannessExists = false)
+    private static void EncodingEndianness(bool encodingExists = false, bool endiannessExists = false)
     {
         if (CurrentEquals("BINARY-ENCODING", "DECIMAL-ENCODING"))
         {
@@ -1374,7 +1374,7 @@ public static partial class Analyzer
         }
     }
 
-    public static EvaluateOperand SelectionSubject()
+    private static EvaluateOperand SelectionSubject()
     {
         if (CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && !LookaheadEquals(1, TokenType.Symbol))
         {
@@ -1409,7 +1409,7 @@ public static partial class Analyzer
         return EvaluateOperand.Invalid;
     }
 
-    public static void SelectionObject(EvaluateOperand operand)
+    private static void SelectionObject(EvaluateOperand operand)
     {
         bool identifier = operand is
             EvaluateOperand.Identifier or EvaluateOperand.Literal or
@@ -1472,7 +1472,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void RangeExpression(bool canHaveRange, EvaluateOperand rangeType)
+    private static void RangeExpression(bool canHaveRange, EvaluateOperand rangeType)
     {
         if (canHaveRange && CurrentEquals("THROUGH", "THRU"))
         {
@@ -1499,7 +1499,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void ParseLiteral(bool numeric, bool @string)
+    private static void ParseLiteral(bool numeric, bool @string)
     {
         if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
         {
@@ -1519,12 +1519,12 @@ public static partial class Analyzer
         }
     }
 
-    public static bool NotIdentifierOrLiteral()
+    private static bool NotIdentifierOrLiteral()
     {
         return !CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String);
     }
 
-    public static bool IdentifierOrLiteral()
+    private static bool IdentifierOrLiteral()
     {
         return CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String);
     }

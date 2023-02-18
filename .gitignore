@@ -6,6 +6,7 @@
 # Otterkit compiler files
 .otterkit/
 nupkg/
+publish/
 
 # COBOL source files
 *.cob

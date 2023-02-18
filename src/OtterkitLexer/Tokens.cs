@@ -1,8 +1,9 @@
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Otterkit; 
 
-public partial record Token
+public sealed partial record Token
 {
     public int line;
     public int column;
@@ -33,27 +34,56 @@ public partial record Token
 
     private static TokenType FindType(string value)
     {
+        var OrdinalIgnore = StringComparison.OrdinalIgnoreCase;
+
         //check if the value is a reserved keyword
         if (TokenLookup.IsReservedWord(value))
             return TokenType.ReservedKeyword;
+
         //check if the value is a figurative literal
         else if (TokenLookup.IsReservedFigurativeLiteral(value))
             return TokenType.FigurativeLiteral;
+
         //check if the value is an intrinsic function
         else if (TokenLookup.IsIntrinsicFunctionName(value))
             return TokenType.IntrinsicFunction;
+
         //check if the value is a symbol
         else if (TokenLookup.IsReservedSymbol(value))
             return TokenType.Symbol;
+
         //check if the value is a string
         else if (value.StartsWith('"') || value.StartsWith('\''))
             return TokenType.String;
+
+        //check if the value is a hexadecimal string
+        else if (value.StartsWith("X\"", OrdinalIgnore) || value.StartsWith("X'", OrdinalIgnore))
+            return TokenType.HexString;
+
+        //check if the value is a boolean literal
+        else if (value.StartsWith("B\"", OrdinalIgnore) || value.StartsWith("B'", OrdinalIgnore))
+            return TokenType.Boolean;
+
+        //check if the value is a hexadecimal boolean literal
+        else if (value.StartsWith("BX\"", OrdinalIgnore) || value.StartsWith("BX'", OrdinalIgnore))
+            return TokenType.HexBoolean;
+
+        //check if the value is a national literal
+        else if (value.StartsWith("N\"", OrdinalIgnore) || value.StartsWith("N'", OrdinalIgnore))
+            return TokenType.National;
+
+        //check if the value is a hexadecimal string
+        else if (value.StartsWith("NX\"", OrdinalIgnore) || value.StartsWith("NX'", OrdinalIgnore))
+            return TokenType.HexNational;
+
         //check if the value is a numeric
         else if (IsNumeric(value) && NumericRegex().IsMatch(value))
             return TokenType.Numeric;
+
         //check if the value is End Of File
         else if (value.Equals(">>IMP-EOF"))
             return TokenType.EOF;
+
         //if none of the above, it's an identifier
         else
             return TokenType.Identifier;
@@ -140,6 +170,23 @@ public partial record Token
             [..] => false
         };
 
+    }
+
+    public override sealed string ToString()
+    {
+        StringBuilder stringBuilder = new();
+        stringBuilder.Append("Token");
+        stringBuilder.Append(" { ");
+        
+        stringBuilder.Append($"Ln: {line, -6},");
+        stringBuilder.Append($"Col: {column, -6},");
+        stringBuilder.Append($"Type: {type, -18},");
+        stringBuilder.Append($"Scope: {scope, -20},");
+        stringBuilder.Append($"Context: {context, -12},");
+        stringBuilder.Append($"Value: {value}");
+
+        stringBuilder.Append(" }");
+        return stringBuilder.ToString();
     }
 
     [GeneratedRegex("^(\\+|-)?\\.?[0-9]+(\\.[0-9]+)?$", RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking)]

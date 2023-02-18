@@ -21,12 +21,12 @@ public static partial class Lexer
     **  < numberPattern > : Matches signed and unsigned number literals, including
     **                      decimal numbers that might start with 0. or just .
     */
-    private const string WordsPattern = @"[a-zA-Z]+([-|_]*[\w0-9]+)*|[0-9]+([-|_][\w0-9]+)+";
-    private const string StringPattern = "|(\")(.*?)(\"|$)|(\')(.*?)(\'|$)";
+    private const string StringPattern = "(X|B|BX|N|NX)*(\"|\')(.*?)(\"|\'|$)";
+    private const string WordsPattern = @"|[a-zA-Z]+([-|_]*[\w0-9]+)*|[0-9]+([-|_][\w0-9]+)+";
     private const string NumberPattern = @"|(\+|-)?\.?[0-9]\d*(\.\d+)?";
     private const string EOFPattern = @"|(>>IMP-EOF)";
     private const string SymbolPattern = @"|(\+|\-|\*\*|\*|=|\/|\$|,|;|::|\.|\(|\)|>>|<>|>=|<=|>|<|&|_)";
-    private const string AllPatterns = WordsPattern + StringPattern + NumberPattern + EOFPattern + SymbolPattern;
+    private const string AllPatterns = StringPattern + WordsPattern + NumberPattern + EOFPattern + SymbolPattern;
 
     public static List<Token> Tokenize(List<string> sourceLines)
     {

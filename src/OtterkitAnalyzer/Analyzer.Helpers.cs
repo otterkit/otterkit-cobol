@@ -792,7 +792,14 @@ public static partial class Analyzer
             errorType = ErrorType.General;
         }
 
-        if (!CurrentEquals(TokenType.String))
+        if (!CurrentEquals(
+            TokenType.String, 
+            TokenType.HexString, 
+            TokenType.Boolean, 
+            TokenType.HexBoolean, 
+            TokenType.National, 
+            TokenType.HexNational
+        ))
         {
             var lookahead = Lookahead(position);
 

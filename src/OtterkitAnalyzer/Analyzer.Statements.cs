@@ -365,7 +365,14 @@ public static partial class Analyzer
         {
             case TokenType.Identifier: Identifier(); break;
             case TokenType.Numeric: Number(); break;
-            case TokenType.String: String(); break;
+            
+            case TokenType.String:
+            case TokenType.HexString:
+            case TokenType.Boolean:
+            case TokenType.HexBoolean:
+            case TokenType.National:
+            case TokenType.HexNational:
+                String(); break;
         }
 
         while (IdentifierOrLiteral())
@@ -374,7 +381,14 @@ public static partial class Analyzer
             {
                 case TokenType.Identifier: Identifier(); break;
                 case TokenType.Numeric: Number(); break;
-                case TokenType.String: String(); break;
+                
+                case TokenType.String:
+                case TokenType.HexString:
+                case TokenType.Boolean:
+                case TokenType.HexBoolean:
+                case TokenType.National:
+                case TokenType.HexNational:
+                    String(); break;
             }
         }
 

@@ -160,6 +160,11 @@ public enum TokenType
     IntrinsicFunction,
     Symbol,
     String,
+    HexString,
+    Boolean,
+    HexBoolean,
+    National,
+    HexNational,
     Numeric,
     Identifier,
     Expression,
@@ -185,8 +190,6 @@ public enum TokenContext
 {
     IsClause,
     IsStatement,
-    IsResolved,
-    IsNotResolved,
     IsEOF
 }
 

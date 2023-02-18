@@ -1521,12 +1521,21 @@ public static partial class Analyzer
 
     private static bool NotIdentifierOrLiteral()
     {
-        return !CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String);
+        return !IdentifierOrLiteral();
     }
 
     private static bool IdentifierOrLiteral()
     {
-        return CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String);
+        return CurrentEquals(
+            TokenType.Identifier, 
+            TokenType.Numeric, 
+            TokenType.String, 
+            TokenType.HexString, 
+            TokenType.Boolean, 
+            TokenType.HexBoolean, 
+            TokenType.National, 
+            TokenType.HexNational
+        );
     }
 
 }

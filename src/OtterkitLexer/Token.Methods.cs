@@ -75,6 +75,13 @@ public sealed partial record Token
             '\u212E' => true, // ESTIMATED SYMBOL
             '\u309B' or '\u309C' => true, // KATAKANA-HIRAGANA VOICED SOUND MARK..KATAKANA-HIRAGANA SEMI-VOICED SOUND MARK
             '0' or '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9' => true, // [0-9] Basic digits required by the COBOL Standard
+
+            // NFKC Modifications:
+            '\u0E33' => false, // THAI CHARACTER SARA AM
+            '\u0EB3' => false, // LAO VOWEL SIGN AM
+            '\uFF9E' => false, // HALFWIDTH KATAKANA VOICED SOUND MARK
+            '\uFF9F' => false, // HALFWIDTH KATAKANA SEMI-VOICED SOUND MARK
+            '\u037A' => false, // U+037A GREEK YPOGEGRAMMENI
             _ => false
         };
 
@@ -123,6 +130,9 @@ public sealed partial record Token
                 // Extra characters required by the COBOL standard:
                 '\u002D' or '\u005F' => true, // minus sign (HYPHEN-MINUS) and underscore (LOW LINE)
                 '\u30FB' => true, // KATAKANA MIDDLE DOT
+
+                // NFKC Modifications:
+                '\u037A' => false, // U+037A GREEK YPOGEGRAMMENI
                 _ => false
             };
         }

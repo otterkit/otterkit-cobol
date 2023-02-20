@@ -296,18 +296,18 @@ public static partial class Analyzer
 
                 if (isPrototype && (isCommon || isInitial || isRecursive))
                 {
-                    ErrorHandler.Parser.Report(FileName, ProgramIdentifier, ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, ProgramIdentifier, ErrorType.General, """
                     Invalid prototype. Program prototypes cannot be defined as common, initial or recursive.
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, ProgramIdentifier);
+                    ErrorHandler.Analyzer.PrettyError(FileName, ProgramIdentifier);
                 }
 
                 if (isInitial && isRecursive)
                 {
-                    ErrorHandler.Parser.Report(FileName, ProgramIdentifier, ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, ProgramIdentifier, ErrorType.General, """
                     Invalid program definition. Initial programs cannot be defined as recursive.
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, ProgramIdentifier);
+                    ErrorHandler.Analyzer.PrettyError(FileName, ProgramIdentifier);
                 }
 
                 if (!isPrototype) Optional("PROGRAM");
@@ -379,10 +379,10 @@ public static partial class Analyzer
                 Optional("FROM");
                 if (!CurrentEquals(TokenType.Identifier))
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     The INHERITS FROM clause must contain at least one class or object name.
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 }
 
                 Identifier();
@@ -394,10 +394,10 @@ public static partial class Analyzer
                 Expected("USING");
                 if (!CurrentEquals(TokenType.Identifier))
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     The USING clause must contain at least one parameter.
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 }
 
                 Identifier();
@@ -433,10 +433,10 @@ public static partial class Analyzer
                 Optional("FROM");
                 if (!CurrentEquals(TokenType.Identifier))
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     The INHERITS FROM clause must contain at least one class or object name.
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 }
 
                 Identifier();
@@ -448,10 +448,10 @@ public static partial class Analyzer
                 Expected("USING");
                 if (!CurrentEquals(TokenType.Identifier))
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     The USING clause must contain at least one parameter.
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 }
 
                 Identifier();
@@ -544,10 +544,10 @@ public static partial class Analyzer
                 Expected("IMPLEMENTS");
                 if (!CurrentEquals(TokenType.Identifier))
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     The IMPLEMENTS clause must contain at least one interface name.
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 }
 
                 Identifier();
@@ -569,10 +569,10 @@ public static partial class Analyzer
                 Expected("IMPLEMENTS");
                 if (!CurrentEquals(TokenType.Identifier))
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     The IMPLEMENTS clause must contain at least one interface name.
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 }
 
                 Identifier();
@@ -717,10 +717,10 @@ public static partial class Analyzer
                         Expected("USING");
                         if (!CurrentEquals(TokenType.Identifier))
                         {
-                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                             The USING clause must contain at least one class, object or interface name.
                             """);
-                            ErrorHandler.Parser.PrettyError(FileName, Current());
+                            ErrorHandler.Analyzer.PrettyError(FileName, Current());
                         }
 
                         if (!CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Identifier))
@@ -751,10 +751,10 @@ public static partial class Analyzer
                         Expected("USING");
                         if (!CurrentEquals(TokenType.Identifier))
                         {
-                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                             The USING clause must contain at least one class, object or interface name.
                             """);
-                            ErrorHandler.Parser.PrettyError(FileName, Current());
+                            ErrorHandler.Analyzer.PrettyError(FileName, Current());
                         }
 
                         if (!CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Identifier))
@@ -848,10 +848,10 @@ public static partial class Analyzer
                 {
                     if (CurrentEquals("BY") && !LookaheadEquals(1, "VALUE", "REFERENCE"))
                     {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                         The USING BY clause in the procedure division header must be followed by "VALUE" or "REFERENCE"
                         """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
                         CombinedAnchorPoint(TokenContext.IsStatement, "RETURNING", ".");
                     }
@@ -870,10 +870,10 @@ public static partial class Analyzer
 
                         if (!CurrentEquals(TokenType.Identifier))
                         {
-                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                             The USING BY REFERENCE clause must contain at least one data item name.
                             """);
-                            ErrorHandler.Parser.PrettyError(FileName, Current());
+                            ErrorHandler.Analyzer.PrettyError(FileName, Current());
                         }
                         
                         SourceUnitSignature signature;
@@ -915,10 +915,10 @@ public static partial class Analyzer
                         Expected("VALUE");
                         if (!CurrentEquals(TokenType.Identifier))
                         {
-                            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                             The USING BY VALUE clause must contain at least one data item name.
                             """);
-                            ErrorHandler.Parser.PrettyError(FileName, Current());
+                            ErrorHandler.Analyzer.PrettyError(FileName, Current());
                         }
                         
                         SourceUnitSignature signature;
@@ -981,10 +981,10 @@ public static partial class Analyzer
 
             if (!canContainStatements && (CurrentEquals(TokenContext.IsStatement) || CurrentEquals(TokenType.Identifier)))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 The procedure division of function, program and method prototypes must not contain any statements, sections or paragraphs
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
                 AnchorPoint("END");
             }
@@ -998,10 +998,10 @@ public static partial class Analyzer
         {
             if (!CurrentEquals(TokenType.Identifier))
             {
-                ErrorHandler.Parser.Report(FileName, Lookahead(-1), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, """
                 Missing returning data item after this RETURNING definition.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
+                ErrorHandler.Analyzer.PrettyError(FileName, Lookahead(-1));
                 return;
             }
 
@@ -1057,8 +1057,8 @@ public static partial class Analyzer
                     _ => throw new UnreachableException()
                 };
 
-                ErrorHandler.Parser.Report(FileName, Lookahead(-1), ErrorType.General, errorMessageChoice);
-                ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
+                ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, errorMessageChoice);
+                ErrorHandler.Analyzer.PrettyError(FileName, Lookahead(-1));
                 return;
             }
 

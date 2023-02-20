@@ -15,7 +15,7 @@ public static class ErrorHandler
         }
     }
 
-    public static class Parser
+    public static class Analyzer
     {
         public static void PrettyError(string fileName, Token token, ConsoleColor color = ConsoleColor.Red)
         {
@@ -65,6 +65,14 @@ public static class ErrorHandler
             Error = true;
 
             Console.ForegroundColor = ConsoleColor.Red;
+
+            if (error == ErrorType.Syntax)
+            {
+                Syntax(token, expected[0], fileName);
+                Console.ResetColor();
+                return;
+            }
+
             if (error == ErrorType.Choice)
             {
                 Choice(token, expected, fileName);
@@ -86,20 +94,25 @@ public static class ErrorHandler
                 return;
             }
 
-            if (error == ErrorType.General)
-            {
-                General(token, expected, fileName);
-                Console.ResetColor();
-                return;
-            }
-
             General(token, expected, fileName);
             Console.ResetColor();
         }
 
+        private static void Syntax(Token token, string errorMessage, string fileName)
+        {
+            Console.Error.Write("Otterkit Lexer error: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Error.WriteLine("{0}:{1}:{2}", Path.GetFullPath(fileName), token.line, token.column);
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Error.Write("Syntax error: ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("{0}\n", errorMessage);
+        }
+
         private static void General(Token token, string[] expected, string fileName)
         {
-            Console.Error.Write("Otterkit parsing error: ");
+            Console.Error.Write("Otterkit Analyzer error: ");
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Error.WriteLine("{0}:{1}:{2}", Path.GetFullPath(fileName), token.line, token.column);
 
@@ -111,7 +124,7 @@ public static class ErrorHandler
 
         private static void Choice(Token token, string[] expected, string fileName)
         {
-            Console.Error.Write("Otterkit parsing error: ");
+            Console.Error.Write("Otterkit Analyzer error: ");
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Error.WriteLine("{0}:{1}:{2}", fileName, token.line, token.column);
 
@@ -124,7 +137,7 @@ public static class ErrorHandler
         private static void Expected(Token token, string expected, string fileName)
         {
 
-            Console.Error.Write("Otterkit parsing error: ");
+            Console.Error.Write("Otterkit Analyzer error: ");
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Error.WriteLine("{0}:{1}:{2}", fileName, token.line, token.column);
 
@@ -137,7 +150,7 @@ public static class ErrorHandler
         private static void Recovery(Token token, string recovery, string fileName)
         {
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Error.Write("Otterkit parsing recovery: ");
+            Console.Error.Write("Otterkit Analyzer recovery: ");
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.Error.WriteLine("{0}:{1}:{2}", Path.GetFullPath(fileName), token.line, token.column);
 
@@ -155,7 +168,7 @@ public static class ErrorHandler
         var isPlural = filesCount > 1 ? "s" : "";
 
         Console.ForegroundColor = ConsoleColor.Blue;
-        Console.WriteLine($"Parsing complete, parsed {filesCount} file{isPlural}, no errors found! \n");
+        Console.WriteLine($"Analyzed {filesCount} file{isPlural}, no errors found! \n");
         Console.ResetColor();
     }
 

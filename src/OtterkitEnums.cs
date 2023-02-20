@@ -196,6 +196,7 @@ public enum TokenContext
 public enum ErrorType
 {
     General,
+    Syntax,
     Expected,
     Choice,
     Recovery,

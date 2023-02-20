@@ -155,10 +155,10 @@ public static partial class Analyzer
     {
         if (!CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "FOR"))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The tallying phrase must start with a data item identifier, which must be followed by the FOR keyword
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         while (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "FOR"))
@@ -168,10 +168,10 @@ public static partial class Analyzer
 
             if (!CurrentEquals("CHARACTERS", "ALL", "LEADING"))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 The tallying phrase must contain at least one of the following clauses: CHARACTERS, ALL or LEADING
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             while (CurrentEquals("CHARACTERS", "ALL", "LEADING"))
@@ -260,10 +260,10 @@ public static partial class Analyzer
     {
         if (!CurrentEquals("CHARACTERS", "ALL", "LEADING", "FIRST"))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The replacing phrase must contain at least one of the following clauses: CHARACTERS, ALL, LEADING or FIRST
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         while (CurrentEquals("CHARACTERS", "ALL", "LEADING", "FIRST"))
@@ -483,11 +483,11 @@ public static partial class Analyzer
         {
             if (afterExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 AFTER can only be specified once in this part of the statement. 
                 The same applies to BEFORE.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             afterExists = true;
@@ -511,11 +511,11 @@ public static partial class Analyzer
         {
             if (beforeExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 BEFORE can only be specified once in this part of the statement. 
                 The same applies to AFTER.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             beforeExists = true;
@@ -541,11 +541,11 @@ public static partial class Analyzer
         {
             if (invalidKeyExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 INVALID KEY can only be specified once in this statement. 
                 The same applies to the NOT INVALID KEY.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             invalidKeyExists = true;
@@ -560,11 +560,11 @@ public static partial class Analyzer
         {
             if (notInvalidKeyExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 NOT INVALID KEY can only be specified once in this statement. 
                 The same applies to the INVALID KEY.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             notInvalidKeyExists = true;
@@ -582,11 +582,11 @@ public static partial class Analyzer
         {
             if (onExceptionExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 ON EXCEPTION can only be specified once in this statement. 
                 The same applies to the NOT ON EXCEPTION.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             onExceptionExists = true;
@@ -601,11 +601,11 @@ public static partial class Analyzer
         {
             if (notOnExceptionExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 NOT ON EXCEPTION can only be specified once in this statement. 
                 The same applies to the ON EXCEPTION.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             notOnExceptionExists = true;
@@ -623,11 +623,11 @@ public static partial class Analyzer
         {
             if (raisingExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 RAISING can only be specified once in this statement. 
                 The same applies to the WITH NORMAL/ERROR STATUS.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             Expected("RAISING");
@@ -653,11 +653,11 @@ public static partial class Analyzer
         {
             if (statusExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 WITH NORMAL/ERROR STATUS can only be specified once in this statement. 
                 The same applies to the RAISING.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             Optional("WITH");
@@ -687,11 +687,11 @@ public static partial class Analyzer
         {
             if (atEndExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 AT END can only be specified once in this statement. 
                 The same applies to the NOT AT END.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             atEndExists = true;
@@ -706,11 +706,11 @@ public static partial class Analyzer
         {
             if (notAtEndExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 NOT AT END can only be specified once in this statement. 
                 The same applies to the AT END.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             notAtEndExists = true;
@@ -728,11 +728,11 @@ public static partial class Analyzer
         {
             if (onErrorExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 ON SIZE ERROR can only be specified once in this statement. 
                 The same applies to NOT ON SIZE ERROR.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             onErrorExists = true;
@@ -748,11 +748,11 @@ public static partial class Analyzer
         {
             if (notOnErrorExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 NOT ON SIZE ERROR can only be specified once in this statement. 
                 The same applies to ON SIZE ERROR.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             notOnErrorExists = true;
@@ -771,11 +771,11 @@ public static partial class Analyzer
         {
             if (onOverflowExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 ON OVERFLOW can only be specified once in this statement. 
                 The same applies to NOT ON OVERFLOW.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             onOverflowExists = true;
@@ -790,11 +790,11 @@ public static partial class Analyzer
         {
             if (notOnOverflowExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 NOT ON OVERFLOW can only be specified once in this statement. 
                 The same applies to ON OVERFLOW.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             notOnOverflowExists = true;
@@ -812,11 +812,11 @@ public static partial class Analyzer
         {
             if (beforeExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 BEFORE can only be specified once in this statement. 
                 The same applies to AFTER.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             beforeExists = true;
             Expected("BEFORE");
@@ -829,11 +829,11 @@ public static partial class Analyzer
         {
             if (afterExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 AFTER can only be specified once in this statement. 
                 The same applies to BEFORE.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             afterExists = true;
             Expected("AFTER");
@@ -848,11 +848,11 @@ public static partial class Analyzer
         {
             if (locales.LC_ALL)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 LC_ALL can only be specified once in this statement. 
                 The same applies to each of the other locale names.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             locales.LC_ALL = true;
             Expected("LC_ALL");
@@ -865,11 +865,11 @@ public static partial class Analyzer
         {
             if (locales.LC_COLLATE)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 LC_COLLATE can only be specified once in this statement. 
                 The same applies to each of the other locale names.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             locales.LC_COLLATE = true;
             Expected("LC_COLLATE");
@@ -882,11 +882,11 @@ public static partial class Analyzer
         {
             if (locales.LC_CTYPE)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 LC_CTYPE can only be specified once in this statement. 
                 The same applies to each of the other locale names.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             locales.LC_CTYPE = true;
             Expected("LC_CTYPE");
@@ -899,11 +899,11 @@ public static partial class Analyzer
         {
             if (locales.LC_MESSAGES)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 LC_MESSAGES can only be specified once in this statement. 
                 The same applies to each of the other locale names.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             locales.LC_MESSAGES = true;
             Expected("LC_MESSAGES");
@@ -916,11 +916,11 @@ public static partial class Analyzer
         {
             if (locales.LC_MONETARY)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 LC_MONETARY can only be specified once in this statement. 
                 The same applies to each of the other locale names.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             locales.LC_MONETARY = true;
             Expected("LC_MONETARY");
@@ -933,11 +933,11 @@ public static partial class Analyzer
         {
             if (locales.LC_NUMERIC)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 LC_NUMERIC can only be specified once in this statement. 
                 The same applies to each of the other locale names.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             locales.LC_NUMERIC = true;
             Expected("LC_NUMERIC");
@@ -950,11 +950,11 @@ public static partial class Analyzer
         {
             if (locales.LC_TIME)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 LC_TIME can only be specified once in this statement. 
                 The same applies to each of the other locale names.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             locales.LC_TIME = true;
             Expected("LC_TIME");
@@ -970,11 +970,11 @@ public static partial class Analyzer
         {
             if (atEndOfPageExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 AT END-OF-PAGE can only be specified once in this statement. 
                 The same applies to NOT AT END-OF-PAGE.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             atEndOfPageExists = true;
@@ -989,11 +989,11 @@ public static partial class Analyzer
         {
             if (notAtEndOfPageExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 NOT AT END-OF-PAGE can only be specified once in this statement. 
                 The same applies to AT END-OF-PAGE.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             isConditional = true;
             notAtEndOfPageExists = true;
@@ -1011,11 +1011,11 @@ public static partial class Analyzer
         {
             if (forAlphanumericExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 FOR ALPHANUMERIC can only be specified once in this statement. 
                 The same applies to FOR NATIONAL.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             forAlphanumericExists = true;
             Optional("FOR");
@@ -1031,11 +1031,11 @@ public static partial class Analyzer
         {
             if (forNationalExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 FOR NATIONAL can only be specified once in this statement. 
                 The same applies to FOR ALPHANUMERIC.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             forNationalExists = true;
             Optional("FOR");
@@ -1053,11 +1053,11 @@ public static partial class Analyzer
         {
             if (lineExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 LINE NUMBER can only be specified once in this statement. 
                 The same applies to the COLUMN NUMBER.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             lineExists = true;
@@ -1081,11 +1081,11 @@ public static partial class Analyzer
         {
             if (columnExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 COLUMN NUMBER can only be specified once in this statement. 
                 The same applies to the LINE NUMBER.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             columnExists = true;
@@ -1129,29 +1129,29 @@ public static partial class Analyzer
 
             if (CurrentEquals(TokenType.Symbol) && !CurrentEquals(".") && !IsArithmeticSymbol(Current()))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Invalid symbol in this arithmetic expression. Valid operators are: +, -, *, /, **, ( and )
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
         }
 
         if (!Helpers.IsBalanced(expression))
         {
-            ErrorHandler.Parser.Report(FileName, expression[0], ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, expression[0], ErrorType.General, """
             This expression is not balanced, one or more parenthesis to not have their matching opening or closing pair, it is an invalid expression
             """);
-            ErrorHandler.Parser.PrettyError(FileName, expression[0]);
+            ErrorHandler.Analyzer.PrettyError(FileName, expression[0]);
         }
 
         var shuntingYard = Helpers.ShuntingYard(expression, Helpers.ArithmeticPrecedence);
 
         if (!Helpers.EvaluatePostfix(shuntingYard, Helpers.ArithmeticPrecedence, out Token error))
         {
-            ErrorHandler.Parser.Report(FileName, error, ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, error, ErrorType.General, """
             This expression cannot be correctly evaluated. Please make sure that all operators have their matching operands.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, error);
+            ErrorHandler.Analyzer.PrettyError(FileName, error);
         }
     }
 
@@ -1259,20 +1259,20 @@ public static partial class Analyzer
 
         if (!Helpers.IsBalanced(expression))
         {
-            ErrorHandler.Parser.Report(FileName, expression[0], ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, expression[0], ErrorType.General, """
             This expression is not balanced, one or more parenthesis to not have their matching opening or closing pair, it is an invalid expression
             """);
-            ErrorHandler.Parser.PrettyError(FileName, expression[0]);
+            ErrorHandler.Analyzer.PrettyError(FileName, expression[0]);
         }
 
         var shuntingYard = Helpers.ShuntingYard(expression, Helpers.BooleanPrecedence);
 
         if (!Helpers.EvaluatePostfix(shuntingYard, Helpers.BooleanPrecedence, out Token error))
         {
-            ErrorHandler.Parser.Report(FileName, error, ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, error, ErrorType.General, """
             This expression cannot be correctly evaluated. Please make sure that all operators have their matching operands.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, error);
+            ErrorHandler.Analyzer.PrettyError(FileName, error);
         }
     }
 
@@ -1329,10 +1329,10 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
             Expected a relational operator. With the exceptions being the "IS NOT EQUAL TO" and "IS NOT =" operators 
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
             Continue();
         }
@@ -1344,11 +1344,11 @@ public static partial class Analyzer
         {
             if (encodingExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 The encoding phrase can only be specified once in this clause. 
                 The same applies to the endianness phrase.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             encodingExists = true;
             Expected(Current().value);
@@ -1361,11 +1361,11 @@ public static partial class Analyzer
         {
             if (endiannessExists)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 The endianness phrase can only be specified once in this clause. 
                 The same applies to the encoding phrase.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             endiannessExists = true;
             Expected(Current().value);
@@ -1503,10 +1503,10 @@ public static partial class Analyzer
     {
         if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             Expected an identifier or a literal
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         if (numeric && CurrentEquals(TokenType.Numeric))

@@ -18,10 +18,10 @@ public static partial class Analyzer
 
         if (errorCheck)
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
             Expected the start of a statement. Instead found "{Current().value}"
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
             AnchorPoint(TokenContext.IsStatement);
         }
@@ -310,10 +310,10 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             Expected AFTER EXCEPTION OBJECT, AFTER EXCEPTION CONDITION, BEFORE REPORTING or AFTER EXCEPTION/ERROR
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
             AnchorPoint(TokenContext.IsStatement);
         }
@@ -355,8 +355,8 @@ public static partial class Analyzer
 
         if (NotIdentifierOrLiteral())
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "an identifier or a literal");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "an identifier or a literal");
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
             AnchorPoint("UPON", "WITH", "NO");
         }
@@ -447,10 +447,10 @@ public static partial class Analyzer
             Optional("AT");
             if (!CurrentEquals("LINE", "COLUMN", "COL"))
             {
-                ErrorHandler.Parser.Report(FileName, Lookahead(-1), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, """
                 When specifying the AT keyword, it must be followed by a LINE NUMBER, COLUMN/COL NUMBER or both.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
+                ErrorHandler.Analyzer.PrettyError(FileName, Lookahead(-1));
             }
             LineColumn();
             OnException(ref isConditional);
@@ -488,8 +488,8 @@ public static partial class Analyzer
         Expected("COMPUTE");
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         while (CurrentEquals(TokenType.Identifier))
@@ -500,8 +500,8 @@ public static partial class Analyzer
         Expected("=");
         if (NotIdentifierOrLiteral())
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "an identifier, numeric literal or a valid arithmetic symbol");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "an identifier, numeric literal or a valid arithmetic symbol");
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         Arithmetic(".");
@@ -558,10 +558,10 @@ public static partial class Analyzer
             {
                 if (CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     The USING BY VALUE clause must only be specified in a program prototype call.
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     Continue();
 
                     AnchorPoint("BY", "REFERENCE", "CONTENT", "RETURNING");
@@ -578,10 +578,10 @@ public static partial class Analyzer
 
                     if (!CurrentEquals(TokenType.Identifier))
                     {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                         The USING BY REFERENCE clause must contain at least one data item name.
                         """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     }
 
                     Identifier();
@@ -598,10 +598,10 @@ public static partial class Analyzer
                     Expected("CONTENT");
                     if (!CurrentEquals(TokenType.Identifier))
                     {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                         The USING BY CONTENT clause must contain at least one data item name.
                         """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
                         AnchorPoint("BY", "REFERENCE", "CONTENT", "RETURNING");
                         if (CurrentEquals("RETURNING", ".")) break;
@@ -625,10 +625,10 @@ public static partial class Analyzer
 
                     if (!CurrentEquals(TokenType.Identifier) && !CurrentEquals("OMMITED"))
                     {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                         The USING BY REFERENCE clause must contain at least one data item name.
                         """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     }
 
                     if (CurrentEquals("OMMITED"))
@@ -647,10 +647,10 @@ public static partial class Analyzer
                     Expected("CONTENT");
                     if (NotIdentifierOrLiteral())
                     {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                         The USING BY CONTENT clause must contain at least one data item name or literal.
                         """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     }
 
                     if (CurrentEquals(TokenType.Identifier))
@@ -673,10 +673,10 @@ public static partial class Analyzer
                     Expected("VALUE");
                     if (NotIdentifierOrLiteral())
                     {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                         The USING BY VALUE clause must contain at least one data item name or literal.
                         """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     }
 
                     if (CurrentEquals(TokenType.Identifier))
@@ -737,8 +737,8 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         while (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
@@ -764,16 +764,16 @@ public static partial class Analyzer
                     break;
 
                 default:
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     break;
             }
 
             Expected("GIVING");
             if (Current().type != TokenType.Identifier)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             while (Current().type == TokenType.Identifier)
@@ -784,8 +784,8 @@ public static partial class Analyzer
             Expected("GIVING");
             if (Current().type != TokenType.Identifier)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             while (Current().type == TokenType.Identifier)
@@ -796,8 +796,8 @@ public static partial class Analyzer
             Expected("TO");
             if (Current().type != TokenType.Identifier)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             while (Current().type == TokenType.Identifier)
@@ -805,8 +805,8 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "TO or GIVING");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "TO or GIVING");
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         SizeError(ref isConditional);
@@ -821,8 +821,8 @@ public static partial class Analyzer
         Expected("SUBTRACT");
         if (Current().type != TokenType.Identifier && Current().type != TokenType.Numeric)
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         while (Current().type == TokenType.Identifier
@@ -850,16 +850,16 @@ public static partial class Analyzer
                     break;
 
                 default:
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     break;
             }
 
             Expected("GIVING");
             if (Current().type != TokenType.Identifier)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             while (Current().type == TokenType.Identifier)
@@ -870,8 +870,8 @@ public static partial class Analyzer
             Expected("FROM");
             if (Current().type != TokenType.Identifier)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             while (Current().type == TokenType.Identifier)
@@ -879,8 +879,8 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "FROM");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "FROM");
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         SizeError(ref isConditional);
@@ -896,11 +896,11 @@ public static partial class Analyzer
         Optional("THEN");
         if (CurrentEquals("NEXT") && LookaheadEquals(1, "SENTENCE"))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             Unsupported phrase: NEXT SENTENCE is an archaic feature. This phrase can be confusing and is a common source of errors.
             The CONTINUE statement can be used to accomplish the same functionality while being much clearer and less prone to error
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
         ParseStatements(true);
         if (CurrentEquals("ELSE"))
@@ -973,10 +973,10 @@ public static partial class Analyzer
 
                 if (NotIdentifierOrLiteral())
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     Expected an identifier if message tag, object reference or a pointer as specified, and an identifier or literal otherwise
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
                     AnchorPoint(TokenContext.IsStatement);
                 }
@@ -1002,10 +1002,10 @@ public static partial class Analyzer
 
                     if (NotIdentifierOrLiteral())
                     {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                         Expected an identifier if message tag, object reference or a pointer as specified, and an identifier or literal otherwise
                         """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
                         AnchorPoint(TokenContext.IsStatement);
                     }
@@ -1041,10 +1041,10 @@ public static partial class Analyzer
         Expected("INITIATE");
         if (Current().type != TokenType.Identifier)
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The INITIATE statement must only contain report entry identifiers defined in the report section.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
         Identifier();
         while (Current().type == TokenType.Identifier)
@@ -1052,10 +1052,10 @@ public static partial class Analyzer
 
         if (!CurrentEquals("."))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The INITIATE statement must only contain report entry identifiers defined in the report section.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
     }
 
@@ -1133,10 +1133,10 @@ public static partial class Analyzer
 
                     if (!CurrentEquals(TokenType.Identifier) && !CurrentEquals("OMMITED"))
                     {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                         The USING BY REFERENCE clause must contain at least one data item name.
                         """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     }
 
                     if (CurrentEquals("OMMITED"))
@@ -1155,10 +1155,10 @@ public static partial class Analyzer
                     Expected("CONTENT");
                     if (NotIdentifierOrLiteral())
                     {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                         The USING BY CONTENT clause must contain at least one data item name or literal.
                         """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     }
 
                     if (CurrentEquals(TokenType.Identifier))
@@ -1181,10 +1181,10 @@ public static partial class Analyzer
                     Expected("VALUE");
                     if (NotIdentifierOrLiteral())
                     {
-                        ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                         The USING BY VALUE clause must contain at least one data item name or literal.
                         """);
-                        ErrorHandler.Parser.PrettyError(FileName, Current());
+                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     }
 
                     if (CurrentEquals(TokenType.Identifier))
@@ -1229,10 +1229,10 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         Identifier();
@@ -1256,10 +1256,10 @@ public static partial class Analyzer
 
             if (!CurrentEquals(TokenType.Identifier))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             Identifier();
@@ -1282,10 +1282,10 @@ public static partial class Analyzer
             {
                 if (!CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     The COLLATING SEQUENCE clause must contain at least 1 alphabet name (max of 2 alphabet names) or at least one FOR ALPHANUMERIC and FOR NATIONAL clauses.
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
                     CombinedAnchorPoint(TokenContext.IsStatement, "USING");
                 }
@@ -1338,8 +1338,8 @@ public static partial class Analyzer
                 break;
 
             default:
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 break;
         }
 
@@ -1357,16 +1357,16 @@ public static partial class Analyzer
                     break;
 
                 default:
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     break;
             }
 
             Expected("GIVING");
             if (Current().type != TokenType.Identifier)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             while (Current().type == TokenType.Identifier)
@@ -1377,8 +1377,8 @@ public static partial class Analyzer
             Expected("BY");
             if (Current().type != TokenType.Identifier)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             while (Current().type == TokenType.Identifier)
@@ -1386,8 +1386,8 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "BY");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "BY");
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         SizeError(ref isConditional);
@@ -1410,10 +1410,10 @@ public static partial class Analyzer
 
         if (NotIdentifierOrLiteral())
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The MOVE statement must only contain a single data item identifier, datatype literal or an intrisic function which returns a data item before the "TO" reserved word.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         if (Current().type == TokenType.Identifier)
@@ -1428,10 +1428,10 @@ public static partial class Analyzer
         Expected("TO");
         if (Current().type != TokenType.Identifier)
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The MOVE statement must only contain data item identifiers after the "TO" reserved word.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         while (Current().type == TokenType.Identifier)
@@ -1439,10 +1439,10 @@ public static partial class Analyzer
 
         if (!CurrentEquals(".") && !CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(TokenContext.IsStatement))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The MOVE statement must only contain data item identifiers after the "TO" reserved word.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
     }
 
@@ -1472,10 +1472,10 @@ public static partial class Analyzer
             }
             else
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Expected ALL OTHER, NO OTHER or READ ONLY. One of them must be specified in the SHARING clause
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
         }
 
@@ -1528,10 +1528,10 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     Expected ALL OTHER, NO OTHER or READ ONLY. One of them must be specified in the SHARING clause
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 }
             }
 
@@ -1578,8 +1578,8 @@ public static partial class Analyzer
                 break;
 
             default:
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 break;
         }
 
@@ -1597,16 +1597,16 @@ public static partial class Analyzer
                     break;
 
                 default:
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     break;
             }
 
             Expected("GIVING");
             if (Current().type != TokenType.Identifier)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             while (Current().type == TokenType.Identifier)
@@ -1626,8 +1626,8 @@ public static partial class Analyzer
                     break;
 
                 default:
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                     break;
             }
 
@@ -1641,8 +1641,8 @@ public static partial class Analyzer
             Expected("INTO");
             if (Current().type != TokenType.Identifier)
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             while (Current().type == TokenType.Identifier)
@@ -1650,8 +1650,8 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "BY or INTO");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "BY or INTO");
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         SizeError(ref isConditional);
@@ -1792,10 +1792,10 @@ public static partial class Analyzer
 
         if (!CurrentEquals("."))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The FREE statement must only contain based data item identifiers.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
     }
@@ -1857,11 +1857,11 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The CLOSE statement only accepts file connector names. 
             NOTE: This statement must not specify more than one file connector when inside of an exception-checking phrase in a PERFORM statement.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         while (Current().type == TokenType.Identifier)
@@ -1887,11 +1887,11 @@ public static partial class Analyzer
 
         if (!CurrentEquals("."))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The CLOSE statement only accepts file connector names. 
             NOTE: This statement must not specify more than one file connector when inside of an exception-checking phrase in a PERFORM statement.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
     }
 
@@ -1906,10 +1906,10 @@ public static partial class Analyzer
 
         else
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The CANCEL statement only accepts Alphanumeric or National literals and data items, or a program prototype name specified in the REPOSITORY paragraph.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
             Continue();
         }
 
@@ -1924,10 +1924,10 @@ public static partial class Analyzer
 
         if (!CurrentEquals("."))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The CANCEL statement only accepts Alphanumeric or National literals and data items, or a program prototype name specified in the REPOSITORY paragraph.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
     }
 
@@ -1996,10 +1996,10 @@ public static partial class Analyzer
 
             if (isInline && CurrentEquals("WHEN"))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
                 An inline PERFORM with a TIMES, VARYING or UNTIL phrase cannot contain an exception checking WHEN phrase 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
 
                 AnchorPoint("END-PERFORM");
             }
@@ -2350,10 +2350,10 @@ public static partial class Analyzer
 
             if (!CurrentEquals("WHEN"))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 The SEARCH statement must contain at least one WHEN condition
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             while (CurrentEquals("WHEN"))
@@ -2362,11 +2362,11 @@ public static partial class Analyzer
                 Condition();
                 if (CurrentEquals("NEXT") && LookaheadEquals(1, "SENTENCE"))
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     Unsupported phrase: NEXT SENTENCE is an archaic feature. This phrase can be confusing and is a common source of errors.
                     The CONTINUE statement can be used to accomplish the same functionality while being much clearer and less prone to error
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
                     AnchorPoint("WHEN", "END-SEARCH");
                 }
@@ -2459,11 +2459,11 @@ public static partial class Analyzer
 
         if (CurrentEquals("NEXT") && LookaheadEquals(1, "SENTENCE"))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             Unsupported phrase: NEXT SENTENCE is an archaic feature. This phrase can be confusing and is a common source of errors.
             The CONTINUE statement can be used to accomplish the same functionality while being much clearer and less prone to error
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
             AnchorPoint("END-SEARCH");
         }
@@ -2720,10 +2720,10 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         Identifier();
@@ -2747,10 +2747,10 @@ public static partial class Analyzer
 
             if (!CurrentEquals(TokenType.Identifier))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             Identifier();
@@ -2781,10 +2781,10 @@ public static partial class Analyzer
             {
                 if (!CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     The COLLATING SEQUENCE clause must contain at least 1 alphabet name (max of 2 alphabet names) or at least one FOR ALPHANUMERIC and FOR NATIONAL clauses.
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
                     CombinedAnchorPoint(TokenContext.IsStatement, "USING");
                 }
@@ -2967,10 +2967,10 @@ public static partial class Analyzer
         Expected("TERMINATE");
         if (Current().type != TokenType.Identifier)
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The TERMINATE statement must only contain report entry identifiers defined in the report section.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
         Identifier();
         while (Current().type == TokenType.Identifier)
@@ -2978,10 +2978,10 @@ public static partial class Analyzer
 
         if (!CurrentEquals("."))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The TERMINATE statement must only contain report entry identifiers defined in the report section.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
     }
 
@@ -3088,10 +3088,10 @@ public static partial class Analyzer
         Expected("VALIDATE");
         if (Current().type != TokenType.Identifier)
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The VALIDATE statement must only contain data item identifiers.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
         Identifier();
         while (Current().type == TokenType.Identifier)
@@ -3099,10 +3099,10 @@ public static partial class Analyzer
 
         if (!CurrentEquals("."))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The VALIDATE statement must only contain data item identifiers.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
     }
 

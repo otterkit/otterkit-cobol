@@ -41,8 +41,8 @@ public static partial class Analyzer
 
         if (!CurrentEquals("PROCEDURE"))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, "Data Division data items and sections");
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "Data Division data items and sections");
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
             Continue();
         }
     }
@@ -133,10 +133,10 @@ public static partial class Analyzer
         string DataItemHash = $"{SourceId.Peek()}#{DataName}";
         if (SymbolTable.SymbolExists(DataItemHash))
         {
-            ErrorHandler.Parser.Report(FileName, DataItem, ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, DataItem, ErrorType.General, $"""
             A data item with this name already exists in this source unit, data items must have a unique name.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, DataItem);
+            ErrorHandler.Analyzer.PrettyError(FileName, DataItem);
         }
         else
         {
@@ -160,21 +160,21 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
             Expected data division clauses or a separator period after this data item's identifier.
             Token found ("{Current().value}") was not a data division clause reserved word.
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         while (CurrentEquals(TokenContext.IsClause))
         {
             if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL", "TYPEDEF"))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Missing clause or possible clause mismatch, in this context the "IS" word must be followed by the EXTERNAL, GLOBAL or TYPEDEF clauses only (IS TYPEDEF), or must be in the middle of the PICTURE clause (PIC IS ...) 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             if ((CurrentEquals("IS") && LookaheadEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
@@ -333,10 +333,10 @@ public static partial class Analyzer
 
                 if (dataType == "Error")
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     Unrecognized type, PICTURE type must be S9, 9, X, A, N or 1. These are Signed Numeric, Unsigned Numeric, Alphanumeric, Alphabetic, National and Boolean respectively
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 }
 
                 dataItem.Type = dataType;
@@ -349,8 +349,8 @@ public static partial class Analyzer
                 Expected(")");
                 if (CurrentEquals("V9") && dataType != "S9" && dataType != "9")
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, "V9 cannot be used with non-numeric types");
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, "V9 cannot be used with non-numeric types");
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 }
 
                 if (CurrentEquals("V9"))
@@ -371,10 +371,10 @@ public static partial class Analyzer
 
                 if (!CurrentEquals(TokenType.String, TokenType.Numeric))
                 {
-                    ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                     The only tokens allowed after a VALUE clause are type literals, like an Alphanumeric literal ("Hello, World!") or a Numeric literal (123.456).
                     """);
-                    ErrorHandler.Parser.PrettyError(FileName, Current());
+                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
                 }
 
                 if (CurrentEquals(TokenType.String))
@@ -432,10 +432,10 @@ public static partial class Analyzer
     {
         if (!CurrentEquals("01") && !CurrentEquals("1"))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             Invalid level number for this data item, CONSTANT data items must have a level number of 1 or 01
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         var LevelNumber = int.Parse(Current().value);
@@ -449,11 +449,11 @@ public static partial class Analyzer
         {
             var originalItem = SymbolTable.GetDataItem(DataItemHash);
 
-            ErrorHandler.Parser.Report(FileName, Lookahead(-1), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, $"""
             A data item with this name already exists in this program, data items in a program must have a unique name.
             The original {originalItem.Identifier} data item can be found on line {originalItem.Line}. 
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Lookahead(-1));
+            ErrorHandler.Analyzer.PrettyError(FileName, Lookahead(-1));
         }
         else
         {
@@ -550,10 +550,10 @@ public static partial class Analyzer
             if (level != lowerLevel)
             {
                 LevelStack.Push(current);
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 All data items that are immediate members of a group item must have equal level numbers, and it should be greater than the level number used for that group item. 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
         }
     }
@@ -582,34 +582,34 @@ public static partial class Analyzer
 
         if (usageCannotHavePicture && dataItem.IsPicture)
         {
-            ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, $"""
             Data items defined with USAGE {dataItem.UsageType} cannot contain a PICTURE clause
             """);
-            ErrorHandler.Parser.PrettyError(FileName, itemToken);
+            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
         }
 
         if (!usageCannotHavePicture && dataItem.IsElementary && !dataItem.IsPicture && !dataItem.IsValue)
         {
-            ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, """
             Elementary data items must contain a PICTURE clause. Except when an alphanumeric, boolean, or national literal is defined in the VALUE clause 
             """);
-            ErrorHandler.Parser.PrettyError(FileName, itemToken);
+            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
         }
 
         if (dataItem.IsGroup && dataItem.IsPicture)
         {
-            ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, """
             Group items must not contain a PICTURE clause. The PICTURE clause can only be specified on elementary data items
             """);
-            ErrorHandler.Parser.PrettyError(FileName, itemToken);
+            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
         }
 
         if (dataItem.IsRenames && dataItem.IsPicture)
         {
-            ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, """
+            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, """
             Data items with a RENAMES clause must not contain a PICTURE clause
             """);
-            ErrorHandler.Parser.PrettyError(FileName, itemToken);
+            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
         }
 
         bool usageCannotHaveValue = dataItem.UsageType switch
@@ -625,10 +625,10 @@ public static partial class Analyzer
 
         if (usageCannotHaveValue && dataItem.IsValue)
         {
-            ErrorHandler.Parser.Report(FileName, itemToken, ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, $"""
             Data items defined with USAGE {dataItem.UsageType} cannot contain a VALUE clause
             """);
-            ErrorHandler.Parser.PrettyError(FileName, itemToken);
+            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
         }
 
     }
@@ -809,10 +809,10 @@ public static partial class Analyzer
                 break;
 
             default:
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
                 Unrecognized USAGE clause. This could be due to an unsupported third-party extension. 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
 
                 AnchorPoint(TokenContext.IsClause);
                 break;

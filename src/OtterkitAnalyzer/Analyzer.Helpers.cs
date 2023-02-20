@@ -12,26 +12,26 @@ public static partial class Analyzer
 
     private static void AnchorPoint(params string[] anchors)
     {
-        ErrorHandler.Parser.AttemptRecovery(anchors);
+        ErrorHandler.Analyzer.AttemptRecovery(anchors);
 
         while (!CurrentEquals(TokenType.EOF))
         {
             if (CurrentEquals("."))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
                 Parser recovered at the following anchor point: 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 Continue();
                 return;
             }
 
             if (CurrentEquals(anchors))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
                 Parser recovered at the following anchor point: 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 return;
             }
 
@@ -41,26 +41,26 @@ public static partial class Analyzer
 
     private static void AnchorPoint(TokenContext anchor)
     {
-        ErrorHandler.Parser.AttemptRecovery(anchor);
+        ErrorHandler.Analyzer.AttemptRecovery(anchor);
 
         while (!CurrentEquals(TokenType.EOF))
         {
             if (CurrentEquals("."))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
                 Parser recovered at the following anchor point: 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 Continue();
                 return;
             }
 
             if (CurrentEquals(anchor))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
                 Parser recovered at the following anchor point: 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 return;
             }
 
@@ -70,26 +70,26 @@ public static partial class Analyzer
 
     private static void CombinedAnchorPoint(TokenContext anchor, params string[] anchors)
     {
-        ErrorHandler.Parser.AttemptRecovery(anchors);
+        ErrorHandler.Analyzer.AttemptRecovery(anchors);
 
         while (!CurrentEquals(TokenType.EOF))
         {
             if (CurrentEquals("."))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
                 Parser recovered at the following anchor point: 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 Continue();
                 return;
             }
 
             if (CurrentEquals(anchors) || CurrentEquals(anchor))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Recovery, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
                 Parser recovered at the following anchor point: 
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 return;
             }
 
@@ -270,8 +270,8 @@ public static partial class Analyzer
             }
         }
 
-        ErrorHandler.Parser.Report(FileName, token, ErrorType.Choice, choices);
-        ErrorHandler.Parser.PrettyError(FileName, token);
+        ErrorHandler.Analyzer.Report(FileName, token, ErrorType.Choice, choices);
+        ErrorHandler.Analyzer.PrettyError(FileName, token);
         Continue();
     }
 
@@ -312,7 +312,7 @@ public static partial class Analyzer
 
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
             Unexpected End Of File. Expected {expected} instead.
             """);
 
@@ -323,8 +323,8 @@ public static partial class Analyzer
         {
             var lookahead = Lookahead(position);
 
-            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
 
             if (wordAnchors.Length != 0) AnchorPoint(wordAnchors);
 
@@ -348,7 +348,7 @@ public static partial class Analyzer
 
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
             Unexpected End Of File. Expected {expected} instead.
             """);
 
@@ -359,8 +359,8 @@ public static partial class Analyzer
         {
             var lookahead = Lookahead(position);
 
-            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
 
             if (typeAnchor is not null) AnchorPoint((TokenContext)typeAnchor);
 
@@ -381,7 +381,7 @@ public static partial class Analyzer
     {
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
             Unexpected End Of File. Expected identifier instead.
             """);
 
@@ -390,10 +390,10 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, """
             a user-defined name or word (an identifier)
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
             Continue();
             return;
         }
@@ -404,10 +404,10 @@ public static partial class Analyzer
         {
             if (!SymbolTable.SymbolExists(dataItemHash))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
                 The name "{Current().value}" does not exist in the context of the current source unit
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
         }
 
@@ -433,10 +433,10 @@ public static partial class Analyzer
                     separator = ",";
                 }
 
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
                 Expected a data item defined with the following: {errorBuilder} USAGE clauses or PICTURE types
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
         }
 
@@ -449,7 +449,7 @@ public static partial class Analyzer
 
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
             Unexpected End Of File. Expected identifier instead.
             """);
 
@@ -459,10 +459,10 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, """
             a user-defined name or word (an identifier)
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
             Continue();
 
             checkFirstUsage =  false;
@@ -475,10 +475,10 @@ public static partial class Analyzer
         {
             if (!SymbolTable.SymbolExists(dataItemHash))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
                 The name "{Current().value}" does not exist in the context of the current source unit
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
         }
 
@@ -507,10 +507,10 @@ public static partial class Analyzer
                     separator = ",";
                 }
 
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
                 Expected a data item defined with the following: {errorBuilder} USAGE clauses or PICTURE types
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
         }
 
@@ -524,7 +524,7 @@ public static partial class Analyzer
         // The symbol table itself needs to be refactored to accommodate this.
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
             Unexpected End Of File. Expected identifier instead.
             """);
 
@@ -533,10 +533,10 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, """
             a user-defined name or word (an identifier)
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
             Continue();
             return;
@@ -552,11 +552,11 @@ public static partial class Analyzer
             Expected("FUNCTION");
             if (!HasFlag(allowedTypes, IdentifierType.Function))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Unexpected FUNCTION call. 
                 NOTE: Function calls cannot be specified as a receiving operand
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             Continue();
@@ -577,11 +577,11 @@ public static partial class Analyzer
             Expected("EXCEPTION-OBJECT");
             if (!HasFlag(allowedTypes, IdentifierType.ExceptionObject))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Unexpected reference to EXCEPTION-OBJECT. 
                 NOTE: EXCEPTION-OBJECT cannot be specified as a receiving operand
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             return;
@@ -591,11 +591,11 @@ public static partial class Analyzer
             Expected("SELF");
             if (!HasFlag(allowedTypes, IdentifierType.Self))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Unexpected reference to SELF.
                 NOTE: SELF cannot be specified as a receiving operand
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             return;
@@ -605,11 +605,11 @@ public static partial class Analyzer
             Expected("NULL");
             if (!HasFlag(allowedTypes, IdentifierType.NullAddress) && !HasFlag(allowedTypes, IdentifierType.NullObject))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Unexpected reference to a NULL address or NULL object.
                 NOTE: NULL cannot be specified as a receiving operand
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             return;
@@ -620,11 +620,11 @@ public static partial class Analyzer
             Optional("OF");
             if (!HasFlag(allowedTypes, IdentifierType.DataAddress))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Unexpected reference to the address of a data item. 
                 NOTE: Data item addresses cannot be specified as a receiving operand
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             Continue();
@@ -637,11 +637,11 @@ public static partial class Analyzer
             Expected("FUNCTION");
             if (!HasFlag(allowedTypes, IdentifierType.FunctionAddress))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Unexpected reference to the address of a function. 
                 NOTE: Function addresses cannot be specified as a receiving operand
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             if (CurrentEquals(TokenType.Identifier))
@@ -662,11 +662,11 @@ public static partial class Analyzer
             Expected("PROGRAM");
             if (!HasFlag(allowedTypes, IdentifierType.ProgramAddress))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Unexpected reference to the address of a program. 
                 NOTE: Program addresses cannot be specified as a receiving operand
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             if (CurrentEquals(TokenType.Identifier))
@@ -686,11 +686,11 @@ public static partial class Analyzer
             Choice("IN", "OF");
             if (!HasFlag(allowedTypes, IdentifierType.LinageCounter))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Unexpected reference to a LINAGE-COUNTER. 
                 NOTE: LINAGE-COUNTER cannot be specified as a receiving operand
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             Continue();
@@ -702,11 +702,11 @@ public static partial class Analyzer
             Choice("IN", "OF");
             if (!HasFlag(allowedTypes, IdentifierType.ReportCounter))
             {
-                ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, """
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
                 Unexpected reference to a report counter. 
                 NOTE: Report counters cannot be specified as a receiving operand
                 """);
-                ErrorHandler.Parser.PrettyError(FileName, Current());
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
             Continue();
@@ -720,7 +720,7 @@ public static partial class Analyzer
     {
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
             Unexpected End Of File. Expected identifier instead.
             """);
 
@@ -729,20 +729,20 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.Expected, """
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, """
             a user-defined name or word (an identifier)
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
             Continue();
             return;
         }
 
         if (!CurrentEquals(identifierString))
         {
-            ErrorHandler.Parser.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
             Expected a user-defined name (an identifier) with value: "{identifierString}"
             """);
-            ErrorHandler.Parser.PrettyError(FileName, Current());
+            ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
         Continue();
@@ -767,8 +767,8 @@ public static partial class Analyzer
         {
             var lookahead = Lookahead(position);
 
-            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
             Continue();
         }
         else
@@ -803,8 +803,8 @@ public static partial class Analyzer
         {
             var lookahead = Lookahead(position);
 
-            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
             Continue();
         }
         else
@@ -832,8 +832,8 @@ public static partial class Analyzer
         {
             var lookahead = Lookahead(position);
 
-            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
             Continue();
         }
         else
@@ -861,8 +861,8 @@ public static partial class Analyzer
         {
             var lookahead = Lookahead(position);
 
-            ErrorHandler.Parser.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Parser.PrettyError(FileName, lookahead);
+            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
+            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
             Continue();
         }
         else

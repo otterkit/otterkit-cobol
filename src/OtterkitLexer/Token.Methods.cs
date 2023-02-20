@@ -21,7 +21,7 @@ public sealed partial record Token
         // XID_Continue  :=  <All characters in XID_Start, plus characters in the unicode categories Mn, Mc, Nd, Pc, and characters with the Other_ID_Continue property>
         // Medial        :=  <Only the special characters minus sign (HYPHEN-MINUS), underscore (LOW LINE), and the ・ (KATAKANA MIDDLE DOT)>
         
-        // Characters with the Other_ID_Start and Other_ID_COntinue properties can be found here: https://www.unicode.org/Public/15.0.0/ucd/PropList.txt
+        // Characters with the Other_ID_Start and Other_ID_Continue properties can be found here: https://www.unicode.org/Public/15.0.0/ucd/PropList.txt
 
         if (!token.value.IsNormalized(NormalizationForm.FormKC))
         {

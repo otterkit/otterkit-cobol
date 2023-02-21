@@ -7,6 +7,7 @@ namespace OtterkitLibrary;
 public interface ICOBOLType
 {
     Memory<byte> Memory { get; init; }
+    ICOBOLType[] Fields { get; init; }
     ReadOnlySpan<byte> Bytes { get; set; }
     string Display { get; }
 }
@@ -59,7 +60,7 @@ public sealed unsafe class OtterkitNativeMemory<TBytes>
     }
 }
 
-public sealed class DataItem : ICOBOLType
+public sealed class DataItem
 {
     public Memory<byte> Memory { get; init; }
     public int Length { get; init; }
@@ -264,6 +265,7 @@ public sealed class Constant
 public sealed class Numeric : ICOBOLType, IComparable<Numeric>
 {
     public Memory<byte> Memory { get; init; }
+    public ICOBOLType[] Fields { get; init; } 
     public int Offset { get; init; }
     public int Length { get; init; }
     public int FractionalLength { get; init; }
@@ -274,6 +276,7 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
 
     public Numeric(ReadOnlySpan<byte> value, int offset, int length, int fractionalLength, Memory<byte> memory)
     {
+        this.Fields = Array.Empty<ICOBOLType>();
         this.IsSigned = value[0] == 43 || value[0] == 45;
         this.Offset = offset;
         this.Length = length;
@@ -305,6 +308,7 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
 
     public Numeric(Memory<byte> memory, int offset, int length, int fractionalLength, bool isSigned)
     {
+        this.Fields = Array.Empty<ICOBOLType>();
         this.Offset = offset;
         this.Length = length;
         this.FractionalLength = fractionalLength;
@@ -326,6 +330,7 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
 
     public Numeric(DecimalHolder decimalHolder, bool isSigned)
     {
+        this.Fields = Array.Empty<ICOBOLType>();
         this.Offset = 0;
 
         int DecimalPointIndex = decimalHolder.Bytes.IndexOf("."u8);
@@ -663,15 +668,16 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
 public sealed class Alphanumeric : ICOBOLType
 {
     public Memory<byte> Memory { get; init; }
+    public ICOBOLType[] Fields { get; init; }
     public int Offset { get; init; }
     public int Length { get; init; }
-    private readonly Encoding encoding = Encoding.UTF8;
 
-    public Alphanumeric(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
+    public Alphanumeric(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory, ICOBOLType[]? fields = null)
     {
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
+        this.Fields = fields ?? Array.Empty<ICOBOLType>();
         Memory.Span.Fill(32);
 
         int byteLength = Length < value.Length
@@ -681,17 +687,19 @@ public sealed class Alphanumeric : ICOBOLType
         value[..byteLength].CopyTo(Memory.Span);
     }
 
-    public Alphanumeric(Memory<byte> memory, int offset, int length)
+    public Alphanumeric(Memory<byte> memory, int offset, int length, ICOBOLType[]? fields = null)
     {
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
+        this.Fields = fields ?? Array.Empty<ICOBOLType>();
     }
 
     public Alphanumeric(ReadOnlySpan<byte> aphanumeric)
     {
         this.Length = aphanumeric.Length;
         this.Memory = new byte[Length];
+        this.Fields = Array.Empty<ICOBOLType>();
         aphanumeric.CopyTo(Memory.Span);
     }
 
@@ -761,7 +769,7 @@ public sealed class Alphanumeric : ICOBOLType
     {
         get
         {
-            return encoding.GetString(Memory.Span);
+            return Encoding.UTF8.GetString(Memory.Span);
         }
     }
 }
@@ -835,6 +843,7 @@ public sealed class BasedAlphanumeric
 public sealed class Alphabetic : ICOBOLType
 {
     public Memory<byte> Memory { get; init; }
+    public ICOBOLType[] Fields { get; init; }
     public int Offset { get; init; }
     public int Length { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
@@ -843,7 +852,8 @@ public sealed class Alphabetic : ICOBOLType
     {
         if (value.IndexOfAny("1234567890"u8) > -1)
             throw new ArgumentOutOfRangeException(nameof(value), "Alphabetic type cannot contain numberic values");
-
+        
+        this.Fields = Array.Empty<ICOBOLType>();
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
@@ -858,6 +868,7 @@ public sealed class Alphabetic : ICOBOLType
 
     public Alphabetic(Memory<byte> memory, int offset, int length)
     {
+        this.Fields = Array.Empty<ICOBOLType>();
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
@@ -991,12 +1002,14 @@ public sealed class BasedAlphabetic
 public sealed class National : ICOBOLType
 {
     public Memory<byte> Memory { get; init; }
+    public ICOBOLType[] Fields { get; init; }
     public int Offset { get; init; }
     public int Length { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
 
     public National(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
     {
+        this.Fields = Array.Empty<ICOBOLType>();
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
@@ -1011,6 +1024,7 @@ public sealed class National : ICOBOLType
 
     public National(Memory<byte> memory, int offset, int length)
     {
+        this.Fields = Array.Empty<ICOBOLType>();
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
@@ -1018,6 +1032,7 @@ public sealed class National : ICOBOLType
 
     public National(ReadOnlySpan<byte> national)
     {
+        this.Fields = Array.Empty<ICOBOLType>();
         this.Length = national.Length;
         this.Memory = new byte[Length];
         national.CopyTo(Memory.Span);
@@ -1136,21 +1151,23 @@ public sealed class BasedNational
     }
 }
 
-public sealed class COBOLBoolean : ICOBOLType
+public sealed class Bit : ICOBOLType
 {
     public Memory<byte> Memory { get; init; }
+    public ICOBOLType[] Fields { get; init; }
     public int Offset { get; init; }
     public int Length { get; init; }
     private readonly Encoding encoding = Encoding.UTF8;
 
-    public COBOLBoolean(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
+    public Bit(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
     {
         foreach (byte bytes in value)
         {
             if (!bytes.Equals(0) || !bytes.Equals(1))
                 throw new ArgumentException("Boolean data type can only contain 0s and 1s");
         }
-
+        
+        this.Fields = Array.Empty<ICOBOLType>();
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);
@@ -1163,8 +1180,9 @@ public sealed class COBOLBoolean : ICOBOLType
         value[..byteLength].CopyTo(Memory.Span);
     }
 
-    public COBOLBoolean(Memory<byte> memory, int offset, int length)
+    public Bit(Memory<byte> memory, int offset, int length)
     {
+        this.Fields = Array.Empty<ICOBOLType>();
         this.Offset = offset;
         this.Length = length;
         this.Memory = memory.Slice(offset, length);

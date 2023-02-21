@@ -452,7 +452,7 @@ public static class Functions
         return new Numeric(HighestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 2]);
     }
 
-    public static Numeric INTEGER_OF_BOOLEAN(COBOLBoolean argument)
+    public static Numeric INTEGER_OF_BOOLEAN(Bit argument)
     {
         string str = Convert.ToInt64(argument.Display, 2).ToString();
         ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(str);

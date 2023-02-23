@@ -426,6 +426,8 @@ public static partial class Analyzer
         Expected(".", """
         Missing separator period at the end of this data item definition, each data item must end with a separator period
         """, -1, "PROCEDURE");
+
+        CheckConditionNames(DataName);
     }
 
     private static void ConstantEntry()
@@ -633,13 +635,96 @@ public static partial class Analyzer
 
     }
 
+    private static void CheckConditionNames(string parentName)
+    {
+        if (!CurrentEquals("88")) return;
+
+        while (CurrentEquals("88"))
+        {
+            Expected("88");
+
+            Token DataItem = Current();
+            string DataName = DataItem.value;
+
+            Identifier();
+
+            string DataItemHash = $"{SourceId.Peek()}#{DataName}";
+
+            if (SymbolTable.SymbolExists(DataItemHash))
+            {
+                ErrorHandler.Analyzer.Report(FileName, DataItem, ErrorType.General, $"""
+                A data item with this name already exists in this source unit, data items must have a unique name.
+                """);
+                ErrorHandler.Analyzer.PrettyError(FileName, DataItem);
+            }
+            else
+            {
+                SymbolTable.AddSymbol(DataItemHash, SymbolType.DataItem);
+            }
+
+            DataItemInfo dataItem = SymbolTable.GetDataItem(DataItemHash);
+
+            dataItem.Parent = parentName;
+            dataItem.Identifier = DataName;
+            dataItem.LevelNumber = 88;
+            dataItem.Section = CurrentSection;
+
+            if (CurrentEquals("VALUES"))
+            {
+                Expected("VALUES");
+                Optional("ARE");
+            }
+            else
+            {
+                Expected("VALUE");
+                Optional("IS");
+            }
+
+            var firstConditionType = Current().type;
+
+            switch (Current().type)
+            {
+                case TokenType.Numeric: Number(); break;
+                
+                case TokenType.String:
+                case TokenType.HexString:
+                case TokenType.Boolean:
+                case TokenType.HexBoolean:
+                case TokenType.National:
+                case TokenType.HexNational:
+                    String(); break;
+            }
+
+            if (CurrentEquals("THROUGH", "THRU"))
+            {
+                Choice("THROUGH", "THRU");
+
+                switch (firstConditionType)
+                {
+                    case TokenType.Numeric: Number(); break;
+                    
+                    case TokenType.String:
+                    case TokenType.HexString:
+                    case TokenType.Boolean:
+                    case TokenType.HexBoolean:
+                    case TokenType.National:
+                    case TokenType.HexNational:
+                        String(); break;
+                }
+            }
+
+            Expected(".", """
+            Missing separator period at the end of this condition name, each condition name must end with a separator period
+            """, -1, "PROCEDURE");
+        }
+    }
+
     private static void UsageClause(DataItemInfo dataitem)
     {
         Expected("USAGE");
         Optional("IS");
         switch (Current().value)
         {
-            
             case "BINARY":
                 Expected("BINARY");
                 dataitem.UsageType = UsageType.Binary;

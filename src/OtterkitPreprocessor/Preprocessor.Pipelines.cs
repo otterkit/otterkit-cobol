@@ -5,23 +5,23 @@ namespace Otterkit;
 
 public static partial class Preprocessor
 {
-    private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Shared;
     internal static readonly List<Token> SourceTokens = new();
+    private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Shared;
     private static int LineCount = 1;
 
     public static async Task<List<Token>> ReadSourceFile(string sourceFile)
     {
         using var sourceStream = File.OpenRead(sourceFile);
         
-        PipeReader pipeReader = PipeReader.Create(sourceStream);
+        var pipeReader = PipeReader.Create(sourceStream);
 
-        var read = await pipeReader.ReadAsync();
+        var readAsync = await pipeReader.ReadAsync();
 
-        ReadOnlySequence<byte> buffer = read.Buffer;
+        var buffer = readAsync.Buffer;
 
-        while (SourceLineExists(ref buffer, out ReadOnlySequence<byte> sequence))
+        while (SourceLineExists(ref buffer, out ReadOnlySequence<byte> line))
         {
-            TokenizeSequence(sequence);
+            TokenizeLine(line);
             LineCount++;
         }
 
@@ -34,12 +34,12 @@ public static partial class Preprocessor
 
     private static bool SourceLineExists(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
     {
-        var newLine = buffer.PositionOf((byte)'\n');
+        var positionOfNewLine = buffer.PositionOf((byte)'\n');
 
-        if (newLine is not null)
+        if (positionOfNewLine is not null)
         {
-            line = buffer.Slice(0, newLine.Value);
-            buffer = buffer.Slice(buffer.GetPosition(1, newLine.Value));
+            line = buffer.Slice(0, positionOfNewLine.Value);
+            buffer = buffer.Slice(buffer.GetPosition(1, positionOfNewLine.Value));
 
             return true;
         }
@@ -57,15 +57,15 @@ public static partial class Preprocessor
         return false;
     }
 
-    private static void TokenizeSequence(ReadOnlySequence<byte> sequence)
+    private static void TokenizeLine(ReadOnlySequence<byte> line)
     {
-        var sequenceLength = (int)sequence.Length;
-        var sharedArray = ArrayPool.Rent(sequenceLength);
+        var lineLength = (int)line.Length;
+        var sharedArray = ArrayPool.Rent(lineLength);
         
         try
         {
-            sequence.CopyTo(sharedArray);
-            Lexer.TokenizeLine(SourceTokens, sharedArray.AsSpan().Slice(0, sequenceLength), LineCount);
+            line.CopyTo(sharedArray);
+            Lexer.TokenizeLine(SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), LineCount);
         }
         finally
         {

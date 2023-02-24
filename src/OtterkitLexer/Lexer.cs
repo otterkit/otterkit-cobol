@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Otterkit;
@@ -24,36 +24,34 @@ public static partial class Lexer
     private const string StringPattern = "(X|B|BX|N|NX)*(\"|\')(.*?)(\"|\'|$)";
     private const string WordsPattern = @"|[a-zA-Z]+([-|_]*[\w0-9]+)*|[0-9]+([-|_][\w0-9]+)+";
     private const string NumberPattern = @"|(\+|-)?\.?[0-9]\d*(\.\d+)?";
-    private const string EOFPattern = @"|(>>IMP-EOF)";
+    private const string DirectivesPattern = "|^.*(>>[A-Z]*(-[A-Z0-9]*)*).*$";
     private const string SymbolPattern = @"|(\+|\-|\*\*|\*|=|\/|\$|,|;|::|\.|\(|\)|>>|<>|>=|<=|>|<|&|_)";
-    private const string AllPatterns = StringPattern + WordsPattern + NumberPattern + EOFPattern + SymbolPattern;
+    private const string AllPatterns = StringPattern + WordsPattern + NumberPattern + DirectivesPattern + SymbolPattern;
 
-    public static List<Token> Tokenize(List<string> sourceLines)
+    public static void TokenizeLine(List<Token> sourceTokens, ReadOnlySpan<byte> bytes, int lineNumber)
     {
-        var lineNumber = 0;
-        List<Token> tokens = new();
+        var charCount = Encoding.UTF8.GetCharCount(bytes);
+        var maxStackLimit = 256;
 
-        foreach (var line in CollectionsMarshal.AsSpan(sourceLines))
+        Span<char> sourceChars = charCount <= maxStackLimit 
+            ? stackalloc char[charCount]
+            : new char[charCount];
+
+        Preprocessor.PreprocessSourceFormat(bytes, sourceChars);
+
+        foreach (var token in LexerRegex().EnumerateMatches(sourceChars))
         {
-            lineNumber += 1;
-            foreach (var token in LexerRegex().EnumerateMatches(line))
+            ReadOnlySpan<char> currentMatch = sourceChars.Slice(token.Index, token.Length);
+
+            if (currentMatch.Contains(">>", StringComparison.OrdinalIgnoreCase))
             {
-                var currentMatch = line.Substring(token.Index, token.Length);
-                if (currentMatch.Equals(">>IMP-EOF")) lineNumber = 0;
-
-                Token tokenized = new(currentMatch, lineNumber, token.Index + 1);
-                tokens.Add(tokenized);
+                Preprocessor.PreprocessDirective(currentMatch, lineNumber);
+                continue;
             }
+
+            Token tokenized = new(new string(currentMatch), lineNumber, token.Index + 1);
+            sourceTokens.Add(tokenized);
         }
-
-        return tokens;
-    }
-
-    public static List<Token> TokenizeLine(string sourceLine)
-    {
-        List<string> sourceLines = new() { sourceLine };
-
-        return Tokenize(sourceLines);
     }
 
     [GeneratedRegex(AllPatterns, RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]

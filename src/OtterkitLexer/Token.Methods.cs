@@ -213,15 +213,9 @@ public sealed partial record Token
             return TokenType.Numeric;
 
         // check if the value is End Of File
-        if (value.Equals(">>IMP-EOF"))
-        {
-            // Handling this special case here makes the FromValue code cleaner
-            token.value = "EOF";
-            token.line = -5;
-            token.column = -5;
+        if (value.Equals("EOF"))
             return TokenType.EOF;
-        }
-
+        
         // if none of the above, it's an identifier
         if (!TryValidateIdentifier(token))
         {

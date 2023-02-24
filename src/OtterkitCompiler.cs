@@ -135,10 +135,9 @@ public static class OtterkitCompiler
                 }
             }
 
-            List<string> preprocessedLines = Preprocessor.Preprocess(ReadSourceFile());
-            List<Token> tokens = Lexer.Tokenize(preprocessedLines);
-            List<Token> classified = Token.FromValue(tokens);
-            List<Token> analized = Analyzer.Analyze(classified, Options.EntryPoint);
+            var preprocessedLines = Preprocessor.Preprocess(Options.EntryPoint);
+            var classified = Token.FromValue(preprocessedLines);
+            var analized = Analyzer.Analyze(classified, Options.EntryPoint);
 
             if (Options.BuildMode is BuildType.ParseOnly)
             {
@@ -147,7 +146,7 @@ public static class OtterkitCompiler
 
             if (Options.BuildMode is BuildType.PrintTokens)
             {
-                bool colorToggle = true;
+                var colorToggle = true;
 
                 foreach (var token in analized)
                 {
@@ -305,43 +304,6 @@ public static class OtterkitCompiler
         {
             Directory.Delete(".otterkit/Build/OtterkitMath", true);
         }
-    }
-
-    private static List<string> ReadSourceFile()
-    {
-        const string eofMarker = "       >>IMP-EOF";
-        if (!File.Exists(Options.EntryPoint))
-        {
-            ErrorHandler.Compiler.Report("Otterkit compiler error: File Not Found");
-            ErrorHandler.Compiler.Report($"The compiler was not able not find the file: {Options.EntryPoint}");
-            Environment.Exit(1);
-        }
-
-        var sourceLines = new List<string>();
-
-        foreach (var line in File.ReadLines(Options.EntryPoint))
-        {
-            sourceLines.Add(line);
-        }
-
-        sourceLines.Add(eofMarker);
-
-        var allSourceFiles = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.cob", SearchOption.AllDirectories);
-        var excludeEntryPoint = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), Options.EntryPoint);
-        var sourcesWithoutEntryPoint = allSourceFiles.Except(excludeEntryPoint);
-
-        foreach (var file in sourcesWithoutEntryPoint)
-        {
-            foreach (var line in File.ReadLines(file))
-            {
-                sourceLines.Add(line);
-            }
-            
-            sourceLines.Add(eofMarker);
-            Options.FileNames.Add(file);
-        }
-
-        return sourceLines;
     }
 
     private static void DisplayHelpMessage()

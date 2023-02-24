@@ -23,17 +23,12 @@ public static partial class Preprocessor
         {
             var lineLength = (int)line.Length;
             var sharedArray = ArrayPool.Rent(lineLength);
-            
-            try
-            {
-                line.CopyTo(sharedArray);
-                Lexer.TokenizeLine(SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), LineCount);
-            }
-            finally
-            {
-                ArrayPool.Return(sharedArray);
-            }
-
+        
+            line.CopyTo(sharedArray);
+        
+            Lexer.TokenizeLine(SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), LineCount);
+        
+            ArrayPool.Return(sharedArray);
             LineCount++;
         }
 

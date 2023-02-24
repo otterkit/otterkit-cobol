@@ -21,7 +21,19 @@ public static partial class Preprocessor
 
         while (SourceLineExists(ref buffer, out ReadOnlySequence<byte> line))
         {
-            TokenizeLine(line);
+            var lineLength = (int)line.Length;
+            var sharedArray = ArrayPool.Rent(lineLength);
+            
+            try
+            {
+                line.CopyTo(sharedArray);
+                Lexer.TokenizeLine(SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), LineCount);
+            }
+            finally
+            {
+                ArrayPool.Return(sharedArray);
+            }
+
             LineCount++;
         }
 
@@ -29,6 +41,7 @@ public static partial class Preprocessor
 
         LineCount = 1;
         SourceTokens.Add(new Token("EOF", TokenType.EOF, -5, -5){ context = TokenContext.IsEOF });
+
         return SourceTokens;
     }
 
@@ -55,21 +68,5 @@ public static partial class Preprocessor
         line = ReadOnlySequence<byte>.Empty;
         
         return false;
-    }
-
-    private static void TokenizeLine(ReadOnlySequence<byte> line)
-    {
-        var lineLength = (int)line.Length;
-        var sharedArray = ArrayPool.Rent(lineLength);
-        
-        try
-        {
-            line.CopyTo(sharedArray);
-            Lexer.TokenizeLine(SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), LineCount);
-        }
-        finally
-        {
-            ArrayPool.Return(sharedArray);
-        }
     }
 }

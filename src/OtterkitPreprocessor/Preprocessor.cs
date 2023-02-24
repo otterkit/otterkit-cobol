@@ -7,8 +7,6 @@ public static partial class Preprocessor
 {
     internal static Options Options = OtterkitCompiler.Options;
     internal static DirectiveType lastDirective = DirectiveType.None;
-    internal static List<string> SourceLines = new();
-    internal static int Index = 0;
 
     public static List<Token> Preprocess(string entryPoint)
     {

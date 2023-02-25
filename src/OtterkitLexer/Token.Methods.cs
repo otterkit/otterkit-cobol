@@ -165,7 +165,8 @@ public sealed partial record Token
 
     private static TokenType FindType(Token token)
     {
-        var OrdinalIgnore = StringComparison.OrdinalIgnoreCase;
+        if (token.type is not TokenType.None) return token.type;
+
         var value = token.value;
 
         // check if the value is a reserved keyword
@@ -183,30 +184,6 @@ public sealed partial record Token
         // check if the value is a symbol
         if (TokenLookup.IsReservedSymbol(value))
             return TokenType.Symbol;
-
-        // check if the value is a string
-        if (value.StartsWith('"') || value.StartsWith('\''))
-            return TokenType.String;
-
-        // check if the value is a hexadecimal string
-        if (value.StartsWith("X\"", OrdinalIgnore) || value.StartsWith("X'", OrdinalIgnore))
-            return TokenType.HexString;
-
-        // check if the value is a boolean literal
-        if (value.StartsWith("B\"", OrdinalIgnore) || value.StartsWith("B'", OrdinalIgnore))
-            return TokenType.Boolean;
-
-        // check if the value is a hexadecimal boolean literal
-        if (value.StartsWith("BX\"", OrdinalIgnore) || value.StartsWith("BX'", OrdinalIgnore))
-            return TokenType.HexBoolean;
-
-        // check if the value is a national literal
-        if (value.StartsWith("N\"", OrdinalIgnore) || value.StartsWith("N'", OrdinalIgnore))
-            return TokenType.National;
-
-        // check if the value is a hexadecimal string
-        if (value.StartsWith("NX\"", OrdinalIgnore) || value.StartsWith("NX'", OrdinalIgnore))
-            return TokenType.HexNational;
 
         // check if the value is a numeric
         if (IsNumeric(value) && NumericRegex().IsMatch(value))

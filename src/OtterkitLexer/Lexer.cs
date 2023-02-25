@@ -49,9 +49,71 @@ public static partial class Lexer
                 continue;
             }
 
-            Token tokenized = new(new string(currentMatch), lineNumber, token.Index + 1);
+            TokenType type = currentMatch switch
+            {
+                ['"' or '\'', .. _, '"' or '\'',] => TokenType.String,
+                ['X' or 'x', '"' or '\'', .. _, '"' or '\'',] => TokenType.HexString,
+                ['B' or 'b', '"' or '\'', .. _, '"' or '\'',] => TokenType.Boolean,
+                ['B' or 'B', 'X' or 'x', '"' or '\'', .. _, '"' or '\'',] => TokenType.HexBoolean,
+                ['N' or 'n', '"' or '\'', .. _, '"' or '\'',] => TokenType.National,
+                ['N' or 'n', 'X' or 'x', '"' or '\'', .. _, '"' or '\'',] => TokenType.HexNational,
+                [..] => TokenType.None
+            };
+
+            if (type is not TokenType.None)
+            {
+                PreprocessStringLiteral(type, currentMatch, out var preprocessed);
+
+                Token stringLiteral = new(new string(preprocessed), type, lineNumber, token.Index + 1);
+                sourceTokens.Add(stringLiteral);
+
+                continue;
+            }
+
+            Token tokenized = new(new string(currentMatch), type, lineNumber, token.Index + 1);
             sourceTokens.Add(tokenized);
         }
+    }
+
+    private static void PreprocessStringLiteral(TokenType type, ReadOnlySpan<char> chars, out ReadOnlySpan<char> preprocessed)
+    {
+        if (type is TokenType.String)
+        {
+            preprocessed = chars.Slice(1, chars.Length - 2);
+            return;
+        }
+
+        if (type is TokenType.HexString)
+        {
+            preprocessed = chars.Slice(2, chars.Length - 3);
+            return;
+        }
+
+        if (type is TokenType.Boolean)
+        {
+            preprocessed = chars.Slice(2, chars.Length - 3);
+            return;
+        }
+
+        if (type is TokenType.HexBoolean)
+        {
+            preprocessed = chars.Slice(3, chars.Length - 4);
+            return;
+        }
+
+        if (type is TokenType.National)
+        {
+            preprocessed = chars.Slice(2, chars.Length - 3);
+            return;
+        }
+
+        if (type is TokenType.HexNational)
+        {
+            preprocessed = chars.Slice(3, chars.Length - 4);
+            return;
+        }
+
+        preprocessed = new ReadOnlySpan<char>();
     }
 
     [GeneratedRegex(AllPatterns, RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]

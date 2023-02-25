@@ -155,6 +155,7 @@ public enum UsageType
 
 public enum TokenType
 {
+    None,
     ReservedKeyword,
     FigurativeLiteral,
     IntrinsicFunction,

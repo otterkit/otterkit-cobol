@@ -30,7 +30,9 @@ public static partial class Preprocessor
             Options.FileNames.Add(file);
         }
 
-        return Preprocessor.SourceTokens;
+        PreprocessCopybooks(SourceTokens);
+
+        return SourceTokens;
     }
 
     public static void PreprocessSourceFormat(ReadOnlySpan<byte> bytes, Span<char> chars)
@@ -138,6 +140,56 @@ public static partial class Preprocessor
 
         void Continue()
         {
+            if (index >= directiveTokens.Count - 1) return;
+
+            index += 1;
+        }
+    }
+
+    public static void PreprocessCopybooks(List<Token> sourceTokens)
+    {
+        var index = 0;
+
+        while (!(index >= sourceTokens.Count - 1))
+        {
+            if (!CurrentEquals("COPY"))
+            {
+                Continue();
+                continue;
+            }
+
+            if (CurrentEquals("COPY"))
+            {
+                var copyIndex = index;
+                Continue();
+
+                var copybookTokens = ReadCopybook(Current().value).Result;
+
+                Continue();
+
+                var currentIndex = index;
+
+                SourceTokens.RemoveRange(copyIndex, currentIndex - copyIndex);
+
+                SourceTokens.InsertRange(copyIndex, copybookTokens);
+                
+            }
+        }
+
+        Token Current()
+        {
+            return sourceTokens[index];
+        }
+
+        bool CurrentEquals(string stringToCompare)
+        {
+            return Current().value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
+        }
+
+        void Continue()
+        {
+            if (index >= sourceTokens.Count - 1) return;
+
             index += 1;
         }
     }

@@ -40,6 +40,38 @@ public static partial class Preprocessor
         return SourceTokens;
     }
 
+    public static async Task<List<Token>> ReadCopybook(string copybookFile)
+    {
+        using var copybookStream = File.OpenRead(copybookFile);
+        
+        var pipeReader = PipeReader.Create(copybookStream);
+
+        var readAsync = await pipeReader.ReadAsync();
+
+        var buffer = readAsync.Buffer;
+
+        List<Token> copybookTokens = new();
+
+        while (SourceLineExists(ref buffer, out ReadOnlySequence<byte> line))
+        {
+            var lineLength = (int)line.Length;
+            var sharedArray = ArrayPool.Rent(lineLength);
+        
+            line.CopyTo(sharedArray);
+        
+            Lexer.TokenizeLine(copybookTokens, sharedArray.AsSpan().Slice(0, lineLength), LineCount);
+        
+            ArrayPool.Return(sharedArray);
+            LineCount++;
+        }
+
+        pipeReader.AdvanceTo(buffer.End);
+
+        LineCount = 1;
+
+        return copybookTokens;
+    }
+
     private static bool SourceLineExists(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
     {
         var positionOfNewLine = buffer.PositionOf((byte)'\n');

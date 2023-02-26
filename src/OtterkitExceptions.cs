@@ -83,7 +83,7 @@ public static class exceptionRegistry {
             Fatal,
             nonFatal,
 
-            other //exceptions with lebels greater than three do not seem to be set as either fata or nonfatal
+            other //exceptions with labels greater than three do not seem to be set as either fata or nonfatal
         }
 
     private sealed class exception{
@@ -91,7 +91,7 @@ public static class exceptionRegistry {
         public string name{get; set;} //technically not needed, but just in case a refactor changes things
         public bool isActivated {get; set;}
 
-        public bool isChecked {get; set;} //yes, you can turn checking for default exceptions off. If anyone has a problem with this COBOL feature, take it to the standard committee
+        public bool isChecked {get; set;} //yes, you can turn checking for default exceptions off.
         
 
         public isFatal fatalityState {get; private set;}
@@ -119,8 +119,48 @@ public static class exceptionRegistry {
         }
     }
 
+    private static exception changeStatus(string name, bool condition){
+        exception current = exceptionRegistry.registry[name];
+        current.isActivated = condition;
+        return current;
+    }
+
+    private static void changeChecked(string name, bool checkedCondition){
+        exceptionRegistry.registry[name].isChecked = checkedCondition;
+    }
+
+    private static bool isExceptionChecked(string name){
+        return exceptionRegistry.registry[name].isChecked;
+    }
+
+    public static void checkOn(string name){
+         changeChecked(name, true);
+    }
+
+    public static void checkOff(string name){
+        changeChecked(name, false);
+    }
+
+    public static void activateException(string name){
+        if (isExceptionChecked(name)){
+            lastException = changeStatus(name, true);
+        }
+    }
+
+    public static void deactivateException(string name){
+        changeStatus(name, false);
+    }
+    /*
+    As of writing this comment, activateException() and deactivateException() are sort of black boxes from an outside view: they perform what you think they would do, but do not
+    care about if the exception was already on or off. Addtionally, activateException() only activates if the exception is being actively checked. This probably fits the
+    behavior of the standard, but is this a good abstraction?
+    */
+
+    private static exception? lastException {get; set;}
+
     private static Dictionary<string, exception> registry = new (StringComparer.OrdinalIgnoreCase){
-        /*it seems that all regular exceptions are uppercase
+        /*
+        It seems that all regular exceptions are uppercase
         All exceptions are false and checked for by default
         I thought about metaprogramming this block, but any solution would just be as time-consuming.
         All exceptions where it's up to the implementor to make the call(imp) are fatal by default for now.

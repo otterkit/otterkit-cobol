@@ -8,11 +8,12 @@
     <Optimize>true</Optimize>
     <Deterministic>true</Deterministic>
     <PublishRelease>true</PublishRelease>
+    <!-- <PublishAot>true</PublishAot> -->
   </PropertyGroup>
 
   <PropertyGroup>
     <PackAsTool>true</PackAsTool>
-    <PackRelease>true</PackRelease>
+    <PackRelease>true</PackRelease> 
     <ToolCommandName>otterkit</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

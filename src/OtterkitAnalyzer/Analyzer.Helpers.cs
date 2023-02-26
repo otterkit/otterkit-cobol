@@ -572,7 +572,8 @@ public static partial class Analyzer
 
             return;
         }
-        else if (CurrentEquals("EXCEPTION-OBJECT"))
+
+        if (CurrentEquals("EXCEPTION-OBJECT"))
         {
             Expected("EXCEPTION-OBJECT");
             if (!HasFlag(allowedTypes, IdentifierType.ExceptionObject))
@@ -586,7 +587,8 @@ public static partial class Analyzer
 
             return;
         }
-        else if (CurrentEquals("SELF"))
+        
+        if (CurrentEquals("SELF"))
         {
             Expected("SELF");
             if (!HasFlag(allowedTypes, IdentifierType.Self))
@@ -600,7 +602,8 @@ public static partial class Analyzer
 
             return;
         }
-        else if (CurrentEquals("NULL"))
+        
+        if (CurrentEquals("NULL"))
         {
             Expected("NULL");
             if (!HasFlag(allowedTypes, IdentifierType.NullAddress) && !HasFlag(allowedTypes, IdentifierType.NullObject))
@@ -614,7 +617,8 @@ public static partial class Analyzer
 
             return;
         }
-        else if (CurrentEquals("ADDRESS") && !LookaheadEquals(1, "PROGRAM", "FUNCTION") && !LookaheadEquals(2, "PROGRAM", "FUNCTION"))
+        
+        if (CurrentEquals("ADDRESS") && !LookaheadEquals(1, "PROGRAM", "FUNCTION") && !LookaheadEquals(2, "PROGRAM", "FUNCTION"))
         {
             Expected("ADDRESS");
             Optional("OF");
@@ -630,7 +634,8 @@ public static partial class Analyzer
             Continue();
             return;
         }
-        else if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "FUNCTION") && !LookaheadEquals(2, "FUNCTION"))
+        
+        if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "FUNCTION") || LookaheadEquals(2, "FUNCTION"))
         {
             Expected("ADDRESS");
             Optional("OF");
@@ -655,7 +660,8 @@ public static partial class Analyzer
 
             return;
         }
-        else if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "PROGRAM") && !LookaheadEquals(2, "PROGRAM"))
+        
+        if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "PROGRAM") || LookaheadEquals(2, "PROGRAM"))
         {
             Expected("ADDRESS");
             Optional("OF");
@@ -680,7 +686,8 @@ public static partial class Analyzer
 
             return;
         }
-        else if (CurrentEquals("LINAGE-COUNTER"))
+        
+        if (CurrentEquals("LINAGE-COUNTER"))
         {
             Expected("LINAGE-COUNTER");
             Choice("IN", "OF");
@@ -696,7 +703,8 @@ public static partial class Analyzer
             Continue();
             return;
         }
-        else if (CurrentEquals("PAGE-COUNTER", "LINE-COUNTER"))
+        
+        if (CurrentEquals("PAGE-COUNTER", "LINE-COUNTER"))
         {
             Choice("PAGE-COUNTER", "LINE-COUNTER");
             Choice("IN", "OF");

@@ -133,20 +133,22 @@ public static class ExceptionRegistry
 
     public static void ActivateException(string name)
     {
-        if (IsExceptionChecked(name))
-        {
-            LastException = ChangeStatus(name, true);
-        }
+        LastException = ChangeStatus(name, true);
     }
 
     public static void DeactivateException(string name)
     {
         ChangeStatus(name, false);
     }
+
     /*
     As of writing this comment, activateException() and deactivateException() are sort of black boxes from an outside view: they perform what you think they would do, but do not
     care about if the exception was already on or off. Addtionally, activateException() only activates if the exception is being actively checked. This probably fits the
     behavior of the standard, but is this a good abstraction?
+
+    Note from KTSnowy: Exceptions should be activated regardless of their checked status, 
+    this is because exceptions can be checked with an ON EXCEPTION or ON OVERFLOW clause without their checked status being on.
+    But automatic checking without an ON EXCEPTION clause only happens if the exception's check status is on.
     */
 
     private static ExceptionMetadata? LastException { get; set; }

@@ -78,77 +78,70 @@ public sealed class EcExternalFormatConflict : Exception
 
 // Implementing COBOL default/regular exceptions as a singleton containing a dictionary of exception status indicators
 
-public static class exceptionRegistry {
-    public enum isFatal{ //why an enum instead of a bool? So that other programmers can understand what this actually means
-            Fatal,
-            nonFatal,
+public static class ExceptionRegistry
+{
+    public enum IsFatal
+    { 
+        //why an enum instead of a bool? So that other programmers can understand what this actually means
+        Fatal,
+        NonFatal,
+        Other //exceptions with labels greater than three do not seem to be set as either fata or nonfatal
+    }
 
-            other //exceptions with labels greater than three do not seem to be set as either fata or nonfatal
-        }
+    private sealed class ExceptionMetadata
+    {
+        public bool IsActivated { get; set; }
 
-    private sealed class exception{
+        public bool IsChecked { get; set; } //yes, you can turn checking for default exceptions off.
 
-        public string name{get; set;} //technically not needed, but just in case a refactor changes things
-        public bool isActivated {get; set;}
+        public IsFatal FatalityState { get; private set; }
 
-        public bool isChecked {get; set;} //yes, you can turn checking for default exceptions off.
-        
-
-        public isFatal fatalityState {get; private set;}
-
-        public exception(string name, bool isActivated, bool isChecked, string fatalityType){
-            this.name = name;
-            this.isActivated = isActivated;
-            this.isChecked = isChecked;
-            string fatalityState = fatalityType.ToLower();
-
-            switch(fatalityState){
-                case "fatal":
-                    this.fatalityState = isFatal.Fatal;
-                    break;
-                case "nonfatal":
-                    this.fatalityState = isFatal.nonFatal;
-                    break;
-                case "other":
-                    this.fatalityState = isFatal.other; //other is for higher-level exceptions, which take on the status of the actual lower-level exception called
-                    break;
-                default:
-                    throw new ArgumentException(String.Format("An exception can only be fatal or nonfatal, not {0}", fatalityState)); 
-
-            }
+        public ExceptionMetadata(bool isActivated, bool isChecked, IsFatal fatalityType)
+        {
+            this.IsActivated = isActivated;
+            this.IsChecked = isChecked;
+            this.FatalityState = fatalityType;
         }
     }
 
-    private static exception changeStatus(string name, bool condition){
-        exception current = exceptionRegistry.registry[name];
-        current.isActivated = condition;
+    private static ExceptionMetadata ChangeStatus(string name, bool condition)
+    {
+        ExceptionMetadata current = ExceptionRegistry.registry[name];
+        current.IsActivated = condition;
         return current;
     }
 
-    private static void changeChecked(string name, bool checkedCondition){
-        exceptionRegistry.registry[name].isChecked = checkedCondition;
+    private static void ChangeChecked(string name, bool checkedCondition)
+    {
+        ExceptionRegistry.registry[name].IsChecked = checkedCondition;
     }
 
-    private static bool isExceptionChecked(string name){
-        return exceptionRegistry.registry[name].isChecked;
+    private static bool IsExceptionChecked(string name)
+    {
+        return ExceptionRegistry.registry[name].IsChecked;
     }
 
-    public static void checkOn(string name){
-         changeChecked(name, true);
+    public static void CheckOn(string name)
+    {
+        ChangeChecked(name, true);
     }
 
-    public static void checkOff(string name){
-        changeChecked(name, false);
+    public static void CheckOff(string name)
+    {
+        ChangeChecked(name, false);
     }
 
-    public static void activateException(string name){
-        if (isExceptionChecked(name)){
-            lastException = changeStatus(name, true);
+    public static void ActivateException(string name)
+    {
+        if (IsExceptionChecked(name))
+        {
+            LastException = ChangeStatus(name, true);
         }
     }
 
-    public static void deactivateException(string name){
-        changeStatus(name, false);
+    public static void DeactivateException(string name)
+    {
+        ChangeStatus(name, false);
     }
     /*
     As of writing this comment, activateException() and deactivateException() are sort of black boxes from an outside view: they perform what you think they would do, but do not
@@ -156,9 +149,10 @@ public static class exceptionRegistry {
     behavior of the standard, but is this a good abstraction?
     */
 
-    private static exception? lastException {get; set;}
+    private static ExceptionMetadata? LastException { get; set; }
 
-    private static Dictionary<string, exception> registry = new (StringComparer.OrdinalIgnoreCase){
+    private static Dictionary<string, ExceptionMetadata> registry = new(StringComparer.OrdinalIgnoreCase)
+    {
         /*
         It seems that all regular exceptions are uppercase
         All exceptions are false and checked for by default
@@ -166,175 +160,173 @@ public static class exceptionRegistry {
         All exceptions where it's up to the implementor to make the call(imp) are fatal by default for now.
         See the standard for more information.
         */
-        {"EC-ALL", new exception("EC-ALL", false, true, "other")},
-        {"EC-ARGUMENT", new exception("EC-ARGUMENT", false, true, "other")},
-        {"EC-ARGUMENT-FUNCTION", new exception("EC-ARGUMENT-FUNCTION", false, true, "fatal")},
-        {"EC-ARGUMENT-IMP", new exception("EC-ARGUMENT-IMP", false, true, "fatal")},//imp
-        {"EC-BOUND", new exception("EC-BOUND", false, true, "other")},
-        {"EC-BOUND-FUNC-RET-VALUE", new exception("EC-BOUND-FUNC-RET-VALUE", false, true, "nonfatal")},
-        {"EC-BOUND-IMP", new exception("EC-BOUND-IMP", false, true, "fatal")},//imp
-        {"EC-BOUND-ODO", new exception("EC-BOUND-ODO", false, true, "fatal")},
-        {"EC-BOUND-OVERFLOW", new exception("EC-BOUND-OVERFLOW", false, true, "nonfatal")},
-        {"EC-BOUND-PTR", new exception("EC-BOUND-PTR", false, true, "fatal")},
-        {"EC-BOUND-REF-MOD", new exception("EC-BOUND-REF-MOD", false, true, "fatal")},
-        {"EC-BOUND-SET", new exception("EC-BOUND-SET", false, true, "nonfatal")},
-        {"EC-BOUND-SUBSCRIPT", new exception("EC-BOUND-SUBSCRIPT", false, true, "fatal")},
-        {"EC-BOUND-TABLE-LIMIT", new exception("EC-BOUND-TABLE-LIMIT", false, true, "fatal")},
-        {"EC-CONTINUE", new exception("EC-CONTINUE", false, true, "other")},
-        {"EC-CONTINUE-IMP", new exception("EC-CONTINUE-IMP", false, true, "fatal")}, //imp 
-        {"EC-CONTINUE-LESS-THAN-ZERO", new exception("EC-CONTINUE-LESS-THAN-ZERO", false, true, "nonfatal")},
-        {"EC-DATA", new exception("EC-DATA", false, true, "other")},
-        {"EC-DATA-CONVERSION", new exception("EC-DATA-CONVERSION", false, true, "nonfatal")},
-        {"EC-DATA-IMP", new exception("EC-DATA-IMP", false, true, "fatal")}, //imp
-        {"EC-DATA-INCOMPATIBLE", new exception("EC-DATA-INCOMPATIBLE", false, true, "fatal")},
-        {"EC-DATA-NOT-FINITE", new exception("EC-DATA-NOT-FINITE", false, true, "fatal")},
-        {"EC-DATA-OVERFLOW", new exception("EC-DATA-OVERFLOW", false, true, "fatal")},
-        {"EC-DATA-PTR-NULL", new exception("EC-DATA-PTR-NULL", false, true, "fatal")},
-        {"EC-EXTERNAL", new exception("EC-EXTERNAL", false, true, "other")},
-        {"EC-EXTERNAL-DATA-MISMATCH", new exception("EC-EXTERNAL-DATA-MISMATCH", false, true, "fatal")},
-        {"EC-EXTERNAL-FILE-MISMATCH", new exception("EC-EXTERNAL-FILE-MISMATCH", false, true, "fatal")},
-        {"EC-EXTERNAL-FORMAT-CONFLICT", new exception("EC-EXTERNAL-FORMAT-CONFLICT", false, true, "fatal")},
-        {"EC-EXTERNAL-IMP", new exception("EC-EXTERNAL-IMP", false, true, "false")}, //imp
-        {"EC-FLOW", new exception("EC-FLOW", false, true, "other")},
-        {"EC-FLOW-APPLY-COMMIT", new exception("EC-FLOW-APPLY-COMMIT", false, true, "fatal")},
-        {"EC-FLOW-COMMIT", new exception("EC-FLOW-COMMIT", false, true, "fatal")},
-        {"EC-FLOW-GLOBAL-EXIT", new exception("EC-FLOW-GLOBAL-EXIT", false, true, "fatal")},
-        {"EC-FLOW-GLOBAL-GOBACK", new exception("EC-FLOW-GLOBAL-GOBACK", false, true, "fatal")},
-        {"EC-FLOW-IMP", new exception("EC-FLOW-IMP", false, true, "fatal")}, //imp
-        {"EC-FLOW-RELEASE", new exception("EC-FLOW-RELEASE", false, true, "fatal")},
-        {"EC-FLOW-REPORT", new exception("EC-FLOW-REPORT", false, true, "fatal")},
-        {"EC-FLOW-RETURN", new exception("EC-FLOW-RETURN", false, true, "fatal")},
-        {"EC-FLOW-ROLLBACK", new exception("EC-FLOW-ROLLBACK", false, true, "fatal")},
-        {"EC-FLOW-SEARCH", new exception("EC-FLOW-SEARCH", false, true, "fatal")},
-        {"EC-FLOW-USE", new exception("EC-FLOW-USE", false, true, "fatal")},
-        {"EC-FUNCTION", new exception("EC-FUNCTION", false, true, "other")},
-        {"EC-FUNCTION-ARG-OMITTED", new exception("EC-FUNCTION-ARG-OMITTED", false, true, "other")},
-        {"EC-FUNCTION-IMP", new exception("EC-FUNCTION-IMP", false, true, "fatal")}, //imp
-        {"EC-FUNCTION-NOT-FOUND", new exception("EC-FUNCTION-NOT-FOUND", false, true, "fatal")},
-        {"EC-FUNCTION-PTR-INVALID", new exception("EC-FUNCTION-PTR-INVALID", false, true, "fatal")},
-        {"EC-FUNCTION-PTR-NULL", new exception("EC-FUNCTION-PTR-NULL", false, true, "fatal")},
-        {"EC-I-O", new exception("EC-I-O", false, true, "other")},
-        {"EC-I-O-AT-END", new exception("EC-I-O-AT-END", false, true, "nonfatal")},
-        {"EC-I-O-EOP", new exception("EC-I-O-EOP", false, true, "nonfatal")},
-        {"EC-I-O-EOP-OVERFLOW", new exception("EC-I-O-EOP-OVERFLOW", false, true, "nonfatal")},
-        {"EC-I-O-FILE-SHARING", new exception("EC-I-O-FILE-SHARING", false, true, "nonfatal")},
-        {"EC-I-O-IMP", new exception("EC-I-O-IMP", false, true, "fatal")}, //imp
-        {"EC-I-O-INVALID-KEY", new exception("EC-I-O-INVALID-KEY", false, true, "nonfatal")},
-        {"EC-I-O-LINAGE", new exception("EC-I-O-LINAGE", false, true, "fatal")},
-        {"EC-I-O-LOGIC-ERROR", new exception("EC-I-O-LOGIC-ERROR", false, true, "fatal")},
-        {"EC-I-O-PERMANENT-ERROR", new exception("EC-I-O-PERMANENT-ERROR", false, true, "fatal")},
-        {"EC-I-O-RECORD-CONTENT", new exception("EC-I-O-RECORD-CONTENT", false, true, "false")},
-        {"EC-I-O-RECORD-OPERATION", new exception("EC-I-O-RECORD-OPERATION", false, true, "nonfatal")},
-        {"EC-I-O-WARNING", new exception("EC-I-O-WARNING", false, true, "nonfatal")},
-        {"EC-IMP", new exception("EC-IMP", false, true, "other")},
+        {"EC-ALL",                      new (false, true, IsFatal.Other)},
+        {"EC-ARGUMENT",                 new (false, true, IsFatal.Other)},
+        {"EC-ARGUMENT-FUNCTION",        new (false, true, IsFatal.Fatal)},
+        {"EC-ARGUMENT-IMP",             new (false, true, IsFatal.Fatal)},//imp
+        {"EC-BOUND",                    new (false, true, IsFatal.Other)},
+        {"EC-BOUND-FUNC-RET-VALUE",     new (false, true, IsFatal.NonFatal)},
+        {"EC-BOUND-IMP",                new (false, true, IsFatal.Fatal)},//imp
+        {"EC-BOUND-ODO",                new (false, true, IsFatal.Fatal)},
+        {"EC-BOUND-OVERFLOW",           new (false, true, IsFatal.NonFatal)},
+        {"EC-BOUND-PTR",                new (false, true, IsFatal.Fatal)},
+        {"EC-BOUND-REF-MOD",            new (false, true, IsFatal.Fatal)},
+        {"EC-BOUND-SET",                new (false, true, IsFatal.NonFatal)},
+        {"EC-BOUND-SUBSCRIPT",          new (false, true, IsFatal.Fatal)},
+        {"EC-BOUND-TABLE-LIMIT",        new (false, true, IsFatal.Fatal)},
+        {"EC-CONTINUE",                 new (false, true, IsFatal.Other)},
+        {"EC-CONTINUE-IMP",             new (false, true, IsFatal.Fatal)}, //imp 
+        {"EC-CONTINUE-LESS-THAN-ZERO",  new (false, true, IsFatal.NonFatal)},
+        {"EC-DATA",                     new (false, true, IsFatal.Other)},
+        {"EC-DATA-CONVERSION",          new (false, true, IsFatal.NonFatal)},
+        {"EC-DATA-IMP",                 new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-DATA-INCOMPATIBLE",        new (false, true, IsFatal.Fatal)},
+        {"EC-DATA-NOT-FINITE",          new (false, true, IsFatal.Fatal)},
+        {"EC-DATA-OVERFLOW",            new (false, true, IsFatal.Fatal)},
+        {"EC-DATA-PTR-NULL",            new (false, true, IsFatal.Fatal)},
+        {"EC-EXTERNAL",                 new (false, true, IsFatal.Other)},
+        {"EC-EXTERNAL-DATA-MISMATCH",   new (false, true, IsFatal.Fatal)},
+        {"EC-EXTERNAL-FILE-MISMATCH",   new (false, true, IsFatal.Fatal)},
+        {"EC-EXTERNAL-FORMAT-CONFLICT", new (false, true, IsFatal.Fatal)},
+        {"EC-EXTERNAL-IMP",             new (false, true, IsFatal.NonFatal)}, //imp
+        {"EC-FLOW",                     new (false, true, IsFatal.Other)},
+        {"EC-FLOW-APPLY-COMMIT",        new (false, true, IsFatal.Fatal)},
+        {"EC-FLOW-COMMIT",              new (false, true, IsFatal.Fatal)},
+        {"EC-FLOW-GLOBAL-EXIT",         new (false, true, IsFatal.Fatal)},
+        {"EC-FLOW-GLOBAL-GOBACK",       new (false, true, IsFatal.Fatal)},
+        {"EC-FLOW-IMP",                 new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-FLOW-RELEASE",             new (false, true, IsFatal.Fatal)},
+        {"EC-FLOW-REPORT",              new (false, true, IsFatal.Fatal)},
+        {"EC-FLOW-RETURN",              new (false, true, IsFatal.Fatal)},
+        {"EC-FLOW-ROLLBACK",            new (false, true, IsFatal.Fatal)},
+        {"EC-FLOW-SEARCH",              new (false, true, IsFatal.Fatal)},
+        {"EC-FLOW-USE",                 new (false, true, IsFatal.Fatal)},
+        {"EC-FUNCTION",                 new (false, true, IsFatal.Other)},
+        {"EC-FUNCTION-ARG-OMITTED",     new (false, true, IsFatal.Other)},
+        {"EC-FUNCTION-IMP",             new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-FUNCTION-NOT-FOUND",       new (false, true, IsFatal.Fatal)},
+        {"EC-FUNCTION-PTR-INVALID",     new (false, true, IsFatal.Fatal)},
+        {"EC-FUNCTION-PTR-NULL",        new (false, true, IsFatal.Fatal)},
+        {"EC-I-O",                      new (false, true, IsFatal.Other)},
+        {"EC-I-O-AT-END",               new (false, true, IsFatal.NonFatal)},
+        {"EC-I-O-EOP",                  new (false, true, IsFatal.NonFatal)},
+        {"EC-I-O-EOP-OVERFLOW",         new (false, true, IsFatal.NonFatal)},
+        {"EC-I-O-FILE-SHARING",         new (false, true, IsFatal.NonFatal)},
+        {"EC-I-O-IMP",                  new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-I-O-INVALID-KEY",          new (false, true, IsFatal.NonFatal)},
+        {"EC-I-O-LINAGE",               new (false, true, IsFatal.Fatal)},
+        {"EC-I-O-LOGIC-ERROR",          new (false, true, IsFatal.Fatal)},
+        {"EC-I-O-PERMANENT-ERROR",      new (false, true, IsFatal.Fatal)},
+        {"EC-I-O-RECORD-CONTENT",       new (false, true, IsFatal.NonFatal)},
+        {"EC-I-O-RECORD-OPERATION",     new (false, true, IsFatal.NonFatal)},
+        {"EC-I-O-WARNING",              new (false, true, IsFatal.NonFatal)},
+        {"EC-IMP",                      new (false, true, IsFatal.Other)},
 
-        {"EC-IMP-suffix", new exception("EC-IMP-suffix", false, true, "other")},
         /*
-        This entry above is unique, so this comment is to bring attention to this situation. Accoridng to this standard, 
+        This entry is unique, so this comment is to bring attention to this situation. Accoridng to the standard, 
         the "suffix" part is defined by the implementor as a custom level-3 exception with the level-2 naturally being 
         "EC-IMP". So there needs to be work done to decide what this exception should be.
         */
+        {"EC-IMP-suffix",               new (false, true, IsFatal.Other)},
+        {"EC-LOCALE",                   new (false, true, IsFatal.Other)},
+        {"EC-LOCALE-IMP",               new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-LOCALE-INCOMPATIBLE",      new (false, true, IsFatal.Fatal)},
+        {"EC-LOCALE-INVALID",           new (false, true, IsFatal.Fatal)},
+        {"EC-LOCALE-INVALID-PTR",       new (false, true, IsFatal.Fatal)},
+        {"EC-LOCALE-MISSING",           new (false, true, IsFatal.Fatal)},
+        {"EC-LOCALE-SIZE",              new (false, true, IsFatal.Fatal)},
+        {"EC-MCS",                      new (false, true, IsFatal.Other)},
+        {"EC-MCS-ABNORMAL-TERMINATION", new (false, true, IsFatal.NonFatal)},
+        {"EC-MCS-IMP",                  new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-MCS-INVALID-TAG",          new (false, true, IsFatal.NonFatal)},
+        {"EC-MCS-MESSAGE-LENGTH",       new (false, true, IsFatal.NonFatal)},
+        {"EC-MCS-NO-REQUESTER",         new (false, true, IsFatal.NonFatal)},
+        {"EC-MCS-NO-SERVER",            new (false, true, IsFatal.NonFatal)},
+        {"EC-MCS-NORMAL-TERMINATION",   new (false, true, IsFatal.NonFatal)},
+        {"EC-MCS-REQUESTOR-FAILED",     new (false, true, IsFatal.NonFatal)},
+        {"EC-OO",                       new (false, true, IsFatal.Other)},
+        {"EC-OO-ARG-OMITTED",           new (false, true, IsFatal.Fatal)},
+        {"EC-OO-CONFORMANCE",           new (false, true, IsFatal.Fatal)},
+        {"EC-OO-EXCEPTION",             new (false, true, IsFatal.Fatal)},
+        {"EC-OO-IMP",                   new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-OO-METHOD",                new (false, true, IsFatal.Fatal)},
+        {"EC-OO-NULL",                  new (false, true, IsFatal.Fatal)},
+        {"EC-OO-RESOURCE",              new (false, true, IsFatal.Fatal)},
+        {"EC-OO-UNIVERSAL",             new (false, true, IsFatal.Fatal)},
+        {"EC-ORDER",                    new (false, true, IsFatal.Other)},
+        {"EC-ORDER-IMP",                new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-ORDER-NOT-SUPPORTED",      new (false, true, IsFatal.Fatal)},
+        {"EC-OVERFLOW",                 new (false, true, IsFatal.Other)},
+        {"EC-OVERFLOW-IMP",             new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-OVERFLOW-STRING",          new (false, true, IsFatal.NonFatal)},
+        {"EC-OVERFLOW-UNSTRING",        new (false, true, IsFatal.NonFatal)},
+        {"EC-PROGRAM",                  new (false, true, IsFatal.Other)},
+        {"EC-PROGRAM-ARG-MISMATCH",     new (false, true, IsFatal.Fatal)},
+        {"EC-PROGRAM-ARG-OMITTED",      new (false, true, IsFatal.Fatal)},
+        {"EC-PROGRAM-CANCEL-ACTIVE",    new (false, true, IsFatal.Fatal)},
+        {"EC-PROGRAM-IMP",              new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-PROGRAM-NOT-FOUND",        new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-PROGRAM-PTR-NULL",         new (false, true, IsFatal.Fatal)},
+        {"EC-PROGRAM-RECURSIVE-CALL",   new (false, true, IsFatal.Fatal)},
+        {"EC-PROGRAM-RESOURCES",        new (false, true, IsFatal.Fatal)},
+        {"EC-RAISING",                  new (false, true, IsFatal.Other)},
+        {"EC-RAISING-IMP",              new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-RAISING-NOT-SPECIFIED",    new (false, true, IsFatal.Fatal)},
+        {"EC-RANGE",                    new (false, true, IsFatal.Other)},
+        {"EC-RANGE-IMP",                new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-RANGE-INDEX",              new (false, true, IsFatal.Fatal)},
+        {"EC-RANGE-INSPECT-SIZE",       new (false, true, IsFatal.Fatal)},
+        {"EC-RANGE-INVALID",            new (false, true, IsFatal.NonFatal)},
+        {"EC-RANGE-PERFORM-VARYING",    new (false, true, IsFatal.Fatal)},
+        {"EC-RANGE-PTR",                new (false, true, IsFatal.Fatal)},
+        {"EC-RANGE-SEARCH-INDEX",       new (false, true, IsFatal.NonFatal)},
+        {"EC-RANGE-SEARCH-NO-MATCH",    new (false, true, IsFatal.NonFatal)},
+        {"EC-REPORT",                   new (false, true, IsFatal.Other)},
+        {"EC-REPORT-ACTIVE",            new (false, true, IsFatal.Fatal)},
+        {"EC-REPORT-COLUMN-OVERLAP",    new (false, true, IsFatal.NonFatal)},
+        {"EC-REPORT-FILE-MODE",         new (false, true, IsFatal.Fatal)},
+        {"EC-REPORT-IMP",               new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-REPORT-INACTIVE",          new (false, true, IsFatal.Fatal)},
+        {"EC-REPORT-LINE-OVERLAP",      new (false, true, IsFatal.NonFatal)},
+        {"EC-REPORT-NOT-TERMINATED",    new (false, true, IsFatal.NonFatal)},
+        {"EC-REPORT-PAGE-LIMIT",        new (false, true, IsFatal.NonFatal)},
+        {"EC-REPORT-PAGE-WIDTH",        new (false, true, IsFatal.NonFatal)},
+        {"EC-REPORT-SUM-SIZE",          new (false, true, IsFatal.Fatal)},
+        {"EC-REPORT-VARYING",           new (false, true, IsFatal.Fatal)},
+        {"EC-SCREEN",                   new (false, true, IsFatal.Other)},
+        {"EC-SCREEN-FIELD-OVERLAP",     new (false, true, IsFatal.NonFatal)},
+        {"EC-SCREEN-IMP",               new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-SCREEN-ITEM-TRUNCATED",    new (false, true, IsFatal.NonFatal)},
+        {"EC-SCREEN-LINE-NUMBER",       new (false, true, IsFatal.NonFatal)},
+        {"EC-SCREEN-STARTING-COLUMN",   new (false, true, IsFatal.NonFatal)},
+        {"EC-SIZE",                     new (false, true, IsFatal.Other)},
+        {"EC-SIZE-ADDRESS",             new (false, true, IsFatal.Fatal)},
+        {"EC-SIZE-EXPONENTIATION",      new (false, true, IsFatal.Fatal)},
+        {"EC-SIZE-IMP",                 new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-SIZE-OVERFLOW",            new (false, true, IsFatal.Fatal)},
+        {"EC-SIZE-TRUNCATION",          new (false, true, IsFatal.Fatal)},
+        {"EC-SIZE-UNDERFLOW",           new (false, true, IsFatal.Fatal)},
+        {"EC-SIZE-ZERO-DIVIDE",         new (false, true, IsFatal.Fatal)},
+        {"EC-SORT-MERGE",               new (false, true, IsFatal.Other)},
+        {"EC-SORT-MERGE-ACTIVE",        new (false, true, IsFatal.Fatal)},
+        {"EC-SORT-MERGE-FILE-OPEN",     new (false, true, IsFatal.Fatal)},
+        {"EC-SORT-MERGE-IMP",           new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-SORT-MERGE-RELEASE",       new (false, true, IsFatal.Fatal)},
+        {"EC-SORT-MERGE-RETURN",        new (false, true, IsFatal.Fatal)},
+        {"EC-SORT-MERGE-SEQUENCE",      new (false, true, IsFatal.Fatal)},
+        {"EC-STORAGE",                  new (false, true, IsFatal.Other)},
+        {"EC-STORAGE-IMP",              new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-STORAGE-NOT-ALLOC",        new (false, true, IsFatal.NonFatal)},
+        {"EC-STORAGE-NOT-AVAIL",        new (false, true, IsFatal.NonFatal)},
+        {"EC-USER",                     new (false, true, IsFatal.Other)}, //user-defined
 
-        {"EC-LOCALE", new exception("EC-LOCALE", false, true, "other")},
-        {"EC-LOCALE-IMP", new exception("EC-LOCALE-IMP", false, true, "fatal")}, //imp
-        {"EC-LOCALE-INCOMPATIBLE", new exception("EC-LOCALE-INCOMPATIBLE", false, true, "fatal")},
-        {"EC-LOCALE-INVALID", new exception("EC-LOCALE-INVALID", false, true, "fatal")},
-        {"EC-LOCALE-INVALID-PTR", new exception("EC-LOCALE-INVALID-PTR", false, true, "fatal")},
-        {"EC-LOCALE-MISSING", new exception("EC-LOCALE-MISSING", false, true, "fatal")},
-        {"EC-LOCALE-SIZE", new exception("EC-LOCALE-SIZE", false, true, "fatal")},
-        {"EC-MCS", new exception("EC-MCS", false, true, "other")},
-        {"EC-MCS-ABNORMAL-TERMINATION", new exception("EC-MCS-ABNORMAL-TERMINATION", false, true, "nonfatal")},
-        {"EC-MCS-IMP", new exception("EC-MCS-IMP", false, true, "fatal")}, //imp
-        {"EC-MCS-INVALID-TAG", new exception("EC-MCS-INVALID-TAG", false, true, "nonfatal")},
-        {"EC-MCS-MESSAGE-LENGTH", new exception("EC-MCS-MESSAGE-LENGTH", false, true, "nonfatal")},
-        {"EC-MCS-NO-REQUESTER", new exception("EC-MCS-NO-REQUESTER", false, true, "nonfatal")},
-        {"EC-MCS-NO-SERVER", new exception("EC-MCS-NO-SERVER", false, true, "nonfatal")},
-        {"EC-MCS-NORMAL-TERMINATION", new exception("EC-MCS-NORMAL-TERMINATION", false, true, "nonfatal")},
-        {"EC-MCS-REQUESTOR-FAILED", new exception("EC-MCS-REQUESTOR-FAILED", false, true, "nonfatal")},
-        {"EC-OO", new exception("EC-OO", false, true, "other")},
-        {"EC-OO-ARG-OMITTED", new exception("EC-OO-ARG-OMITTED", false, true, "fatal")},
-        {"EC-OO-CONFORMANCE", new exception("EC-OO-CONFORMANCE", false, true, "fatal")},
-        {"EC-OO-EXCEPTION", new exception("EC-OO-EXCEPTION", false, true, "fatal")},
-        {"EC-OO-IMP", new exception("EC-OO-IMP", false, true, "fatal")}, //imp
-        {"EC-OO-METHOD", new exception("EC-OO-METHOD", false, true, "fatal")},
-        {"EC-OO-NULL", new exception("EC-OO-NULL", false, true, "fatal")},
-        {"EC-OO-RESOURCE", new exception("EC-OO-RESOURCE", false, true, "fatal")},
-        {"EC-OO-UNIVERSAL", new exception("EC-OO-UNIVERSAL", false, true, "fatal")},
-        {"EC-ORDER", new exception("EC-ORDER", false, true, "other")},
-        {"EC-ORDER-IMP", new exception("EC-ORDER-IMP", false, true, "fatal")}, //imp
-        {"EC-ORDER-NOT-SUPPORTED", new exception("EC-ORDER-NOT-SUPPORTED", false, true, "fatal")},
-        {"EC-OVERFLOW", new exception("EC-OVERFLOW", false, true, "other")},
-        {"EC-OVERFLOW-IMP", new exception("EC-OVERFLOW-IMP", false, true, "fatal")}, //imp
-        {"EC-OVERFLOW-STRING", new exception("EC-OVERFLOW-STRING", false, true, "nonfatal")},
-        {"EC-OVERFLOW-UNSTRING", new exception("EC-OVERFLOW-UNSTRING", false, true, "nonfatal")},
-        {"EC-PROGRAM", new exception("EC-PROGRAM", false, true, "other")},
-        {"EC-PROGRAM-ARG-MISMATCH", new exception("EC-PROGRAM-ARG-MISMATCH", false, true, "fatal")},
-        {"EC-PROGRAM-ARG-OMITTED", new exception("EC-PROGRAM-ARG-OMITTED", false, true, "fatal")},
-        {"EC-PROGRAM-CANCEL-ACTIVE", new exception("EC-PROGRAM-CANCEL-ACTIVE", false, true, "fatal")},
-        {"EC-PROGRAM-IMP", new exception("EC-PROGRAM-IMP", false, true, "fatal")}, //imp
-        {"EC-PROGRAM-NOT-FOUND", new exception("EC-PROGRAM-NOT-FOUND", false, true, "fatal")}, //imp
-        {"EC-PROGRAM-PTR-NULL", new exception("EC-PROGRAM-PTR-NULL", false, true, "fatal")},
-        {"EC-PROGRAM-RECURSIVE-CALL", new exception("EC-PROGRAM-RECURSIVE-CALL", false, true, "fatal")},
-        {"EC-PROGRAM-RESOURCES", new exception("EC-PROGRAM-RESOURCES", false, true, "fatal")},
-        {"EC-RAISING", new exception("EC-RAISING", false, true, "other")},
-        {"EC-RAISING-IMP", new exception("EC-RAISING-IMP", false, true, "fatal")}, //imp
-        {"EC-RAISING-NOT-SPECIFIED", new exception("EC-RAISING-NOT-SPECIFIED", false, true, "fatal")},
-        {"EC-RANGE", new exception("EC-RANGE", false, true, "other")},
-        {"EC-RANGE-IMP", new exception("EC-RANGE-IMP", false, true, "fatal")}, //imp
-        {"EC-RANGE-INDEX", new exception("EC-RANGE-INDEX", false, true, "fatal")},
-        {"EC-RANGE-INSPECT-SIZE", new exception("EC-RANGE-INSPECT-SIZE", false, true, "fatal")},
-        {"EC-RANGE-INVALID", new exception("EC-RANGE-INVALID", false, true, "nonfatal")},
-        {"EC-RANGE-PERFORM-VARYING", new exception("EC-RANGE-PERFORM-VARYING", false, true, "fatal")},
-        {"EC-RANGE-PTR", new exception("EC-RANGE-PTR", false, true, "fatal")},
-        {"EC-RANGE-SEARCH-INDEX", new exception("EC-RANGE-SEARCH-INDEX", false, true, "nonfatal")},
-        {"EC-RANGE-SEARCH-NO-MATCH", new exception("EC-RANGE-SEARCH-NO-MATCH", false, true, "nonfatal")},
-        {"EC-REPORT", new exception("EC-REPORT", false, true, "other")},
-        {"EC-REPORT-ACTIVE", new exception("EC-REPORT-ACTIVE", false, true, "fatal")},
-        {"EC-REPORT-COLUMN-OVERLAP", new exception("EC-REPORT-COLUMN-OVERLAP", false, true, "nonfatal")},
-        {"EC-REPORT-FILE-MODE", new exception("EC-REPORT-FILE-MODE", false, true, "fatal")},
-        {"EC-REPORT-IMP", new exception("EC-REPORT-IMP", false, true, "fatal")}, //imp
-        {"EC-REPORT-INACTIVE", new exception("EC-REPORT-INACTIVE", false, true, "fatal")},
-        {"EC-REPORT-LINE-OVERLAP", new exception("EC-REPORT-LINE-OVERLAP", false, true, "nonfatal")},
-        {"EC-REPORT-NOT-TERMINATED", new exception("EC-REPORT-NOT-TERMINATED", false, true, "nonfatal")},
-        {"EC-REPORT-PAGE-LIMIT", new exception("EC-REPORT-PAGE-LIMIT", false, true, "nonfatal")},
-        {"EC-REPORT-PAGE-WIDTH", new exception("EC-REPORT-PAGE-WIDTH", false, true, "nonfatal")},
-        {"EC-REPORT-SUM-SIZE", new exception("EC-REPORT-SUM-SIZE", false, true, "fatal")},
-        {"EC-REPORT-VARYING", new exception("EC-REPORT-VARYING", false, true, "fatal")},
-        {"EC-SCREEN", new exception("EC-SCREEN", false, true, "other")},
-        {"EC-SCREEN-FIELD-OVERLAP", new exception("EC-SCREEN-FIELD-OVERLAP", false, true, "nonfatal")}, 
-        {"EC-SCREEN-IMP", new exception("EC-SCREEN-IMP", false, true, "fatal")}, //imp
-        {"EC-SCREEN-ITEM-TRUNCATED", new exception("EC-SCREEN-ITEM-TRUNCATED", false, true, "nonfatal")},
-        {"EC-SCREEN-LINE-NUMBER", new exception("EC-SCREEN-LINE-NUMBER", false, true, "nonfatal")},
-        {"EC-SCREEN-STARTING-COLUMN", new exception("EC-SCREEN-STARTING-COLUMN", false, true, "nonfatal")},
-        {"EC-SIZE", new exception("EC-SIZE", false, true, "other")},
-        {"EC-SIZE-ADDRESS", new exception("EC-SIZE-ADDRESS", false, true, "fatal")},
-        {"EC-SIZE-EXPONENTIATION", new exception("EC-SIZE-EXPONENTIATION", false, true, "fatal")},
-        {"EC-SIZE-IMP", new exception("EC-SIZE-IMP", false, true, "fatal")}, //imp
-        {"EC-SIZE-OVERFLOW", new exception("EC-SIZE-OVERFLOW", false, true, "fatal")},
-        {"EC-SIZE-TRUNCATION", new exception("EC-SIZE-TRUNCATION", false, true, "fatal")},
-        {"EC-SIZE-UNDERFLOW", new exception("EC-SIZE-UNDERFLOW", false, true, "fatal")},
-        {"EC-SIZE-ZERO-DIVIDE", new exception("EC-SIZE-ZERO-DIVIDE", false, true, "fatal")},
-        {"EC-SORT-MERGE", new exception("EC-SORT-MERGE", false, true, "other")},
-        {"EC-SORT-MERGE-ACTIVE", new exception("EC-SORT-MERGE-ACTIVE", false, true, "fatal")},
-        {"EC-SORT-MERGE-FILE-OPEN", new exception("EC-SORT-MERGE-FILE-OPEN", false, true, "fatal")},
-        {"EC-SORT-MERGE-IMP", new exception("EC-SORT-MERGE-IMP", false, true, "fatal")}, //imp
-        {"EC-SORT-MERGE-RELEASE", new exception("EC-SORT-MERGE-RELEASE", false, true, "fatal")},
-        {"EC-SORT-MERGE-RETURN", new exception("EC-SORT-MERGE-RETURN", false, true, "fatal")},
-        {"EC-SORT-MERGE-SEQUENCE", new exception("EC-SORT-MERGE-SEQUENCE", false, true, "fatal")},
-        {"EC-STORAGE", new exception("EC-STORAGE", false, true, "other")},
-        {"EC-STORAGE-IMP", new exception("EC-STORAGE-IMP", false, true, "fatal")}, //imp
-        {"EC-STORAGE-NOT-ALLOC", new exception("EC-STORAGE-NOT-ALLOC", false, true, "nonfatal")},
-        {"EC-STORAGE-NOT-AVAIL", new exception("EC-STORAGE-NOT-AVAIL", false, true, "nonfatal")},
-        {"EC-USER", new exception("EC-USER", false, true, "other")}, //user-defined
-
-        {"EC-USER-suffix", new exception("EC-USER-suffix", false, true, "nonfatal")}, 
         //similar to the previous suffix exception, but this time the user decides
-
-        {"EC-VALIDATE", new exception("EC-VALIDATE", false, true, "other")},
-        {"EC-VALIDATE-CONTENT", new exception("EC-VALIDATE-CONTENT", false, true, "nonfatal")},
-        {"EC-VALIDATE-FORMAT", new exception("EC-VALIDATE-FORMAT", false, true, "nonfatal")},
-        {"EC-VALIDATE-IMP", new exception("EC-VALIDATE-IMP", false, true, "fatal")}, //imp
-        {"EC-VALIDATE-RELATION", new exception("EC-VALIDATE-RELATION", false, true, "nonfatal")},
-        {"EC-VALIDATE-VARYING", new exception("EC-VALIDATE-VARYING", false, true, "fatal")}
+        {"EC-USER-suffix",              new (false, true, IsFatal.NonFatal)}, 
+        {"EC-VALIDATE",                 new (false, true, IsFatal.Other)},
+        {"EC-VALIDATE-CONTENT",         new (false, true, IsFatal.NonFatal)},
+        {"EC-VALIDATE-FORMAT",          new (false, true, IsFatal.NonFatal)},
+        {"EC-VALIDATE-IMP",             new (false, true, IsFatal.Fatal)}, //imp
+        {"EC-VALIDATE-RELATION",        new (false, true, IsFatal.NonFatal)},
+        {"EC-VALIDATE-VARYING",         new (false, true, IsFatal.Fatal)}
     };
 }

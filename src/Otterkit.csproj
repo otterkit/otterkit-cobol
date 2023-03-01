@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../libotterkit/src/OtterkitLibrary.csproj" />
+    <PackageReference Include="System.IO.Hashing" Version="7.0.0" />
     <PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
   </ItemGroup>
 

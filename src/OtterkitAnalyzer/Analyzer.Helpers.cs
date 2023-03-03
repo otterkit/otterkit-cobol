@@ -97,7 +97,6 @@ public static partial class Analyzer
         }
     }
 
-
     /// <summary>
     /// Token <c>Lookahead</c>: This method returns a Token from an index of Current Index + the amount parameter
     /// <para>When passed a positive amount it will act as a lookahead method, and when passed a negative amount it will act as a lookbehind method</para>
@@ -144,38 +143,6 @@ public static partial class Analyzer
     }
 
     /// <summary>
-    /// Boolean <c>LookaheadEquals</c> TokenScope[]: This method returns true or false depending on if the Token scope from an index of Current Index + the first parameter is equal to the scopes of the second paramenter
-    /// <para>When passed a positive amount it will act as a lookahead comparison method, and when passed a negative amount it will act as a lookbehind comparison method</para>
-    /// <para>Technically this method allows for infinite lookahead and lookbehind comparisons, as long as the Index + amount is not bigger than the
-    /// number of items on the list of Tokens or smaller than 0.</para>
-    /// </summary>
-    private static bool LookaheadEquals(int lookahead, params TokenScope[] tokenScopesToCompare)
-    {
-        foreach (var scope in tokenScopesToCompare)
-        {
-            if (Lookahead(lookahead).scope.Equals(scope)) return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Boolean <c>LookaheadEquals</c> TokenContext[]: This method returns true or false depending on if the Token context from an index of Current Index + the first parameter is equal to the contexts of the second paramenter
-    /// <para>When passed a positive amount it will act as a lookahead comparison method, and when passed a negative amount it will act as a lookbehind comparison method</para>
-    /// <para>Technically this method allows for infinite lookahead and lookbehind comparisons, as long as the Index + amount is not bigger than the
-    /// number of items on the list of Tokens or smaller than 0.</para>
-    /// </summary>
-    private static bool LookaheadEquals(int lookahead, params TokenContext[] tokenContextsToCompare)
-    {
-        foreach (var context in tokenContextsToCompare)
-        {
-            if (Lookahead(lookahead).context.Equals(context)) return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
     /// Token <c>Current</c>: This method returns the current token from the current Index.
     /// <para>The returned token in encapsulated inside of the Token type, which holds not only the value of the token but also some additional context
     /// that might be required by the parser in certain situations</para>
@@ -183,6 +150,13 @@ public static partial class Analyzer
     private static Token Current()
     {
         return TokenList[Index];
+    }
+
+    private static bool CurrentEquals(string value)
+    {
+        if (Current().value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
+        
+        return false;
     }
 
     /// <summary>
@@ -199,6 +173,13 @@ public static partial class Analyzer
         return false;
     }
 
+    private static bool CurrentEquals(TokenType tokenType)
+    {
+        if (Current().type == tokenType) return true;
+        
+        return false;
+    }
+
     /// <summary>
     /// Boolean <c>CurrentEquals</c> TokenType[]: This method returns true or false depending on if the current token from the current Index has the same type as the parameter.
     /// <para>This helper method is an alternative to the <c>"Current().value.Equals()"</c> syntax, which could become verbose and harder to read when it's used frequently</para>
@@ -207,21 +188,7 @@ public static partial class Analyzer
     {
         foreach (var type in tokenTypesToCompare)
         {
-            if (Current().type.Equals(type)) return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Boolean <c>CurrentEquals</c> TokenScope[]: This method returns true or false depending on if the current token from the current Index has the same scope as the parameter.
-    /// <para>This helper method is an alternative to the <c>"Current().value.Equals()"</c> syntax, which could become verbose and harder to read when it's used frequently</para>
-    /// </summary>
-    private static bool CurrentEquals(params TokenScope[] tokenScopesToCompare)
-    {
-        foreach (var scope in tokenScopesToCompare)
-        {
-            if (Current().scope.Equals(scope)) return true;
+            if (Current().type == type) return true;
         }
 
         return false;
@@ -281,16 +248,6 @@ public static partial class Analyzer
     /// if the current token doesn't match the value it ignores the token and returns without moving to the next token</para>
     /// </summary>
     private static void Optional(string optional)
-    {
-        if (CurrentEquals(optional)) Continue();
-    }
-
-    /// <summary>
-    /// Void <c>Optional</c>: This method checks if the current token is equal to it's first parameter.
-    /// <para>If the current token matches the type, it moves to the next token,
-    /// if the current token doesn't match the type it ignores the token and returns without moving to the next token</para>
-    /// </summary>
-    private static void Optional(TokenType optional)
     {
         if (CurrentEquals(optional)) Continue();
     }
@@ -849,34 +806,4 @@ public static partial class Analyzer
             Continue();
         }
     }
-
-    /// <summary>
-    /// Void <c>Symbol</c>: This method checks if the current token is a valid COBOl Symbol.
-    /// <para>If the current token's type is TokenType.Symbol, it moves to the next token,
-    /// if the current token's type is TokenType.Symbol it calls the ErrorHandler to report a parsing error</para>
-    /// </summary>
-    private static void Symbol(string custom = "default", int position = 0)
-    {
-        var errorMessage = "a COBOL symbol";
-        var errorType = ErrorType.Expected;
-        if (!custom.Equals("default"))
-        {
-            errorMessage = custom;
-            errorType = ErrorType.General;
-        }
-
-        if (!CurrentEquals(TokenType.Symbol))
-        {
-            var lookahead = Lookahead(position);
-
-            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
-            Continue();
-        }
-        else
-        {
-            Continue();
-        }
-    }
-
 }

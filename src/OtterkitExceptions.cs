@@ -88,7 +88,7 @@ public static class ExceptionRegistry
         Other //exceptions with labels greater than three do not seem to be set as either fata or nonfatal
     }
 
-    private sealed class ExceptionMetadata
+    public sealed class ExceptionMetadata
     {
         public bool IsActivated { get; set; }
 
@@ -151,7 +151,7 @@ public static class ExceptionRegistry
     But automatic checking without an ON EXCEPTION clause only happens if the exception's check status is on.
     */
 
-    private static ExceptionMetadata? LastException { get; set; }
+    public static ExceptionMetadata? LastException { get; set; }
 
     private static Dictionary<string, ExceptionMetadata> registry = new(StringComparer.OrdinalIgnoreCase)
     {

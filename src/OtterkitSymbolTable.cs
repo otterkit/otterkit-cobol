@@ -36,11 +36,10 @@ public record SourceUnitSignature
 {
     public string? Identifier;
     public SourceUnit SourceType;
-    public string? Returning;
     public List<string> Parameters = new();
     public List<bool> IsOptional = new();
     public List<bool> IsByRef = new();
-    public List<string>? Exceptions = new();
+    public string? Returning;
 }
 
 public record RepositorySignature

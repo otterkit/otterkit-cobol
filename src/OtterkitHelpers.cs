@@ -1,6 +1,3 @@
-using System.Text;
-using System.Text.RegularExpressions;
-
 namespace Otterkit;
 
 public static class Helpers
@@ -254,31 +251,39 @@ public static class Helpers
         return true;
     }
 
-    public static int ParsePictureString(ReadOnlySpan<char> pictureString)
+    public static int ParsePictureString(ReadOnlySpan<char> picture, out HashSet<char> set)
     {
-        List<char> list = new();
+        var hashSet = new HashSet<char>();
+        var dataSize = 0;
 
-        for (int i = 0; i < pictureString.Length; i++)
+        for (var index = 0; index < picture.Length; index++)
         {
-            if (pictureString[i] == '(')
+            if (picture[index] == '(')
             {
-                int start = i;
-                while (pictureString[i] != ')') i++;
-                int end = i;
-                int count = int.Parse(pictureString.Slice(start + 1, end - start - 1));
-                char c = pictureString[i - 3];
-                for (int j = 0; j < count - 1; j++)
-                {
-                    list.Add(c);
-                }
-            }
-            else
-            {
-                list.Add(pictureString[i]);
-            }
-        }
+                var character = picture[index - 1];
 
-        return list.Count;
+                var start = index;
+
+                while (picture[index] != ')') index++;
+
+                var end = index;
+
+                var count = int.Parse(picture.Slice(start + 1, end - start - 1));
+                
+                hashSet.Add(character);
+
+                dataSize += count - 1;
+
+                continue;
+            }
+
+            hashSet.Add(picture[index]);
+
+            dataSize++;
+        }
+        
+        set = hashSet;
+        return dataSize;
     }
 
 }

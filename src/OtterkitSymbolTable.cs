@@ -8,7 +8,8 @@ public record DataItemInfo
     public int LevelNumber;
     public string? Identifier;
     public string? Type;
-    public string? PictureLength;
+    public string? PictureString;
+    public int PictureLength;
     public string? ExternalName;
     public string? DefaultValue;
     public UsageType UsageType;

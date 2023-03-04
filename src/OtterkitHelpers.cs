@@ -258,10 +258,12 @@ public static class Helpers
 
         for (var index = 0; index < picture.Length; index++)
         {
-            if (picture[index] == '(')
-            {
-                var character = picture[index - 1];
+            var character = picture[index];
 
+            if (character is 'B' or 'b' or '0' or '/') { }
+
+            if (character == '(')
+            {
                 var start = index;
 
                 while (picture[index] != ')') index++;
@@ -269,8 +271,6 @@ public static class Helpers
                 var end = index;
 
                 var count = int.Parse(picture.Slice(start + 1, end - start - 1));
-                
-                hashSet.Add(character);
 
                 dataSize += count - 1;
 

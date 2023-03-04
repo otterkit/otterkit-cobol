@@ -119,7 +119,6 @@ public static partial class Analyzer
 
     private static void BaseEntry()
     {
-        string dataType;
         int LevelNumber = int.Parse(Current().value);
         Number();
 
@@ -320,49 +319,23 @@ public static partial class Analyzer
             {
                 Choice("PIC", "PICTURE");
                 Optional("IS");
-                dataType = Current().value switch
-                {
-                    "S9" => "S9",
-                    "9" => "9",
-                    "X" => "X",
-                    "A" => "A",
-                    "N" => "N",
-                    "1" => "1",
-                    _ => "Error"
-                };
 
-                if (dataType == "Error")
+                var pictureBuilder = new StringBuilder();
+                while (!CurrentEquals(".") && !CurrentEquals(TokenContext.IsClause))
                 {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    Unrecognized type, PICTURE type must be S9, 9, X, A, N or 1. These are Signed Numeric, Unsigned Numeric, Alphanumeric, Alphabetic, National and Boolean respectively
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    pictureBuilder.Append(Current().value);
+                    Continue();
                 }
+            
+                var pictureString = pictureBuilder.ToString();
 
-                dataItem.Type = dataType;
+                var parsePicture = Helpers.ParsePictureString(pictureString, out var chars);
+
+                dataItem.PictureString = pictureString;
+
+                dataItem.PictureLength = parsePicture;
+
                 dataItem.IsPicture = true;
-                Choice("S9", "9", "X", "A", "N", "1");
-
-                Expected("(");
-                string DataLength = Current().value;
-                Number();
-                Expected(")");
-                if (CurrentEquals("V9") && dataType != "S9" && dataType != "9")
-                {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, "V9 cannot be used with non-numeric types");
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                }
-
-                if (CurrentEquals("V9"))
-                {
-                    Expected("V9");
-                    Expected("(");
-                    DataLength += $"V{Current().value}";
-                    Number();
-                    Expected(")");
-                }
-
-                dataItem.PictureLength = DataLength;
             }
 
             if (CurrentEquals("VALUE"))

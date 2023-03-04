@@ -7,7 +7,36 @@
     <Nullable>enable</Nullable>
     <Optimize>true</Optimize>
     <Deterministic>true</Deterministic>
+    <PublishRelease>true</PublishRelease>
+    <!-- <PublishAot>true</PublishAot> -->
+    <NoWarn>$(NoWarn);NU5100</NoWarn>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <PackRelease>true</PackRelease> 
+    <PackageId>Otterkit.Library</PackageId>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Version>1.0.45-alpha</Version>
+    <Copyright>Copyright (c) Otterkit 2023</Copyright>
+    <Authors>Otterkit Authors</Authors>
+    <Company>Otterkit Project</Company>
+    <PackageIcon>OtterkitIcon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>Otterkit;COBOL;Compiler;Transpiler</PackageTags>
+    <PackageProjectUrl>https://github.com/otterkit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/otterkit/libotterkit</RepositoryUrl> 
+    <RepositoryType>git</RepositoryType>
+    <Description>
+      Main package for Otterkit's runtime library. This package contains the library responsible for all aspects of Otterkit COBOL's runtime behaviour.
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../Assets/OtterkitIcon.png" Pack="true" PackagePath="/" />
+    <None Include="../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="OtterkitMath/**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

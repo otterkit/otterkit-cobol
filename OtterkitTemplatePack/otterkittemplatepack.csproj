@@ -15,8 +15,8 @@
   <PropertyGroup>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.0.10-alpha</Version>
-    <Copyright>Copyright (c) Otterkit 2022</Copyright>
+    <Version>1.0.45-alpha</Version>
+    <Copyright>Copyright (c) Otterkit 2023</Copyright>
     <Authors>Otterkit Authors</Authors>
     <Company>Otterkit Project</Company>
     <PackageIcon>OtterkitIcon.png</PackageIcon>
@@ -26,7 +26,7 @@
     <RepositoryUrl>https://github.com/otterkit/otterkit</RepositoryUrl> 
     <RepositoryType>git</RepositoryType>
     <Description>
-      Part of the Otterkit COBOL compiler. This package installs the templates needed to generate new Otterkit COBOL projects.
+      This package contains the templates needed to generate new Otterkit COBOL projects.
     </Description>
   </PropertyGroup>
 

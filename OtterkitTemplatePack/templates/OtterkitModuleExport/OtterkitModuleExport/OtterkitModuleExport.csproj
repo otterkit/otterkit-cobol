@@ -12,12 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="OtterkitLibrary">
-      <HintPath>OtterkitLibrary.dll</HintPath>
-    </Reference>
-    <Content Include="OtterkitMath/**">
-      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
-    </Content>
+    <PackageReference Include="Otterkit.Library" Version="1.0.45-alpha" />
   </ItemGroup>
 
 </Project>

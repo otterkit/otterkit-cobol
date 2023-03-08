@@ -329,7 +329,7 @@ public static partial class Analyzer
             
                 var pictureString = pictureBuilder.ToString();
 
-                var parsePicture = Helpers.ParsePictureString(pictureString, out var chars);
+                var parsePicture = PictureString(pictureString, out var chars);
 
                 dataItem.PictureString = pictureString;
 

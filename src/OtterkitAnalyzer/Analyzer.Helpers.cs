@@ -10,6 +10,41 @@ public static partial class Analyzer
     // (And other helpers that it easier to iterate through the List)
     // All other methods inside of the analyzer depend on these to parse through the tokens.
 
+    public static int PictureString(ReadOnlySpan<char> picture, out HashSet<char> set)
+    {
+        var hashSet = new HashSet<char>();
+        var dataSize = 0;
+
+        for (var index = 0; index < picture.Length; index++)
+        {
+            var character = picture[index];
+
+            if (character is 'B' or 'b' or '0' or '/') { }
+
+            if (character == '(')
+            {
+                var start = index;
+
+                while (picture[index] != ')') index++;
+
+                var end = index;
+
+                var count = int.Parse(picture.Slice(start + 1, end - start - 1));
+
+                dataSize += count - 1;
+
+                continue;
+            }
+
+            hashSet.Add(picture[index]);
+
+            dataSize++;
+        }
+        
+        set = hashSet;
+        return dataSize;
+    }
+
     private static void AnchorPoint(params string[] anchors)
     {
         ErrorHandler.Analyzer.AttemptRecovery(anchors);

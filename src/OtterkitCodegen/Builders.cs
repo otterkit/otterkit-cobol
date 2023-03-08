@@ -624,14 +624,14 @@ public class StatementBuilder
             Continue(1);
         }
 
-        expression = Helpers.ShuntingYard(expression, Helpers.BooleanPrecedence);
+        expression = Analyzer.ShuntingYard(expression, Analyzer.ConditionalPrecedence);
 
         foreach (var item in expression)
         {
             Console.WriteLine(item);
         }
 
-        var compiledExpression = Helpers.PostfixToCSharpInfix(expression, Helpers.BooleanPrecedence);
+        var compiledExpression = Analyzer.PostfixToCSharpInfix(expression, Analyzer.ConditionalPrecedence);
 
         CompiledStatement += $"if ({compiledExpression}) {{";
 

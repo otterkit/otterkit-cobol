@@ -1108,7 +1108,7 @@ public static partial class Analyzer
     {
         static bool IsArithmeticSymbol(Token current)
         {
-            return Helpers.ArithmeticPrecedence.ContainsKey(current.value);
+            return ArithmeticPrecedence.ContainsKey(current.value);
         }
 
         var expression = new List<Token>();
@@ -1136,7 +1136,7 @@ public static partial class Analyzer
             }
         }
 
-        if (!Helpers.IsBalanced(expression))
+        if (!IsBalanced(expression))
         {
             ErrorHandler.Analyzer.Report(FileName, expression[0], ErrorType.General, """
             This expression is not balanced, one or more parenthesis to not have their matching opening or closing pair, it is an invalid expression
@@ -1144,9 +1144,9 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, expression[0]);
         }
 
-        var shuntingYard = Helpers.ShuntingYard(expression, Helpers.ArithmeticPrecedence);
+        var shuntingYard = ShuntingYard(expression, ArithmeticPrecedence);
 
-        if (!Helpers.EvaluatePostfix(shuntingYard, Helpers.ArithmeticPrecedence, out Token error))
+        if (!EvaluatePostfix(shuntingYard, ArithmeticPrecedence, out Token error))
         {
             ErrorHandler.Analyzer.Report(FileName, error, ErrorType.General, """
             This expression cannot be correctly evaluated. Please make sure that all operators have their matching operands.
@@ -1257,7 +1257,7 @@ public static partial class Analyzer
             }
         }
 
-        if (!Helpers.IsBalanced(expression))
+        if (!IsBalanced(expression))
         {
             ErrorHandler.Analyzer.Report(FileName, expression[0], ErrorType.General, """
             This expression is not balanced, one or more parenthesis to not have their matching opening or closing pair, it is an invalid expression
@@ -1265,9 +1265,9 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, expression[0]);
         }
 
-        var shuntingYard = Helpers.ShuntingYard(expression, Helpers.BooleanPrecedence);
+        var shuntingYard = ShuntingYard(expression, ConditionalPrecedence);
 
-        if (!Helpers.EvaluatePostfix(shuntingYard, Helpers.BooleanPrecedence, out Token error))
+        if (!EvaluatePostfix(shuntingYard, ConditionalPrecedence, out Token error))
         {
             ErrorHandler.Analyzer.Report(FileName, error, ErrorType.General, """
             This expression cannot be correctly evaluated. Please make sure that all operators have their matching operands.
@@ -1389,7 +1389,7 @@ public static partial class Analyzer
         }
         else if (CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && LookaheadEquals(1, TokenType.Symbol))
         {
-            if (Helpers.ArithmeticPrecedence.ContainsKey(Lookahead(1).value))
+            if (ArithmeticPrecedence.ContainsKey(Lookahead(1).value))
             {
                 Arithmetic("ALSO", "WHEN");
                 return EvaluateOperand.Arithmetic;
@@ -1452,7 +1452,7 @@ public static partial class Analyzer
         }
         else if (arithmetic || condition && CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && LookaheadEquals(1, TokenType.Symbol))
         {
-            if (arithmetic && Helpers.ArithmeticPrecedence.ContainsKey(Lookahead(1).value))
+            if (arithmetic && ArithmeticPrecedence.ContainsKey(Lookahead(1).value))
             {
                 Arithmetic("ALSO", "WHEN");
                 RangeExpression(range, EvaluateOperand.Arithmetic);

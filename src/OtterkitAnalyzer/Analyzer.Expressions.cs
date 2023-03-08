@@ -1,6 +1,6 @@
 namespace Otterkit;
 
-public static class Helpers
+public static partial class Analyzer
 {
     public static readonly Dictionary<string, int> ArithmeticPrecedence = new()
     {
@@ -13,7 +13,7 @@ public static class Helpers
         [")"] = 4,
     };
 
-    public static readonly Dictionary<string, int> BooleanPrecedence = new()
+    public static readonly Dictionary<string, int> ConditionalPrecedence = new()
     {
         ["("] = 0,
         ["AND"] = 1,
@@ -250,40 +250,4 @@ public static class Helpers
         error = new Token("NoError", TokenType.EOF, -1, -1);
         return true;
     }
-
-    public static int ParsePictureString(ReadOnlySpan<char> picture, out HashSet<char> set)
-    {
-        var hashSet = new HashSet<char>();
-        var dataSize = 0;
-
-        for (var index = 0; index < picture.Length; index++)
-        {
-            var character = picture[index];
-
-            if (character is 'B' or 'b' or '0' or '/') { }
-
-            if (character == '(')
-            {
-                var start = index;
-
-                while (picture[index] != ')') index++;
-
-                var end = index;
-
-                var count = int.Parse(picture.Slice(start + 1, end - start - 1));
-
-                dataSize += count - 1;
-
-                continue;
-            }
-
-            hashSet.Add(picture[index]);
-
-            dataSize++;
-        }
-        
-        set = hashSet;
-        return dataSize;
-    }
-
 }

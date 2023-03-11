@@ -28,6 +28,8 @@ public static partial class Lexer
     private const string SymbolPattern = @"|(\+|\-|\*\*|\*|=|\/|\$|,|;|::|\.|\(|\)|>>|<>|>=|<=|>|<|&|_)";
     private const string AllPatterns = StringPattern + WordsPattern + NumberPattern + DirectivesPattern + SymbolPattern;
 
+    private static bool IsPictureNext;
+
     public static void TokenizeLine(List<Token> sourceTokens, ReadOnlySpan<byte> bytes, int lineNumber)
     {
         var charCount = Encoding.UTF8.GetCharCount(bytes);
@@ -39,15 +41,41 @@ public static partial class Lexer
 
         Preprocessor.PreprocessSourceFormat(bytes, sourceChars);
 
+        var PictureEndIndex = 0;
+
         foreach (var token in LexerRegex().EnumerateMatches(sourceChars))
         {
             ReadOnlySpan<char> currentMatch = sourceChars.Slice(token.Index, token.Length);
+
+            if (token.Index < PictureEndIndex) continue;
 
             if (currentMatch.Contains(">>", StringComparison.OrdinalIgnoreCase))
             {
                 Preprocessor.PreprocessDirective(currentMatch, lineNumber);
                 continue;
             }
+
+            if (IsPictureNext && !currentMatch.Equals("IS", StringComparison.OrdinalIgnoreCase))
+            {
+                var temporary = sourceChars.Slice(token.Index, sourceChars.Length - token.Index - 1);
+
+                var regex = PictureEndRegex().EnumerateMatches(temporary);
+
+                regex.MoveNext();
+
+                var pictureChars = temporary.Slice(0, regex.Current.Index);
+
+                Token picture = new(new string(pictureChars), TokenType.Picture, lineNumber, token.Index + 1);
+                sourceTokens.Add(picture);
+
+                PictureEndIndex = regex.Current.Index + token.Index;
+                IsPictureNext = false;
+
+                continue;
+            }
+
+            IsPictureNext = currentMatch.Equals("PIC", StringComparison.OrdinalIgnoreCase)
+                || currentMatch.Equals("PICTURE", StringComparison.OrdinalIgnoreCase);
 
             TokenType type = currentMatch switch
             {
@@ -118,4 +146,7 @@ public static partial class Lexer
 
     [GeneratedRegex(AllPatterns, RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex LexerRegex();
+
+    [GeneratedRegex("""(\s|\.\s)""", RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex PictureEndRegex();
 }

@@ -320,22 +320,17 @@ public static partial class Analyzer
                 Choice("PIC", "PICTURE");
                 Optional("IS");
 
-                var pictureBuilder = new StringBuilder();
-                while (!CurrentEquals(".") && !CurrentEquals(TokenContext.IsClause))
-                {
-                    pictureBuilder.Append(Current().value);
-                    Continue();
-                }
+                var picture = Current();
             
-                var pictureString = pictureBuilder.ToString();
+                var isValidPicture = PictureString(picture.value, out var size);
 
-                var isValidPicture = PictureString(pictureString, out var size);
-
-                dataItem.PictureString = pictureString;
+                dataItem.PictureString = picture.value;
 
                 dataItem.PictureLength = size;
 
                 dataItem.IsPicture = true;
+
+                Continue();
             }
 
             if (CurrentEquals("VALUE"))

@@ -160,6 +160,7 @@ public enum TokenType
     FigurativeLiteral,
     IntrinsicFunction,
     Symbol,
+    Picture,
     String,
     HexString,
     Boolean,

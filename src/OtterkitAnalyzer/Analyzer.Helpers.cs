@@ -10,18 +10,107 @@ public static partial class Analyzer
     // (And other helpers that it easier to iterate through the List)
     // All other methods inside of the analyzer depend on these to parse through the tokens.
 
-    public static int PictureString(ReadOnlySpan<char> picture, out HashSet<char> set)
+    public static bool PictureString(ReadOnlySpan<char> picture, out int size)
     {
-        var hashSet = new HashSet<char>();
+        var set = new HashSet<char>();
+        var isAfterDecimalPoint = false;
         var dataSize = 0;
+        var isValid = true;
 
         for (var index = 0; index < picture.Length; index++)
         {
-            var character = picture[index];
+            var character = char.ToUpperInvariant(picture[index]);
 
-            if (character is 'B' or 'b' or '0' or '/') { }
+            if (character is 'S' && !set.IsEmpty())
+            {
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
+                Picture symbol 'S' must be the first symbol of the picture clause.
+                """);
 
-            if (character == '(')
+                isValid = false;
+            }
+
+            if(character is 'N' && set.ContainsAny('9', 'A', 'X', 'S', 'V', 'P', '1', 'E'))
+            {
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
+                Picture symbol 'N' must not precede or be followed by any symbols other than 'N'.
+                """);
+
+                isValid = false;
+            }
+
+            if(character is '1' && set.ContainsAny('9', 'A', 'X', 'S', 'V', 'P', 'N', 'E'))
+            {
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
+                Picture symbol '1' must not precede or be followed by any symbols other than '1'.
+                """);
+
+                isValid = false;
+            }
+
+            if(character is 'A' or 'X' && set.ContainsAny('S', 'V', 'P', '1', 'N', 'E'))
+            {
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
+                Picture symbols 'A' and 'X' must only precede or be followed by '9', 'A' or 'X'.
+                """);
+
+                isValid = false;
+            }
+
+            if (character is 'V' && set.Contains('V'))
+            {
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
+                Picture symbol 'V' must only appear once in the same picture clause.
+                """);
+
+                isValid = false;
+            }
+
+            if (character is 'V' or 'P' && set.ContainsAny('A', 'X', '1', 'N', 'E'))
+            {
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
+                Picture symbols 'V' and 'P' must not precede or be followed by 'A', 'X', '1', 'N' or 'E'.
+                """);
+
+                isValid = false;
+            }
+
+            if (character is 'V' && !set.Contains('V')) isAfterDecimalPoint = true;
+            
+            if (character is 'P' && set.ContainsAny('9', 'P') && isAfterDecimalPoint)
+            {
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
+                Picture symbol 'P' or a string of symbols 'P' must only appear once in a picture clause.
+                """);
+
+                isValid = false;
+            }
+
+            if (character is 'P' && !set.IsEmpty() && set.Contains('9') && !isAfterDecimalPoint)
+            {
+                while (picture[index] is 'P' or 'p')
+                {
+                    if (index >= picture.Length - 1) break;
+
+                    index++; 
+                    dataSize++;
+                }
+            }
+
+            if (character is 'P' && (set.IsEmpty() || !set.Contains('9') || isAfterDecimalPoint))
+            {
+                while (picture[index] is 'P' or 'p')
+                {
+                    if (index >= picture.Length - 1) break;
+
+                    index++; 
+                    dataSize++;
+                }
+
+                isAfterDecimalPoint = true;
+            }
+
+            if (character is '(')
             {
                 var start = index;
 
@@ -36,13 +125,13 @@ public static partial class Analyzer
                 continue;
             }
 
-            hashSet.Add(picture[index]);
+            set.Add(character);
 
             dataSize++;
         }
         
-        set = hashSet;
-        return dataSize;
+        size = dataSize;
+        return isValid;
     }
 
     private static void AnchorPoint(params string[] anchors)

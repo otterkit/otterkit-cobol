@@ -74,8 +74,9 @@ public static partial class Lexer
                 continue;
             }
 
-            IsPictureNext = currentMatch.Equals("PIC", StringComparison.OrdinalIgnoreCase)
-                || currentMatch.Equals("PICTURE", StringComparison.OrdinalIgnoreCase);
+            IsPictureNext = currentMatch[0] is 'P' or 'p' 
+                && (currentMatch.Equals("PIC", StringComparison.OrdinalIgnoreCase)
+                || currentMatch.Equals("PICTURE", StringComparison.OrdinalIgnoreCase));
 
             TokenType type = currentMatch switch
             {

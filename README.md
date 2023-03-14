@@ -23,6 +23,16 @@ dotnet tool install --global Otterkit --version 1.0.40-alpha
 
 First, clone the git repo from [https://github.com/otterkit/otterkit.git](https://github.com/otterkit/otterkit.git) to get the source code. To access the libotterkit submodule inside, use the `--recurse-submodules --remote-submodules` flag on the clone command. To run, navigate into the `src` folder (for the compiler, not libotterkit) and then type `dotnet run` into the command line.
 
+## Sponsors and Open Source Support
+
+<h3 align="center">Open Source Support</h3>
+
+<p align="center">
+  <a target="_blank" href="https://www.jetbrains.com/community/opensource/">
+    <img width="160" src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo (Main) logo.">
+  </a>
+</p>
+
 ## Standard Acknowledgement
 
 Any organization interested in reproducing the COBOL standard and specifications in whole or in part,

@@ -14,14 +14,34 @@ COBOL was created in 1959 by the [CODASYL Committee](https://en.wikipedia.org/wi
 
 Otterkit is available to install on the [Nuget package manager](https://www.nuget.org/packages/Otterkit/) ([.NET 7](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) is required). To install, type these two lines into the command line:
 ```
-dotnet new install Otterkit.Templates::1.0.10-alpha
+dotnet new install Otterkit.Templates::1.0.45-alpha
 
-dotnet tool install --global Otterkit --version 1.0.40-alpha
+dotnet tool install --global Otterkit --version 1.0.45-alpha
 ```
 
 ### Build from Source
 
 First, clone the git repo from [https://github.com/otterkit/otterkit.git](https://github.com/otterkit/otterkit.git) to get the source code. To access the libotterkit submodule inside, use the `--recurse-submodules --remote-submodules` flag on the clone command. To run, navigate into the `src` folder (for the compiler, not libotterkit) and then type `dotnet run` into the command line.
+
+### Build from Source on MacOS (For Intel and Apple Silicon processors)
+
+After clone the git repo navigate into the `src` folder and type:
+
+```
+dotnet run new app   
+```
+
+For build the COBOL file type:
+
+```
+dotnet run build -e ${COBOLFILEPATH} --free       
+```
+
+For build and run the COBOL file type:
+
+```
+dotnet run build --run -e ${COBOLFILEPATH} --free          
+```
 
 ## Sponsors and Open Source Support
 

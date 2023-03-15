@@ -522,7 +522,7 @@ public class StatementBuilder
                 displayStrings += $"\"{Current().value}\", ";
 
             if (Current().type == TokenType.String)
-                displayStrings += $"{Current().value.Replace('\'','"')}, ";
+                displayStrings += $"\"{Current().value}\", ";
 
             Continue(1);
         }

@@ -854,6 +854,37 @@ public static partial class Analyzer
             return;
         }
 
+        if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "::"))
+        {
+
+
+            if (!HasFlag(allowedTypes, IdentifierType.MethodInvocation))
+            {
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
+                Unexpected inline method invocation. 
+                NOTE: Function calls cannot be specified as a receiving operand
+                """);
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            }
+
+            // TODO: Replace Continue with an identifier check for the method name
+            Continue();
+            Expected("::");
+            String();
+
+            if (CurrentEquals("("))
+            {
+                // TODO:
+                // This needs a check from the symbol table to verify the number and type
+                // of the function's parameters.
+                Expected("(");
+                while (!CurrentEquals(")")) Continue();
+                Expected(")");
+            }
+
+            return;
+        }        
+
         var current = Current();
 
         Continue();

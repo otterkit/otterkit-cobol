@@ -235,11 +235,18 @@ public static partial class Analyzer
     }
 
     /// <summary>
-    /// Boolean <c>LookaheadEquals</c> string[]: This method returns true or false depending on if the Token value from an index of Current Index + the first parameter is equal to the values of the second paramenter
+    /// <c>LookaheadEquals</c>: This method returns true or false depending on if the Token value from an index of Current Index + the first parameter is equal to the values of the second paramenter
     /// <para>When passed a positive amount it will act as a lookahead comparison method, and when passed a negative amount it will act as a lookbehind comparison method</para>
     /// <para>Technically this method allows for infinite lookahead and lookbehind comparisons, as long as the Index + amount is not bigger than the
     /// number of items on the list of Tokens or smaller than 0.</para>
     /// </summary>
+    private static bool LookaheadEquals(int lookahead, string value)
+    {
+        if (Lookahead(lookahead).value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
+
+        return false;
+    }
+
     private static bool LookaheadEquals(int lookahead, params string[] valuesToCompare)
     {
         foreach (var value in valuesToCompare)

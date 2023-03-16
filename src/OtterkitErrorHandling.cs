@@ -23,7 +23,7 @@ public static class ErrorHandler
             string error = new(' ', line.Length - token.value.Length);
 
             int count = line.TakeWhile(char.IsWhiteSpace).Count();
-            error = error.Insert(token.column - count - 1, new string('~', token.value.Length));
+            error = error.Insert(token.column - count, new string('~', token.value.Length));
 
             Console.WriteLine($"{" ",5}|");
             Console.WriteLine($"{token.line,4} | {line.TrimStart()}");

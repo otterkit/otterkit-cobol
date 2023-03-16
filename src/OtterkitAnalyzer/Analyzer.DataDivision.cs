@@ -871,5 +871,4 @@ public static partial class Analyzer
                 break;
         }
     }
-
 }

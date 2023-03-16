@@ -809,6 +809,53 @@ public static partial class Analyzer
             return;
         }
 
+        if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "AS"))
+        {
+            // var isFactory = false;
+            // var isStronglyTyped = false;
+
+            // Need to implement identifier resolution first
+            // To parse the rest of this identifier correctly
+            // and to add extra compile time checks
+        
+            Continue();
+            Expected("AS");
+
+            if (!HasFlag(allowedTypes, IdentifierType.ObjectView))
+            {
+                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
+                Unexpected object view identifier.
+                NOTE: An object view cannot be specified as a receiving operand
+                """);
+                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            }
+
+            if (CurrentEquals("UNIVERSAL"))
+            {
+                Expected("UNIVERSAL");
+                return;
+            }
+
+            if (CurrentEquals("Factory"))
+            {
+                Expected("FACTORY");
+                Optional("OF");
+                // isFactory = true;
+            }
+
+            Continue();
+
+            if (CurrentEquals("ONLY"))
+            {
+                Expected("ONLY");
+                // isStronglyTyped = true
+            }
+
+            return;
+        }
+
+        var current = Current();
+
         Continue();
     }
 

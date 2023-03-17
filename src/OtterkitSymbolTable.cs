@@ -1,6 +1,6 @@
 namespace Otterkit;
 
-public record DataItemInfo
+public record DataSignature
 {
     public CurrentScope Section;
     public string? Parent;
@@ -29,8 +29,8 @@ public record DataItemInfo
     public bool IsAligned;
     public bool IsConstantRecord;
     public bool IsProperty;
-    public bool IsPicture;
-    public bool IsValue;
+    public bool HasPicture;
+    public bool HasValue;
 }
 
 public record SourceUnitSignature
@@ -38,6 +38,7 @@ public record SourceUnitSignature
     public string? Identifier;
     public SourceUnit SourceType;
     public List<string> Parameters = new();
+    public List<int> ParameterSizes = new();
     public List<bool> IsOptional = new();
     public List<bool> IsByRef = new();
     public string? Returning;
@@ -63,7 +64,7 @@ public static class SymbolTable
     internal static readonly Dictionary<string, SymbolPointer> Symbols = new(StringComparer.OrdinalIgnoreCase);
     private static readonly List<RepositorySignature> RepositorySignatures = new();
     private static readonly List<SourceUnitSignature> SourceUnitSignatures = new();
-    private static readonly List<DataItemInfo> DataItemSymbols = new();
+    private static readonly List<DataSignature> DataItemSymbols = new();
 
     public static void AddSymbol(string symbolHash, SymbolType symbolType)
     {
@@ -71,7 +72,7 @@ public static class SymbolTable
 
         if (symbolType is SymbolType.DataItem)
         {
-            DataItemSymbols.Add(new DataItemInfo());
+            DataItemSymbols.Add(new DataSignature());
 
             symbolIndex = DataItemSymbols.Count - 1;
         }
@@ -99,7 +100,7 @@ public static class SymbolTable
         Symbols.Add(symbolHash, pointer);
     }
 
-    public static DataItemInfo GetDataItem(string symbolHash)
+    public static DataSignature GetDataItem(string symbolHash)
     {
         var pointer = GetPointer(symbolHash);
 

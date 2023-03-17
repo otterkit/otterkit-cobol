@@ -573,7 +573,7 @@ public static partial class Analyzer
         if (allowedUsage.Length >= 1)
         {
             bool hasAllowedUsage = false;
-            DataItemInfo dataItem = SymbolTable.GetDataItem(dataItemHash);
+            DataSignature dataItem = SymbolTable.GetDataItem(dataItemHash);
             foreach (var usage in allowedUsage)
             {
                 if (dataItem.UsageType == usage) 
@@ -809,7 +809,7 @@ public static partial class Analyzer
             return;
         }
 
-        if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "AS"))
+        if (LookaheadEquals(1, "AS"))
         {
             // var isFactory = false;
             // var isStronglyTyped = false;
@@ -854,7 +854,7 @@ public static partial class Analyzer
             return;
         }
 
-        if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "::"))
+        if (LookaheadEquals(1, "::"))
         {
 
 
@@ -884,10 +884,6 @@ public static partial class Analyzer
 
             return;
         }        
-
-        var current = Current();
-
-        Continue();
     }
 
     private static void Identifier(string identifierString)

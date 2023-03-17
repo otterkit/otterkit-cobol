@@ -142,7 +142,7 @@ public static partial class Analyzer
             SymbolTable.AddSymbol(DataItemHash, SymbolType.DataItem);
         }
 
-        DataItemInfo dataItem = SymbolTable.GetDataItem(DataItemHash);
+        DataSignature dataItem = SymbolTable.GetDataItem(DataItemHash);
 
         dataItem.Identifier = DataName;
         dataItem.LevelNumber = LevelNumber;
@@ -328,7 +328,7 @@ public static partial class Analyzer
 
                 dataItem.PictureLength = size;
 
-                dataItem.IsPicture = true;
+                dataItem.HasPicture = true;
 
                 Continue();
             }
@@ -430,7 +430,7 @@ public static partial class Analyzer
             SymbolTable.AddSymbol(DataItemHash, SymbolType.DataItem);
         }
 
-        DataItemInfo dataItem = SymbolTable.GetDataItem(DataItemHash);
+        DataSignature dataItem = SymbolTable.GetDataItem(DataItemHash);
 
         dataItem.Identifier = DataName;
         dataItem.LevelNumber = LevelNumber;
@@ -530,7 +530,7 @@ public static partial class Analyzer
 
     private static void CheckClauses(string dataItemHash, Token itemToken)
     {
-        DataItemInfo dataItem = SymbolTable.GetDataItem(dataItemHash);
+        DataSignature dataItem = SymbolTable.GetDataItem(dataItemHash);
 
         bool usageCannotHavePicture = dataItem.UsageType switch
         {
@@ -550,7 +550,7 @@ public static partial class Analyzer
             _ => false
         };
 
-        if (usageCannotHavePicture && dataItem.IsPicture)
+        if (usageCannotHavePicture && dataItem.HasPicture)
         {
             ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, $"""
             Data items defined with USAGE {dataItem.UsageType} cannot contain a PICTURE clause
@@ -558,7 +558,7 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
         }
 
-        if (!usageCannotHavePicture && dataItem.IsElementary && !dataItem.IsPicture && !dataItem.IsValue)
+        if (!usageCannotHavePicture && dataItem.IsElementary && !dataItem.HasPicture && !dataItem.HasValue)
         {
             ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, """
             Elementary data items must contain a PICTURE clause. Except when an alphanumeric, boolean, or national literal is defined in the VALUE clause 
@@ -566,7 +566,7 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
         }
 
-        if (dataItem.IsGroup && dataItem.IsPicture)
+        if (dataItem.IsGroup && dataItem.HasPicture)
         {
             ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, """
             Group items must not contain a PICTURE clause. The PICTURE clause can only be specified on elementary data items
@@ -574,7 +574,7 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
         }
 
-        if (dataItem.IsRenames && dataItem.IsPicture)
+        if (dataItem.IsRenames && dataItem.HasPicture)
         {
             ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, """
             Data items with a RENAMES clause must not contain a PICTURE clause
@@ -593,7 +593,7 @@ public static partial class Analyzer
             _ => false
         };
 
-        if (usageCannotHaveValue && dataItem.IsValue)
+        if (usageCannotHaveValue && dataItem.HasValue)
         {
             ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, $"""
             Data items defined with USAGE {dataItem.UsageType} cannot contain a VALUE clause
@@ -630,7 +630,7 @@ public static partial class Analyzer
                 SymbolTable.AddSymbol(DataItemHash, SymbolType.DataItem);
             }
 
-            DataItemInfo dataItem = SymbolTable.GetDataItem(DataItemHash);
+            DataSignature dataItem = SymbolTable.GetDataItem(DataItemHash);
 
             dataItem.Parent = parentName;
             dataItem.Identifier = DataName;
@@ -687,7 +687,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void UsageClause(DataItemInfo dataitem)
+    private static void UsageClause(DataSignature dataitem)
     {
         Expected("USAGE");
         Optional("IS");

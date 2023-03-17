@@ -90,10 +90,9 @@ public static class ExceptionRegistry
 
     public sealed class ExceptionMetadata
     {
+        public static string LastExceptionName { get; set; } = "";
         public bool IsActivated { get; set; }
-
         public bool IsChecked { get; set; } //yes, you can turn checking for default exceptions off.
-
         public IsFatal FatalityState { get; private set; }
 
         public ExceptionMetadata(bool isActivated, bool isChecked, IsFatal fatalityType)
@@ -134,6 +133,8 @@ public static class ExceptionRegistry
     public static void ActivateException(string name)
     {
         LastException = ChangeStatus(name, true);
+
+        ExceptionMetadata.LastExceptionName = name;
     }
 
     public static void DeactivateException(string name)

@@ -283,6 +283,11 @@ public static partial class Analyzer
         return TokenList[Index];
     }
 
+    private static int CurrentIndex()
+    {
+        return Index;
+    }
+
     private static bool CurrentEquals(string value)
     {
         if (Current().value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;

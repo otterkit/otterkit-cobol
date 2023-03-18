@@ -420,8 +420,7 @@ public static partial class Analyzer
             var originalItem = SymbolTable.GetDataItem(DataItemHash);
 
             ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, $"""
-            A data item with this name already exists in this program, data items in a program must have a unique name.
-            The original {originalItem.Identifier} data item can be found on line {originalItem.Line}. 
+            A data item with this name already exists in this program, data items in a program must have a unique name. 
             """);
             ErrorHandler.Analyzer.PrettyError(FileName, Lookahead(-1));
         }

@@ -1,65 +1,6 @@
 namespace Otterkit;
 
-public record DataSignature
-{
-    public CurrentScope Section;
-    public string Parent = string.Empty;
-    public DataSignature[] Fields = Array.Empty<DataSignature>();
-    public int LevelNumber;
-    public string Identifier = string.Empty;
-    public string Type = string.Empty;
-    public string PictureString = string.Empty;
-    public int PictureLength;
-    public string ExternalName = string.Empty;
-    public string DefaultValue = string.Empty;
-    public UsageType UsageType;
-    public string UsageContext = string.Empty;
-    public bool IsExternal;
-    public bool IsElementary;
-    public bool IsGroup;
-    public bool IsConstant;
-    public bool IsGlobal;
-    public bool IsBased;
-    public bool IsTypedef;
-    public bool IsAnyLength;
-    public bool IsDynamicLength;
-    public bool IsRedefines;
-    public bool IsRenames;
-    public bool IsBlank;
-    public bool IsAligned;
-    public bool IsConstantRecord;
-    public bool IsProperty;
-    public bool HasPicture;
-    public bool HasValue;
-}
-
-public record SourceUnitSignature
-{
-    public string Identifier = string.Empty;
-    public SourceUnit SourceType;
-    public List<string> Parameters = new();
-    public List<int> ParameterSizes = new();
-    public List<bool> IsOptional = new();
-    public List<bool> IsByRef = new();
-    public string Returning = string.Empty;
-}
-
-public record RepositorySignature
-{
-    public string Identifier = string.Empty;
-    public SourceUnit SourceType;
-    public string ExternalizedIdentifier = string.Empty;
-    public string Expands = string.Empty;
-    public List<string>? Using;
-}
-
-public struct SymbolPointer
-{
-    public required SymbolType SymbolType { get; set; }
-    public required int SymbolIndex { get; set; }
-}
-
-public static class SymbolTable
+public static partial class SymbolTable
 {
     internal static readonly Dictionary<string, SymbolPointer> Symbols = new(StringComparer.OrdinalIgnoreCase);
     private static readonly List<RepositorySignature> RepositorySignatures = new();

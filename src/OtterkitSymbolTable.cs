@@ -3,17 +3,17 @@ namespace Otterkit;
 public record DataSignature
 {
     public CurrentScope Section;
-    public string? Parent;
-    public int Line;
+    public string Parent = string.Empty;
+    public DataSignature[] Fields = Array.Empty<DataSignature>();
     public int LevelNumber;
-    public string? Identifier;
-    public string? Type;
-    public string? PictureString;
+    public string Identifier = string.Empty;
+    public string Type = string.Empty;
+    public string PictureString = string.Empty;
     public int PictureLength;
-    public string? ExternalName;
-    public string? DefaultValue;
+    public string ExternalName = string.Empty;
+    public string DefaultValue = string.Empty;
     public UsageType UsageType;
-    public string? UsageContext;
+    public string UsageContext = string.Empty;
     public bool IsExternal;
     public bool IsElementary;
     public bool IsGroup;
@@ -35,21 +35,21 @@ public record DataSignature
 
 public record SourceUnitSignature
 {
-    public string? Identifier;
+    public string Identifier = string.Empty;
     public SourceUnit SourceType;
     public List<string> Parameters = new();
     public List<int> ParameterSizes = new();
     public List<bool> IsOptional = new();
     public List<bool> IsByRef = new();
-    public string? Returning;
+    public string Returning = string.Empty;
 }
 
 public record RepositorySignature
 {
-    public string? Identifier;
+    public string Identifier = string.Empty;
     public SourceUnit SourceType;
-    public string? ExternalizedIdentifier;
-    public string? Expands;
+    public string ExternalizedIdentifier = string.Empty;
+    public string Expands = string.Empty;
     public List<string>? Using;
 }
 

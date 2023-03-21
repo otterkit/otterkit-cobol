@@ -147,8 +147,6 @@ public class DataItemBuilder
         Identifier = Current().value;
         Continue(1);
 
-        DataSignature Item = SymbolTable.GetDataItem($"{ProgramBuilder.UnformattedID}#{Identifier}");
-
         if (LevelNumber.Equals("77"))
         {
             BuildSevenSeven();

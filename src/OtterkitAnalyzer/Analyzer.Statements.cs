@@ -2527,8 +2527,8 @@ public static partial class Analyzer
 
         if (CurrentEquals(TokenType.Identifier) || CurrentEquals("SIZE", "ADDRESS"))
         {
-            string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
-            DataSignature dataItem = SymbolTable.GetDataItem(dataItemHash);
+            // TODO: This needs to be fixed to lookup a qualified reference
+            DataSignature dataItem = new();
 
             if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "UP", "DOWN", "TO"))
             {

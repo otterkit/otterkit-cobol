@@ -3,29 +3,19 @@ namespace Otterkit;
 public static partial class SymbolTable
 {
     internal static readonly Dictionary<string, SymbolPointer> Symbols = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly List<RepositorySignature> RepositorySignatures = new();
     private static readonly List<SourceUnitSignature> SourceUnitSignatures = new();
-    private static readonly List<DataSignature> DataItemSymbols = new();
-    private static readonly LocalReferences<DataSignature> DataLocals = new();
-    private static readonly LocalReferences<RepositorySignature> RepositoryLocals = new();
+    public static readonly LocalReferences<DataSignature> DataLocals = new();
+    public static readonly LocalReferences<RepositorySignature> RepositoryLocals = new();
+
+    public static void ClearLocalReferences()
+    {
+        DataLocals.ClearReferences();
+        RepositoryLocals.ClearReferences();
+    }
 
     public static void AddSymbol(string symbolHash, SymbolType symbolType)
     {
         int symbolIndex = default;
-
-        if (symbolType is SymbolType.DataItem)
-        {
-            DataItemSymbols.Add(new DataSignature());
-
-            symbolIndex = DataItemSymbols.Count - 1;
-        }
-
-        if (symbolType is SymbolType.RepositorySignature)
-        {
-            RepositorySignatures.Add(new RepositorySignature());
-
-            symbolIndex = RepositorySignatures.Count - 1;
-        }
 
         if (symbolType is SymbolType.SourceUnitSignature)
         {
@@ -43,25 +33,11 @@ public static partial class SymbolTable
         Symbols.Add(symbolHash, pointer);
     }
 
-    public static DataSignature GetDataItem(string symbolHash)
-    {
-        var pointer = GetPointer(symbolHash);
-
-        return DataItemSymbols[pointer.SymbolIndex];
-    }
-
     public static SourceUnitSignature GetSourceUnit(string symbolHash)
     {
         var pointer = GetPointer(symbolHash);
 
         return SourceUnitSignatures[pointer.SymbolIndex];
-    }
-
-    public static RepositorySignature GetRepository(string symbolHash)
-    {
-        var pointer = GetPointer(symbolHash);
-
-        return RepositorySignatures[pointer.SymbolIndex];
     }
 
     public static bool SymbolExists(string symbolHash)

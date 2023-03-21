@@ -510,7 +510,8 @@ public static partial class Analyzer
 
             foreach (var usage in allowedUsage)
             {
-                if (SymbolTable.GetDataItem(dataItemHash).UsageType == usage) 
+                // TODO: This needs to be fixed to lookup a qualified reference
+                if (new DataSignature().UsageType == usage) 
                     hasAllowedUsage = true;
             }
 
@@ -578,7 +579,10 @@ public static partial class Analyzer
         if (allowedUsage.Length >= 1)
         {
             bool hasAllowedUsage = false;
-            DataSignature dataItem = SymbolTable.GetDataItem(dataItemHash);
+
+            // TODO: This needs to be fixed to lookup a qualified reference
+            DataSignature dataItem = new();
+            
             foreach (var usage in allowedUsage)
             {
                 if (dataItem.UsageType == usage) 

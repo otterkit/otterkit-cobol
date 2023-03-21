@@ -119,42 +119,38 @@ public static partial class Analyzer
 
     private static void BaseEntry()
     {
-        int LevelNumber = int.Parse(Current().value);
+        int levelNumber = int.Parse(Current().value);
         Number();
 
-        Token DataItem = Current();
-        string DataName = DataItem.value;
+        Token itemToken = Current();
+        string dataName = itemToken.value;
 
-        CheckLevelNumber(LevelNumber);
+        CheckLevelNumber(levelNumber);
         
         Identifier();
 
-        string DataItemHash = $"{SourceId.Peek()}#{DataName}";
-        if (SymbolTable.SymbolExists(DataItemHash))
+        if (SymbolTable.DataLocals.ReferenceExists(dataName) && levelNumber is 1)
         {
-            ErrorHandler.Analyzer.Report(FileName, DataItem, ErrorType.General, $"""
-            A data item with this name already exists in this source unit, data items must have a unique name.
+            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, $"""
+            A 01-level data item with this name already exists in this source unit, root level items must have a unique name.
             """);
-            ErrorHandler.Analyzer.PrettyError(FileName, DataItem);
-        }
-        else
-        {
-            SymbolTable.AddSymbol(DataItemHash, SymbolType.DataItem);
+            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
         }
 
-        DataSignature dataItem = SymbolTable.GetDataItem(DataItemHash);
 
-        dataItem.Identifier = DataName;
-        dataItem.LevelNumber = LevelNumber;
-        dataItem.Section = CurrentSection;
+        DataSignature dataReference = new();
+
+        dataReference.Identifier = dataName;
+        dataReference.LevelNumber = levelNumber;
+        dataReference.Section = CurrentSection;
 
         if (GroupStack.Count == 0)
         {
-            dataItem.Parent = "Root";
+            dataReference.Parent = "Root";
         }
         else
         {
-            dataItem.Parent = GroupStack.Peek();
+            dataReference.Parent = GroupStack.Peek();
         }
 
         if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
@@ -183,8 +179,8 @@ public static partial class Analyzer
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
-                    dataItem.IsExternal = true;
-                    dataItem.ExternalName = Current().value;
+                    dataReference.IsExternal = true;
+                    dataReference.ExternalName = Current().value;
 
                     String("""
                     Missing externalized name, the "AS" word on the EXTERNAL clause must be followed by an alphanumeric or national literal
@@ -193,8 +189,8 @@ public static partial class Analyzer
 
                 if (!CurrentEquals("AS"))
                 {
-                    dataItem.IsExternal = true;
-                    dataItem.ExternalName = Current().value;
+                    dataReference.IsExternal = true;
+                    dataReference.ExternalName = Current().value;
                 }
             }
 
@@ -202,14 +198,14 @@ public static partial class Analyzer
             {
                 Optional("IS");
                 Expected("GLOBAL");
-                dataItem.IsGlobal = true;
+                dataReference.IsGlobal = true;
             }
 
             if ((CurrentEquals("IS") && LookaheadEquals(1, "TYPEDEF")) || CurrentEquals("TYPEDEF"))
             {
                 Optional("IS");
                 Expected("TYPEDEF");
-                dataItem.IsTypedef = true;
+                dataReference.IsTypedef = true;
 
                 if (CurrentEquals("STRONG")) Expected("STRONG");
             }
@@ -218,7 +214,7 @@ public static partial class Analyzer
             {
                 Expected("REDEFINES");
                 Identifier();
-                dataItem.IsRedefines = true;
+                dataReference.IsRedefines = true;
             }
 
             if (CurrentEquals("ALIGNED")) Expected("ALIGNED");
@@ -227,7 +223,7 @@ public static partial class Analyzer
             {
                 Expected("ANY");
                 Expected("LENGTH");
-                dataItem.IsAnyLength = true;
+                dataReference.IsAnyLength = true;
             }
 
             if (CurrentEquals("BASED")) Expected("BASED");
@@ -237,21 +233,21 @@ public static partial class Analyzer
                 Expected("BLANK");
                 Optional("WHEN");
                 Expected("ZERO");
-                dataItem.IsBlank = true;
+                dataReference.IsBlank = true;
             }
 
             if (CurrentEquals("CONSTANT") && LookaheadEquals(1, "RECORD"))
             {
                 Expected("CONSTANT");
                 Expected("RECORD");
-                dataItem.IsConstantRecord = true;
+                dataReference.IsConstantRecord = true;
             }
 
             if (CurrentEquals("DYNAMIC"))
             {
                 Expected("DYNAMIC");
                 Optional("LENGTH");
-                dataItem.IsDynamicLength = true;
+                dataReference.IsDynamicLength = true;
 
                 if (CurrentEquals(TokenType.Identifier)) Identifier();
 
@@ -287,7 +283,7 @@ public static partial class Analyzer
             if (CurrentEquals("PROPERTY"))
             {
                 Expected("PROPERTY");
-                dataItem.IsProperty = true;
+                dataReference.IsProperty = true;
                 if (CurrentEquals("WITH", "NO"))
                 {
                     Optional("WITH");
@@ -324,11 +320,11 @@ public static partial class Analyzer
             
                 var isValidPicture = PictureString(picture.value, out var size);
 
-                dataItem.PictureString = picture.value;
+                dataReference.PictureString = picture.value;
 
-                dataItem.PictureLength = size;
+                dataReference.PictureLength = size;
 
-                dataItem.HasPicture = true;
+                dataReference.HasPicture = true;
 
                 Continue();
             }
@@ -347,20 +343,20 @@ public static partial class Analyzer
 
                 if (CurrentEquals(TokenType.String))
                 {
-                    dataItem.DefaultValue = Current().value;
+                    dataReference.DefaultValue = Current().value;
                     String();
                 }
 
                 if (CurrentEquals(TokenType.Numeric))
                 {
-                    dataItem.DefaultValue = Current().value;
+                    dataReference.DefaultValue = Current().value;
                     Number();
                 }
             }
 
             if (CurrentEquals("USAGE"))
             {
-                UsageClause(dataItem);
+                UsageClause(dataReference);
             }
 
         }
@@ -369,7 +365,7 @@ public static partial class Analyzer
         {
             if (LevelStack.Count == 0)
             {
-                dataItem.IsElementary = true;
+                dataReference.IsElementary = true;
             }
             else
             {
@@ -378,24 +374,26 @@ public static partial class Analyzer
 
                 if (currentLevel == 1 && outInt >= 2 && outInt <= 49 || outInt >= 2 && outInt <= 49 && outInt > currentLevel)
                 {
-                    dataItem.IsGroup = true;
+                    dataReference.IsGroup = true;
                 }
                 else
                 {
-                    dataItem.IsElementary = true;
+                    dataReference.IsElementary = true;
                 }
             }
         }
 
-        CheckClauses(DataItemHash, DataItem);
+        CheckClauses(dataReference, itemToken);
 
-        if (dataItem.IsGroup) GroupStack.Push(DataItemHash);
+        if (dataReference.IsGroup) GroupStack.Push(dataName);
 
         Expected(".", """
         Missing separator period at the end of this data item definition, each data item must end with a separator period
         """, -1, "PROCEDURE");
 
-        CheckConditionNames(DataName);
+        SymbolTable.DataLocals.AddOrUpdateReference(dataName, dataReference);
+
+        CheckConditionNames(dataName);
     }
 
     private static void ConstantEntry()
@@ -408,40 +406,33 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
-        var LevelNumber = int.Parse(Current().value);
+        var levelNumber = int.Parse(Current().value);
         Number();
 
-        var DataName = Current().value;
+        var dataName = Current().value;
         Identifier();
 
-        var DataItemHash = $"{SourceId.Peek()}#{DataName}";
-        if (SymbolTable.SymbolExists(DataItemHash))
+        if (SymbolTable.DataLocals.ReferenceExists(dataName))
         {
-            var originalItem = SymbolTable.GetDataItem(DataItemHash);
-
             ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, $"""
             A data item with this name already exists in this program, data items in a program must have a unique name. 
             """);
             ErrorHandler.Analyzer.PrettyError(FileName, Lookahead(-1));
         }
-        else
-        {
-            SymbolTable.AddSymbol(DataItemHash, SymbolType.DataItem);
-        }
 
-        DataSignature dataItem = SymbolTable.GetDataItem(DataItemHash);
+        DataSignature dataReference = new();
 
-        dataItem.Identifier = DataName;
-        dataItem.LevelNumber = LevelNumber;
-        dataItem.Section = CurrentSection;
-        dataItem.IsConstant = true;
+        dataReference.Identifier = dataName;
+        dataReference.LevelNumber = levelNumber;
+        dataReference.Section = CurrentSection;
+        dataReference.IsConstant = true;
 
         Expected("CONSTANT");
         if (CurrentEquals("IS") || CurrentEquals("GLOBAL"))
         {
             Optional("IS");
             Expected("GLOBAL");
-                dataItem.IsGlobal = true;
+                dataReference.IsGlobal = true;
         }
 
         if (CurrentEquals("FROM"))
@@ -484,6 +475,8 @@ public static partial class Analyzer
         }
 
         Expected(".");
+
+        SymbolTable.DataLocals.AddOrUpdateReference(dataName, dataReference);
     }
 
     private static void CheckLevelNumber(int level)
@@ -527,9 +520,9 @@ public static partial class Analyzer
         }
     }
 
-    private static void CheckClauses(string dataItemHash, Token itemToken)
+    private static void CheckClauses(DataSignature localReference, Token itemToken)
     {
-        DataSignature dataItem = SymbolTable.GetDataItem(dataItemHash);
+        var dataItem = localReference;
 
         bool usageCannotHavePicture = dataItem.UsageType switch
         {
@@ -610,31 +603,25 @@ public static partial class Analyzer
         {
             Expected("88");
 
-            Token DataItem = Current();
-            string DataName = DataItem.value;
+            Token itemToken = Current();
+            string dataName = itemToken.value;
 
             Identifier();
 
-            string DataItemHash = $"{SourceId.Peek()}#{DataName}";
-
-            if (SymbolTable.SymbolExists(DataItemHash))
+            if (SymbolTable.DataLocals.ReferenceExists(dataName))
             {
-                ErrorHandler.Analyzer.Report(FileName, DataItem, ErrorType.General, $"""
+                ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, $"""
                 A data item with this name already exists in this source unit, data items must have a unique name.
                 """);
-                ErrorHandler.Analyzer.PrettyError(FileName, DataItem);
-            }
-            else
-            {
-                SymbolTable.AddSymbol(DataItemHash, SymbolType.DataItem);
+                ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
             }
 
-            DataSignature dataItem = SymbolTable.GetDataItem(DataItemHash);
+            DataSignature dataReference = new();
 
-            dataItem.Parent = parentName;
-            dataItem.Identifier = DataName;
-            dataItem.LevelNumber = 88;
-            dataItem.Section = CurrentSection;
+            dataReference.Parent = parentName;
+            dataReference.Identifier = dataName;
+            dataReference.LevelNumber = 88;
+            dataReference.Section = CurrentSection;
 
             if (CurrentEquals("VALUES"))
             {
@@ -683,10 +670,12 @@ public static partial class Analyzer
             Expected(".", """
             Missing separator period at the end of this condition name, each condition name must end with a separator period
             """, -1, "PROCEDURE");
+
+            SymbolTable.DataLocals.AddOrUpdateReference(dataName, dataReference);
         }
     }
 
-    private static void UsageClause(DataSignature dataitem)
+    private static void UsageClause(DataSignature dataReference)
     {
         Expected("USAGE");
         Optional("IS");
@@ -694,7 +683,7 @@ public static partial class Analyzer
         {
             case "BINARY":
                 Expected("BINARY");
-                dataitem.UsageType = UsageType.Binary;
+                dataReference.UsageType = UsageType.Binary;
                 break;
 
             case "BINARY-CHAR":
@@ -714,18 +703,18 @@ public static partial class Analyzer
 
             case "BIT":
                 Expected("BIT");
-                dataitem.UsageType = UsageType.Bit;
+                dataReference.UsageType = UsageType.Bit;
                 break;
 
             case "COMP":
             case "COMPUTATIONAL":
                 Expected(Current().value);
-                dataitem.UsageType = UsageType.Computational;
+                dataReference.UsageType = UsageType.Computational;
                 break;
 
             case "DISPLAY":
                 Expected("DISPLAY");
-                dataitem.UsageType = UsageType.Display;
+                dataReference.UsageType = UsageType.Display;
                 break;
 
             case "FLOAT-BINARY-32":
@@ -767,17 +756,17 @@ public static partial class Analyzer
 
             case "INDEX":
                 Expected("INDEX");
-                dataitem.UsageType = UsageType.Index;
+                dataReference.UsageType = UsageType.Index;
                 break;
 
             case "MESSAGE-TAG":
                 Expected("MESSAGE-TAG");
-                dataitem.UsageType = UsageType.MessageTag;
+                dataReference.UsageType = UsageType.MessageTag;
                 break;
 
             case "NATIONAL":
                 Expected("NATIONAL");
-                dataitem.UsageType = UsageType.National;
+                dataReference.UsageType = UsageType.National;
                 break;
 
             case "OBJECT":
@@ -788,7 +777,7 @@ public static partial class Analyzer
 
                 // Need implement identifier resolution first
                 // To parse the rest of this using clause correctly
-                dataitem.UsageType = UsageType.ObjectReference;
+                dataReference.UsageType = UsageType.ObjectReference;
                 if (CurrentEquals("Factory"))
                 {
                     Expected("FACTORY");
@@ -827,21 +816,21 @@ public static partial class Analyzer
                 if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
                 {
                     Optional("TO");
-                    dataitem.UsageType = UsageType.DataPointer;
-                    dataitem.UsageContext = Current().value;
+                    dataReference.UsageType = UsageType.DataPointer;
+                    dataReference.UsageContext = Current().value;
                     Identifier();
                 }
                 else
                 {
-                    dataitem.UsageType = UsageType.DataPointer;
+                    dataReference.UsageType = UsageType.DataPointer;
                 }
                 break;
 
             case "FUNCTION-POINTER":
                 Expected("FUNCTION-POINTER");
                 Optional("TO");
-                dataitem.UsageType = UsageType.FunctionPointer;
-                dataitem.UsageContext = Current().value;
+                dataReference.UsageType = UsageType.FunctionPointer;
+                dataReference.UsageContext = Current().value;
                 Identifier();
                 break;
 
@@ -850,13 +839,13 @@ public static partial class Analyzer
                 if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
                 {
                     Optional("TO");
-                    dataitem.UsageType = UsageType.ProgramPointer;
-                    dataitem.UsageContext = Current().value;
+                    dataReference.UsageType = UsageType.ProgramPointer;
+                    dataReference.UsageContext = Current().value;
                     Identifier();
                 }
                 else
                 {
-                    dataitem.UsageType = UsageType.ProgramPointer;
+                    dataReference.UsageType = UsageType.ProgramPointer;
                 }
                 break;
 

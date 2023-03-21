@@ -38,7 +38,7 @@ public class LocalReferences<TValue> where TValue: notnull
     {
         ref var references = ref CollectionsMarshal.GetValueRefOrNullRef(ReferenceLookup, localName);
 
-        if (!Unsafe.IsNullRef(ref references))
+        if (!Unsafe.IsNullRef(ref references) && references is not null)
         {
             return references.Count == 1;
         }
@@ -46,13 +46,25 @@ public class LocalReferences<TValue> where TValue: notnull
         throw new ArgumentOutOfRangeException(nameof(localName), "Reference name does not exist in the ReferenceLookup dictionary");
     }
 
-    public ref List<TValue>? GetNameReferences(string localName)
+    public List<TValue> GetReferencesByName(string localName)
     {
         ref var references = ref CollectionsMarshal.GetValueRefOrNullRef(ReferenceLookup, localName);
 
-        if (!Unsafe.IsNullRef(ref references))
+        if (!Unsafe.IsNullRef(ref references) && references is not null)
         {
-            return ref references;
+            return references;
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(localName), "Reference name does not exist in the ReferenceLookup dictionary");
+    }
+
+    public TValue GetFirstReferenceByName(string localName)
+    {
+        ref var references = ref CollectionsMarshal.GetValueRefOrNullRef(ReferenceLookup, localName);
+
+        if (!Unsafe.IsNullRef(ref references) && references is not null)
+        {
+            return references[0];
         }
 
         throw new ArgumentOutOfRangeException(nameof(localName), "Reference name does not exist in the ReferenceLookup dictionary");

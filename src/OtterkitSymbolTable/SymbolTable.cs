@@ -6,6 +6,8 @@ public static partial class SymbolTable
     private static readonly List<RepositorySignature> RepositorySignatures = new();
     private static readonly List<SourceUnitSignature> SourceUnitSignatures = new();
     private static readonly List<DataSignature> DataItemSymbols = new();
+    private static readonly LocalReferences<DataSignature> DataLocals = new();
+    private static readonly LocalReferences<RepositorySignature> RepositoryLocals = new();
 
     public static void AddSymbol(string symbolHash, SymbolType symbolType)
     {

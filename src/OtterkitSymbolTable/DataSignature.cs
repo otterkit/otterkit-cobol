@@ -4,7 +4,6 @@ public record DataSignature
 {
     public CurrentScope Section;
     public string Parent = string.Empty;
-    public DataSignature[] Fields = Array.Empty<DataSignature>();
     public int LevelNumber;
     public string Identifier = string.Empty;
     public string Type = string.Empty;

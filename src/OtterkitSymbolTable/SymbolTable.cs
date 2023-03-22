@@ -4,8 +4,9 @@ public static partial class SymbolTable
 {
     internal static readonly Dictionary<string, SymbolPointer> Symbols = new(StringComparer.OrdinalIgnoreCase);
     private static readonly List<SourceUnitSignature> SourceUnitSignatures = new();
-    public static readonly LocalReferences<DataSignature> DataLocals = new();
+    public static readonly GlobalReferences<SourceUnitSignature> SourceUnitGlobals = new();
     public static readonly LocalReferences<RepositorySignature> RepositoryLocals = new();
+    public static readonly LocalReferences<DataSignature> DataLocals = new();
 
     public static void ClearLocalReferences()
     {

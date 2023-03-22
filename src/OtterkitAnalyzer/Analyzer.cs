@@ -314,6 +314,7 @@ public static partial class Analyzer
             }
 
             SymbolTable.AddSymbol($"{SourceId.Peek()}", SymbolType.SourceUnitSignature);
+
             Expected(".", """
             Missing separator period at the end of this program definition
             """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");

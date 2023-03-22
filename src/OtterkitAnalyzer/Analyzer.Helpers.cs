@@ -405,7 +405,7 @@ public static partial class Analyzer
 
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, $"""
             Unexpected End Of File. Expected {expected} instead.
             """);
 
@@ -441,7 +441,7 @@ public static partial class Analyzer
 
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
+            ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, $"""
             Unexpected End Of File. Expected {expected} instead.
             """);
 
@@ -893,6 +893,8 @@ public static partial class Analyzer
 
             return;
         }        
+
+        Continue();
     }
 
     private static void Identifier(string identifierString)

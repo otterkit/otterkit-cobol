@@ -21,7 +21,7 @@ public class LocalReferences<TValue> where TValue: notnull
 
         if (exists && references is null)
         {
-            throw new ArgumentNullException(nameof(localName), "Reference name exists but value was null in the ReferenceLookup dictionary");
+            throw new ArgumentException("Reference name exists but value was null in the ReferenceLookup dictionary", nameof(localName));
         }
     }
 
@@ -34,7 +34,7 @@ public class LocalReferences<TValue> where TValue: notnull
         return false;
     }
 
-    public bool IsReferenceUnique(string localName)
+    public bool ReferenceExistsAndIsUnique(string localName)
     {
         ref var references = ref CollectionsMarshal.GetValueRefOrNullRef(ReferenceLookup, localName);
 
@@ -43,7 +43,7 @@ public class LocalReferences<TValue> where TValue: notnull
             return references.Count == 1;
         }
 
-        throw new ArgumentOutOfRangeException(nameof(localName), "Reference name does not exist in the ReferenceLookup dictionary");
+        return false;
     }
 
     public List<TValue> GetReferencesByName(string localName)
@@ -58,7 +58,7 @@ public class LocalReferences<TValue> where TValue: notnull
         throw new ArgumentOutOfRangeException(nameof(localName), "Reference name does not exist in the ReferenceLookup dictionary");
     }
 
-    public TValue GetFirstReferenceByName(string localName)
+    public TValue GetUniqueReferenceByName(string localName)
     {
         ref var references = ref CollectionsMarshal.GetValueRefOrNullRef(ReferenceLookup, localName);
 

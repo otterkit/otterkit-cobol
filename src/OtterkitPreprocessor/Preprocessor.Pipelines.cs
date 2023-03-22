@@ -86,7 +86,7 @@ public static partial class Preprocessor
 
         if (!buffer.IsEmpty)
         {
-            line = buffer.Slice(0, buffer.Length - 1);
+            line = buffer.Slice(0, buffer.Length);
             buffer = buffer.Slice(buffer.End);
 
             return true;

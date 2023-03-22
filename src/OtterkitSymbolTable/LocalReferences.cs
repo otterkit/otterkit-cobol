@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Otterkit;
 
-public class LocalReferences<TValue> where TValue: notnull
+public sealed class LocalReferences<TValue> where TValue: notnull
 {
     private readonly Dictionary<string, List<TValue>> ReferenceLookup = new(StringComparer.OrdinalIgnoreCase);
 

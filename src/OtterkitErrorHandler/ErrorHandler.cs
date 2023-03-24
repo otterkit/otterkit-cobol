@@ -38,6 +38,7 @@ public ref struct Error
 
         Console.WriteLine($": {errorMessage}");
 
+        ErrorHandler.HasError = true;
         return new(errorType, consoleColor);
     }
 

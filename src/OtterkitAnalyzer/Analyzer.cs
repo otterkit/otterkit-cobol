@@ -70,7 +70,7 @@ public static partial class Analyzer
 
         // If a parsing error has occured, terminate the compilation process.
         // We do not want the compiler to continue when the source code is not valid.
-        if (ErrorHandler.Error) ErrorHandler.Terminate("parsing");
+        if (ErrorHandler.HasError) ErrorHandler.Terminate("parsing");
 
         // Return parsed list of tokens.
         return TokenList;

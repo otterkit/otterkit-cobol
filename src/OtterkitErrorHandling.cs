@@ -2,7 +2,7 @@ namespace Otterkit;
 
 public static class ErrorHandler
 {
-    internal static bool Error = false;
+    internal static bool HasError = false;
     internal static Options Options = OtterkitCompiler.Options;
 
     public static class Compiler
@@ -33,36 +33,12 @@ public static class ErrorHandler
             Console.WriteLine($" {error}\n");
             Console.ResetColor();
 
-
-        }
-
-        public static void AttemptRecovery(string[] anchors)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write("Attempting recovery: ");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine($"""
-            Unexpected tokens will be ignored until a separator period or an anchor point is found 
-            (Anchors: {string.Join(", ", anchors)})
-
-            """);
-        }
-
-        public static void AttemptRecovery(TokenContext anchor)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write("Attempting recovery: ");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine($"""
-            Unexpected tokens will be ignored until a separator period or an anchor point is found 
-            (Anchor: {anchor})
-
-            """);
+            
         }
 
         public static void Report(string fileName, Token token, ErrorType error, params string[] expected)
         {
-            Error = true;
+            HasError = true;
 
             Console.ForegroundColor = ConsoleColor.Red;
 

@@ -141,7 +141,7 @@ public static class OtterkitCompiler
 
             if (Options.BuildMode is BuildType.ParseOnly)
             {
-                if (!ErrorHandler.Error) ErrorHandler.SuccessfulParsing();
+                if (!ErrorHandler.HasError) ErrorHandler.SuccessfulParsing();
             }
 
             if (Options.BuildMode is BuildType.PrintTokens)
@@ -163,7 +163,7 @@ public static class OtterkitCompiler
                     Console.WriteLine(token);
                 }
 
-                if (!ErrorHandler.Error) ErrorHandler.SuccessfulParsing();
+                if (!ErrorHandler.HasError) ErrorHandler.SuccessfulParsing();
             }
 
             if (Options.BuildMode is BuildType.PrintSymbols)
@@ -185,7 +185,7 @@ public static class OtterkitCompiler
                     Console.WriteLine($"{symbol.Key}  =>  {symbol.Value.SymbolType}");
                 }
 
-                if (!ErrorHandler.Error) ErrorHandler.SuccessfulParsing();
+                if (!ErrorHandler.HasError) ErrorHandler.SuccessfulParsing();
             }
 
             if (Options.BuildMode is BuildType.BuildOnly)

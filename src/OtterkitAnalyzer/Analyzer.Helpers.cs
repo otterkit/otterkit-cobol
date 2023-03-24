@@ -363,21 +363,18 @@ public static partial class Analyzer
     /// <para>If the current token matches the value, it moves to the next token,
     /// if the current token doesn't match the value it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void Expected(string expected, string custom = "default", int position = 0, params string[] wordAnchors)
+    private static void Expected(string expected, string? custom = null, int position = 0, params string[] wordAnchors)
     {
-        var errorMessage = expected;
-        var errorType = ErrorType.Expected;
-        if (!custom.Equals("default"))
-        {
-            errorMessage = custom;
-            errorType = ErrorType.General;
-        }
-
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, $"""
-            Unexpected End Of File. Expected {expected} instead.
-            """);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
+                Unexpected end of file.
+                """)
+            .WithSourceLine(Lookahead(-1), FileName, $"""
+                Expected {expected} after this token.
+                """)
+            .CloseError();
 
             return;
         }
@@ -386,8 +383,14 @@ public static partial class Analyzer
         {
             var lookahead = Lookahead(position);
 
-            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, """
+                Unexpected token.
+                """)
+            .WithSourceLine(lookahead, FileName, $"""
+                {custom ?? $"Expected {expected}, instead of {Current().value}"}
+                """)
+            .CloseError();
 
             if (wordAnchors.Length != 0) AnchorPoint(wordAnchors);
 
@@ -399,21 +402,18 @@ public static partial class Analyzer
         }
     }
 
-    private static void Expected(string expected, string custom = "default", int position = 0, TokenContext? typeAnchor = null)
+    private static void Expected(string expected, string? custom = null, int position = 0, TokenContext? typeAnchor = null)
     {
-        var errorMessage = expected;
-        var errorType = ErrorType.Expected;
-        if (!custom.Equals("default"))
-        {
-            errorMessage = custom;
-            errorType = ErrorType.General;
-        }
-
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, $"""
-            Unexpected End Of File. Expected {expected} instead.
-            """);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
+                Unexpected end of file.
+                """)
+            .WithSourceLine(Lookahead(-1), FileName, $"""
+                Expected {expected} after this token.
+                """)
+            .CloseError();
 
             return;
         }
@@ -422,17 +422,23 @@ public static partial class Analyzer
         {
             var lookahead = Lookahead(position);
 
-            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, """
+                Unexpected token.
+                """)
+            .WithSourceLine(lookahead, FileName, $"""
+                {custom ?? $"Expected {expected}, instead of {Current().value}]"}
+                """)
+            .CloseError();
 
             if (typeAnchor is not null) AnchorPoint((TokenContext)typeAnchor);
 
             if (typeAnchor is null) Continue();
+
+            return;
         }
-        else
-        {
-            Continue();
-        }
+
+        Continue();
     }
 
     /// <summary>
@@ -444,19 +450,29 @@ public static partial class Analyzer
     {
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-            Unexpected End Of File. Expected identifier instead.
-            """);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
+                Unexpected end of file.
+                """)
+            .WithSourceLine(Lookahead(-1), FileName, $"""
+                Expected an identifier after this token.
+                """)
+            .CloseError();
 
             return;
         }
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, """
-            a user-defined name or word (an identifier)
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token.
+                """)
+            .WithSourceLine(Current(), FileName, $"""
+                Expected a user-defined word (an identifier).
+                """)
+            .CloseError();
+
             Continue();
             return;
         }
@@ -513,9 +529,14 @@ public static partial class Analyzer
 
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-            Unexpected End Of File. Expected identifier instead.
-            """);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
+                Unexpected end of file.
+                """)
+            .WithSourceLine(Lookahead(-1), FileName, $"""
+                Expected an identifier after this token.
+                """)
+            .CloseError();
 
             checkFirstUsage =  false;
             return;
@@ -523,10 +544,15 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, """
-            a user-defined name or word (an identifier)
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token.
+                """)
+            .WithSourceLine(Current(), FileName, $"""
+                Expected a user-defined word (an identifier).
+                """)
+            .CloseError();
+
             Continue();
 
             checkFirstUsage =  false;
@@ -591,19 +617,28 @@ public static partial class Analyzer
         // The symbol table itself needs to be refactored to accommodate this.
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-            Unexpected End Of File. Expected identifier instead.
-            """);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
+                Unexpected end of file.
+                """)
+            .WithSourceLine(Lookahead(-1), FileName, $"""
+                Expected an identifier after this token.
+                """)
+            .CloseError();
 
             return;
         }
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, """
-            a user-defined name or word (an identifier)
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token.
+                """)
+            .WithSourceLine(Current(), FileName, $"""
+                Expected a user-defined word (an identifier).
+                """)
+            .CloseError();
 
             Continue();
             return;
@@ -871,29 +906,43 @@ public static partial class Analyzer
     {
         if (CurrentEquals(TokenType.EOF))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-            Unexpected End Of File. Expected identifier instead.
-            """);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
+                Unexpected end of file.
+                """)
+            .WithSourceLine(Lookahead(-1), FileName, $"""
+                Expected an identifier after this token.
+                """)
+            .CloseError();
 
             return;
         }
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, """
-            a user-defined name or word (an identifier)
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), FileName, $"""
+                Expected a user-defined word (an identifier).
+                """)
+            .CloseError();
+
             Continue();
             return;
         }
 
         if (!CurrentEquals(identifierString))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-            Expected a user-defined name (an identifier) with value: "{identifierString}"
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """
+                Unexpected user-defined name.
+                """)
+            .WithSourceLine(Current(), FileName, $"""
+                Expected the following identifier: {identifierString}.
+                """)
+            .CloseError();
         }
 
         Continue();

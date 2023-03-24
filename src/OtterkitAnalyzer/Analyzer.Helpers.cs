@@ -136,26 +136,16 @@ public static partial class Analyzer
 
     private static void AnchorPoint(params string[] anchors)
     {
-        ErrorHandler.Analyzer.AttemptRecovery(anchors);
-
         while (!CurrentEquals(TokenType.EOF))
         {
             if (CurrentEquals("."))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
-                Parser recovered at the following anchor point: 
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 Continue();
                 return;
             }
 
             if (CurrentEquals(anchors))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
-                Parser recovered at the following anchor point: 
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 return;
             }
 
@@ -165,26 +155,16 @@ public static partial class Analyzer
 
     private static void AnchorPoint(TokenContext anchor)
     {
-        ErrorHandler.Analyzer.AttemptRecovery(anchor);
-
         while (!CurrentEquals(TokenType.EOF))
         {
             if (CurrentEquals("."))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
-                Parser recovered at the following anchor point: 
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 Continue();
                 return;
             }
 
             if (CurrentEquals(anchor))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
-                Parser recovered at the following anchor point: 
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 return;
             }
 
@@ -194,26 +174,16 @@ public static partial class Analyzer
 
     private static void CombinedAnchorPoint(TokenContext anchor, params string[] anchors)
     {
-        ErrorHandler.Analyzer.AttemptRecovery(anchors);
-
         while (!CurrentEquals(TokenType.EOF))
         {
             if (CurrentEquals("."))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
-                Parser recovered at the following anchor point: 
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 Continue();
                 return;
             }
 
             if (CurrentEquals(anchors) || CurrentEquals(anchor))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
-                Parser recovered at the following anchor point: 
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
                 return;
             }
 

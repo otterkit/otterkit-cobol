@@ -21,7 +21,7 @@ public static partial class Analyzer
     /// <para>This is used when checking if a variable already exists in the current source unit, and when adding them to the DataItemSymbolTable class's variable table.
     /// The DataItemSymbolTable class is then used to simplify the codegen process of generating data items.</para>
     /// </summary>
-    private static readonly Stack<string> SourceId = new();
+    private static readonly Stack<Token> SourceId = new();
 
     /// <summary>
     /// Stack SourceUnit <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
@@ -237,13 +237,10 @@ public static partial class Analyzer
         // This is where SourceId and SourceType get their values for a COBOL source unit.
         void ProgramId()
         {
-            Token ProgramIdentifier;
-
             Expected("PROGRAM-ID");
             Expected(".");
 
-            ProgramIdentifier = Current();
-            SourceId.Push(ProgramIdentifier.value);
+            SourceId.Push(Current());
             SourceType.Push(SourceUnit.Program);
             CurrentSection = CurrentScope.ProgramId;
 
@@ -253,7 +250,7 @@ public static partial class Analyzer
                 Expected("AS");
                 SourceId.Pop();
                 String();
-                SourceId.Push(Lookahead(-1).value);
+                SourceId.Push(Lookahead(-1));
             }
 
             if (CurrentEquals("IS", "COMMON", "INITIAL", "RECURSIVE", "PROTOTYPE"))
@@ -296,18 +293,18 @@ public static partial class Analyzer
 
                 if (isPrototype && (isCommon || isInitial || isRecursive))
                 {
-                    ErrorHandler.Analyzer.Report(FileName, ProgramIdentifier, ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, SourceId.Peek(), ErrorType.General, """
                     Invalid prototype. Program prototypes cannot be defined as common, initial or recursive.
                     """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, ProgramIdentifier);
+                    ErrorHandler.Analyzer.PrettyError(FileName, SourceId.Peek());
                 }
 
                 if (isInitial && isRecursive)
                 {
-                    ErrorHandler.Analyzer.Report(FileName, ProgramIdentifier, ErrorType.General, """
+                    ErrorHandler.Analyzer.Report(FileName, SourceId.Peek(), ErrorType.General, """
                     Invalid program definition. Initial programs cannot be defined as recursive.
                     """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, ProgramIdentifier);
+                    ErrorHandler.Analyzer.PrettyError(FileName, SourceId.Peek());
                 }
 
                 if (!isPrototype) Optional("PROGRAM");
@@ -325,7 +322,7 @@ public static partial class Analyzer
             Expected("FUNCTION-ID");
             Expected(".");
 
-            SourceId.Push(Current().value);
+            SourceId.Push(Current());
             SourceType.Push(SourceUnit.Function);
             CurrentSection = CurrentScope.FunctionId;
 
@@ -356,7 +353,7 @@ public static partial class Analyzer
             Expected("CLASS-ID");
             Expected(".");
 
-            SourceId.Push(Current().value);
+            SourceId.Push(Current());
             SourceType.Push(SourceUnit.Class);
             CurrentSection = CurrentScope.ClassId;
 
@@ -416,7 +413,7 @@ public static partial class Analyzer
             Expected("INTERFACE-ID");
             Expected(".");
 
-            SourceId.Push(Current().value);
+            SourceId.Push(Current());
             SourceType.Push(SourceUnit.Interface);
             CurrentSection = CurrentScope.InterfaceId;
 
@@ -478,10 +475,10 @@ public static partial class Analyzer
             {
                 Expected("GET");
                 Expected("PROPERTY");
-                SourceId.Push($"GET {Current().value}");
+                SourceId.Push(Current());
                 SourceType.Push(SourceUnit.MethodGetter);
 
-                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek()}", SymbolType.SourceUnitSignature);
+                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek().value}", SymbolType.SourceUnitSignature);
 
                 Identifier();
 
@@ -491,10 +488,10 @@ public static partial class Analyzer
                 Expected("SET");
                 Expected("PROPERTY");
 
-                SourceId.Push($"SET {Current().value}");
+                SourceId.Push(Current());
                 SourceType.Push(SourceUnit.MethodSetter);
 
-                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek()}", SymbolType.SourceUnitSignature);
+                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek().value}", SymbolType.SourceUnitSignature);
 
                 Identifier();
             }
@@ -506,7 +503,7 @@ public static partial class Analyzer
                     Expected("AS");
                     String();
                 }
-                SourceId.Push(Lookahead(-1).value);
+                SourceId.Push(Lookahead(-1));
 
                 if (currentSource == SourceUnit.Interface)
                 {

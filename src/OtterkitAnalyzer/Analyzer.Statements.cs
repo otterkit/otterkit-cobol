@@ -3186,6 +3186,6 @@ public static partial class Analyzer
 
     private static void PARAGRAPH()
     {
-        Identifier(Current().value);
+        Identifier(Current());
     }
 }

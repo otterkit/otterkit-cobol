@@ -912,7 +912,7 @@ public static partial class Analyzer
         Continue();
     }
 
-    private static void Identifier(string identifierString)
+    private static void Identifier(Token identifierToken)
     {
         if (CurrentEquals(TokenType.EOF))
         {
@@ -943,14 +943,14 @@ public static partial class Analyzer
             return;
         }
 
-        if (!CurrentEquals(identifierString))
+        if (!CurrentEquals(identifierToken.value))
         {
             Error
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """
                 Unexpected user-defined name.
                 """)
             .WithSourceLine(Current(), FileName, $"""
-                Expected the following identifier: {identifierString}.
+                Expected the following identifier: {identifierToken.value}.
                 """)
             .CloseError();
         }

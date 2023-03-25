@@ -79,7 +79,7 @@ public static partial class Preprocessor
 
             if (sourceChars.Length >= 1)
             {
-                sourceChars = sourceChars.Slice(1);
+                sourceChars[0] = ' ';
             }
         }
 

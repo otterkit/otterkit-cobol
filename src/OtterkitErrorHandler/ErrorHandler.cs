@@ -47,8 +47,8 @@ public ref struct Error
         string line = File.ReadLines(fileName).Skip(token.line - 1).Take(token.line).First();
         string error = new(' ', line.Length - token.value.Length);
 
-        int count = line.TakeWhile(char.IsWhiteSpace).Count();
-        error = error.Insert(token.column - count, new string('~', token.value.Length));
+        int whiteSpace = line.TakeWhile(char.IsWhiteSpace).Count() + 1;
+        error = error.Insert(token.column - whiteSpace, new string('~', token.value.Length));
         
         ColoredWrite(DarkGray, "     ╭─/> [");
 

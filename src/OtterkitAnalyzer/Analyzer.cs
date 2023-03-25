@@ -961,9 +961,22 @@ public static partial class Analyzer
                 ReturningDataName();
             }
 
-            Expected(".", """
-            Missing separator period at the end of this PROCEDURE DIVISION header, every division header must end with a separator period
-            """, -1, TokenContext.IsStatement);
+            if (!Expected(".", false))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    Division header, missing separator period.
+                    """)
+                .WithSourceLine(Lookahead(-1), FileName, """
+                    Expected a separator period '. ' after this token
+                    """)
+                .WithNote("""
+                    Every division header must end with a separator period
+                    """)
+                .CloseError();
+
+                AnchorPoint(TokenContext.IsStatement);
+            }
 
             bool isProcedureDeclarative = CurrentEquals("DECLARATIVES")
                 || CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION");

@@ -22,7 +22,7 @@ public static partial class Analyzer
     // It is also responsible for showing appropriate error messages when an error occurs in the DATA DIVISION.
     private static void DATA()
     {
-        Expected("DATA", "data division");
+        Expected("DATA");
         Expected("DIVISION");
         CurrentSection = CurrentScope.DataDivision;
 

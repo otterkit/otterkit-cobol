@@ -402,7 +402,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void Expected(string expected, string? custom = null, int position = 0, TokenContext? typeAnchor = null)
+    private static bool Expected(string expected, bool useDefaultError = true)
     {
         if (CurrentEquals(TokenType.EOF))
         {
@@ -415,31 +415,41 @@ public static partial class Analyzer
                 """)
             .CloseError();
 
-            return;
+            // Error has already been handled above
+            return true;
         }
 
-        if (!CurrentEquals(expected))
-        {
-            var lookahead = Lookahead(position);
+        var isExpectedToken = CurrentEquals(expected);
 
+        if (!isExpectedToken && useDefaultError)
+        {
             Error
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, """
                 Unexpected token.
                 """)
-            .WithSourceLine(lookahead, FileName, $"""
-                {custom ?? $"Expected {expected}, instead of {Current().value}]"}
+            .WithSourceLine(Current(), FileName, $"""
+                $"Expected '{expected}' here, found '{Current().value}' instead"
                 """)
             .CloseError();
 
-            if (typeAnchor is not null) AnchorPoint((TokenContext)typeAnchor);
-
-            if (typeAnchor is null) Continue();
-
-            return;
+            // Error has already been handled above
+            // Handled using a default error message
+            return true;
         }
 
+        if (!isExpectedToken && !useDefaultError)
+        {
+            // Error has not been handled
+            // Expected to be handled by the consumer
+            // of this method using an if statement
+            return false;
+        }
+        
         Continue();
+
+        return true;
     }
+
 
     /// <summary>
     /// Void <c>Identifier</c>: This method checks if the current token is an identifier.

@@ -912,7 +912,7 @@ public static partial class Analyzer
         Continue();
     }
 
-    private static void Identifier(Token identifierToken)
+    private static bool Identifier(Token identifierToken, bool useDefaultError = true)
     {
         if (CurrentEquals(TokenType.EOF))
         {
@@ -925,7 +925,8 @@ public static partial class Analyzer
                 """)
             .CloseError();
 
-            return;
+            // Error has already been handled above
+            return true;
         }
 
         if (!CurrentEquals(TokenType.Identifier))
@@ -940,10 +941,14 @@ public static partial class Analyzer
             .CloseError();
 
             Continue();
-            return;
+
+            // Error has already been handled above
+            return true;
         }
 
-        if (!CurrentEquals(identifierToken.value))
+        var isExpectedToken = CurrentEquals(identifierToken.value);
+
+        if (!isExpectedToken && useDefaultError)
         {
             Error
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """
@@ -953,9 +958,23 @@ public static partial class Analyzer
                 Expected the following identifier: {identifierToken.value}.
                 """)
             .CloseError();
+
+            // Error has already been handled above
+            // Handled using a default error message
+            return true;
         }
 
+        if (!isExpectedToken && !useDefaultError)
+        {
+            // Error has not been handled
+            // Expected to be handled by the consumer
+            // of this method using an if statement
+            return false;
+        }
+        
         Continue();
+
+        return true;
     }
 
     /// <summary>

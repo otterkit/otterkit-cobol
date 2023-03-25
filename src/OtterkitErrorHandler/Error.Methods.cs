@@ -28,7 +28,7 @@ public readonly ref partial struct Error
         ShowSourceLine(token.line, line);
 
         //   │              ~~~~~
-        ShowErrorLine(ConsoleColor, error);
+        ShowErrorPosition(ConsoleColor, error);
 
         if (errorHelp is not null)
         {
@@ -41,6 +41,28 @@ public readonly ref partial struct Error
             // Move to next line if no error help message was provided
             Console.WriteLine();
         }
+
+        //   │
+        Separator();
+
+        return this;
+    }
+
+    public Error WithSourceNote(Token token, string fileName)
+    {
+        var (line, note) = FetchSourceLine(token, fileName);
+        
+        //   ├─/> [file.cob:5:25]
+        ShowFileInformation('├', token, fileName);
+
+        //   │ 
+        Separator();
+
+        // 7 │  END PROGRAM HELLO.  
+        ShowSourceLine(token.line, line);
+
+        //   │              ~~~~~
+        ShowNotePosition(Green, note);
 
         //   │
         Separator();

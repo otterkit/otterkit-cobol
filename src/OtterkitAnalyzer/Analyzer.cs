@@ -1087,7 +1087,28 @@ public static partial class Analyzer
 
                     Expected("END");
                     Expected("PROGRAM");
-                    Identifier(SourceId.Pop());
+
+                    var sourceId = SourceId.Pop();
+
+                    if (!Identifier(sourceId, false))
+                    {
+                        Error
+                        .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """
+                            Unexpected user-defined name.
+                            """)
+                        .WithSourceLine(Current(), FileName, $"""
+                            Expected the following identifier: {sourceId.value}.
+                            """)
+                        .WithSourceNote(sourceId, FileName)
+                        .WithNote("""
+                            The end marker must match its source unit definition. 
+                            """)
+                        .CloseError();
+
+                        Continue();
+                    }
+
+
                     Expected(".", """
                     Missing separator period at the end of this END PROGRAM definition
                     """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");

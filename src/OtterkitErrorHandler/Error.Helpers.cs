@@ -34,10 +34,16 @@ public readonly ref partial struct Error
         ColoredWrite(ResetColor() , $"{sourceLine.TrimStart()}\n");
     }
 
-    private static void ShowErrorLine(ConsoleColor errorColor, string errorLine)
+    private static void ShowErrorPosition(ConsoleColor errorColor, string errorLine)
     {
         ColoredWrite(DarkGray     , "     │");
         ColoredWrite(errorColor   ,$"  {errorLine.TrimEnd()}");
+    }
+
+    private static void ShowNotePosition(ConsoleColor errorColor, string errorLine)
+    {
+        ColoredWrite(DarkGray     , "     │");
+        ColoredWrite(errorColor   ,$"  {errorLine.TrimEnd()}\n");
     }
 
     private static void ShowErrorHelp(ConsoleColor errorColor, string errorHelp)

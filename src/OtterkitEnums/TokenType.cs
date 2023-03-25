@@ -3,6 +3,7 @@ namespace Otterkit;
 public enum TokenType
 {
     None,
+    Error,
     ReservedKeyword,
     FigurativeLiteral,
     IntrinsicFunction,

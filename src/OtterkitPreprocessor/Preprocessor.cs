@@ -36,9 +36,9 @@ public static partial class Preprocessor
             Options.FileNames.Add(file);
         }
 
-        PreprocessCopybooks(SourceTokens);
+        PreprocessCopybooks(Options.SourceTokens);
 
-        return SourceTokens;
+        return Options.SourceTokens;
     }
 
     public static void PreprocessSourceFormat(ReadOnlySpan<byte> bytes, Span<char> chars)
@@ -175,9 +175,9 @@ public static partial class Preprocessor
 
                 var currentIndex = index;
 
-                SourceTokens.RemoveRange(copyIndex, currentIndex - copyIndex);
+                Options.SourceTokens.RemoveRange(copyIndex, currentIndex - copyIndex);
 
-                SourceTokens.InsertRange(copyIndex, copybookTokens);
+                Options.SourceTokens.InsertRange(copyIndex, copybookTokens);
                 
             }
         }

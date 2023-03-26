@@ -5,11 +5,10 @@ namespace Otterkit;
 
 public static partial class Preprocessor
 {
-    internal static readonly List<Token> SourceTokens = new();
     private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Shared;
     private static int LineCount = 1;
 
-    public static async Task<List<Token>> ReadSourceFile(string sourceFile)
+    public static async ValueTask<List<Token>> ReadSourceFile(string sourceFile)
     {
         using var sourceStream = File.OpenRead(sourceFile);
         
@@ -26,7 +25,7 @@ public static partial class Preprocessor
         
             line.CopyTo(sharedArray);
         
-            Lexer.TokenizeLine(SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), LineCount);
+            Lexer.TokenizeLine(Options.SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), LineCount);
         
             ArrayPool.Return(sharedArray);
             LineCount++;
@@ -35,12 +34,12 @@ public static partial class Preprocessor
         pipeReader.AdvanceTo(buffer.End);
 
         LineCount = 1;
-        SourceTokens.Add(new Token("EOF", TokenType.EOF, -5, -5){ context = TokenContext.IsEOF });
+        Options.SourceTokens.Add(new Token("EOF", TokenType.EOF, -5, -5){ context = TokenContext.IsEOF });
 
-        return SourceTokens;
+        return Options.SourceTokens;
     }
 
-    public static async Task<List<Token>> ReadCopybook(string copybookFile)
+    public static async ValueTask<List<Token>> ReadCopybook(string copybookFile)
     {
         using var copybookStream = File.OpenRead(copybookFile);
         

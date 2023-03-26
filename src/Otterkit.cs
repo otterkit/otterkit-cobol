@@ -11,6 +11,7 @@ public record Options
     public required string EntryPoint;
     public required string SourceFormat;
     public required List<string> FileNames;
+    public required List<Token> SourceTokens;
 }
 
 public static class Otterkit
@@ -23,7 +24,8 @@ public static class Otterkit
         EntryPoint = "main.cob",
         SourceFormat = "fixed",
         ColumnLength = 80,
-        FileNames = new()
+        FileNames = new(),
+        SourceTokens = new()
     };
 
     public static void Main(string[] args)

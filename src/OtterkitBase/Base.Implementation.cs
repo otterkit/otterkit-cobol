@@ -2,23 +2,23 @@ namespace OtterkitLibrary;
 
 public static class Base
 {
-    private static readonly Factory FactoryInstance = new();
-
-    public class Factory : ICOBOLUniversal, IBaseFactoryInterface
+    public class Factory : IUniversal, IBaseFactoryInterface
     {
-        public Object New()
+        public static TActiveClass New<TActiveClass>()
+            where TActiveClass : Object, new()
         {
-            Object outObject = new Object();
+            var outObject = new TActiveClass();
 
             return outObject;
         }
     }
 
-    public class Object : ICOBOLUniversal, IBaseObjectInterface
+    public class Object : IUniversal, IBaseObjectInterface
     {
-        public Factory FactoryObject()
+        public TActiveClass FactoryObject<TActiveClass>()
+            where TActiveClass: Factory, new()
         {
-            Factory outFactory = FactoryInstance;
+            var outFactory = new TActiveClass();
 
             return outFactory;
         }

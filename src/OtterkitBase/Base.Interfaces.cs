@@ -2,10 +2,12 @@ namespace OtterkitLibrary;
 
 public interface IBaseFactoryInterface
 {
-    Base.Object New();
+    static abstract TActiveClass New<TActiveClass>()
+         where TActiveClass : Base.Object, new();
 }
 
 public interface IBaseObjectInterface
 {
-    Base.Factory FactoryObject();
+    TActiveClass FactoryObject<TActiveClass>()
+        where TActiveClass: Base.Factory, new();
 }

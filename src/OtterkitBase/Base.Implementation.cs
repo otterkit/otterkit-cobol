@@ -2,35 +2,25 @@ namespace OtterkitLibrary;
 
 public static class Base
 {
-    private static readonly BaseFactory FactoryInstance = new();
+    private static readonly Factory FactoryInstance = new();
 
-    protected interface IBaseFactory
+    public class Factory : ICOBOLUniversal, IBaseFactoryInterface
     {
-        protected static BaseObject New()
+        public Object New()
         {
-            BaseObject outObject = new BaseObject();
+            Object outObject = new Object();
 
             return outObject;
         }
     }
 
-    public class BaseFactory : ICOBOLRoot, IBaseFactory, IBaseFactoryInterface
+    public class Object : ICOBOLUniversal, IBaseObjectInterface
     {
-        public BaseObject New() => IBaseFactory.New();
-    }
-
-    protected interface IBaseObject
-    {
-        protected static BaseFactory FactoryObject()
+        public Factory FactoryObject()
         {
-            BaseFactory outFactory = FactoryInstance;
+            Factory outFactory = FactoryInstance;
 
             return outFactory;
         }
-    }
-
-    public class BaseObject : ICOBOLRoot, IBaseObject, IBaseObjectInterface
-    {
-        public BaseFactory FactoryObject() => IBaseObject.FactoryObject();
     }
 }

@@ -2,10 +2,10 @@ namespace OtterkitLibrary;
 
 public interface IBaseFactoryInterface
 {
-    Base.BaseObject New();
+    Base.Object New();
 }
 
 public interface IBaseObjectInterface
 {
-    Base.BaseFactory FactoryObject();
+    Base.Factory FactoryObject();
 }

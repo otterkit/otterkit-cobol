@@ -257,7 +257,7 @@ public sealed partial record Token
 
     public static List<Token> FromValue(List<Token> tokens)
     {
-        FileName = OtterkitCompiler.Options.EntryPoint;
+        FileName = Otterkit.Options.EntryPoint;
 
         var index = 0;
         var fileIndex = 0;
@@ -271,7 +271,7 @@ public sealed partial record Token
 
             if (token.type is TokenType.EOF && index < tokens.Count - 1)
             {
-                FileName = OtterkitCompiler.Options.FileNames[fileIndex++];
+                FileName = Otterkit.Options.FileNames[fileIndex++];
             }
 
             previousToken = token;

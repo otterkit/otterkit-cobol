@@ -5,8 +5,9 @@ namespace Otterkit;
 
 public static partial class Preprocessor
 {
-    internal static Options Options = OtterkitCompiler.Options;
-    internal static DirectiveType lastDirective = DirectiveType.None;
+    internal static Options Options = Otterkit.Options;
+    internal static DirectiveType LastDirective = DirectiveType.None;
+    internal static string Workspace => Directory.GetCurrentDirectory(); 
 
     public static List<Token> Preprocess(string entryPoint)
     {
@@ -17,14 +18,19 @@ public static partial class Preprocessor
             Environment.Exit(1);
         }
 
-        var allSourceFiles = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.cob", SearchOption.AllDirectories);
-        var excludeEntryPoint = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), entryPoint);
-        var sourcesWithoutEntryPoint = allSourceFiles.Except(excludeEntryPoint);
+        var relativeEntryPoint = Path.GetRelativePath(Workspace, entryPoint);
 
-        List<Token> files = Preprocessor.ReadSourceFile(entryPoint).Result;
+        Options.EntryPoint = relativeEntryPoint;
 
-        foreach (var file in sourcesWithoutEntryPoint)
+        var allSourceFiles = Directory.EnumerateFiles(Workspace, "*.cob", SearchOption.AllDirectories)
+            .Select(static path => Path.GetRelativePath(Workspace, path));
+        
+        var files = Preprocessor.ReadSourceFile(relativeEntryPoint).Result;
+
+        foreach (var file in allSourceFiles)
         {
+            if (file.Equals(relativeEntryPoint)) continue;
+
             files = Preprocessor.ReadSourceFile(file).Result;
             
             Options.FileNames.Add(file);

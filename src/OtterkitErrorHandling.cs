@@ -3,7 +3,7 @@ namespace Otterkit;
 public static class ErrorHandler
 {
     internal static bool HasError = false;
-    internal static Options Options = OtterkitCompiler.Options;
+    internal static Options Options = Otterkit.Options;
 
     public static class Compiler
     {

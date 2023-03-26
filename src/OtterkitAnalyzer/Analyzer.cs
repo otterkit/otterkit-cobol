@@ -116,7 +116,7 @@ public static partial class Analyzer
 
             if (CurrentEquals("EOF") && Index < TokenList.Count - 1)
             {
-                FileName = OtterkitCompiler.Options.FileNames[FileIndex++];
+                FileName = Otterkit.Options.FileNames[FileIndex++];
 
                 Continue();
                 Source();

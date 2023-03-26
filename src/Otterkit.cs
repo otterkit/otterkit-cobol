@@ -13,7 +13,7 @@ public record Options
     public required List<string> FileNames;
 }
 
-public static class OtterkitCompiler
+public static class Otterkit
 {
     internal static Options Options = new()
     {

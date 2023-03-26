@@ -1042,34 +1042,45 @@ public static partial class Analyzer
                 string errorMessageChoice = currentSource switch
                 {
                     SourceUnit.Program or SourceUnit.ProgramPrototype => """
-                    Missing END PROGRAM marker. If another source unit is present after the end of a program or program prototype, the program must contain an END marker.
+                    Missing END PROGRAM marker.
                     """,
 
                     SourceUnit.Function or SourceUnit.FunctionPrototype => """
-                    Missing END FUNCTION marker. User-defined functions and function prototypes must always end with an END FUNCTION marker.
+                    Missing END FUNCTION marker.
                     """,
 
                     SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter => """
-                    Missing END METHOD marker. Method definitions and property getter/setter must always end with an END METHOD marker.
+                    Missing END METHOD marker.
                     """,
 
                     SourceUnit.Class => """
-                    Missing END CLASS marker. Class definitions must always end with an END CLASS marker.
+                    Missing END CLASS marker.
                     """,
 
                     SourceUnit.Interface => """
-                    Missing END INTERFACE marker. Interface definitions must always end with an END INTERFACE marker.
+                    Missing END INTERFACE marker.
                     """,
 
-                    SourceUnit.Factory or SourceUnit.Object => """
-                    Missing END FACTORY and END OBJECT marker. Factory and object definitions must always end with an END FACTORY and END OBJECT marker.
+                    SourceUnit.Factory => """
+                    Missing END FACTORY marker.
+                    """,
+
+                    SourceUnit.Object => """
+                    Missing END OBJECT marker.
                     """,
 
                     _ => throw new UnreachableException()
                 };
 
-                ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, errorMessageChoice);
-                ErrorHandler.Analyzer.PrettyError(FileName, Lookahead(-1));
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 27, $"""
+                    End marker, {errorMessageChoice}
+                    """)
+                .WithSourceLine(Lookahead(-1), FileName, """
+                    Expected a source unit end marker after this token
+                    """)
+                .CloseError();
+
                 return;
             }
 
@@ -1079,8 +1090,11 @@ public static partial class Analyzer
                 return;
             }
 
+            var sourceId = SourceId.Pop();
+
             switch (currentSource)
             {
+                
                 case SourceUnit.Program:
                 case SourceUnit.ProgramPrototype:
                     SourceType.Pop();
@@ -1088,30 +1102,8 @@ public static partial class Analyzer
                     Expected("END");
                     Expected("PROGRAM");
 
-                    var sourceId = SourceId.Pop();
+                    EndMarkerErrorHandling();
 
-                    if (!Identifier(sourceId, false))
-                    {
-                        Error
-                        .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """
-                            Unexpected user-defined name.
-                            """)
-                        .WithSourceLine(Current(), FileName, $"""
-                            Expected the following identifier: {sourceId.value}.
-                            """)
-                        .WithSourceNote(sourceId, FileName)
-                        .WithNote("""
-                            The end marker must match its source unit definition. 
-                            """)
-                        .CloseError();
-
-                        Continue();
-                    }
-
-
-                    Expected(".", """
-                    Missing separator period at the end of this END PROGRAM definition
-                    """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
                     break;
 
                 case SourceUnit.Function:
@@ -1120,10 +1112,9 @@ public static partial class Analyzer
 
                     Expected("END");
                     Expected("FUNCTION");
-                    Identifier(SourceId.Pop());
-                    Expected(".", """
-                    Missing separator period at the end of this END FUNCTION definition
-                    """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+
+                    EndMarkerErrorHandling();
+
                     break;
 
                 case SourceUnit.Method:
@@ -1140,9 +1131,23 @@ public static partial class Analyzer
                     if (currentSource is SourceUnit.MethodGetter or SourceUnit.MethodSetter)
                         SourceId.Pop();
 
-                    Expected(".", """
-                    Missing separator period at the end of this END METHOD definition
-                    """, -1, "IDENTIFICATION", "METHOD-ID", "OBJECT", "FACTORY");
+                    if (!Expected(".", false))
+                    {
+                        Error
+                        .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                            End marker, missing separator period.
+                            """)
+                        .WithSourceLine(Lookahead(-1), FileName, """
+                            Expected a separator period '. ' after this token
+                            """)
+                        .WithNote("""
+                            Every end marker must end with a separator period
+                            """)
+                        .CloseError();
+
+                        AnchorPoint("IDENTIFICATION", "METHOD-ID", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                    }
+
                     break;
 
                 case SourceUnit.Class:
@@ -1150,10 +1155,9 @@ public static partial class Analyzer
 
                     Expected("END");
                     Expected("CLASS");
-                    Identifier(SourceId.Pop());
-                    Expected(".", """
-                    Missing separator period at the end of this END CLASS definition
-                    """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+
+                    EndMarkerErrorHandling();
+
                     break;
 
                 case SourceUnit.Interface:
@@ -1161,10 +1165,9 @@ public static partial class Analyzer
 
                     Expected("END");
                     Expected("INTERFACE");
-                    Identifier(SourceId.Pop());
-                    Expected(".", """
-                    Missing separator period at the end of this END INTERFACE definition
-                    """, -1, "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+
+                    EndMarkerErrorHandling();
+
                     break;
 
                 case SourceUnit.Factory:
@@ -1172,9 +1175,24 @@ public static partial class Analyzer
 
                     Expected("END");
                     Expected("FACTORY");
-                    Expected(".", """
-                    Missing separator period at the end of this END FACTORY definition
-                    """, -1, "OBJECT", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                    
+                    if (!Expected(".", false))
+                    {
+                        Error
+                        .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                            End marker, missing separator period.
+                            """)
+                        .WithSourceLine(Lookahead(-1), FileName, """
+                            Expected a separator period '. ' after this token
+                            """)
+                        .WithNote("""
+                            Every end marker must end with a separator period
+                            """)
+                        .CloseError();
+
+                        AnchorPoint("OBJECT", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                    }
+                    
                     break;
 
                 case SourceUnit.Object:
@@ -1182,11 +1200,65 @@ public static partial class Analyzer
 
                     Expected("END");
                     Expected("OBJECT");
-                    Expected(".", """
-                    Missing separator period at the end of this END FACTORY definition
-                    """, -1, "END", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
-                    break;
+                    
+                    if (!Expected(".", false))
+                    {
+                        Error
+                        .Build(ErrorType.Analyzer, ConsoleColor.Red, 26,"""
+                            End marker, missing separator period.
+                            """)
+                        .WithSourceLine(Lookahead(-1), FileName, """
+                            Expected a separator period '. ' after this token
+                            """)
+                        .WithNote("""
+                            Every end marker must end with a separator period
+                            """)
+                        .CloseError();
 
+                        AnchorPoint("OBJECT", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                    }
+                    
+                    break;
+            }
+        }
+    
+        void EndMarkerErrorHandling()
+        {
+            var sourceId = SourceId.Pop();
+
+            if (!Identifier(sourceId, false))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """
+                    Unexpected user-defined name.
+                    """)
+                .WithSourceLine(Current(), FileName, $"""
+                    Expected the following identifier: {sourceId.value}.
+                    """)
+                .WithSourceNote(sourceId, FileName)
+                .WithNote("""
+                    The end marker must match its source unit definition. 
+                    """)
+                .CloseError();
+
+                Continue();
+            }
+
+            if (!Expected(".", false))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    End marker, missing separator period.
+                    """)
+                .WithSourceLine(Lookahead(-1), FileName, """
+                    Expected a separator period '. ' after this token
+                    """)
+                .WithNote("""
+                    Every end marker must end with a separator period
+                    """)
+                .CloseError();
+
+                AnchorPoint("IDENTIFICATION", "OBJECT", "METHOD-ID", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
             }
         }
     }

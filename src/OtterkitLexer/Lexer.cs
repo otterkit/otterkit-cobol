@@ -28,9 +28,12 @@ public static partial class Lexer
     private const string SymbolPattern = @"|(\+|\-|\*\*|\*|=|\/|\$|,|;|::|\.|\(|\)|>>|<>|>=|<=|>|<|&|_)";
     private const string AllPatterns = StringPattern + WordsPattern + NumberPattern + DirectivesPattern + SymbolPattern;
 
+    public static int LineIndex;
+    public static int FileIndex;
+
     private static bool IsPictureNext;
 
-    public static void TokenizeLine(List<Token> sourceTokens, ReadOnlySpan<byte> bytes, int lineNumber)
+    public static void TokenizeLine(List<Token> sourceTokens, ReadOnlySpan<byte> bytes)
     {
         var charCount = Encoding.UTF8.GetCharCount(bytes);
         var maxStackLimit = 256;
@@ -41,17 +44,17 @@ public static partial class Lexer
 
         Preprocessor.PreprocessSourceFormat(bytes, sourceChars);
 
-        var PictureEndIndex = 0;
+        var pictureEndIndex = 0;
 
         foreach (var token in LexerRegex().EnumerateMatches(sourceChars))
         {
             ReadOnlySpan<char> currentMatch = sourceChars.Slice(token.Index, token.Length);
 
-            if (token.Index < PictureEndIndex) continue;
+            if (token.Index < pictureEndIndex) continue;
 
             if (currentMatch.Contains(">>", StringComparison.OrdinalIgnoreCase))
             {
-                Preprocessor.PreprocessDirective(currentMatch, lineNumber);
+                Preprocessor.PreprocessDirective(currentMatch, LineIndex);
                 continue;
             }
 
@@ -65,12 +68,18 @@ public static partial class Lexer
 
                 var pictureChars = temporary.Slice(0, regex.Current.Index);
 
-                Token picture = new(new string(pictureChars), TokenType.Picture, lineNumber, token.Index + 1);
+                Token picture = new(new string(pictureChars), TokenType.Picture)
+                {
+                    Line = LineIndex,
+                    Column = token.Index + 1,
+                    FileIndex = FileIndex
+                };
+
                 sourceTokens.Add(picture);
 
-                PictureEndIndex = regex.Current.Index + token.Index;
-                IsPictureNext = false;
+                pictureEndIndex = regex.Current.Index + token.Index;
 
+                IsPictureNext = false;
                 continue;
             }
 
@@ -93,13 +102,24 @@ public static partial class Lexer
             {
                 PreprocessStringLiteral(type, currentMatch, out var preprocessed);
 
-                Token stringLiteral = new(new string(preprocessed), type, lineNumber, token.Index + 1);
-                sourceTokens.Add(stringLiteral);
+                Token stringLiteral = new(new string(preprocessed), type)
+                {
+                    Line = LineIndex,
+                    Column = token.Index + 1,
+                    FileIndex = FileIndex
+                };
 
+                sourceTokens.Add(stringLiteral);
                 continue;
             }
 
-            Token tokenized = new(new string(currentMatch), type, lineNumber, token.Index + 1);
+            Token tokenized = new(new string(currentMatch), type)
+            {
+                Line = LineIndex,
+                Column = token.Index + 1,
+                FileIndex = FileIndex
+            };
+
             sourceTokens.Add(tokenized);
         }
     }

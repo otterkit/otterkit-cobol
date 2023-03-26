@@ -25,13 +25,17 @@ public static partial class Preprocessor
         var allSourceFiles = Directory.EnumerateFiles(Workspace, "*.cob", SearchOption.AllDirectories)
             .Select(static path => Path.GetRelativePath(Workspace, path));
         
-        var files = Preprocessor.ReadSourceFile(relativeEntryPoint).Result;
+        var tokens = ReadSourceFile(relativeEntryPoint).Result;
+
+        Options.FileNames.Add(relativeEntryPoint);
 
         foreach (var file in allSourceFiles)
         {
             if (file.Equals(relativeEntryPoint)) continue;
 
-            files = Preprocessor.ReadSourceFile(file).Result;
+            Lexer.FileIndex++;
+
+            tokens = ReadSourceFile(file).Result;
             
             Options.FileNames.Add(file);
         }

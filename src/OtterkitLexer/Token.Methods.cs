@@ -5,8 +5,18 @@ using System.Text.RegularExpressions;
 namespace Otterkit; 
 
 public sealed partial record Token
-{
-    private static string FileName = string.Empty;
+{   
+    private static Options CompilerOptions = Otterkit.Options;
+
+    private string FetchFile()
+    {
+        if (FileIndex is 0)
+        {
+            return CompilerOptions.EntryPoint;
+        }
+
+        return CompilerOptions.FileNames[FileIndex];
+    }
 
     private static bool TryValidateIdentifier(Token token)
     {
@@ -23,6 +33,8 @@ public sealed partial record Token
         
         // Characters with the Other_ID_Start and Other_ID_Continue properties can be found here: https://www.unicode.org/Public/15.0.0/ucd/PropList.txt
 
+        var fileName = token.FetchFile();
+
         if (!token.Value.IsNormalized(NormalizationForm.FormKC))
         {
             try
@@ -37,10 +49,10 @@ public sealed partial record Token
                 // If a string contains non-normalized characters followed by invalid Unicode characters, 
                 // the Normalize method will throw an ArgumentException.
                 // Return false and report a syntax error:
-                ErrorHandler.Analyzer.Report(FileName, token, ErrorType.Syntax, """
+                ErrorHandler.Analyzer.Report(fileName, token, ErrorType.Syntax, """
                 Conversion into Normalization Form NFKC failed due to an invalid character. Identifiers must not contain invalid Unicode characters.
                 """);
-                ErrorHandler.Analyzer.PrettyError(FileName, token);
+                ErrorHandler.Analyzer.PrettyError(fileName, token);
 
                 return false;
             }
@@ -48,10 +60,10 @@ public sealed partial record Token
 
         if (token.Value.Length >= 64)
         {
-            ErrorHandler.Analyzer.Report(FileName, token, ErrorType.Syntax, """
+            ErrorHandler.Analyzer.Report(fileName, token, ErrorType.Syntax, """
             Identifiers (user-defined words) must have a length less than or equal to 63 characters.
             """);
-            ErrorHandler.Analyzer.PrettyError(FileName, token);
+            ErrorHandler.Analyzer.PrettyError(fileName, token);
             
             return false;
         }
@@ -87,10 +99,10 @@ public sealed partial record Token
 
         if (!matchesStartCategory && !matchesOtherStartCharacters)
         {
-            ErrorHandler.Analyzer.Report(FileName, token, ErrorType.Syntax, """
+            ErrorHandler.Analyzer.Report(fileName, token, ErrorType.Syntax, """
             Invalid character at the start of this identifier.
             """);
-            ErrorHandler.Analyzer.PrettyError(FileName, token);
+            ErrorHandler.Analyzer.PrettyError(fileName, token);
             
             return false;
         }
@@ -141,10 +153,10 @@ public sealed partial record Token
         {
             if (!matchesContinueCategory(character) && !matchesOtherContinueCharacters(character))
             {
-                ErrorHandler.Analyzer.Report(FileName, token, ErrorType.Syntax, """
+                ErrorHandler.Analyzer.Report(fileName, token, ErrorType.Syntax, """
                 Invalid character in the middle of this identifier.
                 """);
-                ErrorHandler.Analyzer.PrettyError(FileName, token);
+                ErrorHandler.Analyzer.PrettyError(fileName, token);
                 
                 return false;
             }
@@ -152,10 +164,10 @@ public sealed partial record Token
 
         if (token.Value[token.Value.Length - 1] is '\u002D' or '\u005F' or '\u30FB')
         {
-            ErrorHandler.Analyzer.Report(FileName, token, ErrorType.Syntax, """
+            ErrorHandler.Analyzer.Report(fileName, token, ErrorType.Syntax, """
             Invalid character at the end of this identifier.
             """);
-            ErrorHandler.Analyzer.PrettyError(FileName, token);
+            ErrorHandler.Analyzer.PrettyError(fileName, token);
             
             return false;
         }
@@ -257,11 +269,6 @@ public sealed partial record Token
 
     public static List<Token> FromValue(List<Token> tokens)
     {
-        FileName = Otterkit.Options.EntryPoint;
-
-        var index = 0;
-        var fileIndex = 0;
-
         Token previousToken = tokens[0];
         foreach (Token token in tokens)
         {
@@ -269,13 +276,7 @@ public sealed partial record Token
             token.Scope = FindScope(token, previousToken);
             token.Context = FindContext(token);
 
-            if (token.Type is TokenType.EOF && index < tokens.Count - 1)
-            {
-                FileName = Otterkit.Options.FileNames[fileIndex++];
-            }
-
             previousToken = token;
-            index++;
         }
 
         // If a lexing error has occured, terminate the compilation process.

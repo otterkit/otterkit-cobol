@@ -6,7 +6,6 @@ namespace Otterkit;
 public static partial class Preprocessor
 {
     private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Shared;
-    private static int LineCount = 1;
 
     public static async ValueTask<List<Token>> ReadSourceFile(string sourceFile)
     {
@@ -18,22 +17,24 @@ public static partial class Preprocessor
 
         var buffer = readAsync.Buffer;
 
+        Lexer.LineIndex = 1;
+
         while (SourceLineExists(ref buffer, out ReadOnlySequence<byte> line))
         {
             var lineLength = (int)line.Length;
             var sharedArray = ArrayPool.Rent(lineLength);
         
             line.CopyTo(sharedArray);
-        
-            Lexer.TokenizeLine(Options.SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), LineCount);
+       
+            Lexer.TokenizeLine(Options.SourceTokens, sharedArray.AsSpan().Slice(0, lineLength));
         
             ArrayPool.Return(sharedArray);
-            LineCount++;
+            
+            Lexer.LineIndex++;
         }
 
         pipeReader.AdvanceTo(buffer.End);
 
-        LineCount = 1;
         Options.SourceTokens.Add(new Token("EOF", TokenType.EOF, -5, -5){ Context = TokenContext.IsEOF });
 
         return Options.SourceTokens;
@@ -49,6 +50,8 @@ public static partial class Preprocessor
 
         var buffer = readAsync.Buffer;
 
+        Lexer.LineIndex = 1;
+
         List<Token> copybookTokens = new();
 
         while (SourceLineExists(ref buffer, out ReadOnlySequence<byte> line))
@@ -58,15 +61,14 @@ public static partial class Preprocessor
         
             line.CopyTo(sharedArray);
         
-            Lexer.TokenizeLine(copybookTokens, sharedArray.AsSpan().Slice(0, lineLength), LineCount);
+            Lexer.TokenizeLine(copybookTokens, sharedArray.AsSpan().Slice(0, lineLength));
         
             ArrayPool.Return(sharedArray);
-            LineCount++;
+
+            Lexer.LineIndex++;
         }
 
         pipeReader.AdvanceTo(buffer.End);
-
-        LineCount = 1;
 
         return copybookTokens;
     }

@@ -1102,7 +1102,7 @@ public static partial class Analyzer
                     Expected("END");
                     Expected("PROGRAM");
 
-                    EndMarkerErrorHandling();
+                    EndMarkerErrorHandling(sourceId);
 
                     break;
 
@@ -1113,7 +1113,7 @@ public static partial class Analyzer
                     Expected("END");
                     Expected("FUNCTION");
 
-                    EndMarkerErrorHandling();
+                    EndMarkerErrorHandling(sourceId);
 
                     break;
 
@@ -1156,7 +1156,7 @@ public static partial class Analyzer
                     Expected("END");
                     Expected("CLASS");
 
-                    EndMarkerErrorHandling();
+                    EndMarkerErrorHandling(sourceId);
 
                     break;
 
@@ -1166,7 +1166,7 @@ public static partial class Analyzer
                     Expected("END");
                     Expected("INTERFACE");
 
-                    EndMarkerErrorHandling();
+                    EndMarkerErrorHandling(sourceId);
 
                     break;
 
@@ -1222,20 +1222,18 @@ public static partial class Analyzer
             }
         }
     
-        void EndMarkerErrorHandling()
+        void EndMarkerErrorHandling(Token token)
         {
-            var sourceId = SourceId.Pop();
-
-            if (!Identifier(sourceId, false))
+            if (!Identifier(token, false))
             {
                 Error
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """
                     Unexpected user-defined name.
                     """)
                 .WithSourceLine(Current(), FileName, $"""
-                    Expected the following identifier: {sourceId.value}.
+                    Expected the following identifier: {token.value}.
                     """)
-                .WithSourceNote(sourceId, FileName)
+                .WithSourceNote(token, FileName)
                 .WithNote("""
                     The end marker must match its source unit definition. 
                     """)

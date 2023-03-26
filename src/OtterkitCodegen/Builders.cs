@@ -138,13 +138,13 @@ public class DataItemBuilder
     public void BuildDataItem(CurrentScope section = CurrentScope.WorkingStorage)
     {
         Section = section;
-        if (Current().type != TokenType.Numeric)
+        if (Current().Type != TokenType.Numeric)
             throw new ArgumentException("Unexpected Input: Data Item Builder has to start with a level number");
 
-        LevelNumber = Current().value;
+        LevelNumber = Current().Value;
         Continue(1);
 
-        Identifier = Current().value;
+        Identifier = Current().Value;
         Continue(1);
 
         if (LevelNumber.Equals("77"))
@@ -184,15 +184,15 @@ public class DataItemBuilder
                 Continue(1);
                 if (CurrentEquals("IS")) Continue(1);
 
-                DataType = Current().value;
+                DataType = Current().Value;
                 if (CurrentEquals("S9")) isSigned = true;
 
                 Continue(2);
 
-                Length = int.Parse(Current().value);
+                Length = int.Parse(Current().Value);
 
                 if ((DataType.Equals("9") || DataType.Equals("S9")) && LookaheadEquals(2, "V9"))
-                    FractionalLength = int.Parse(Lookahead(4).value);
+                    FractionalLength = int.Parse(Lookahead(4).Value);
             }
 
             if ((CurrentEquals("IS") && LookaheadEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
@@ -206,7 +206,7 @@ public class DataItemBuilder
                 if (LookaheadEquals(1, "EXTERNAL"))
                 {
                     Continue(2);
-                    externalizedName = FormatIdentifier(Current().value[1..^1]);
+                    externalizedName = FormatIdentifier(Current().Value[1..^1]);
                 }
 
                 ExternalName = externalizedName;
@@ -215,7 +215,7 @@ public class DataItemBuilder
             if (CurrentEquals("VALUE"))
             {
                 Continue(1);
-                DataValue = Current().value;
+                DataValue = Current().Value;
             }
 
             Continue(1);
@@ -327,7 +327,7 @@ public class DataItemBuilder
             Continue(1);
             if (CurrentEquals("OF")) Continue(1);
 
-            string FormattedValue = FormatIdentifier(Current().value);
+            string FormattedValue = FormatIdentifier(Current().Value);
             CompiledDataItem += $"new(Encoding.UTF8.GetBytes({FormattedValue}.Length.ToString()));";
         }
 
@@ -336,15 +336,15 @@ public class DataItemBuilder
             Continue(1);
             if (CurrentEquals("OF")) Continue(1);
 
-            string FormattedValue = FormatIdentifier(Current().value);
+            string FormattedValue = FormatIdentifier(Current().Value);
             CompiledDataItem += $"new(Encoding.UTF8.GetBytes({FormattedValue}.Bytes.Length.ToString()));";
         }
 
-        if (Current().type == TokenType.String)
-            CompiledDataItem += $"new({Current().value}u8);";
+        if (Current().Type == TokenType.String)
+            CompiledDataItem += $"new({Current().Value}u8);";
 
-        if (Current().type == TokenType.Numeric)
-            CompiledDataItem += $"new(\"{Current().value}\"u8);";
+        if (Current().Type == TokenType.Numeric)
+            CompiledDataItem += $"new(\"{Current().Value}\"u8);";
 
         Continue(1);
 
@@ -359,7 +359,7 @@ public class DataItemBuilder
 
         static string dataTypes(Token current)
         {
-            return current.value switch
+            return current.Value switch
             {
                 "X" => "Alphanumeric",
                 "A" => "Alphabetic",
@@ -383,16 +383,16 @@ public class DataItemBuilder
 
                 Continue(2);
 
-                Length = int.Parse(Current().value);
+                Length = int.Parse(Current().Value);
 
-                if (Lookahead(1).value.Equals("V9")) FractionalLength = int.Parse(Lookahead(4).value);
+                if (Lookahead(1).Value.Equals("V9")) FractionalLength = int.Parse(Lookahead(4).Value);
 
             }
 
             if (CurrentEquals("VALUE"))
             {
                 Continue(1);
-                DataValue = Current().value;
+                DataValue = Current().Value;
             }
 
             Continue(1);
@@ -441,12 +441,12 @@ public class DataItemBuilder
 
     bool LookaheadEquals(int lookahead, string stringToCompare)
     {
-        return Lookahead(lookahead).value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
+        return Lookahead(lookahead).Value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
     }
 
     bool CurrentEquals(string stringToCompare)
     {
-        return Current().value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
+        return Current().Value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
     }
 }
 
@@ -507,20 +507,20 @@ public class StatementBuilder
         string displayStrings = string.Empty;
         Continue(1);
 
-        while (Current().type is TokenType.Identifier or TokenType.Numeric or TokenType.String)
+        while (Current().Type is TokenType.Identifier or TokenType.Numeric or TokenType.String)
         {
             string identifier;
-            if (Current().type == TokenType.Identifier)
+            if (Current().Type == TokenType.Identifier)
             {
-                identifier = FormatIdentifier(Current().value);
+                identifier = FormatIdentifier(Current().Value);
                 displayStrings += $"{identifier}.Display, ";
             }
 
-            if (Current().type == TokenType.Numeric)
-                displayStrings += $"\"{Current().value}\", ";
+            if (Current().Type == TokenType.Numeric)
+                displayStrings += $"\"{Current().Value}\", ";
 
-            if (Current().type == TokenType.String)
-                displayStrings += $"\"{Current().value}\", ";
+            if (Current().Type == TokenType.String)
+                displayStrings += $"\"{Current().Value}\", ";
 
             Continue(1);
         }
@@ -529,10 +529,10 @@ public class StatementBuilder
         {
             Continue(1);
             if (CurrentEquals("STANDARD-OUTPUT"))
-                CompiledStatement += $"\"{Current().value}\", ";
+                CompiledStatement += $"\"{Current().Value}\", ";
 
             if (CurrentEquals("STANDARD-ERROR"))
-                CompiledStatement += $"\"{Current().value}\", ";
+                CompiledStatement += $"\"{Current().Value}\", ";
 
             Continue(1);
         }
@@ -554,7 +554,7 @@ public class StatementBuilder
     private void CALL()
     {
         Continue(1);
-        string ProgramName = $"{FormatIdentifier(Current().value[1..^1])}";
+        string ProgramName = $"{FormatIdentifier(Current().Value[1..^1])}";
         CompiledStatement += $"{ProgramName} {ProgramName} = new();";
         CompiledStatement += "\n        Statements.CALL(";
         CompiledStatement += $"() => {ProgramName}.Procedure());";
@@ -566,7 +566,7 @@ public class StatementBuilder
         CompiledStatement += "Statements.ACCEPT(";
         // Statements.ACCEPT(dataItem, from, format)
         Continue(1);
-        CompiledStatement += $"{FormatIdentifier(Current().value)}, ";
+        CompiledStatement += $"{FormatIdentifier(Current().Value)}, ";
         Continue(1);
 
         if (!CurrentEquals("FROM"))
@@ -575,37 +575,37 @@ public class StatementBuilder
         if (CurrentEquals("FROM"))
         {
             Continue(1);
-            switch (Current().value.ToUpperInvariant())
+            switch (Current().Value.ToUpperInvariant())
             {
                 case "STANDARD-INPUT":
                 case "COMMAND-LINE":
-                    CompiledStatement += $"\"{Current().value}\");";
+                    CompiledStatement += $"\"{Current().Value}\");";
                     break;
 
                 case "DATE":
-                    CompiledStatement += $"\"{Current().value}\"";
+                    CompiledStatement += $"\"{Current().Value}\"";
                     if (LookaheadEquals(1, "YYYYMMDD"))
-                        CompiledStatement += $", \"{Lookahead(1).value}\");";
+                        CompiledStatement += $", \"{Lookahead(1).Value}\");";
 
                     if (!LookaheadEquals(1, "YYYYMMDD"))
                         CompiledStatement += ");";
                     break;
 
                 case "DAY":
-                    CompiledStatement += $"\"{Current().value}\"";
+                    CompiledStatement += $"\"{Current().Value}\"";
                     if (LookaheadEquals(1, "YYYYDDD"))
-                        CompiledStatement += $", \"{Lookahead(1).value}\");";
+                        CompiledStatement += $", \"{Lookahead(1).Value}\");";
 
                     if (!LookaheadEquals(1, "YYYYDDD"))
                         CompiledStatement += ");";
                     break;
 
                 case "DAY-OF-WEEK":
-                    CompiledStatement += $"\"{Current().value}\");";
+                    CompiledStatement += $"\"{Current().Value}\");";
                     break;
 
                 case "TIME":
-                    CompiledStatement += $"\"{Current().value}\");";
+                    CompiledStatement += $"\"{Current().Value}\");";
                     break;
             }
         }
@@ -672,16 +672,16 @@ public class StatementBuilder
             Continue(1);
         }
 
-        switch (Current().type)
+        switch (Current().Type)
         {
             case TokenType.Identifier:
-                CompiledStatement += $"{FormatIdentifier(Current().value)}.Display);";
+                CompiledStatement += $"{FormatIdentifier(Current().Value)}.Display);";
                 break;
             case TokenType.Numeric:
-                CompiledStatement += $"\"{Current().value}\");";
+                CompiledStatement += $"\"{Current().Value}\");";
                 break;
             case TokenType.String:
-                CompiledStatement += $"{Current().value});";
+                CompiledStatement += $"{Current().Value});";
                 break;
         }
         ExportStatement();
@@ -697,16 +697,16 @@ public class StatementBuilder
 
     bool LookaheadEquals(int lookahead, string stringToCompare)
     {
-        return Lookahead(lookahead).value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
+        return Lookahead(lookahead).Value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
     }
 
     bool CurrentEquals(string stringToCompare)
     {
-        return Current().value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
+        return Current().Value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
     }
 
     bool CurrentEquals(TokenContext contextToCompare)
     {
-        return Current().context == contextToCompare;
+        return Current().Context == contextToCompare;
     }
 }

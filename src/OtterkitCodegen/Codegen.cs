@@ -9,11 +9,11 @@ public static class Codegen
         ProgramBuilder compiled = new();
         int index = 0;
 
-        while (Current().scope is not TokenScope.EnvironmentDivision and not TokenScope.DataDivision and not TokenScope.ProcedureDivision)
+        while (Current().Scope is not TokenScope.EnvironmentDivision and not TokenScope.DataDivision and not TokenScope.ProcedureDivision)
         {
             if (CurrentEquals("PROGRAM-ID"))
             {
-                compiled.DefineIdentification(Lookahead(2).value);
+                compiled.DefineIdentification(Lookahead(2).Value);
                 if (ProgramEntryPoint == string.Empty)
                 {
                     ProgramEntryPoint = compiled.Identification;
@@ -21,13 +21,13 @@ public static class Codegen
             }
 
             if (CurrentEquals("FUNCTION-ID"))
-                compiled.DefineIdentification(Lookahead(2).value);
+                compiled.DefineIdentification(Lookahead(2).Value);
 
             Continue();
         }
 
         CurrentScope scope = CurrentScope.WorkingStorage;
-        while (Current().scope is not TokenScope.ProcedureDivision)
+        while (Current().Scope is not TokenScope.ProcedureDivision)
         {
             if (CurrentEquals("WORKING-STORAGE"))
                 scope = CurrentScope.WorkingStorage;
@@ -35,19 +35,19 @@ public static class Codegen
             if (CurrentEquals("LOCAL-STORAGE"))
                 scope = CurrentScope.LocalStorage;
 
-            if (Current().type == TokenType.Numeric && (CurrentEquals("01") || CurrentEquals("1")) && !LookaheadEquals(2, "CONSTANT"))
+            if (Current().Type == TokenType.Numeric && (CurrentEquals("01") || CurrentEquals("1")) && !LookaheadEquals(2, "CONSTANT"))
             {
                 DataItemBuilder Record = new(compiled, Continue, Current, Lookahead);
                 Record.BuildDataItem(scope);
             }
 
-            if (Current().type == TokenType.Numeric && LookaheadEquals(2, "CONSTANT"))
+            if (Current().Type == TokenType.Numeric && LookaheadEquals(2, "CONSTANT"))
             {
                 DataItemBuilder Constant = new(compiled, Continue, Current, Lookahead);
                 Constant.BuildDataItem(scope);
             }
 
-            if (Current().type == TokenType.Numeric && Current().value.Equals("77"))
+            if (Current().Type == TokenType.Numeric && Current().Value.Equals("77"))
             {
                 DataItemBuilder SevenSeven = new(compiled, Continue, Current, Lookahead);
                 SevenSeven.BuildDataItem(scope);
@@ -100,7 +100,7 @@ public static class Codegen
 
         bool LookaheadEquals(int lookahead, string stringToCompare)
         {
-            return Lookahead(lookahead).value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
+            return Lookahead(lookahead).Value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
         }
 
         Token Current()
@@ -110,7 +110,7 @@ public static class Codegen
 
         bool CurrentEquals(string stringToCompare)
         {
-            return Current().value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
+            return Current().Value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
         }
 
         void Continue(int amount = 1)

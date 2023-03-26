@@ -212,7 +212,7 @@ public static partial class Analyzer
     /// </summary>
     private static bool LookaheadEquals(int lookahead, string value)
     {
-        if (Lookahead(lookahead).value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
+        if (Lookahead(lookahead).Value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
 
         return false;
     }
@@ -221,7 +221,7 @@ public static partial class Analyzer
     {
         foreach (var value in valuesToCompare)
         {
-            if (Lookahead(lookahead).value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
+            if (Lookahead(lookahead).Value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
         }
 
         return false;
@@ -237,7 +237,7 @@ public static partial class Analyzer
     {
         foreach (var type in tokenTypesToCompare)
         {
-            if (Lookahead(lookahead).type.Equals(type)) return true;
+            if (Lookahead(lookahead).Type.Equals(type)) return true;
         }
 
         return false;
@@ -260,7 +260,7 @@ public static partial class Analyzer
 
     private static bool CurrentEquals(string value)
     {
-        if (Current().value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
+        if (Current().Value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
         
         return false;
     }
@@ -273,7 +273,7 @@ public static partial class Analyzer
     {
         foreach (var value in valuesToCompare)
         {
-            if (Current().value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
+            if (Current().Value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
         }
 
         return false;
@@ -281,7 +281,7 @@ public static partial class Analyzer
 
     private static bool CurrentEquals(TokenType tokenType)
     {
-        if (Current().type == tokenType) return true;
+        if (Current().Type == tokenType) return true;
         
         return false;
     }
@@ -294,7 +294,7 @@ public static partial class Analyzer
     {
         foreach (var type in tokenTypesToCompare)
         {
-            if (Current().type == type) return true;
+            if (Current().Type == type) return true;
         }
 
         return false;
@@ -308,7 +308,7 @@ public static partial class Analyzer
     {
         foreach (var context in tokenContextsToCompare)
         {
-            if (Current().context.Equals(context)) return true;
+            if (Current().Context.Equals(context)) return true;
         }
 
         return false;
@@ -388,7 +388,7 @@ public static partial class Analyzer
                 Unexpected token.
                 """)
             .WithSourceLine(lookahead, FileName, $"""
-                {custom ?? $"Expected {expected}, instead of {Current().value}"}
+                {custom ?? $"Expected {expected}, instead of {Current().Value}"}
                 """)
             .CloseError();
 
@@ -428,7 +428,7 @@ public static partial class Analyzer
                 Unexpected token.
                 """)
             .WithSourceLine(Current(), FileName, $"""
-                $"Expected '{expected}' here, found '{Current().value}' instead"
+                $"Expected '{expected}' here, found '{Current().Value}' instead"
                 """)
             .CloseError();
 
@@ -487,14 +487,14 @@ public static partial class Analyzer
             return;
         }
 
-        string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
+        string dataItemHash = $"{SourceId.Peek()}#{Current().Value}";
 
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
             if (!SymbolTable.SymbolExists(dataItemHash))
             {
                 ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-                The name "{Current().value}" does not exist in the context of the current source unit
+                The name "{Current().Value}" does not exist in the context of the current source unit
                 """);
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
@@ -569,14 +569,14 @@ public static partial class Analyzer
             return;
         }
 
-        string dataItemHash = $"{SourceId.Peek()}#{Current().value}";
+        string dataItemHash = $"{SourceId.Peek()}#{Current().Value}";
 
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
             if (!SymbolTable.SymbolExists(dataItemHash))
             {
                 ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-                The name "{Current().value}" does not exist in the context of the current source unit
+                The name "{Current().Value}" does not exist in the context of the current source unit
                 """);
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
@@ -946,7 +946,7 @@ public static partial class Analyzer
             return true;
         }
 
-        var isExpectedToken = CurrentEquals(identifierToken.value);
+        var isExpectedToken = CurrentEquals(identifierToken.Value);
 
         if (!isExpectedToken && useDefaultError)
         {
@@ -955,7 +955,7 @@ public static partial class Analyzer
                 Unexpected user-defined name.
                 """)
             .WithSourceLine(Current(), FileName, $"""
-                Expected the following identifier: {identifierToken.value}.
+                Expected the following identifier: {identifierToken.Value}.
                 """)
             .CloseError();
 

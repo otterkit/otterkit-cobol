@@ -169,7 +169,7 @@ public static partial class Preprocessor
                 var copyIndex = index;
                 Continue();
 
-                var copybookTokens = ReadCopybook(Current().value).Result;
+                var copybookTokens = ReadCopybook(Current().Value).Result;
 
                 Continue();
 
@@ -189,7 +189,7 @@ public static partial class Preprocessor
 
         bool CurrentEquals(string stringToCompare)
         {
-            return Current().value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
+            return Current().Value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
         }
 
         void Continue()

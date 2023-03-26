@@ -478,7 +478,7 @@ public static partial class Analyzer
                 SourceId.Push(Current());
                 SourceType.Push(SourceUnit.MethodGetter);
 
-                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek().value}", SymbolType.SourceUnitSignature);
+                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek().Value}", SymbolType.SourceUnitSignature);
 
                 Identifier();
 
@@ -491,7 +491,7 @@ public static partial class Analyzer
                 SourceId.Push(Current());
                 SourceType.Push(SourceUnit.MethodSetter);
 
-                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek().value}", SymbolType.SourceUnitSignature);
+                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek().Value}", SymbolType.SourceUnitSignature);
 
                 Identifier();
             }
@@ -887,7 +887,7 @@ public static partial class Analyzer
                             signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}");
                         }
 
-                        signature.Parameters.Add(Current().value);
+                        signature.Parameters.Add(Current().Value);
                         signature.IsOptional.Add(optional);
                         signature.IsByRef.Add(true);
 
@@ -900,7 +900,7 @@ public static partial class Analyzer
                                 optional = true;
                                 Expected("OPTIONAL");
                             }
-                            signature.Parameters.Add(Current().value);
+                            signature.Parameters.Add(Current().Value);
                             signature.IsOptional.Add(optional);
                             signature.IsByRef.Add(true);
                             Identifier();
@@ -932,13 +932,13 @@ public static partial class Analyzer
                             signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}");
                         }
 
-                        signature.Parameters.Add(Current().value);
+                        signature.Parameters.Add(Current().Value);
                         signature.IsOptional.Add(false);
                         signature.IsByRef.Add(false);
                         Identifier();
                         while (CurrentEquals(TokenType.Identifier))
                         {
-                            signature.Parameters.Add(Current().value);
+                            signature.Parameters.Add(Current().Value);
                             signature.IsOptional.Add(false);
                             signature.IsByRef.Add(false);
                             Identifier();
@@ -1029,7 +1029,7 @@ public static partial class Analyzer
                 signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}");
             }
 
-            signature.Returning = Current().value;
+            signature.Returning = Current().Value;
             Identifier();
         }
 
@@ -1231,7 +1231,7 @@ public static partial class Analyzer
                     Unexpected user-defined name.
                     """)
                 .WithSourceLine(Current(), FileName, $"""
-                    Expected the following identifier: {token.value}.
+                    Expected the following identifier: {token.Value}.
                     """)
                 .WithSourceNote(token, FileName)
                 .WithNote("""

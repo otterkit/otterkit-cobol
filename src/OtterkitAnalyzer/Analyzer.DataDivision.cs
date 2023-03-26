@@ -58,7 +58,7 @@ public static partial class Analyzer
         CurrentSection = CurrentScope.WorkingStorage;
 
         Expected(".");
-        while (Current().type == TokenType.Numeric)
+        while (Current().Type == TokenType.Numeric)
             Entries();
     }
 
@@ -69,7 +69,7 @@ public static partial class Analyzer
         CurrentSection = CurrentScope.LocalStorage;
 
         Expected(".");
-        while (Current().type is TokenType.Numeric)
+        while (Current().Type is TokenType.Numeric)
             Entries();
     }
 
@@ -80,7 +80,7 @@ public static partial class Analyzer
         CurrentSection = CurrentScope.LinkageSection;
 
         Expected(".");
-        while (Current().type is TokenType.Numeric)
+        while (Current().Type is TokenType.Numeric)
             Entries();
     }
 
@@ -106,11 +106,11 @@ public static partial class Analyzer
     private static void RecordEntry()
     {
         BaseEntry();
-        _ = int.TryParse(Current().value, out int outInt);
+        _ = int.TryParse(Current().Value, out int outInt);
         while (outInt > 1 && outInt < 50)
         {
             BaseEntry();
-            _ = int.TryParse(Current().value, out outInt);
+            _ = int.TryParse(Current().Value, out outInt);
         }
 
         LevelStack.Clear();
@@ -119,11 +119,11 @@ public static partial class Analyzer
 
     private static void BaseEntry()
     {
-        int levelNumber = int.Parse(Current().value);
+        int levelNumber = int.Parse(Current().Value);
         Number();
 
         Token itemToken = Current();
-        string dataName = itemToken.value;
+        string dataName = itemToken.Value;
 
         CheckLevelNumber(levelNumber);
         
@@ -157,7 +157,7 @@ public static partial class Analyzer
         {
             ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
             Expected data division clauses or a separator period after this data item's identifier.
-            Token found ("{Current().value}") was not a data division clause reserved word.
+            Token found ("{Current().Value}") was not a data division clause reserved word.
             """);
             ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
@@ -180,7 +180,7 @@ public static partial class Analyzer
                 {
                     Expected("AS");
                     dataReference.IsExternal = true;
-                    dataReference.ExternalName = Current().value;
+                    dataReference.ExternalName = Current().Value;
 
                     String("""
                     Missing externalized name, the "AS" word on the EXTERNAL clause must be followed by an alphanumeric or national literal
@@ -190,7 +190,7 @@ public static partial class Analyzer
                 if (!CurrentEquals("AS"))
                 {
                     dataReference.IsExternal = true;
-                    dataReference.ExternalName = Current().value;
+                    dataReference.ExternalName = Current().Value;
                 }
             }
 
@@ -318,9 +318,9 @@ public static partial class Analyzer
 
                 var picture = Current();
             
-                var isValidPicture = PictureString(picture.value, out var size);
+                var isValidPicture = PictureString(picture.Value, out var size);
 
-                dataReference.PictureString = picture.value;
+                dataReference.PictureString = picture.Value;
 
                 dataReference.PictureLength = size;
 
@@ -343,13 +343,13 @@ public static partial class Analyzer
 
                 if (CurrentEquals(TokenType.String))
                 {
-                    dataReference.DefaultValue = Current().value;
+                    dataReference.DefaultValue = Current().Value;
                     String();
                 }
 
                 if (CurrentEquals(TokenType.Numeric))
                 {
-                    dataReference.DefaultValue = Current().value;
+                    dataReference.DefaultValue = Current().Value;
                     Number();
                 }
             }
@@ -369,7 +369,7 @@ public static partial class Analyzer
             }
             else
             {
-                _ = int.TryParse(Lookahead(1).value, out int outInt);
+                _ = int.TryParse(Lookahead(1).Value, out int outInt);
                 var currentLevel = LevelStack.Peek();
 
                 if (currentLevel == 1 && outInt >= 2 && outInt <= 49 || outInt >= 2 && outInt <= 49 && outInt > currentLevel)
@@ -406,10 +406,10 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
-        var levelNumber = int.Parse(Current().value);
+        var levelNumber = int.Parse(Current().Value);
         Number();
 
-        var dataName = Current().value;
+        var dataName = Current().Value;
         Identifier();
 
         if (SymbolTable.DataLocals.ReferenceExists(dataName))
@@ -443,7 +443,7 @@ public static partial class Analyzer
         else
         {
             Optional("AS");
-            switch (Current().type)
+            switch (Current().Type)
             {
                 case TokenType.String:
                     String();
@@ -604,7 +604,7 @@ public static partial class Analyzer
             Expected("88");
 
             Token itemToken = Current();
-            string dataName = itemToken.value;
+            string dataName = itemToken.Value;
 
             Identifier();
 
@@ -634,9 +634,9 @@ public static partial class Analyzer
                 Optional("IS");
             }
 
-            var firstConditionType = Current().type;
+            var firstConditionType = Current().Type;
 
-            switch (Current().type)
+            switch (Current().Type)
             {
                 case TokenType.Numeric: Number(); break;
                 
@@ -679,7 +679,7 @@ public static partial class Analyzer
     {
         Expected("USAGE");
         Optional("IS");
-        switch (Current().value)
+        switch (Current().Value)
         {
             case "BINARY":
                 Expected("BINARY");
@@ -690,7 +690,7 @@ public static partial class Analyzer
             case "BINARY-SHORT":
             case "BINARY-LONG":
             case "BINARY-DOUBLE":
-                Expected(Current().value);
+                Expected(Current().Value);
                 if (CurrentEquals("SIGNED"))
                 {
                     Expected("SIGNED");
@@ -708,7 +708,7 @@ public static partial class Analyzer
 
             case "COMP":
             case "COMPUTATIONAL":
-                Expected(Current().value);
+                Expected(Current().Value);
                 dataReference.UsageType = UsageType.Computational;
                 break;
 
@@ -817,7 +817,7 @@ public static partial class Analyzer
                 {
                     Optional("TO");
                     dataReference.UsageType = UsageType.DataPointer;
-                    dataReference.UsageContext = Current().value;
+                    dataReference.UsageContext = Current().Value;
                     Identifier();
                 }
                 else
@@ -830,7 +830,7 @@ public static partial class Analyzer
                 Expected("FUNCTION-POINTER");
                 Optional("TO");
                 dataReference.UsageType = UsageType.FunctionPointer;
-                dataReference.UsageContext = Current().value;
+                dataReference.UsageContext = Current().Value;
                 Identifier();
                 break;
 
@@ -840,7 +840,7 @@ public static partial class Analyzer
                 {
                     Optional("TO");
                     dataReference.UsageType = UsageType.ProgramPointer;
-                    dataReference.UsageContext = Current().value;
+                    dataReference.UsageContext = Current().Value;
                     Identifier();
                 }
                 else

@@ -12,14 +12,14 @@ public static partial class Analyzer
 
     private static void ParseStatements(bool isNested = false)
     {
-        bool errorCheck = Current().context != TokenContext.IsStatement
+        bool errorCheck = Current().Context != TokenContext.IsStatement
             && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, ".") && !isNested)
             && !(CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION") && !isNested);
 
         if (errorCheck)
         {
             ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-            Expected the start of a statement. Instead found "{Current().value}"
+            Expected the start of a statement. Instead found "{Current().Value}"
             """);
             ErrorHandler.Analyzer.PrettyError(FileName, Current());
 
@@ -361,7 +361,7 @@ public static partial class Analyzer
             AnchorPoint("UPON", "WITH", "NO");
         }
 
-        switch (Current().type)
+        switch (Current().Type)
         {
             case TokenType.Identifier: Identifier(); break;
             case TokenType.Numeric: Number(); break;
@@ -377,7 +377,7 @@ public static partial class Analyzer
 
         while (IdentifierOrLiteral())
         {
-            switch (Current().type)
+            switch (Current().Type)
             {
                 case TokenType.Identifier: Identifier(); break;
                 case TokenType.Numeric: Number(); break;
@@ -753,7 +753,7 @@ public static partial class Analyzer
         if (CurrentEquals("TO") && LookaheadEquals(2, "GIVING"))
         {
             Optional("TO");
-            switch (Current().type)
+            switch (Current().Type)
             {
                 case TokenType.Identifier:
                     Identifier();
@@ -770,37 +770,37 @@ public static partial class Analyzer
             }
 
             Expected("GIVING");
-            if (Current().type != TokenType.Identifier)
+            if (Current().Type != TokenType.Identifier)
             {
                 ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
         else if (CurrentEquals("GIVING"))
         {
             Expected("GIVING");
-            if (Current().type != TokenType.Identifier)
+            if (Current().Type != TokenType.Identifier)
             {
                 ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
         else if (CurrentEquals("TO"))
         {
             Expected("TO");
-            if (Current().type != TokenType.Identifier)
+            if (Current().Type != TokenType.Identifier)
             {
                 ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
         else
@@ -819,27 +819,27 @@ public static partial class Analyzer
         bool isConditional = false;
 
         Expected("SUBTRACT");
-        if (Current().type != TokenType.Identifier && Current().type != TokenType.Numeric)
+        if (Current().Type != TokenType.Identifier && Current().Type != TokenType.Numeric)
         {
             ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
             ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
-        while (Current().type == TokenType.Identifier
-            || Current().type == TokenType.Numeric
+        while (Current().Type == TokenType.Identifier
+            || Current().Type == TokenType.Numeric
         )
         {
-            if (Current().type == TokenType.Identifier)
+            if (Current().Type == TokenType.Identifier)
                 Identifier();
 
-            if (Current().type == TokenType.Numeric)
+            if (Current().Type == TokenType.Numeric)
                 Number();
         }
 
         if (CurrentEquals("FROM") && LookaheadEquals(2, "GIVING"))
         {
             Optional("FROM");
-            switch (Current().type)
+            switch (Current().Type)
             {
                 case TokenType.Identifier:
                     Identifier();
@@ -856,25 +856,25 @@ public static partial class Analyzer
             }
 
             Expected("GIVING");
-            if (Current().type != TokenType.Identifier)
+            if (Current().Type != TokenType.Identifier)
             {
                 ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
         else if (CurrentEquals("FROM"))
         {
             Expected("FROM");
-            if (Current().type != TokenType.Identifier)
+            if (Current().Type != TokenType.Identifier)
             {
                 ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
         else
@@ -950,7 +950,7 @@ public static partial class Analyzer
 
         if (IsCategoryName())
         {
-            Expected(Current().value);
+            Expected(Current().Value);
             Optional("TO");
             Expected("VALUE");
         }
@@ -967,7 +967,7 @@ public static partial class Analyzer
             Expected("REPLACING");
             if (IsCategoryName())
             {
-                Expected(Current().value);
+                Expected(Current().Value);
                 Optional("DATA");
                 Expected("BY");
 
@@ -996,7 +996,7 @@ public static partial class Analyzer
 
                 while (IsCategoryName())
                 {
-                    Expected(Current().value);
+                    Expected(Current().Value);
                     Optional("DATA");
                     Expected("BY");
 
@@ -1039,7 +1039,7 @@ public static partial class Analyzer
     private static void INITIATE()
     {
         Expected("INITIATE");
-        if (Current().type != TokenType.Identifier)
+        if (Current().Type != TokenType.Identifier)
         {
             ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The INITIATE statement must only contain report entry identifiers defined in the report section.
@@ -1047,7 +1047,7 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
         Identifier();
-        while (Current().type == TokenType.Identifier)
+        while (Current().Type == TokenType.Identifier)
             Identifier();
 
         if (!CurrentEquals("."))
@@ -1236,7 +1236,7 @@ public static partial class Analyzer
         }
 
         Identifier();
-        while (Current().type == TokenType.Identifier)
+        while (Current().Type == TokenType.Identifier)
             Identifier();
 
 
@@ -1263,7 +1263,7 @@ public static partial class Analyzer
             }
 
             Identifier();
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
 
@@ -1297,7 +1297,7 @@ public static partial class Analyzer
         Expected("USING");
         Identifier();
         Identifier();
-        while (Current().type == TokenType.Identifier)
+        while (Current().Type == TokenType.Identifier)
             Identifier();
 
         if (CurrentEquals("OUTPUT"))
@@ -1317,7 +1317,7 @@ public static partial class Analyzer
         {
             Expected("GIVING");
             Identifier();
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
     }
@@ -1327,7 +1327,7 @@ public static partial class Analyzer
         bool isConditional = false;
 
         Expected("MULTIPLY");
-        switch (Current().type)
+        switch (Current().Type)
         {
             case TokenType.Identifier:
                 Identifier();
@@ -1346,7 +1346,7 @@ public static partial class Analyzer
         if (CurrentEquals("BY") && LookaheadEquals(2, "GIVING"))
         {
             Optional("BY");
-            switch (Current().type)
+            switch (Current().Type)
             {
                 case TokenType.Identifier:
                     Identifier();
@@ -1363,25 +1363,25 @@ public static partial class Analyzer
             }
 
             Expected("GIVING");
-            if (Current().type != TokenType.Identifier)
+            if (Current().Type != TokenType.Identifier)
             {
                 ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
         else if (CurrentEquals("BY"))
         {
             Expected("BY");
-            if (Current().type != TokenType.Identifier)
+            if (Current().Type != TokenType.Identifier)
             {
                 ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
         else
@@ -1401,7 +1401,7 @@ public static partial class Analyzer
         Expected("MOVE");
         if (CurrentEquals("CORRESPONDING") || CurrentEquals("CORR"))
         {
-            Expected(Current().value);
+            Expected(Current().Value);
             Identifier();
             Expected("TO");
             Identifier();
@@ -1416,17 +1416,17 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
-        if (Current().type == TokenType.Identifier)
+        if (Current().Type == TokenType.Identifier)
             Identifier();
 
-        else if (Current().type == TokenType.Numeric)
+        else if (Current().Type == TokenType.Numeric)
             Number();
 
-        else if (Current().type == TokenType.String)
+        else if (Current().Type == TokenType.String)
             String();
 
         Expected("TO");
-        if (Current().type != TokenType.Identifier)
+        if (Current().Type != TokenType.Identifier)
         {
             ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The MOVE statement must only contain data item identifiers after the "TO" reserved word.
@@ -1434,7 +1434,7 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
-        while (Current().type == TokenType.Identifier)
+        while (Current().Type == TokenType.Identifier)
             Identifier();
 
         if (!CurrentEquals(".") && !CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(TokenContext.IsStatement))
@@ -1567,7 +1567,7 @@ public static partial class Analyzer
         bool isConditional = false;
 
         Expected("DIVIDE");
-        switch (Current().type)
+        switch (Current().Type)
         {
             case TokenType.Identifier:
                 Identifier();
@@ -1586,7 +1586,7 @@ public static partial class Analyzer
         if ((CurrentEquals("BY") || CurrentEquals("INTO")) && LookaheadEquals(2, "GIVING") && !LookaheadEquals(4, "REMAINDER"))
         {
             Choice("BY", "INTO");
-            switch (Current().type)
+            switch (Current().Type)
             {
                 case TokenType.Identifier:
                     Identifier();
@@ -1603,19 +1603,19 @@ public static partial class Analyzer
             }
 
             Expected("GIVING");
-            if (Current().type != TokenType.Identifier)
+            if (Current().Type != TokenType.Identifier)
             {
                 ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
         else if ((CurrentEquals("BY") || CurrentEquals("INTO")) && LookaheadEquals(2, "GIVING") && LookaheadEquals(4, "REMAINDER"))
         {
             Choice("BY", "INTO");
-            switch (Current().type)
+            switch (Current().Type)
             {
                 case TokenType.Identifier:
                     Identifier();
@@ -1639,13 +1639,13 @@ public static partial class Analyzer
         else if (CurrentEquals("INTO"))
         {
             Expected("INTO");
-            if (Current().type != TokenType.Identifier)
+            if (Current().Type != TokenType.Identifier)
             {
                 ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
 
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
         else
@@ -1672,10 +1672,10 @@ public static partial class Analyzer
             Expected("FILE");
             Optional("OVERRIDE");
             Identifier();
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
-        else if (Current().type == TokenType.Identifier)
+        else if (Current().Type == TokenType.Identifier)
         {
             Identifier();
             Expected("RECORD");
@@ -1811,7 +1811,7 @@ public static partial class Analyzer
         Expected("GO");
         Optional("TO");
         Identifier();
-        if (CurrentEquals("DEPENDING") || Current().type == TokenType.Identifier)
+        if (CurrentEquals("DEPENDING") || Current().Type == TokenType.Identifier)
         {
             while (CurrentEquals(TokenType.Identifier)) Identifier();
 
@@ -1835,12 +1835,12 @@ public static partial class Analyzer
     private static void CLOSE()
     {
         Expected("CLOSE");
-        if (Current().type == TokenType.Identifier)
+        if (Current().Type == TokenType.Identifier)
         {
             Identifier();
             if (CurrentEquals("REEL") || CurrentEquals("UNIT"))
             {
-                Expected(Current().value);
+                Expected(Current().Value);
 
                 if (CurrentEquals("FOR") || CurrentEquals("REMOVAL"))
                 {
@@ -1864,12 +1864,12 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
 
-        while (Current().type == TokenType.Identifier)
+        while (Current().Type == TokenType.Identifier)
         {
             Identifier();
             if (CurrentEquals("REEL", "UNIT"))
             {
-                Expected(Current().value);
+                Expected(Current().Value);
 
                 if (CurrentEquals("FOR", "REMOVAL"))
                 {
@@ -1898,10 +1898,10 @@ public static partial class Analyzer
     private static void CANCEL()
     {
         Expected("CANCEL");
-        if (Current().type == TokenType.Identifier)
+        if (Current().Type == TokenType.Identifier)
             Identifier();
 
-        else if (Current().type == TokenType.String)
+        else if (Current().Type == TokenType.String)
             String();
 
         else
@@ -1913,12 +1913,12 @@ public static partial class Analyzer
             Continue();
         }
 
-        while (Current().type == TokenType.Identifier || Current().type == TokenType.String)
+        while (Current().Type == TokenType.Identifier || Current().Type == TokenType.String)
         {
-            if (Current().type == TokenType.Identifier)
+            if (Current().Type == TokenType.Identifier)
                 Identifier();
 
-            if (Current().type == TokenType.String)
+            if (Current().Type == TokenType.String)
                 String();
         }
 
@@ -2128,7 +2128,7 @@ public static partial class Analyzer
         Identifier();
         if (CurrentEquals("NEXT", "PREVIOUS"))
         {
-            Expected(Current().value);
+            Expected(Current().Value);
             isSequential = true;
         }
 
@@ -2228,10 +2228,10 @@ public static partial class Analyzer
         if (CurrentEquals("FROM"))
         {
             Expected("FROM");
-            if (Current().type == TokenType.String)
+            if (Current().Type == TokenType.String)
                 String();
 
-            else if (Current().type == TokenType.Numeric)
+            else if (Current().Type == TokenType.Numeric)
                 Number();
 
             else
@@ -2278,10 +2278,10 @@ public static partial class Analyzer
         {
             Expected("FROM");
 
-            if (Current().type == TokenType.Identifier)
+            if (Current().Type == TokenType.Identifier)
                 Identifier();
 
-            else if (Current().type == TokenType.Numeric)
+            else if (Current().Type == TokenType.Numeric)
                 Number();
 
             else
@@ -2727,7 +2727,7 @@ public static partial class Analyzer
         }
 
         Identifier();
-        while (Current().type == TokenType.Identifier)
+        while (Current().Type == TokenType.Identifier)
             Identifier();
 
 
@@ -2754,7 +2754,7 @@ public static partial class Analyzer
             }
 
             Identifier();
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
 
@@ -2810,7 +2810,7 @@ public static partial class Analyzer
         {
             Expected("USING");
             Identifier();
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
 
@@ -2831,7 +2831,7 @@ public static partial class Analyzer
         {
             Expected("GIVING");
             Identifier();
-            while (Current().type == TokenType.Identifier)
+            while (Current().Type == TokenType.Identifier)
                 Identifier();
         }
     }
@@ -2880,7 +2880,7 @@ public static partial class Analyzer
             Optional("WITH");
             Choice("NORMAL", "ERROR");
             Optional("STATUS");
-            switch (Current().type)
+            switch (Current().Type)
             {
                 case TokenType.Identifier:
                     Identifier();
@@ -2965,7 +2965,7 @@ public static partial class Analyzer
     private static void TERMINATE()
     {
         Expected("TERMINATE");
-        if (Current().type != TokenType.Identifier)
+        if (Current().Type != TokenType.Identifier)
         {
             ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The TERMINATE statement must only contain report entry identifiers defined in the report section.
@@ -2973,7 +2973,7 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
         Identifier();
-        while (Current().type == TokenType.Identifier)
+        while (Current().Type == TokenType.Identifier)
             Identifier();
 
         if (!CurrentEquals("."))
@@ -3086,7 +3086,7 @@ public static partial class Analyzer
     private static void VALIDATE()
     {
         Expected("VALIDATE");
-        if (Current().type != TokenType.Identifier)
+        if (Current().Type != TokenType.Identifier)
         {
             ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
             The VALIDATE statement must only contain data item identifiers.
@@ -3094,7 +3094,7 @@ public static partial class Analyzer
             ErrorHandler.Analyzer.PrettyError(FileName, Current());
         }
         Identifier();
-        while (Current().type == TokenType.Identifier)
+        while (Current().Type == TokenType.Identifier)
             Identifier();
 
         if (!CurrentEquals("."))
@@ -3153,7 +3153,7 @@ public static partial class Analyzer
 
                 if (CurrentEquals("LINE", "LINES"))
                 {
-                    Expected(Current().value);
+                    Expected(Current().Value);
                 }
             }
         }

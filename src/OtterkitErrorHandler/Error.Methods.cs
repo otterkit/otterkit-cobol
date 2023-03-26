@@ -25,7 +25,7 @@ public readonly ref partial struct Error
         Separator();
 
         // 7 │  END PROGRAM HELLO.  
-        ShowSourceLine(token.line, line);
+        ShowSourceLine(token.Line, line);
 
         //   │              ~~~~~
         ShowErrorPosition(ConsoleColor, error);
@@ -59,7 +59,7 @@ public readonly ref partial struct Error
         Separator();
 
         // 7 │  END PROGRAM HELLO.  
-        ShowSourceLine(token.line, line);
+        ShowSourceLine(token.Line, line);
 
         //   │              ~~~~~
         ShowNotePosition(Green, note);

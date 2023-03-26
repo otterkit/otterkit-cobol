@@ -40,35 +40,35 @@ public static partial class Analyzer
 
         foreach (var token in input)
         {
-            if (token.type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
+            if (token.Type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
             {
                 output.Add(token);
             }
-            else if (token.value.Equals("("))
+            else if (token.Value.Equals("("))
             {
                 stack.Push(token);
             }
-            else if (token.value.Equals(")"))
+            else if (token.Value.Equals(")"))
             {
-                while (!stack.Peek().value.Equals("("))
+                while (!stack.Peek().Value.Equals("("))
                 {
                     output.Add(stack.Pop());
                 }
 
                 stack.Pop();
             }
-            else if (precedence.ContainsKey(token.value))
+            else if (precedence.ContainsKey(token.Value))
             {
-                var isExponentiation = token.value == "**";
+                var isExponentiation = token.Value == "**";
 
                 if (isArithmetic)
-                while (stack.Count > 0 && ((precedence[stack.Peek().value] > precedence[token.value] && !isExponentiation) || (precedence[stack.Peek().value] >= precedence[token.value] && !isExponentiation && stack.Peek().value == "**")))
+                while (stack.Count > 0 && ((precedence[stack.Peek().Value] > precedence[token.Value] && !isExponentiation) || (precedence[stack.Peek().Value] >= precedence[token.Value] && !isExponentiation && stack.Peek().Value == "**")))
                 {
                     output.Add(stack.Pop());
                 }
 
                 if (!isArithmetic)
-                while (stack.Count > 0 && precedence[stack.Peek().value] >= precedence[token.value])
+                while (stack.Count > 0 && precedence[stack.Peek().Value] >= precedence[token.Value])
                 {
                     output.Add(stack.Pop());
                 }
@@ -91,24 +91,24 @@ public static partial class Analyzer
 
         foreach (var token in postfix)
         {
-            var isUnary = token.value == "NOT";
+            var isUnary = token.Value == "NOT";
 
-            if (token.type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
+            if (token.Type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
             {
-                stack.Push(token.value);
+                stack.Push(token.Value);
             }
 
-            else if (precedence.ContainsKey(token.value) && isUnary)
+            else if (precedence.ContainsKey(token.Value) && isUnary)
             {
                 var right = stack.Pop();
-                stack.Push($"({token.value} {right})");
+                stack.Push($"({token.Value} {right})");
             }
 
-            else if (precedence.ContainsKey(token.value) && !isUnary)
+            else if (precedence.ContainsKey(token.Value) && !isUnary)
             {
                 var right = stack.Pop();
                 var left = stack.Pop();
-                stack.Push($"({left} {token.value} {right})");
+                stack.Push($"({left} {token.Value} {right})");
             }
         }
 
@@ -121,25 +121,25 @@ public static partial class Analyzer
 
         foreach (var token in postfix)
         {
-            var isUnary = token.value == "NOT";
+            var isUnary = token.Value == "NOT";
 
-            if (token.type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
+            if (token.Type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
             {
-                stack.Push(token.value);
+                stack.Push(token.Value);
             }
 
-            else if (precedence.ContainsKey(token.value) && isUnary)
+            else if (precedence.ContainsKey(token.Value) && isUnary)
             {
                 var right = stack.Pop();
                 stack.Push($"!({right})");
             }
 
-            else if (precedence.ContainsKey(token.value) && !isUnary)
+            else if (precedence.ContainsKey(token.Value) && !isUnary)
             {
                 var right = stack.Pop();
                 var left = stack.Pop();
 
-                switch (token.value)
+                switch (token.Value)
                 {
                     case "NOT >":
                         stack.Push($"!({left} > {right})"); break;
@@ -164,7 +164,7 @@ public static partial class Analyzer
                         stack.Push($"({left} ^ {right})"); break;
 
                     default:
-                        stack.Push($"({left} {token.value} {right})"); break;
+                        stack.Push($"({left} {token.Value} {right})"); break;
                 }
 
             }
@@ -179,13 +179,13 @@ public static partial class Analyzer
 
         foreach (Token token in tokens)
         {
-            if (token.value.Equals("("))
+            if (token.Value.Equals("("))
             {
                 stack.Push(token);
             }
-            else if (token.value.Equals(")"))
+            else if (token.Value.Equals(")"))
             {
-                if (stack.Count == 0 || !stack.Pop().value.Equals("("))
+                if (stack.Count == 0 || !stack.Pop().Value.Equals("("))
                 {
                     return false;
                 }
@@ -201,13 +201,13 @@ public static partial class Analyzer
 
         foreach (var token in expression)
         {
-            if (token.type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
+            if (token.Type is TokenType.Numeric or TokenType.Identifier or TokenType.String)
             {
                 stack.Push(token);
             }
-            else if (precedence.ContainsKey(token.value))
+            else if (precedence.ContainsKey(token.Value))
             {
-                var isUnary = token.value == "NOT";
+                var isUnary = token.Value == "NOT";
 
                 if (stack.Count < 1 && isUnary)
                 {

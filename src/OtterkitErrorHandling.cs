@@ -19,14 +19,14 @@ public static class ErrorHandler
     {
         public static void PrettyError(string fileName, Token token, ConsoleColor color = ConsoleColor.Red)
         {
-            string line = File.ReadLines(fileName).Skip(token.line - 1).Take(token.line).First();
-            string error = new(' ', line.Length - token.value.Length);
+            string line = File.ReadLines(fileName).Skip(token.Line - 1).Take(token.Line).First();
+            string error = new(' ', line.Length - token.Value.Length);
 
             int count = line.TakeWhile(char.IsWhiteSpace).Count();
-            error = error.Insert(token.column - count, new string('~', token.value.Length));
+            error = error.Insert(token.Column - count, new string('~', token.Value.Length));
 
             Console.WriteLine($"{" ",5}|");
-            Console.WriteLine($"{token.line,4} | {line.TrimStart()}");
+            Console.WriteLine($"{token.Line,4} | {line.TrimStart()}");
             Console.Write($"{" ",5}|");
 
             Console.ForegroundColor = color;
@@ -78,7 +78,7 @@ public static class ErrorHandler
         {
             Console.Error.Write("Otterkit Lexer error: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Error.WriteLine("{0}:{1}:{2}", Path.GetFullPath(fileName), token.line, token.column);
+            Console.Error.WriteLine("{0}:{1}:{2}", Path.GetFullPath(fileName), token.Line, token.Column);
 
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Syntax error: ");
@@ -90,7 +90,7 @@ public static class ErrorHandler
         {
             Console.Error.Write("Otterkit Analyzer error: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Error.WriteLine("{0}:{1}:{2}", Path.GetFullPath(fileName), token.line, token.column);
+            Console.Error.WriteLine("{0}:{1}:{2}", Path.GetFullPath(fileName), token.Line, token.Column);
 
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Unexpected token: ");
@@ -102,12 +102,12 @@ public static class ErrorHandler
         {
             Console.Error.Write("Otterkit Analyzer error: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Error.WriteLine("{0}:{1}:{2}", fileName, token.line, token.column);
+            Console.Error.WriteLine("{0}:{1}:{2}", fileName, token.Line, token.Column);
 
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Unexpected token: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("Expected {0} or {1}, instead of {2}\n", expected[0], expected[1], token.value);
+            Console.WriteLine("Expected {0} or {1}, instead of {2}\n", expected[0], expected[1], token.Value);
         }
 
         private static void Expected(Token token, string expected, string fileName)
@@ -115,12 +115,12 @@ public static class ErrorHandler
 
             Console.Error.Write("Otterkit Analyzer error: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Error.WriteLine("{0}:{1}:{2}", fileName, token.line, token.column);
+            Console.Error.WriteLine("{0}:{1}:{2}", fileName, token.Line, token.Column);
 
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Error.Write("Unexpected token: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("Expected {0}, instead of {1}\n", expected, token.value);
+            Console.WriteLine("Expected {0}, instead of {1}\n", expected, token.Value);
         }
 
         private static void Recovery(Token token, string recovery, string fileName)
@@ -128,12 +128,12 @@ public static class ErrorHandler
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.Error.Write("Otterkit Analyzer recovery: ");
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.Error.WriteLine("{0}:{1}:{2}", Path.GetFullPath(fileName), token.line, token.column);
+            Console.Error.WriteLine("{0}:{1}:{2}", Path.GetFullPath(fileName), token.Line, token.Column);
 
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.Error.Write(recovery);
             Console.ForegroundColor = ConsoleColor.Gray;
-            Console.WriteLine("(Anchor: \"{0}\")\n", token.value);
+            Console.WriteLine("(Anchor: \"{0}\")\n", token.Value);
         }
 
     }

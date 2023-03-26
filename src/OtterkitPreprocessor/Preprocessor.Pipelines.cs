@@ -34,7 +34,7 @@ public static partial class Preprocessor
         pipeReader.AdvanceTo(buffer.End);
 
         LineCount = 1;
-        Options.SourceTokens.Add(new Token("EOF", TokenType.EOF, -5, -5){ context = TokenContext.IsEOF });
+        Options.SourceTokens.Add(new Token("EOF", TokenType.EOF, -5, -5){ Context = TokenContext.IsEOF });
 
         return Options.SourceTokens;
     }

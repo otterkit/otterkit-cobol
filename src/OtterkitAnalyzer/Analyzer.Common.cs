@@ -663,7 +663,7 @@ public static partial class Analyzer
             Optional("WITH");
             Choice("NORMAL", "ERROR");
             Optional("STATUS");
-            switch (Current().type)
+            switch (Current().Type)
             {
                 case TokenType.Identifier:
                     Identifier();
@@ -1089,7 +1089,7 @@ public static partial class Analyzer
             }
 
             columnExists = true;
-            Expected(Current().value);
+            Expected(Current().Value);
             Optional("NUMBER");
             if (CurrentEquals(TokenType.Identifier))
             {
@@ -1108,7 +1108,7 @@ public static partial class Analyzer
     {
         static bool IsArithmeticSymbol(Token current)
         {
-            return ArithmeticPrecedence.ContainsKey(current.value);
+            return ArithmeticPrecedence.ContainsKey(current.Value);
         }
 
         var expression = new List<Token>();
@@ -1161,13 +1161,13 @@ public static partial class Analyzer
 
         while (!CurrentEquals(TokenContext.IsStatement) && !CurrentEquals(delimiter))
         {
-            if (CurrentEquals("IS") && (Lookahead(1).value is "GREATER" or "LESS" or "EQUAL" or "NOT" || Lookahead(1).type is TokenType.Symbol))
+            if (CurrentEquals("IS") && (Lookahead(1).Value is "GREATER" or "LESS" or "EQUAL" or "NOT" || Lookahead(1).Type is TokenType.Symbol))
             {
                 Continue();
             }
             else if (CurrentEquals("NOT") && (LookaheadEquals(1, ">") || LookaheadEquals(1, "<")))
             {
-                var combined = new Token($"NOT {Lookahead(1).value}", TokenType.Symbol, Current().line, Current().column);
+                var combined = new Token($"NOT {Lookahead(1).Value}", TokenType.Symbol, Current().Line, Current().Column);
                 expression.Add(combined);
                 Continue(2);
             }
@@ -1175,19 +1175,19 @@ public static partial class Analyzer
             {
                 if (LookaheadEquals(1, "GREATER"))
                 {
-                    var combined = new Token($"NOT >", TokenType.Symbol, Current().line, Current().column);
+                    var combined = new Token($"NOT >", TokenType.Symbol, Current().Line, Current().Column);
                     expression.Add(combined);
                 }
 
                 if (LookaheadEquals(1, "LESS"))
                 {
-                    var combined = new Token($"NOT <", TokenType.Symbol, Current().line, Current().column);
+                    var combined = new Token($"NOT <", TokenType.Symbol, Current().Line, Current().Column);
                     expression.Add(combined);
                 }
 
                 if (LookaheadEquals(1, "EQUAL"))
                 {
-                    var combined = new Token($"<>", TokenType.Symbol, Current().line, Current().column);
+                    var combined = new Token($"<>", TokenType.Symbol, Current().Line, Current().Column);
                     expression.Add(combined);
                 }
 
@@ -1199,19 +1199,19 @@ public static partial class Analyzer
             {
                 if (CurrentEquals("GREATER"))
                 {
-                    var converted = new Token($">", TokenType.Symbol, Current().line, Current().column);
+                    var converted = new Token($">", TokenType.Symbol, Current().Line, Current().Column);
                     expression.Add(converted);
                 }
 
                 if (CurrentEquals("LESS"))
                 {
-                    var converted = new Token($"<", TokenType.Symbol, Current().line, Current().column);
+                    var converted = new Token($"<", TokenType.Symbol, Current().Line, Current().Column);
                     expression.Add(converted);
                 }
 
                 if (CurrentEquals("EQUAL"))
                 {
-                    var converted = new Token($"=", TokenType.Symbol, Current().line, Current().column);
+                    var converted = new Token($"=", TokenType.Symbol, Current().Line, Current().Column);
                     expression.Add(converted);
                 }
 
@@ -1221,7 +1221,7 @@ public static partial class Analyzer
 
                     if (LookaheadEquals(1, "THAN")) Continue(3);
 
-                    var converted = new Token($">=", TokenType.Symbol, Current().line, Current().column);
+                    var converted = new Token($">=", TokenType.Symbol, Current().Line, Current().Column);
                     expression.Add(converted);
                 }
 
@@ -1231,7 +1231,7 @@ public static partial class Analyzer
 
                     if (!LookaheadEquals(1, "THAN")) Continue(2);
 
-                    var converted = new Token($"<=", TokenType.Symbol, Current().line, Current().column);
+                    var converted = new Token($"<=", TokenType.Symbol, Current().Line, Current().Column);
                     expression.Add(converted);
                 }
 
@@ -1247,7 +1247,7 @@ public static partial class Analyzer
                     while (!CurrentEquals(")")) Continue();
 
                     Continue();
-                    expression.Add(new Token("FUNCTION-CALL", TokenType.Identifier, current.line, current.column));
+                    expression.Add(new Token("FUNCTION-CALL", TokenType.Identifier, current.Line, current.Column));
                 }
                 else
                 {
@@ -1351,7 +1351,7 @@ public static partial class Analyzer
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             encodingExists = true;
-            Expected(Current().value);
+            Expected(Current().Value);
 
             WriteBeforeAfter(encodingExists, endiannessExists);
 
@@ -1368,7 +1368,7 @@ public static partial class Analyzer
                 ErrorHandler.Analyzer.PrettyError(FileName, Current());
             }
             endiannessExists = true;
-            Expected(Current().value);
+            Expected(Current().Value);
 
             WriteBeforeAfter(encodingExists, endiannessExists);
         }
@@ -1389,7 +1389,7 @@ public static partial class Analyzer
         }
         else if (CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && LookaheadEquals(1, TokenType.Symbol))
         {
-            if (ArithmeticPrecedence.ContainsKey(Lookahead(1).value))
+            if (ArithmeticPrecedence.ContainsKey(Lookahead(1).Value))
             {
                 Arithmetic("ALSO", "WHEN");
                 return EvaluateOperand.Arithmetic;
@@ -1452,7 +1452,7 @@ public static partial class Analyzer
         }
         else if (arithmetic || condition && CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && LookaheadEquals(1, TokenType.Symbol))
         {
-            if (arithmetic && ArithmeticPrecedence.ContainsKey(Lookahead(1).value))
+            if (arithmetic && ArithmeticPrecedence.ContainsKey(Lookahead(1).Value))
             {
                 Arithmetic("ALSO", "WHEN");
                 RangeExpression(range, EvaluateOperand.Arithmetic);

@@ -23,13 +23,13 @@ public sealed partial record Token
         
         // Characters with the Other_ID_Start and Other_ID_Continue properties can be found here: https://www.unicode.org/Public/15.0.0/ucd/PropList.txt
 
-        if (!token.value.IsNormalized(NormalizationForm.FormKC))
+        if (!token.Value.IsNormalized(NormalizationForm.FormKC))
         {
             try
             {
                 // If the identifier contains non-normalized characters,
                 // try to convert into the Normalization Form NFKC.
-                token.value = token.value.Normalize(NormalizationForm.FormKC);
+                token.Value = token.Value.Normalize(NormalizationForm.FormKC);
             }
             catch (ArgumentException)
             {
@@ -46,7 +46,7 @@ public sealed partial record Token
             }
         }
 
-        if (token.value.Length >= 64)
+        if (token.Value.Length >= 64)
         {
             ErrorHandler.Analyzer.Report(FileName, token, ErrorType.Syntax, """
             Identifiers (user-defined words) must have a length less than or equal to 63 characters.
@@ -56,7 +56,7 @@ public sealed partial record Token
             return false;
         }
 
-        var matchesStartCategory = char.GetUnicodeCategory(token.value[0]) switch
+        var matchesStartCategory = char.GetUnicodeCategory(token.Value[0]) switch
         {
             UnicodeCategory.UppercaseLetter or // Lu
             UnicodeCategory.LowercaseLetter or // Ll
@@ -67,7 +67,7 @@ public sealed partial record Token
             _ => false
         };
 
-        var matchesOtherStartCharacters = token.value[0] switch
+        var matchesOtherStartCharacters = token.Value[0] switch
         {
             // This list includes all characters with the property Other_ID_Start
             '\u1885' or '\u1886' => true, // MONGOLIAN LETTER ALI GALI BALUDA .. MONGOLIAN LETTER ALI GALI THREE BALUDA
@@ -137,7 +137,7 @@ public sealed partial record Token
             };
         }
 
-        foreach (var character in token.value.AsSpan(1))
+        foreach (var character in token.Value.AsSpan(1))
         {
             if (!matchesContinueCategory(character) && !matchesOtherContinueCharacters(character))
             {
@@ -150,7 +150,7 @@ public sealed partial record Token
             }
         }
 
-        if (token.value[token.value.Length - 1] is '\u002D' or '\u005F' or '\u30FB')
+        if (token.Value[token.Value.Length - 1] is '\u002D' or '\u005F' or '\u30FB')
         {
             ErrorHandler.Analyzer.Report(FileName, token, ErrorType.Syntax, """
             Invalid character at the end of this identifier.
@@ -165,9 +165,9 @@ public sealed partial record Token
 
     private static TokenType FindType(Token token)
     {
-        if (token.type is not TokenType.None) return token.type;
+        if (token.Type is not TokenType.None) return token.Type;
 
-        var value = token.value;
+        var value = token.Value;
 
         // check if the value is a reserved keyword
         if (TokenLookup.IsReservedWord(value))
@@ -205,15 +205,15 @@ public sealed partial record Token
     private static TokenContext? FindContext(Token token)
     {
         // check if the token belongs to a data division clause
-        if (TokenLookup.IsReservedClause(token.value))
+        if (TokenLookup.IsReservedClause(token.Value))
             return TokenContext.IsClause;
 
         // check if the token is a statement
-        if (TokenLookup.IsReservedStatement(token.value))
+        if (TokenLookup.IsReservedStatement(token.Value))
             return TokenContext.IsStatement;
 
         // check if the token represents a file separator   
-        if (token.line is -5)
+        if (token.Line is -5)
             return TokenContext.IsEOF;
 
         // if none of the above, return null
@@ -222,37 +222,37 @@ public sealed partial record Token
 
     private static TokenScope? FindScope(Token token, Token previousToken)
     {
-        if (token.value.Equals("PROGRAM-ID", StringComparison.OrdinalIgnoreCase))
+        if (token.Value.Equals("PROGRAM-ID", StringComparison.OrdinalIgnoreCase))
             return TokenScope.ProgramId;
 
-        if (token.value.Equals("FUNCTION-ID", StringComparison.OrdinalIgnoreCase))
+        if (token.Value.Equals("FUNCTION-ID", StringComparison.OrdinalIgnoreCase))
             return TokenScope.FunctionId;
 
-        if (token.value.Equals("INTERFACE-ID", StringComparison.OrdinalIgnoreCase))
+        if (token.Value.Equals("INTERFACE-ID", StringComparison.OrdinalIgnoreCase))
             return TokenScope.InterfaceId;
 
-        if (token.value.Equals("CLASS-ID", StringComparison.OrdinalIgnoreCase))
+        if (token.Value.Equals("CLASS-ID", StringComparison.OrdinalIgnoreCase))
             return TokenScope.ClassId;
 
-        if (token.value.Equals("METHOD-ID", StringComparison.OrdinalIgnoreCase))
+        if (token.Value.Equals("METHOD-ID", StringComparison.OrdinalIgnoreCase))
             return TokenScope.MethodId;
 
-        if (token.value.Equals("ENVIRONMENT", StringComparison.OrdinalIgnoreCase))
+        if (token.Value.Equals("ENVIRONMENT", StringComparison.OrdinalIgnoreCase))
             return TokenScope.EnvironmentDivision;
 
-        if (token.value.Equals("DATA", StringComparison.OrdinalIgnoreCase))
+        if (token.Value.Equals("DATA", StringComparison.OrdinalIgnoreCase))
             return TokenScope.DataDivision;
 
-        if (token.value.Equals("PROCEDURE", StringComparison.OrdinalIgnoreCase))
+        if (token.Value.Equals("PROCEDURE", StringComparison.OrdinalIgnoreCase))
             return TokenScope.ProcedureDivision;
 
-        if (token.value.Equals("FACTORY", StringComparison.OrdinalIgnoreCase))
+        if (token.Value.Equals("FACTORY", StringComparison.OrdinalIgnoreCase))
             return TokenScope.Factory;
 
-        if (token.value.Equals("OBJECT", StringComparison.OrdinalIgnoreCase))
+        if (token.Value.Equals("OBJECT", StringComparison.OrdinalIgnoreCase))
             return TokenScope.Object;
 
-        return previousToken.scope;
+        return previousToken.Scope;
     }
 
     public static List<Token> FromValue(List<Token> tokens)
@@ -265,11 +265,11 @@ public sealed partial record Token
         Token previousToken = tokens[0];
         foreach (Token token in tokens)
         {
-            token.type = FindType(token);
-            token.scope = FindScope(token, previousToken);
-            token.context = FindContext(token);
+            token.Type = FindType(token);
+            token.Scope = FindScope(token, previousToken);
+            token.Context = FindContext(token);
 
-            if (token.type is TokenType.EOF && index < tokens.Count - 1)
+            if (token.Type is TokenType.EOF && index < tokens.Count - 1)
             {
                 FileName = Otterkit.Options.FileNames[fileIndex++];
             }
@@ -304,12 +304,12 @@ public sealed partial record Token
         stringBuilder.Append("Token");
         stringBuilder.Append(" { ");
         
-        stringBuilder.Append($"Ln: {line, -6},");
-        stringBuilder.Append($"Col: {column, -6},");
-        stringBuilder.Append($"Type: {type, -18},");
-        stringBuilder.Append($"Scope: {scope, -20},");
-        stringBuilder.Append($"Context: {context, -12},");
-        stringBuilder.Append($"Value: {value}");
+        stringBuilder.Append($"Ln: {Line, -6},");
+        stringBuilder.Append($"Col: {Column, -6},");
+        stringBuilder.Append($"Type: {Type, -18},");
+        stringBuilder.Append($"Scope: {Scope, -20},");
+        stringBuilder.Append($"Context: {Context, -12},");
+        stringBuilder.Append($"Value: {Value}");
 
         stringBuilder.Append(" }");
         return stringBuilder.ToString();

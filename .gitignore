@@ -16,6 +16,12 @@ publish/
 # macOS DS_Store
 .DS_Store
 
+# VSCode Files
+.vscode/
+
+# Rider Files
+.idea/
+
 # User-specific files
 *.rsuser
 *.suo

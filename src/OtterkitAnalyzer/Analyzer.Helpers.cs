@@ -23,54 +23,90 @@ public static partial class Analyzer
 
             if (character is 'S' && !set.IsEmpty())
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Picture symbol 'S' must be the first symbol of the picture clause.
-                """);
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
+                    Invalid picture clause character string.
+                    """)
+                .WithSourceLine(Lookahead(-1))
+                .WithNote("""
+                    Symbol 'S' must be the first symbol of the picture string.
+                    """)
+                .CloseError();
 
                 isValid = false;
             }
 
             if(character is 'N' && set.ContainsAny('9', 'A', 'X', 'S', 'V', 'P', '1', 'E'))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Picture symbol 'N' must not precede or be followed by any symbols other than 'N'.
-                """);
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
+                    Invalid picture clause character string.
+                    """)
+                .WithSourceLine(Lookahead(-1))
+                .WithNote("""
+                    Symbol 'N' must not follow any symbols other than 'N'.
+                    """)
+                .CloseError();
 
                 isValid = false;
             }
 
             if(character is '1' && set.ContainsAny('9', 'A', 'X', 'S', 'V', 'P', 'N', 'E'))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Picture symbol '1' must not precede or be followed by any symbols other than '1'.
-                """);
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
+                    Invalid picture clause character string.
+                    """)
+                .WithSourceLine(Lookahead(-1))
+                .WithNote("""
+                    Symbol '1' must not follow any symbols other than '1'.
+                    """)
+                .CloseError();
 
                 isValid = false;
             }
 
             if(character is 'A' or 'X' && set.ContainsAny('S', 'V', 'P', '1', 'N', 'E'))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Picture symbols 'A' and 'X' must only precede or be followed by '9', 'A' or 'X'.
-                """);
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
+                    Invalid picture clause character string.
+                    """)
+                .WithSourceLine(Lookahead(-1))
+                .WithNote("""
+                    Symbols 'A' and 'X' may only follow the symbols '9', 'A' or 'X'.
+                    """)
+                .CloseError();
 
                 isValid = false;
             }
 
             if (character is 'V' && set.Contains('V'))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Picture symbol 'V' must only appear once in the same picture clause.
-                """);
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
+                    Invalid picture clause character string.
+                    """)
+                .WithSourceLine(Lookahead(-1))
+                .WithNote("""
+                    Symbol 'V' may only appear once in the same picture string.
+                    """)
+                .CloseError();
 
                 isValid = false;
             }
 
             if (character is 'V' or 'P' && set.ContainsAny('A', 'X', '1', 'N', 'E'))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Picture symbols 'V' and 'P' must not precede or be followed by 'A', 'X', '1', 'N' or 'E'.
-                """);
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
+                    Invalid picture clause character string.
+                    """)
+                .WithSourceLine(Lookahead(-1))
+                .WithNote("""
+                    Symbols 'V' and 'P' must not follow the symbols 'A', 'X', '1', 'N' or 'E'.
+                    """)
+                .CloseError();
 
                 isValid = false;
             }
@@ -79,9 +115,15 @@ public static partial class Analyzer
             
             if (character is 'P' && set.ContainsAny('9', 'P') && isAfterDecimalPoint)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Picture symbol 'P' or a string of symbols 'P' must only appear once in a picture clause.
-                """);
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
+                    Invalid picture clause character string.
+                    """)
+                .WithSourceLine(Lookahead(-1))
+                .WithNote("""
+                    Symbol 'P' or a string of 'P' may only appear once in a picture clause.
+                    """)
+                .CloseError();
 
                 isValid = false;
             }
@@ -333,7 +375,6 @@ public static partial class Analyzer
     /// </summary>
     private static void Choice(params string[] choices)
     {
-        Token token = Current();
         foreach (string choice in choices)
         {
             if (CurrentEquals(choice))
@@ -343,8 +384,15 @@ public static partial class Analyzer
             }
         }
 
-        ErrorHandler.Analyzer.Report(FileName, token, ErrorType.Choice, choices);
-        ErrorHandler.Analyzer.PrettyError(FileName, token);
+        Error
+        .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, """
+            Unexpected token.
+            """)
+        .WithSourceLine(Current(), $"""
+            Expected one of the following: {string.Join(", ", choices)},
+            """)
+        .CloseError();
+
         Continue();
     }
 
@@ -493,10 +541,14 @@ public static partial class Analyzer
         {
             if (!SymbolTable.SymbolExists(dataItemHash))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-                The name "{Current().Value}" does not exist in the context of the current source unit
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Reference to undefined identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Identifier name does not exist in the current context.
+                    """)
+                .CloseError();
             }
         }
 
@@ -575,10 +627,14 @@ public static partial class Analyzer
         {
             if (!SymbolTable.SymbolExists(dataItemHash))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-                The name "{Current().Value}" does not exist in the context of the current source unit
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Reference to undefined identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Identifier name does not exist in the current context.
+                    """)
+                .CloseError();
             }
         }
 
@@ -664,11 +720,17 @@ public static partial class Analyzer
             Expected("FUNCTION");
             if (!HasFlag(allowedTypes, IdentifierType.Function))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Unexpected FUNCTION call. 
-                NOTE: Function calls cannot be specified as a receiving operand
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Unexpected function identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This function call should not be here.
+                    """)
+                .WithNote("""
+                    Function calls must not be used as receiving operands
+                    """)
+                .CloseError();
             }
 
             Continue();
@@ -690,11 +752,17 @@ public static partial class Analyzer
             Expected("EXCEPTION-OBJECT");
             if (!HasFlag(allowedTypes, IdentifierType.ExceptionObject))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Unexpected reference to EXCEPTION-OBJECT. 
-                NOTE: EXCEPTION-OBJECT cannot be specified as a receiving operand
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Unexpected EXCEPTION-OBJECT identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This EXCEPTION-OBJECT should not be here.
+                    """)
+                .WithNote("""
+                    EXCEPTION-OBJECT must not be used as receiving operand
+                    """)
+                .CloseError();
             }
 
             return;
@@ -705,11 +773,17 @@ public static partial class Analyzer
             Expected("SELF");
             if (!HasFlag(allowedTypes, IdentifierType.Self))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Unexpected reference to SELF.
-                NOTE: SELF cannot be specified as a receiving operand
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Unexpected SELF identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This SELF should not be here.
+                    """)
+                .WithNote("""
+                    SELF must not be used as receiving operand
+                    """)
+                .CloseError();
             }
 
             return;
@@ -720,11 +794,17 @@ public static partial class Analyzer
             Expected("NULL");
             if (!HasFlag(allowedTypes, IdentifierType.NullAddress) && !HasFlag(allowedTypes, IdentifierType.NullObject))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Unexpected reference to a NULL address or NULL object.
-                NOTE: NULL cannot be specified as a receiving operand
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Unexpected NULL identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This NULL reference should not be here.
+                    """)
+                .WithNote("""
+                    NULL must not be used as receiving operand
+                    """)
+                .CloseError();
             }
 
             return;
@@ -736,11 +816,17 @@ public static partial class Analyzer
             Optional("OF");
             if (!HasFlag(allowedTypes, IdentifierType.DataAddress))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Unexpected reference to the address of a data item. 
-                NOTE: Data item addresses cannot be specified as a receiving operand
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Unexpected ADDRESS OF identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This ADDRESS OF reference should not be here.
+                    """)
+                .WithNote("""
+                    ADDRESS OF must not be used as receiving operand
+                    """)
+                .CloseError();
             }
 
             Continue();
@@ -754,11 +840,17 @@ public static partial class Analyzer
             Expected("FUNCTION");
             if (!HasFlag(allowedTypes, IdentifierType.FunctionAddress))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Unexpected reference to the address of a function. 
-                NOTE: Function addresses cannot be specified as a receiving operand
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Unexpected ADDRESS OF FUNCTION identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This ADDRESS OF FUNCTION should not be here.
+                    """)
+                .WithNote("""
+                    ADDRESS OF FUNCTION must not be used as receiving operand
+                    """)
+                .CloseError();
             }
 
             if (CurrentEquals(TokenType.Identifier))
@@ -780,11 +872,17 @@ public static partial class Analyzer
             Expected("PROGRAM");
             if (!HasFlag(allowedTypes, IdentifierType.ProgramAddress))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Unexpected reference to the address of a program. 
-                NOTE: Program addresses cannot be specified as a receiving operand
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Unexpected ADDRESS OF PROGRAM identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This ADDRESS OF PROGRAM should not be here.
+                    """)
+                .WithNote("""
+                    ADDRESS OF PROGRAM must not be used as receiving operand
+                    """)
+                .CloseError();
             }
 
             if (CurrentEquals(TokenType.Identifier))
@@ -805,11 +903,17 @@ public static partial class Analyzer
             Choice("IN", "OF");
             if (!HasFlag(allowedTypes, IdentifierType.LinageCounter))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Unexpected reference to a LINAGE-COUNTER. 
-                NOTE: LINAGE-COUNTER cannot be specified as a receiving operand
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Unexpected LINAGE-COUNTER identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This LINAGE-COUNTER should not be here.
+                    """)
+                .WithNote("""
+                    LINAGE-COUNTER must not be used as receiving operand
+                    """)
+                .CloseError();
             }
 
             Continue();
@@ -818,15 +922,24 @@ public static partial class Analyzer
         
         if (CurrentEquals("PAGE-COUNTER", "LINE-COUNTER"))
         {
+            var token = Current();
+
             Choice("PAGE-COUNTER", "LINE-COUNTER");
             Choice("IN", "OF");
+
             if (!HasFlag(allowedTypes, IdentifierType.ReportCounter))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Unexpected reference to a report counter. 
-                NOTE: Report counters cannot be specified as a receiving operand
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, $"""
+                    Unexpected {token.Value} identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This {token.Value} should not be here.
+                    """)
+                .WithNote($"""
+                    {token.Value} must not be used as receiving operand
+                    """)
+                .CloseError();
             }
 
             Continue();
@@ -847,11 +960,17 @@ public static partial class Analyzer
 
             if (!HasFlag(allowedTypes, IdentifierType.ObjectView))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Unexpected object view identifier.
-                NOTE: An object view cannot be specified as a receiving operand
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Unexpected Object View identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This Object View should not be here.
+                    """)
+                .WithNote("""
+                    Object View must not be used as receiving operand
+                    """)
+                .CloseError();
             }
 
             if (CurrentEquals("UNIVERSAL"))
@@ -884,11 +1003,17 @@ public static partial class Analyzer
 
             if (!HasFlag(allowedTypes, IdentifierType.MethodInvocation))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Unexpected inline method invocation. 
-                NOTE: Function calls cannot be specified as a receiving operand
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Unexpected inline method call.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This method call should not be here.
+                    """)
+                .WithNote("""
+                    Inline method calls must not be used as receiving operand
+                    """)
+                .CloseError();
             }
 
             // TODO: Replace Continue with an identifier check for the method name
@@ -982,28 +1107,24 @@ public static partial class Analyzer
     /// <para>If the current token's type is TokenType.Numeric, it moves to the next token,
     /// if the current token's type is TokenType.Numeric it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void Number(string custom = "default", int position = 0)
+    private static void Number()
     {
-        var errorMessage = "Numeric literal";
-        var errorType = ErrorType.Expected;
-        if (!custom.Equals("default"))
-        {
-            errorMessage = custom;
-            errorType = ErrorType.General;
-        }
-
         if (!CurrentEquals(TokenType.Numeric))
         {
-            var lookahead = Lookahead(position);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a numeric literal.
+                """)
+            .CloseError();
 
-            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
             Continue();
+            return;
         }
-        else
-        {
-            Continue();
-        }
+
+        Continue();
     }
 
     /// <summary>
@@ -1011,16 +1132,8 @@ public static partial class Analyzer
     /// <para>If the current token's type is TokenType.String, it moves to the next token,
     /// if the current token's type is TokenType.String it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void String(string custom = "default", int position = 0)
+    private static void String()
     {
-        var errorMessage = "String literal";
-        var errorType = ErrorType.Expected;
-        if (!custom.Equals("default"))
-        {
-            errorMessage = custom;
-            errorType = ErrorType.General;
-        }
-
         if (!CurrentEquals(
             TokenType.String, 
             TokenType.HexString, 
@@ -1030,16 +1143,20 @@ public static partial class Analyzer
             TokenType.HexNational
         ))
         {
-            var lookahead = Lookahead(position);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a string type literal.
+                """)
+            .CloseError();
 
-            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
             Continue();
+            return;
         }
-        else
-        {
-            Continue();
-        }
+
+        Continue();
     }
 
     /// <summary>
@@ -1047,27 +1164,23 @@ public static partial class Analyzer
     /// <para>If the current token's type is TokenType.FigurativeLiteral, it moves to the next token,
     /// if the current token's type is TokenType.FigurativeLiteral it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void FigurativeLiteral(string custom = "default", int position = 0)
+    private static void FigurativeLiteral()
     {
-        var errorMessage = "Numeric literal";
-        var errorType = ErrorType.Expected;
-        if (!custom.Equals("default"))
-        {
-            errorMessage = custom;
-            errorType = ErrorType.General;
-        }
-
         if (!CurrentEquals(TokenType.FigurativeLiteral))
         {
-            var lookahead = Lookahead(position);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a figurative literal.
+                """)
+            .CloseError();
 
-            ErrorHandler.Analyzer.Report(FileName, lookahead, errorType, errorMessage);
-            ErrorHandler.Analyzer.PrettyError(FileName, lookahead);
             Continue();
+            return;
         }
-        else
-        {
-            Continue();
-        }
+
+        Continue();
     }
 }

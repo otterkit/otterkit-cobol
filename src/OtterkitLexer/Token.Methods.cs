@@ -6,15 +6,7 @@ namespace Otterkit;
 
 public sealed partial record Token
 {
-    public string FetchFile()
-    {
-        if (FileIndex == 0)
-        {
-            return CompilerOptions.EntryPoint;
-        }
-
-        return CompilerOptions.FileNames[FileIndex];
-    }
+    public string FetchFile => CompilerOptions.FileNames[FileIndex];
 
     private static bool TryValidateIdentifier(Token token)
     {
@@ -31,7 +23,7 @@ public sealed partial record Token
         
         // Characters with the Other_ID_Start and Other_ID_Continue properties can be found here: https://www.unicode.org/Public/15.0.0/ucd/PropList.txt
 
-        var fileName = token.FetchFile();
+        var fileName = token.FetchFile;
 
         if (!token.Value.IsNormalized(NormalizationForm.FormKC))
         {

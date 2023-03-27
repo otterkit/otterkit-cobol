@@ -110,7 +110,7 @@ public static partial class Analyzer
 
             if (CurrentEquals("EOF") && Index < TokenList.Count - 1)
             {
-                FileName = Lookahead(1).FetchFile();
+                FileName = Lookahead(1).FetchFile;
 
                 Continue();
                 Source();

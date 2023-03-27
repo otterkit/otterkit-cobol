@@ -17,7 +17,7 @@ public static partial class Preprocessor
 
         var buffer = readAsync.Buffer;
 
-        Lexer.LineIndex = 1;
+        var lineIndex = 1;
 
         while (SourceLineExists(ref buffer, out ReadOnlySequence<byte> line))
         {
@@ -26,18 +26,18 @@ public static partial class Preprocessor
         
             line.CopyTo(sharedArray);
        
-            Lexer.TokenizeLine(Options.SourceTokens, sharedArray.AsSpan().Slice(0, lineLength));
+            Lexer.TokenizeLine(CompilerOptions.SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), lineIndex);
         
             ArrayPool.Return(sharedArray);
             
-            Lexer.LineIndex++;
+            lineIndex++;
         }
 
         pipeReader.AdvanceTo(buffer.End);
 
-        Options.SourceTokens.Add(new Token("EOF", TokenType.EOF, -5, -5){ Context = TokenContext.IsEOF });
+        CompilerOptions.SourceTokens.Add(new Token("EOF", TokenType.EOF, -5, -5){ Context = TokenContext.IsEOF });
 
-        return Options.SourceTokens;
+        return CompilerOptions.SourceTokens;
     }
 
     public static async ValueTask<List<Token>> ReadCopybook(string copybookFile)
@@ -50,7 +50,7 @@ public static partial class Preprocessor
 
         var buffer = readAsync.Buffer;
 
-        Lexer.LineIndex = 1;
+        var lineIndex = 1;
 
         List<Token> copybookTokens = new();
 
@@ -61,11 +61,11 @@ public static partial class Preprocessor
         
             line.CopyTo(sharedArray);
         
-            Lexer.TokenizeLine(copybookTokens, sharedArray.AsSpan().Slice(0, lineLength));
+            Lexer.TokenizeLine(copybookTokens, sharedArray.AsSpan().Slice(0, lineLength), lineIndex);
         
             ArrayPool.Return(sharedArray);
 
-            Lexer.LineIndex++;
+            lineIndex++;
         }
 
         pipeReader.AdvanceTo(buffer.End);

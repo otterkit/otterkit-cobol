@@ -49,19 +49,13 @@ public static partial class Analyzer
     private static int Index;
 
     /// <summary>
-    /// Int <c>FileIndex</c>: This is the index of the current file name, used by the parser to point to the correct file name when showing error messages.
-    /// <para>The file index should only move forwards.</para>
-    /// </summary>
-    private static int FileIndex;
-
-    /// <summary>
     /// Otterkit COBOL Syntax Analyzer
     /// <para>This parser was built to be easily extensible, with some reusable COBOL parts.</para>
     /// <para>It requires a List of Tokens generated from the Lexer and the Token Classifier.</para>
     /// </summary>
-    public static List<Token> Analyze(List<Token> tokenList, string fileName)
+    public static List<Token> Analyze(List<Token> tokenList, string entryPoint)
     {
-        FileName = fileName;
+        FileName = entryPoint;
         TokenList = tokenList;
 
         // Call the parser's main method
@@ -116,7 +110,7 @@ public static partial class Analyzer
 
             if (CurrentEquals("EOF") && Index < TokenList.Count - 1)
             {
-                FileName = Otterkit.Options.FileNames[FileIndex++];
+                FileName = Lookahead(1).FetchFile();
 
                 Continue();
                 Source();

@@ -5,7 +5,6 @@ namespace Otterkit;
 
 public static partial class Preprocessor
 {
-    internal static Options Options = Otterkit.Options;
     internal static DirectiveType LastDirective = DirectiveType.None;
     internal static string Workspace => Directory.GetCurrentDirectory(); 
 
@@ -20,29 +19,27 @@ public static partial class Preprocessor
 
         var relativeEntryPoint = Path.GetRelativePath(Workspace, entryPoint);
 
-        Options.EntryPoint = relativeEntryPoint;
+        CompilerOptions.EntryPoint = relativeEntryPoint;
 
         var allSourceFiles = Directory.EnumerateFiles(Workspace, "*.cob", SearchOption.AllDirectories)
             .Select(static path => Path.GetRelativePath(Workspace, path));
         
-        var tokens = ReadSourceFile(relativeEntryPoint).Result;
+        CompilerOptions.FileNames.Add(relativeEntryPoint);
 
-        Options.FileNames.Add(relativeEntryPoint);
+        var tokens = ReadSourceFile(relativeEntryPoint).Result;
 
         foreach (var file in allSourceFiles)
         {
             if (file.Equals(relativeEntryPoint)) continue;
 
-            Lexer.FileIndex++;
+            CompilerOptions.FileNames.Add(file);
 
             tokens = ReadSourceFile(file).Result;
-            
-            Options.FileNames.Add(file);
         }
 
-        PreprocessCopybooks(Options.SourceTokens);
+        PreprocessCopybooks(CompilerOptions.SourceTokens);
 
-        return Options.SourceTokens;
+        return CompilerOptions.SourceTokens;
     }
 
     public static void PreprocessSourceFormat(ReadOnlySpan<byte> bytes, Span<char> chars)
@@ -56,12 +53,12 @@ public static partial class Preprocessor
 
         Encoding.UTF8.GetChars(bytes, sourceChars);
 
-        if (Options.SourceFormat == "fixed")
+        if (CompilerOptions.SourceFormat == SourceFormat.Fixed)
         {
-            if (sourceChars.Length >= Options.ColumnLength)
+            if (sourceChars.Length >= CompilerOptions.ColumnLength)
             {
                 // Removes everything after the max column length
-                sourceChars.Slice(Options.ColumnLength).Fill(' ');
+                sourceChars.Slice(CompilerOptions.ColumnLength).Fill(' ');
             }
 
             // Removes the sequence number area
@@ -93,7 +90,7 @@ public static partial class Preprocessor
             }
         }
 
-        if (Options.SourceFormat == "free")
+        if (CompilerOptions.SourceFormat == SourceFormat.Free)
         {
             int commentIndex = sourceChars.IndexOf("*>");
             if (commentIndex > -1)
@@ -129,12 +126,12 @@ public static partial class Preprocessor
 
             if (CurrentEquals("FREE"))
             {
-                Options.SourceFormat = "free";
+                CompilerOptions.SourceFormat = SourceFormat.Free;
             }
 
             if (CurrentEquals("FIXED"))
             {
-                Options.SourceFormat = "fixed";
+                CompilerOptions.SourceFormat = SourceFormat.Fixed;
             }
         }
 
@@ -158,9 +155,9 @@ public static partial class Preprocessor
 
     public static void PreprocessCopybooks(List<Token> sourceTokens)
     {
-        var index = 0;
+        var tokenIndex = 0;
 
-        while (!(index >= sourceTokens.Count - 1))
+        while (!(tokenIndex >= sourceTokens.Count - 1))
         {
             if (!CurrentEquals("COPY"))
             {
@@ -170,25 +167,30 @@ public static partial class Preprocessor
 
             if (CurrentEquals("COPY"))
             {
-                var copyIndex = index;
-                Continue();
-
-                var copybookTokens = ReadCopybook(Current().Value).Result;
+                var statementIndex = tokenIndex;
 
                 Continue();
 
-                var currentIndex = index;
+                var copybookName = Current().Value;
 
-                Options.SourceTokens.RemoveRange(copyIndex, currentIndex - copyIndex);
+                CompilerOptions.FileNames.Add(copybookName);
 
-                Options.SourceTokens.InsertRange(copyIndex, copybookTokens);
+                var copybookTokens = ReadCopybook(copybookName).Result;
+
+                Continue();
+
+                var currentIndex = tokenIndex;
+
+                CompilerOptions.SourceTokens.RemoveRange(statementIndex, currentIndex - statementIndex);
+
+                CompilerOptions.SourceTokens.InsertRange(statementIndex, copybookTokens);
                 
             }
         }
 
         Token Current()
         {
-            return sourceTokens[index];
+            return sourceTokens[tokenIndex];
         }
 
         bool CurrentEquals(string stringToCompare)
@@ -198,9 +200,9 @@ public static partial class Preprocessor
 
         void Continue()
         {
-            if (index >= sourceTokens.Count - 1) return;
+            if (tokenIndex >= sourceTokens.Count - 1) return;
 
-            index += 1;
+            tokenIndex += 1;
         }
     }
 

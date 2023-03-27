@@ -2,32 +2,8 @@ using System.Diagnostics;
 
 namespace Otterkit;
 
-public record Options
-{
-    public required string Name;
-    public required string Type;
-    public required BuildType BuildMode;
-    public required int ColumnLength;
-    public required string EntryPoint;
-    public required string SourceFormat;
-    public required List<string> FileNames;
-    public required List<Token> SourceTokens;
-}
-
 public static class Otterkit
 {
-    internal static Options Options = new()
-    {
-        Name = "OtterkitExport",
-        Type = "app",
-        BuildMode = BuildType.BuildOnly,
-        EntryPoint = "main.cob",
-        SourceFormat = "fixed",
-        ColumnLength = 80,
-        FileNames = new(),
-        SourceTokens = new()
-    };
-
     public static void Main(string[] args)
     {
         if (args.Length <= 1 || args[0].Equals("-h") || args[0].Equals("--help"))
@@ -65,16 +41,16 @@ public static class Otterkit
                 switch (argument)
                 {
                     case "app":
-                        Options.Type = "app";
+                        CompilerOptions.Output = OutputType.Application;
                         break;
 
                     case "module":
-                        Options.Type = "mod";
+                        CompilerOptions.Output = OutputType.Library;
                         break;
                     
                     case "-n":
                     case "--name":
-                        Options.Name = args[index];
+                        CompilerOptions.Name = args[index];
                         break;
                 }
             }
@@ -98,55 +74,57 @@ public static class Otterkit
 
                     case "-e":
                     case "--entry":
-                        Options.EntryPoint = args[index];
+                        CompilerOptions.EntryPoint = args[index];
                         break;
 
                     case "-cl":
                     case "--columns":
-                        Options.ColumnLength = int.Parse(args[index]);
+                        CompilerOptions.ColumnLength = int.Parse(args[index]);
                         break;
 
                     case "-p":
                     case "--parse":
-                        Options.BuildMode = BuildType.ParseOnly;
+                        CompilerOptions.BuildMode = BuildType.ParseOnly;
                         break;
 
                     case "-p:tokens":
                     case "--parse:tokens":
-                        Options.BuildMode = BuildType.PrintTokens;
+                        CompilerOptions.BuildMode = BuildType.PrintTokens;
                         break;
 
                     case "-p:symbols":
                     case "--parse:symbols":
-                        Options.BuildMode = BuildType.PrintSymbols;
+                        CompilerOptions.BuildMode = BuildType.PrintSymbols;
                         break;
 
                     case "-r":
                     case "--run":
-                        Options.BuildMode = BuildType.BuildAndRun;
+                        CompilerOptions.BuildMode = BuildType.BuildAndRun;
                         break;
 
                     // --Fixed meaning Fixed Format
                     case "--fixed":
-                        Options.SourceFormat = "fixed";
+                        CompilerOptions.SourceFormat = SourceFormat.Fixed;
                         break;
                     // --Free meaning Free Format
                     case "--free":
-                        Options.SourceFormat = "free";
+                        CompilerOptions.SourceFormat = SourceFormat.Free;
                         break;
                 }
             }
 
-            var preprocessedLines = Preprocessor.Preprocess(Options.EntryPoint);
-            var classified = Token.FromValue(preprocessedLines);
-            var analized = Analyzer.Analyze(classified, Options.EntryPoint);
+            var preprocessedLines = Preprocessor.Preprocess(CompilerOptions.EntryPoint);
 
-            if (Options.BuildMode is BuildType.ParseOnly)
+            var classified = Token.FromValue(preprocessedLines);
+
+            var analized = Analyzer.Analyze(classified, CompilerOptions.EntryPoint);
+
+            if (CompilerOptions.BuildMode is BuildType.ParseOnly)
             {
                 if (!ErrorHandler.HasError) ErrorHandler.SuccessfulParsing();
             }
 
-            if (Options.BuildMode is BuildType.PrintTokens)
+            if (CompilerOptions.BuildMode is BuildType.PrintTokens)
             {
                 var colorToggle = true;
 
@@ -168,7 +146,7 @@ public static class Otterkit
                 if (!ErrorHandler.HasError) ErrorHandler.SuccessfulParsing();
             }
 
-            if (Options.BuildMode is BuildType.PrintSymbols)
+            if (CompilerOptions.BuildMode is BuildType.PrintSymbols)
             {
                 bool colorToggle = true;
 
@@ -190,17 +168,17 @@ public static class Otterkit
                 if (!ErrorHandler.HasError) ErrorHandler.SuccessfulParsing();
             }
 
-            if (Options.BuildMode is BuildType.BuildOnly)
+            if (CompilerOptions.BuildMode is BuildType.BuildOnly)
             {
-                Codegen.Generate(analized, Options.EntryPoint);
+                Codegen.Generate(analized, CompilerOptions.EntryPoint);
 
                 Directory.CreateDirectory(".otterkit/Build");
                 CallDotnetCompiler("build");
             }
             
-            if (Options.BuildMode is BuildType.BuildAndRun)
+            if (CompilerOptions.BuildMode is BuildType.BuildAndRun)
             {
-                Codegen.Generate(analized, Options.EntryPoint);
+                Codegen.Generate(analized, CompilerOptions.EntryPoint);
 
                 Directory.CreateDirectory(".otterkit/Build");
                 CallDotnetCompiler("run");
@@ -213,33 +191,16 @@ public static class Otterkit
         var arguments = string.Empty;
         if (operation.Equals("new"))
         {
-            var type = Options.Type switch
+            var templateType = CompilerOptions.Output switch
             {
-                "app" => "otterkit-export",
-                "mod" => "otterkit-module-export",
+                OutputType.Application => "otterkit-export",
+                OutputType.Library => "otterkit-module-export",
                 _ => "otterkit-export"
             };
 
-            var otterkitConfig = $$"""
-            {
-                "$schema": "https://raw.githubusercontent.com/otterkit/otterkit/unfinished-codegen/src/schema.json",
-                "author": "Project Author",
-                "name": "{{Options.Name}}",
-                "id": "MyCompany.{{Options.Name}}",
-                "description": "Description of the project's purpose",
-                "tags": ["COBOL"],
-                "metadata": {
-                    "entryPoint": "main.cob#main",
-                    "type": "{{(Options.Type.Equals("app")?"application":"module")}}"
-                },
-                "license": "License URL"
-            }
-            """;
-
             Directory.CreateDirectory(".otterkit");
 
-            File.WriteAllText(".otterkit/OtterkitConfig.json", otterkitConfig);
-            arguments = $"new {type} -n OtterkitExport -o .otterkit --force";
+            arguments = $"new {templateType} -n OtterkitExport -o .otterkit --force";
         }
 
         if (operation.Equals("run"))
@@ -253,12 +214,12 @@ public static class Otterkit
                 binaryName = @".otterkit\Build\OtterkitExport.exe";
             }
 
-            using Process otterkitExport = new();
-            otterkitExport.StartInfo.FileName = binaryName;
-            otterkitExport.StartInfo.UseShellExecute = false;
-            otterkitExport.Start();
+            using Process outputBinary = new();
+            outputBinary.StartInfo.FileName = binaryName;
+            outputBinary.StartInfo.UseShellExecute = false;
+            outputBinary.Start();
 
-            otterkitExport.WaitForExit();
+            outputBinary.WaitForExit();
 
             return;
         }
@@ -266,6 +227,7 @@ public static class Otterkit
         if (operation.Equals("build"))
         {
             string runtimeIdentifier = string.Empty;
+
             if (OperatingSystem.IsLinux())
             {
                 runtimeIdentifier = "linux-x64";

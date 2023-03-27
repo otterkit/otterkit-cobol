@@ -28,12 +28,9 @@ public static partial class Lexer
     private const string SymbolPattern = @"|(\+|\-|\*\*|\*|=|\/|\$|,|;|::|\.|\(|\)|>>|<>|>=|<=|>|<|&|_)";
     private const string AllPatterns = StringPattern + WordsPattern + NumberPattern + DirectivesPattern + SymbolPattern;
 
-    public static int LineIndex;
-    public static int FileIndex;
-
     private static bool IsPictureNext;
 
-    public static void TokenizeLine(List<Token> sourceTokens, ReadOnlySpan<byte> bytes)
+    public static void TokenizeLine(List<Token> sourceTokens, ReadOnlySpan<byte> bytes, int lineIndex)
     {
         var charCount = Encoding.UTF8.GetCharCount(bytes);
         var maxStackLimit = 256;
@@ -46,6 +43,8 @@ public static partial class Lexer
 
         var pictureEndIndex = 0;
 
+        var fileIndex = CompilerOptions.FileNames.Count - 1;
+
         foreach (var token in LexerRegex().EnumerateMatches(sourceChars))
         {
             ReadOnlySpan<char> currentMatch = sourceChars.Slice(token.Index, token.Length);
@@ -54,7 +53,7 @@ public static partial class Lexer
 
             if (currentMatch.Contains(">>", StringComparison.OrdinalIgnoreCase))
             {
-                Preprocessor.PreprocessDirective(currentMatch, LineIndex);
+                Preprocessor.PreprocessDirective(currentMatch, lineIndex);
                 continue;
             }
 
@@ -70,9 +69,9 @@ public static partial class Lexer
 
                 Token picture = new(new string(pictureChars), TokenType.Picture)
                 {
-                    Line = LineIndex,
+                    Line = lineIndex,
                     Column = token.Index + 1,
-                    FileIndex = FileIndex
+                    FileIndex = fileIndex
                 };
 
                 sourceTokens.Add(picture);
@@ -104,9 +103,9 @@ public static partial class Lexer
 
                 Token stringLiteral = new(new string(preprocessed), type)
                 {
-                    Line = LineIndex,
+                    Line = lineIndex,
                     Column = token.Index + 1,
-                    FileIndex = FileIndex
+                    FileIndex = fileIndex
                 };
 
                 sourceTokens.Add(stringLiteral);
@@ -115,9 +114,9 @@ public static partial class Lexer
 
             Token tokenized = new(new string(currentMatch), type)
             {
-                Line = LineIndex,
+                Line = lineIndex,
                 Column = token.Index + 1,
-                FileIndex = FileIndex
+                FileIndex = fileIndex
             };
 
             sourceTokens.Add(tokenized);

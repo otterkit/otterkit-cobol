@@ -5,12 +5,10 @@ using System.Text.RegularExpressions;
 namespace Otterkit; 
 
 public sealed partial record Token
-{   
-    private static Options CompilerOptions = Otterkit.Options;
-
-    private string FetchFile()
+{
+    public string FetchFile()
     {
-        if (FileIndex is 0)
+        if (FileIndex == 0)
         {
             return CompilerOptions.EntryPoint;
         }

@@ -3,7 +3,6 @@ namespace Otterkit;
 public static class ErrorHandler
 {
     internal static bool HasError = false;
-    internal static Options Options = Otterkit.Options;
 
     public static class Compiler
     {
@@ -140,7 +139,7 @@ public static class ErrorHandler
 
     public static void SuccessfulParsing()
     {
-        var filesCount = Options.FileNames.Count + 1;
+        var filesCount = CompilerOptions.FileNames.Count + 1;
         var isPlural = filesCount > 1 ? "s" : "";
 
         Console.ForegroundColor = ConsoleColor.Blue;

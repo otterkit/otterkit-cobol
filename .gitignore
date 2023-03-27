@@ -19,6 +19,9 @@ publish/
 # VSCode Files
 .vscode/
 
+# Rider Files
+.idea/
+
 # User-specific files
 *.rsuser
 *.suo

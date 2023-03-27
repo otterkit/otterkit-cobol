@@ -18,13 +18,6 @@ public static partial class SymbolTable
     {
         int symbolIndex = default;
 
-        if (symbolType is SymbolType.SourceUnitSignature)
-        {
-            SourceUnitSignatures.Add(new SourceUnitSignature());
-
-            symbolIndex = SourceUnitSignatures.Count - 1;
-        }
-
         SymbolPointer pointer = new()
         {
             SymbolType = symbolType,
@@ -58,10 +51,4 @@ public static partial class SymbolTable
         throw new ArgumentException($"Symbol table key \"{symbolHash}\" does not exist.");
     }
 
-    public static bool CheckType(SymbolPointer symbolPointer, SymbolType symbolType)
-    {
-        if (symbolPointer.SymbolType == symbolType) return true;
-
-        return false;
-    }
 }

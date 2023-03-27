@@ -371,7 +371,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
                 Unexpected end of file.
                 """)
-            .WithSourceLine(Lookahead(-1), FileName, $"""
+            .WithSourceLine(Lookahead(-1), $"""
                 Expected {expected} after this token.
                 """)
             .CloseError();
@@ -387,7 +387,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, """
                 Unexpected token.
                 """)
-            .WithSourceLine(lookahead, FileName, $"""
+            .WithSourceLine(lookahead, $"""
                 {custom ?? $"Expected {expected}, instead of {Current().Value}"}
                 """)
             .CloseError();
@@ -410,7 +410,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
                 Unexpected end of file.
                 """)
-            .WithSourceLine(Lookahead(-1), FileName, $"""
+            .WithSourceLine(Lookahead(-1), $"""
                 Expected {expected} after this token.
                 """)
             .CloseError();
@@ -427,7 +427,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, """
                 Unexpected token.
                 """)
-            .WithSourceLine(Current(), FileName, $"""
+            .WithSourceLine(Current(), $"""
                 $"Expected '{expected}' here, found '{Current().Value}' instead"
                 """)
             .CloseError();
@@ -464,7 +464,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
                 Unexpected end of file.
                 """)
-            .WithSourceLine(Lookahead(-1), FileName, $"""
+            .WithSourceLine(Lookahead(-1), $"""
                 Expected an identifier after this token.
                 """)
             .CloseError();
@@ -478,7 +478,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
                 Unexpected token.
                 """)
-            .WithSourceLine(Current(), FileName, $"""
+            .WithSourceLine(Current(), $"""
                 Expected a user-defined word (an identifier).
                 """)
             .CloseError();
@@ -543,7 +543,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
                 Unexpected end of file.
                 """)
-            .WithSourceLine(Lookahead(-1), FileName, $"""
+            .WithSourceLine(Lookahead(-1), $"""
                 Expected an identifier after this token.
                 """)
             .CloseError();
@@ -558,7 +558,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
                 Unexpected token.
                 """)
-            .WithSourceLine(Current(), FileName, $"""
+            .WithSourceLine(Current(), $"""
                 Expected a user-defined word (an identifier).
                 """)
             .CloseError();
@@ -631,7 +631,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
                 Unexpected end of file.
                 """)
-            .WithSourceLine(Lookahead(-1), FileName, $"""
+            .WithSourceLine(Lookahead(-1), $"""
                 Expected an identifier after this token.
                 """)
             .CloseError();
@@ -645,7 +645,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
                 Unexpected token.
                 """)
-            .WithSourceLine(Current(), FileName, $"""
+            .WithSourceLine(Current(), $"""
                 Expected a user-defined word (an identifier).
                 """)
             .CloseError();
@@ -920,7 +920,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
                 Unexpected end of file.
                 """)
-            .WithSourceLine(Lookahead(-1), FileName, $"""
+            .WithSourceLine(Lookahead(-1), $"""
                 Expected an identifier after this token.
                 """)
             .CloseError();
@@ -935,7 +935,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
                 Unexpected token type.
                 """)
-            .WithSourceLine(Current(), FileName, $"""
+            .WithSourceLine(Current(), $"""
                 Expected a user-defined word (an identifier).
                 """)
             .CloseError();
@@ -954,7 +954,7 @@ public static partial class Analyzer
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """
                 Unexpected user-defined name.
                 """)
-            .WithSourceLine(Current(), FileName, $"""
+            .WithSourceLine(Current(), $"""
                 Expected the following identifier: {identifierToken.Value}.
                 """)
             .CloseError();

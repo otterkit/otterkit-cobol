@@ -20,11 +20,11 @@ public readonly ref partial struct Error
         ColoredWrite(DarkGray, "     │\n");
     }
 
-    private static void ShowFileInformation(char joiningChar, Token token, string fileName)
+    private static void ShowFileInformation(char joiningChar, Token token)
     {
         // ╭
         ColoredWrite(DarkGray     , $"     {joiningChar}─/> [");
-        ColoredWrite(ResetColor() , $"{fileName}:{token.Line}:{token.Column}");
+        ColoredWrite(ResetColor() , $"{token.FetchFile}:{token.Line}:{token.Column}");
         ColoredWrite(DarkGray     , "]\n");
     }
 
@@ -59,9 +59,9 @@ public readonly ref partial struct Error
         ColoredWrite(ResetColor() , $": {noteMessage}\n");
     }
 
-    private static (string, string) FetchSourceLine(Token token, string fileName)
+    private static (string, string) FetchSourceLine(Token token)
     {
-        string line = File.ReadLines(fileName).Skip(token.Line - 1).Take(token.Line).First();
+        string line = File.ReadLines(token.FetchFile).Skip(token.Line - 1).Take(token.Line).First();
         int whiteSpace = line.TakeWhile(char.IsWhiteSpace).Count() + 1;
 
         string error = new string(' ', line.Length - token.Value.Length)

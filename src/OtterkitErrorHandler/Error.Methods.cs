@@ -14,12 +14,12 @@ public readonly ref partial struct Error
         return new(errorType, consoleColor);
     }
 
-    public Error WithSourceLine(Token token, string fileName, string? errorHelp = null)
+    public Error WithSourceLine(Token token, string? errorHelp = null)
     {
-        var (line, error) = FetchSourceLine(token, fileName);
+        var (line, error) = FetchSourceLine(token);
         
         //   ╭─/> [file.cob:5:25]
-        ShowFileInformation('╭', token, fileName);
+        ShowFileInformation('╭', token);
 
         //   │ 
         Separator();
@@ -48,12 +48,12 @@ public readonly ref partial struct Error
         return this;
     }
 
-    public Error WithSourceNote(Token token, string fileName)
+    public Error WithSourceNote(Token token)
     {
-        var (line, note) = FetchSourceLine(token, fileName);
+        var (line, note) = FetchSourceLine(token);
         
         //   ├─/> [file.cob:5:25]
-        ShowFileInformation('├', token, fileName);
+        ShowFileInformation('├', token);
 
         //   │ 
         Separator();

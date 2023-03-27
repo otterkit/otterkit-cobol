@@ -958,7 +958,7 @@ public static partial class Analyzer
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                     Division header, missing separator period.
                     """)
-                .WithSourceLine(Lookahead(-1), FileName, """
+                .WithSourceLine(Lookahead(-1), """
                     Expected a separator period '. ' after this token
                     """)
                 .WithNote("""
@@ -1070,7 +1070,7 @@ public static partial class Analyzer
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 27, $"""
                     End marker, {errorMessageChoice}
                     """)
-                .WithSourceLine(Lookahead(-1), FileName, """
+                .WithSourceLine(Lookahead(-1), """
                     Expected a source unit end marker after this token
                     """)
                 .CloseError();
@@ -1131,7 +1131,7 @@ public static partial class Analyzer
                         .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                             End marker, missing separator period.
                             """)
-                        .WithSourceLine(Lookahead(-1), FileName, """
+                        .WithSourceLine(Lookahead(-1), """
                             Expected a separator period '. ' after this token
                             """)
                         .WithNote("""
@@ -1176,7 +1176,7 @@ public static partial class Analyzer
                         .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                             End marker, missing separator period.
                             """)
-                        .WithSourceLine(Lookahead(-1), FileName, """
+                        .WithSourceLine(Lookahead(-1), """
                             Expected a separator period '. ' after this token
                             """)
                         .WithNote("""
@@ -1201,7 +1201,7 @@ public static partial class Analyzer
                         .Build(ErrorType.Analyzer, ConsoleColor.Red, 26,"""
                             End marker, missing separator period.
                             """)
-                        .WithSourceLine(Lookahead(-1), FileName, """
+                        .WithSourceLine(Lookahead(-1), """
                             Expected a separator period '. ' after this token
                             """)
                         .WithNote("""
@@ -1224,10 +1224,10 @@ public static partial class Analyzer
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """
                     Unexpected user-defined name.
                     """)
-                .WithSourceLine(Current(), FileName, $"""
+                .WithSourceLine(Current(), $"""
                     Expected the following identifier: {token.Value}.
                     """)
-                .WithSourceNote(token, FileName)
+                .WithSourceNote(token)
                 .WithNote("""
                     The end marker must match its source unit definition. 
                     """)
@@ -1242,7 +1242,7 @@ public static partial class Analyzer
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                     End marker, missing separator period.
                     """)
-                .WithSourceLine(Lookahead(-1), FileName, """
+                .WithSourceLine(Lookahead(-1), """
                     Expected a separator period '. ' after this token
                     """)
                 .WithNote("""

@@ -39,10 +39,14 @@ public sealed partial record Token
                 // If a string contains non-normalized characters followed by invalid Unicode characters, 
                 // the Normalize method will throw an ArgumentException.
                 // Return false and report a syntax error:
-                ErrorHandler.Analyzer.Report(fileName, token, ErrorType.Syntax, """
-                Conversion into Normalization Form NFKC failed due to an invalid character. Identifiers must not contain invalid Unicode characters.
-                """);
-                ErrorHandler.Analyzer.PrettyError(fileName, token);
+                Error
+                .Build(ErrorType.Syntax, ConsoleColor.Red, 125,"""
+                    Invalid Unicode character.
+                    """)
+                .WithSourceLine(token, """
+                    Conversion into Normalization Form NFKC failed due to an invalid character.
+                    """)
+                .CloseError();
 
                 return false;
             }
@@ -50,11 +54,15 @@ public sealed partial record Token
 
         if (token.Value.Length >= 64)
         {
-            ErrorHandler.Analyzer.Report(fileName, token, ErrorType.Syntax, """
-            Identifiers (user-defined words) must have a length less than or equal to 63 characters.
-            """);
-            ErrorHandler.Analyzer.PrettyError(fileName, token);
-            
+            Error
+            .Build(ErrorType.Syntax, ConsoleColor.Red, 130,"""
+                Invalid identifier.
+                """)
+            .WithSourceLine(token, """
+                Identifiers must not have more than 63 characters.
+                """)
+            .CloseError();
+
             return false;
         }
 
@@ -89,10 +97,14 @@ public sealed partial record Token
 
         if (!matchesStartCategory && !matchesOtherStartCharacters)
         {
-            ErrorHandler.Analyzer.Report(fileName, token, ErrorType.Syntax, """
-            Invalid character at the start of this identifier.
-            """);
-            ErrorHandler.Analyzer.PrettyError(fileName, token);
+            Error
+            .Build(ErrorType.Syntax, ConsoleColor.Red, 130,"""
+                Invalid identifier.
+                """)
+            .WithSourceLine(token, """
+                Invalid character at the start of this identifier.
+                """)
+            .CloseError();
             
             return false;
         }
@@ -143,10 +155,14 @@ public sealed partial record Token
         {
             if (!matchesContinueCategory(character) && !matchesOtherContinueCharacters(character))
             {
-                ErrorHandler.Analyzer.Report(fileName, token, ErrorType.Syntax, """
-                Invalid character in the middle of this identifier.
-                """);
-                ErrorHandler.Analyzer.PrettyError(fileName, token);
+                Error
+                .Build(ErrorType.Syntax, ConsoleColor.Red, 130,"""
+                    Invalid identifier.
+                    """)
+                .WithSourceLine(token, """
+                    Invalid character in the middle of this identifier.
+                    """)
+                .CloseError();
                 
                 return false;
             }
@@ -154,11 +170,15 @@ public sealed partial record Token
 
         if (token.Value[token.Value.Length - 1] is '\u002D' or '\u005F' or '\u30FB')
         {
-            ErrorHandler.Analyzer.Report(fileName, token, ErrorType.Syntax, """
-            Invalid character at the end of this identifier.
-            """);
-            ErrorHandler.Analyzer.PrettyError(fileName, token);
-            
+            Error
+            .Build(ErrorType.Syntax, ConsoleColor.Red, 130,"""
+                Invalid identifier.
+                """)
+            .WithSourceLine(token, """
+                Invalid character at the end of this identifier.
+                """)
+            .CloseError();
+
             return false;
         }
 

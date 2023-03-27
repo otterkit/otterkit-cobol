@@ -28,6 +28,7 @@ public record DataSignature
     public bool IsAligned;
     public bool IsConstantRecord;
     public bool IsProperty;
+    public bool HasUsage;
     public bool HasPicture;
     public bool HasValue;
 }

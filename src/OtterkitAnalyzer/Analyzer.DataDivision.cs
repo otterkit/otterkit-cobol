@@ -26,9 +26,22 @@ public static partial class Analyzer
         Expected("DIVISION");
         CurrentSection = CurrentScope.DataDivision;
 
-        Expected(".", """
-        Missing separator period at the end of this DATA DIVISION header, every division header must end with a separator period
-        """, -1, "WORKING-STORAGE", "LOCAL-STORAGE", "LINKAGE", "PROCEDURE");
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                Division header, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token
+                """)
+            .WithNote("""
+                Every division header must end with a separator period
+                """)
+            .CloseError();
+
+            AnchorPoint("WORKING-STORAGE", "LOCAL-STORAGE", "LINKAGE", "PROCEDURE");
+        }
 
         if (CurrentEquals("WORKING-STORAGE"))
             WorkingStorage();
@@ -38,13 +51,6 @@ public static partial class Analyzer
 
         if (CurrentEquals("LINKAGE"))
             LinkageSection();
-
-        if (!CurrentEquals("PROCEDURE"))
-        {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "Data Division data items and sections");
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
-            Continue();
-        }
     }
 
 
@@ -131,10 +137,17 @@ public static partial class Analyzer
 
         if (SymbolTable.DataLocals.ReferenceExists(dataName) && levelNumber is 1)
         {
-            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, $"""
-            A 01-level data item with this name already exists in this source unit, root level items must have a unique name.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
+                Duplicate root level definition.
+                """)
+            .WithSourceLine(Current(), """
+                A 01 level variable already exists with this name
+                """)
+            .WithNote("""
+                Every root level item must have a unique name. 
+                """)
+            .CloseError();
         }
 
 
@@ -146,7 +159,7 @@ public static partial class Analyzer
 
         if (GroupStack.Count == 0)
         {
-            dataReference.Parent = "Root";
+            dataReference.Parent = "root";
         }
         else
         {
@@ -155,21 +168,28 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-            Expected data division clauses or a separator period after this data item's identifier.
-            Token found ("{Current().Value}") was not a data division clause reserved word.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
+                Unexpected token.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected data item clauses or a separator period after this token
+                """)
+            .CloseError();
         }
 
         while (CurrentEquals(TokenContext.IsClause))
         {
             if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL", "TYPEDEF"))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Missing clause or possible clause mismatch, in this context the "IS" word must be followed by the EXTERNAL, GLOBAL or TYPEDEF clauses only (IS TYPEDEF), or must be in the middle of the PICTURE clause (PIC IS ...) 
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 35,"""
+                    Missing clause or possible clause mismatch.
+                    """)
+                .WithSourceLine(Current(), """
+                    The 'IS' clause must only be followed by EXTERNAL, GLOBAL or TYPEDEF.
+                    """)
+                .CloseError();
             }
 
             if ((CurrentEquals("IS") && LookaheadEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
@@ -182,9 +202,7 @@ public static partial class Analyzer
                     dataReference.IsExternal = true;
                     dataReference.ExternalName = Current().Value;
 
-                    String("""
-                    Missing externalized name, the "AS" word on the EXTERNAL clause must be followed by an alphanumeric or national literal
-                    """, -1);
+                    String();
                 }
 
                 if (!CurrentEquals("AS"))
@@ -335,10 +353,14 @@ public static partial class Analyzer
 
                 if (!CurrentEquals(TokenType.String, TokenType.Numeric))
                 {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    The only tokens allowed after a VALUE clause are type literals, like an Alphanumeric literal ("Hello, World!") or a Numeric literal (123.456).
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
+                        Unexpected token.
+                        """)
+                    .WithSourceLine(Current(), """
+                        Expected a string or numeric literal.
+                        """)
+                    .CloseError();
                 }
 
                 if (CurrentEquals(TokenType.String))
@@ -387,9 +409,20 @@ public static partial class Analyzer
 
         if (dataReference.IsGroup) GroupStack.Push(dataName);
 
-        Expected(".", """
-        Missing separator period at the end of this data item definition, each data item must end with a separator period
-        """, -1, "PROCEDURE");
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                Data item definition, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token
+                """)
+            .WithNote("""
+                Every item must end with a separator period
+                """)
+            .CloseError();
+        }
 
         SymbolTable.DataLocals.AddOrUpdateReference(dataName, dataReference);
 
@@ -400,10 +433,14 @@ public static partial class Analyzer
     {
         if (!CurrentEquals("01") && !CurrentEquals("1"))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            Invalid level number for this data item, CONSTANT data items must have a level number of 1 or 01
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 40,"""
+                Invalid level number.
+                """)
+            .WithSourceLine(Current(), """
+                CONSTANT variables must have a level number of '1' or '01'.
+                """)
+            .CloseError();
         }
 
         var levelNumber = int.Parse(Current().Value);
@@ -414,10 +451,17 @@ public static partial class Analyzer
 
         if (SymbolTable.DataLocals.ReferenceExists(dataName))
         {
-            ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, $"""
-            A data item with this name already exists in this program, data items in a program must have a unique name. 
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Lookahead(-1));
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
+                Duplicate root level definition.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                A 01 level variable already exists with this name
+                """)
+            .WithNote("""
+                Root level items must have a unique name. 
+                """)
+            .CloseError();
         }
 
         DataSignature dataReference = new();
@@ -474,7 +518,20 @@ public static partial class Analyzer
 
         }
 
-        Expected(".");
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                Data item definition, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token
+                """)
+            .WithNote("""
+                Every item must end with a separator period
+                """)
+            .CloseError();
+        }
 
         SymbolTable.DataLocals.AddOrUpdateReference(dataName, dataReference);
     }
@@ -512,10 +569,15 @@ public static partial class Analyzer
             if (level != lowerLevel)
             {
                 LevelStack.Push(current);
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                All data items that are immediate members of a group item must have equal level numbers, and it should be greater than the level number used for that group item. 
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 40,"""
+                    Invalid level number.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This variable should have a level number of {lowerLevel}.
+                    """)
+                .CloseError();
             }
         }
     }
@@ -544,34 +606,50 @@ public static partial class Analyzer
 
         if (usageCannotHavePicture && dataItem.HasPicture)
         {
-            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, $"""
-            Data items defined with USAGE {dataItem.UsageType} cannot contain a PICTURE clause
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
+                Invalid clause combination.
+                """)
+            .WithSourceLine(Current(), $"""
+                Items with USAGE {dataItem.UsageType.Display()} must not contain a PICTURE clause.
+                """)
+            .CloseError();
         }
 
-        if (!usageCannotHavePicture && dataItem.IsElementary && !dataItem.HasPicture && !dataItem.HasValue)
+        if (!usageCannotHavePicture && dataItem.IsElementary && !dataItem.HasPicture && !dataItem.HasUsage && !dataItem.HasValue)
         {
-            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, """
-            Elementary data items must contain a PICTURE clause. Except when an alphanumeric, boolean, or national literal is defined in the VALUE clause 
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
+                Invalid clause combination.
+                """)
+            .WithSourceLine(Current(), $"""
+                Elementary items must contain a PICTURE clause.
+                """)
+            .CloseError();
         }
 
         if (dataItem.IsGroup && dataItem.HasPicture)
         {
-            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, """
-            Group items must not contain a PICTURE clause. The PICTURE clause can only be specified on elementary data items
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
+                Invalid clause combination.
+                """)
+            .WithSourceLine(Current(), $"""
+                Group items must not contain a PICTURE clause.
+                """)
+            .CloseError();
         }
 
         if (dataItem.IsRenames && dataItem.HasPicture)
         {
-            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, """
-            Data items with a RENAMES clause must not contain a PICTURE clause
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
+                Invalid clause combination.
+                """)
+            .WithSourceLine(Current(), $"""
+                Items with a RENAMES clause must not contain a PICTURE clause.
+                """)
+            .CloseError();
         }
 
         bool usageCannotHaveValue = dataItem.UsageType switch
@@ -587,12 +665,15 @@ public static partial class Analyzer
 
         if (usageCannotHaveValue && dataItem.HasValue)
         {
-            ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, $"""
-            Data items defined with USAGE {dataItem.UsageType} cannot contain a VALUE clause
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
+                Invalid clause combination.
+                """)
+            .WithSourceLine(Current(), $"""
+                Items with USAGE {dataItem.UsageType.Display()} must not contain a VALUE clause.
+                """)
+            .CloseError();
         }
-
     }
 
     private static void CheckConditionNames(string parentName)
@@ -667,9 +748,20 @@ public static partial class Analyzer
                 }
             }
 
-            Expected(".", """
-            Missing separator period at the end of this condition name, each condition name must end with a separator period
-            """, -1, "PROCEDURE");
+            if (!Expected(".", false))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    Data item definition, missing separator period.
+                    """)
+                .WithSourceLine(Lookahead(-1), """
+                    Expected a separator period '. ' after this token
+                    """)
+                .WithNote("""
+                    Every item must end with a separator period
+                    """)
+                .CloseError();
+            }
 
             SymbolTable.DataLocals.AddOrUpdateReference(dataName, dataReference);
         }
@@ -850,10 +942,15 @@ public static partial class Analyzer
                 break;
 
             default:
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Recovery, """
-                Unrecognized USAGE clause. This could be due to an unsupported third-party extension. 
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current(), ConsoleColor.Blue);
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 50,"""
+                    Unrecognized USAGE clause.
+                    """)
+                .WithSourceLine(Lookahead(-1))
+                .WithNote("""
+                    This could be due to an unsupported third-party extension.
+                    """)
+                .CloseError();
 
                 AnchorPoint(TokenContext.IsClause);
                 break;

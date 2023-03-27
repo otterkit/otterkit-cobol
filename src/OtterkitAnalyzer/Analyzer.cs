@@ -287,28 +287,52 @@ public static partial class Analyzer
 
                 if (isPrototype && (isCommon || isInitial || isRecursive))
                 {
-                    ErrorHandler.Analyzer.Report(FileName, SourceId.Peek(), ErrorType.General, """
-                    Invalid prototype. Program prototypes cannot be defined as common, initial or recursive.
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, SourceId.Peek());
+                    Error
+                    .Build(ErrorType.Syntax, ConsoleColor.Red, 55,"""
+                        Invalid program prototype definition.
+                        """)
+                    .WithSourceLine(SourceId.Peek(), """
+                        Program prototypes cannot be defined as common, initial or recursive.
+                        """)
+                    .CloseError();
                 }
 
                 if (isInitial && isRecursive)
                 {
-                    ErrorHandler.Analyzer.Report(FileName, SourceId.Peek(), ErrorType.General, """
-                    Invalid program definition. Initial programs cannot be defined as recursive.
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, SourceId.Peek());
+                    Error
+                    .Build(ErrorType.Syntax, ConsoleColor.Red, 55,"""
+                        Invalid program definition.
+                        """)
+                    .WithSourceLine(SourceId.Peek(), """
+                        Initial programs cannot be defined as recursive.
+                        """)
+                    .CloseError();
                 }
 
                 if (!isPrototype) Optional("PROGRAM");
             }
 
-            SymbolTable.AddSymbol($"{SourceId.Peek()}", SymbolType.SourceUnitSignature);
+            var signature = new SourceUnitSignature(SourceId.Peek(), SourceType.Peek());
 
-            Expected(".", """
-            Missing separator period at the end of this program definition
-            """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+            SymbolTable.SourceUnitGlobals
+                .AddGlobalReference(SourceId.Peek().Value, signature);
+
+            if (!Expected(".", false))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    Program definition, missing separator period.
+                    """)
+                .WithSourceLine(Lookahead(-1), """
+                    Expected a separator period '. ' after this token.
+                    """)
+                .WithNote("""
+                    Every source unit definition must end with a separator period.
+                    """)
+                .CloseError();
+
+                AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+            }
         }
 
         void FunctionId()
@@ -336,10 +360,27 @@ public static partial class Analyzer
                 SourceType.Push(SourceUnit.FunctionPrototype);
             }
 
-            SymbolTable.AddSymbol($"{SourceId.Peek()}", SymbolType.SourceUnitSignature);
-            Expected(".", """
-            Missing separator period at the end of this function definition
-            """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+            var signature = new SourceUnitSignature(SourceId.Peek(), SourceType.Peek());
+
+            SymbolTable.SourceUnitGlobals
+                .AddGlobalReference(SourceId.Peek().Value, signature);
+
+            if (!Expected(".", false))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    Function definition, missing separator period.
+                    """)
+                .WithSourceLine(Lookahead(-1), """
+                    Expected a separator period '. ' after this token.
+                    """)
+                .WithNote("""
+                    Every source unit definition must end with a separator period.
+                    """)
+                .CloseError();
+
+                AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+            }
         }
 
         void ClassId()
@@ -369,12 +410,17 @@ public static partial class Analyzer
             {
                 Expected("INHERITS");
                 Optional("FROM");
+
                 if (!CurrentEquals(TokenType.Identifier))
                 {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    The INHERITS FROM clause must contain at least one class or object name.
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
+                        Class definition, missing INHERITS class.
+                        """)
+                    .WithSourceLine(Lookahead(-1), """
+                        The INHERITS phrase must contain at least one class name.
+                        """)
+                    .CloseError();
                 }
 
                 Identifier();
@@ -386,20 +432,41 @@ public static partial class Analyzer
                 Expected("USING");
                 if (!CurrentEquals(TokenType.Identifier))
                 {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    The USING clause must contain at least one parameter.
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
+                        Class definition, missing using parameter.
+                        """)
+                    .WithSourceLine(Lookahead(-1), """
+                        The USING phrase must contain at least one parameter.
+                        """)
+                    .CloseError();
                 }
 
                 Identifier();
                 while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
-            SymbolTable.AddSymbol($"{SourceId.Peek()}", SymbolType.SourceUnitSignature);
-            Expected(".", """
-            Missing separator period at the end of this class definition
-            """, -1, "OPTION", "ENVIRONMENT", "DATA", "FACTORY", "OBJECT");
+            var signature = new SourceUnitSignature(SourceId.Peek(), SourceType.Peek());
+
+            SymbolTable.SourceUnitGlobals
+                .AddGlobalReference(SourceId.Peek().Value, signature);
+
+            if (!Expected(".", false))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    Class definition, missing separator period.
+                    """)
+                .WithSourceLine(Lookahead(-1), """
+                    Expected a separator period '. ' after this token.
+                    """)
+                .WithNote("""
+                    Every source unit definition must end with a separator period.
+                    """)
+                .CloseError();
+
+                AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "FACTORY", "OBJECT");
+            }
         }
 
         void InterfaceId()
@@ -423,12 +490,17 @@ public static partial class Analyzer
             {
                 Expected("INHERITS");
                 Optional("FROM");
+
                 if (!CurrentEquals(TokenType.Identifier))
                 {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    The INHERITS FROM clause must contain at least one class or object name.
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
+                        Interface definition, missing INHERITS class.
+                        """)
+                    .WithSourceLine(Lookahead(-1), """
+                        The INHERITS phrase must contain at least one interface name.
+                        """)
+                    .CloseError();
                 }
 
                 Identifier();
@@ -440,20 +512,41 @@ public static partial class Analyzer
                 Expected("USING");
                 if (!CurrentEquals(TokenType.Identifier))
                 {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    The USING clause must contain at least one parameter.
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
+                        Interface definition, missing using parameter.
+                        """)
+                    .WithSourceLine(Lookahead(-1), """
+                        The USING phrase must contain at least one parameter.
+                        """)
+                    .CloseError();
                 }
 
                 Identifier();
                 while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
-            SymbolTable.AddSymbol($"{SourceId.Peek()}", SymbolType.SourceUnitSignature);
-            Expected(".", """
-            Missing separator period at the end of this interface definition
-            """, -1, "OPTION", "ENVIRONMENT", "DATA", "FACTORY", "OBJECT");
+            var signature = new SourceUnitSignature(SourceId.Peek(), SourceType.Peek());
+
+            SymbolTable.SourceUnitGlobals
+                .AddGlobalReference(SourceId.Peek().Value, signature);
+
+            if (!Expected(".", false))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    Interface definition, missing separator period.
+                    """)
+                .WithSourceLine(Lookahead(-1), """
+                    Expected a separator period '. ' after this token.
+                    """)
+                .WithNote("""
+                    Every source unit definition must end with a separator period.
+                    """)
+                .CloseError();
+
+                AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+            }
         }
 
         void MethodId()

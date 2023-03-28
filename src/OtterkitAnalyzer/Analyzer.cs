@@ -1087,6 +1087,8 @@ public static partial class Analyzer
                 Identifier name does not exist in the current context.
                 """)
             .CloseError();
+
+            Continue();
             return;
         }
 
@@ -1100,6 +1102,8 @@ public static partial class Analyzer
                 Identifier name requires a qualifier.
                 """)
             .CloseError();
+
+            Continue();
             return;
         }
 

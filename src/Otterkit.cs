@@ -92,11 +92,6 @@ public static class Otterkit
                         CompilerOptions.BuildMode = BuildType.PrintTokens;
                         break;
 
-                    case "-p:symbols":
-                    case "--parse:symbols":
-                        CompilerOptions.BuildMode = BuildType.PrintSymbols;
-                        break;
-
                     case "-r":
                     case "--run":
                         CompilerOptions.BuildMode = BuildType.BuildAndRun;
@@ -146,31 +141,9 @@ public static class Otterkit
                 if (!ErrorHandler.HasError) ErrorHandler.SuccessfulParsing();
             }
 
-            if (CompilerOptions.BuildMode is BuildType.PrintSymbols)
-            {
-                bool colorToggle = true;
-
-                foreach (var symbol in SymbolTable.Symbols)
-                {
-                    if (colorToggle)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Gray;
-                    }
-                    else
-                    {
-                        Console.ForegroundColor = ConsoleColor.DarkGray;
-                    }
-
-                    colorToggle = !colorToggle;
-                    Console.WriteLine($"{symbol.Key}  =>  {symbol.Value.SymbolType}");
-                }
-
-                if (!ErrorHandler.HasError) ErrorHandler.SuccessfulParsing();
-            }
-
             if (CompilerOptions.BuildMode is BuildType.BuildOnly)
             {
-                Codegen.Generate(analized, CompilerOptions.EntryPoint);
+                Codegen.Generate(CompilerOptions.SourceTokens, CompilerOptions.EntryPoint);
 
                 Directory.CreateDirectory(".otterkit/Build");
                 CallDotnetCompiler("build");
@@ -178,7 +151,7 @@ public static class Otterkit
             
             if (CompilerOptions.BuildMode is BuildType.BuildAndRun)
             {
-                Codegen.Generate(analized, CompilerOptions.EntryPoint);
+                Codegen.Generate(CompilerOptions.SourceTokens, CompilerOptions.EntryPoint);
 
                 Directory.CreateDirectory(".otterkit/Build");
                 CallDotnetCompiler("run");

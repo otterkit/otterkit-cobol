@@ -3,11 +3,11 @@ using System.Runtime.CompilerServices;
 
 namespace Otterkit;
 
-public sealed class GlobalReferences<TValue> where TValue: notnull
+public sealed class GlobalReferences
 {
-    private readonly Dictionary<string, TValue> ReferenceLookup = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, AbstractSignature> ReferenceLookup = new(StringComparer.OrdinalIgnoreCase);
 
-    public bool TryAddGlobalReference(string globalName, TValue globalReference)
+    public bool TryAddGlobalReference(string globalName, AbstractSignature globalReference)
     {
         ref var reference = ref CollectionsMarshal.GetValueRefOrAddDefault(ReferenceLookup, globalName, out var exists);
 
@@ -29,26 +29,26 @@ public sealed class GlobalReferences<TValue> where TValue: notnull
         return false;
     }
 
-    public bool ReferenceExists<TGlobal>(string globalName)
-        where TGlobal : class
+    public bool ReferenceExists<TSignature>(string globalName)
+        where TSignature : AbstractSignature
     {
         ref var reference = ref CollectionsMarshal.GetValueRefOrNullRef(ReferenceLookup, globalName);
 
-        if (!Unsafe.IsNullRef(ref reference)) return reference is TGlobal;
+        if (!Unsafe.IsNullRef(ref reference)) return reference is TSignature;
 
         return false;
     }
 
-    public TGlobal? GetSignature<TGlobal>(string globalName)
-        where TGlobal : class
+    public TSignature GetSignature<TSignature>(string globalName)
+        where TSignature : AbstractSignature
     {
         ref var reference = ref CollectionsMarshal.GetValueRefOrNullRef(ReferenceLookup, globalName);
 
         if (!Unsafe.IsNullRef(ref reference))
         {
-            return reference as TGlobal;
+            return (TSignature)reference;
         }
 
-        return null;
+        throw new ArgumentNullException(nameof(globalName), "Global reference does not exist in the ReferenceLookup Dictionary");
     }
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
 using System.Text;
 
@@ -56,7 +57,8 @@ public static partial class Analyzer
 
             if (notClassOrInterface)
             {
-                if (CurrentEquals("PROCEDURE")) PROCEDURE();
+                if (CurrentEquals("PROCEDURE")) 
+                    PROCEDURE(CompilerContext.CurrentCallable[0]);
             }
             else if (SourceType.Peek() == SourceUnit.Class)
             {
@@ -573,33 +575,6 @@ public static partial class Analyzer
                 Expected("FINAL");
             }
 
-            if (currentSource is SourceUnit.Interface)
-            {
-                var parent = SymbolTable.GetSignature<InterfaceSignature>(currentId.Value);
-
-                var method = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
-
-                parent.Methods.Add(method);
-            }
-
-            if (currentSource is SourceUnit.Object)
-            {
-                var parent = SymbolTable.GetSignature<ClassSignature>(currentId.Value);
-
-                var method = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
-
-                parent.ObjectMethods.Add(method);
-            }
-
-            if (currentSource is SourceUnit.Factory)
-            {
-                var parent = SymbolTable.GetSignature<ClassSignature>(currentId.Value);
-
-                var method = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
-
-                parent.FactoryMethods.Add(method);
-            }
-
             if (!Expected(".", false))
             {
                 Error
@@ -616,6 +591,33 @@ public static partial class Analyzer
 
                 AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
             }
+
+            if (currentSource is SourceUnit.Interface)
+            {
+                var parentInterface = SymbolTable.GetSignature<InterfaceSignature>(currentId.Value);
+
+                var methodPrototype = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
+
+                parentInterface.Methods.Add(methodPrototype);
+
+                CompilerContext.CurrentCallable[0] = methodPrototype;
+            }
+
+            var parentClass = SymbolTable.GetSignature<ClassSignature>(currentId.Value);
+
+            var method = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
+
+            if (currentSource is SourceUnit.Object)
+            {
+                parentClass.ObjectMethods.Add(method);
+            }
+
+            if (currentSource is SourceUnit.Factory)
+            {
+                parentClass.FactoryMethods.Add(method);
+            }
+            
+            CompilerContext.CurrentCallable[0] = method;
         }
 
         void Factory()
@@ -688,7 +690,7 @@ public static partial class Analyzer
 
                     if (CurrentEquals("DATA")) DATA();
 
-                    PROCEDURE();
+                    PROCEDURE(CompilerContext.CurrentCallable[0]);
 
                     EndMarker();
                 }
@@ -715,7 +717,7 @@ public static partial class Analyzer
 
                     if (CurrentEquals("DATA")) DATA();
 
-                    PROCEDURE();
+                    PROCEDURE(CompilerContext.CurrentCallable[0]);
 
                     EndMarker();
                 }
@@ -742,7 +744,8 @@ public static partial class Analyzer
 
                     if (CurrentEquals("DATA")) DATA();
 
-                    if (CurrentEquals("PROCEDURE")) PROCEDURE();
+                    if (CurrentEquals("PROCEDURE")) 
+                        PROCEDURE(CompilerContext.CurrentCallable[0]);
 
                     EndMarker();
                 }
@@ -919,7 +922,7 @@ public static partial class Analyzer
         // That includes the user-defined paragraphs, sections and declaratives
         // or when parsing OOP COBOL code, it's responsible for parsing COBOL methods, objects and factories. 
         // It is also responsible for showing appropriate error messages when an error occurs in the PROCEDURE DIVISION.
-        void PROCEDURE()
+        void PROCEDURE(CallableSignature currentCallable)
         {
             Expected("PROCEDURE");
             Expected("DIVISION");
@@ -1000,12 +1003,12 @@ public static partial class Analyzer
             if (SourceType.Peek() is SourceUnit.Function or SourceUnit.FunctionPrototype)
             {
                 Expected("RETURNING");
-                ReturningDataName();
+                ReturningDataName(currentCallable);
             }
             else if (CurrentEquals("RETURNING"))
             {
                 Expected("RETURNING");
-                ReturningDataName();
+                ReturningDataName(currentCallable);
             }
 
             if (!Expected(".", false))
@@ -1024,6 +1027,68 @@ public static partial class Analyzer
 
                 AnchorPoint(TokenContext.IsStatement);
             }
+
+            ProcedureBody();
+        }
+
+        // This method is part of the PROCEDURE DIVISION parsing. It's used to parse the "RETURNING" data item specified in
+        // the PROCEDURE DIVISION header. It's separate from the previous method because its code is needed more than once.
+        // COBOL user-defined functions should always return a data item.
+        void ReturningDataName(CallableSignature currentCallable)
+        {
+            if (!CurrentEquals(TokenType.Identifier))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 75, """
+                    Missing returning data item.
+                    """)
+                .WithSourceLine(Lookahead(-1), $"""
+                    Missing returning identifier after this token.
+                    """)
+                .CloseError();
+                return;
+            }
+
+            var (exists, isUnique) = SymbolTable.VariableExistsAndIsUnique(Current().Value);
+
+            if (!exists)
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Reference to undefined identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Identifier name does not exist in the current context.
+                    """)
+                .CloseError();
+                return;
+            }
+
+            if (exists && !isUnique)
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
+                    Reference to non-unique identifier.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Identifier name requires a qualifier.
+                    """)
+                .CloseError();
+                return;
+            }
+
+            var returning = SymbolTable.GetUniqueVariableByName(Current().Value);
+
+            currentCallable.Returning = returning;
+
+            // TODO: Handle name qualifiers.
+
+            Identifier();
+        }
+
+        void ProcedureBody()
+        {
+            var currentSource = SourceType.Peek();
 
             bool isProcedureDeclarative = CurrentEquals("DECLARATIVES")
                 || CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION");
@@ -1049,25 +1114,6 @@ public static partial class Analyzer
 
                 AnchorPoint("END");
             }
-
-        }
-
-        // This method is part of the PROCEDURE DIVISION parsing. It's used to parse the "RETURNING" data item specified in
-        // the PROCEDURE DIVISION header. It's separate from the previous method because its code is needed more than once.
-        // COBOL user-defined functions should always return a data item.
-        void ReturningDataName()
-        {
-            if (!CurrentEquals(TokenType.Identifier))
-            {
-                ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, """
-                Missing returning data item after this RETURNING definition.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Lookahead(-1));
-                return;
-            }
-
-            // TODO: Reimplement returning item resolution
-            Identifier();
         }
 
         void EndMarker()
@@ -1296,12 +1342,11 @@ public static partial class Analyzer
         }
     }
 
-    public static Token GetRootId()
+    public static (Token, SourceUnit) GetRootId()
     {
-        var currentId = CurrentId.Pop();
-        var rootId = CurrentId.Peek();
+        var rootId = CurrentId.PeekBehind();
+        var rootType = SourceType.PeekBehind();
 
-        CurrentId.Push(currentId);
-        return rootId;
+        return (rootId, rootType);
     }
 }

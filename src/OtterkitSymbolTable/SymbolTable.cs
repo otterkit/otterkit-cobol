@@ -12,6 +12,16 @@ public static partial class SymbolTable
         return SourceUnitGlobals.GetSignature<TSignature>(signatureName);
     }
 
+    public static (bool, bool) VariableExistsAndIsUnique(string localName)
+    {
+        return DataLocals.ReferenceExistsAndIsUnique(localName);
+    }
+
+    public static DataSignature GetUniqueVariableByName(string localName)
+    {
+        return DataLocals.GetUniqueReferenceByName(localName);
+    }
+
     public static void ClearLocalReferences()
     {
         DataLocals.ClearReferences();

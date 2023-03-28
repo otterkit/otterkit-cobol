@@ -2,6 +2,7 @@ namespace Otterkit;
 
 public static class CompilerContext
 {
-    public static List<string> FileNames = new();
-    public static List<Token> SourceTokens = new();
+    public static readonly List<string> FileNames = new();
+    public static readonly List<Token> SourceTokens = new();
+    public static readonly List<CallableSignature> CurrentCallable = new(1);
 }

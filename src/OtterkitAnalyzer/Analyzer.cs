@@ -11,7 +11,6 @@ namespace Otterkit;
 public static partial class Analyzer
 {
     private static string FileName = string.Empty;
-    private static string RootId = "";
     private static CurrentScope CurrentSection;
     private static readonly Stack<Token> CurrentId = new();
     private static readonly Stack<SourceUnit> SourceType = new();
@@ -354,7 +353,7 @@ public static partial class Analyzer
             Expected("CLASS-ID");
             Expected(".");
 
-            SetCurrentSourceId(true, Current());
+            CurrentId.Push(Current());
 
             SourceType.Push(SourceUnit.Class);
             CurrentSection = CurrentScope.ClassId;
@@ -440,7 +439,7 @@ public static partial class Analyzer
             Expected("INTERFACE-ID");
             Expected(".");
             
-            SetCurrentSourceId(true, Current());
+            CurrentId.Push(Current());
 
             SourceType.Push(SourceUnit.Interface);
             CurrentSection = CurrentScope.InterfaceId;
@@ -1128,8 +1127,6 @@ public static partial class Analyzer
                 return;
             }
 
-            var sourceId = CurrentId.Pop();
-
             switch (currentSource)
             {
                 
@@ -1140,7 +1137,7 @@ public static partial class Analyzer
                     Expected("END");
                     Expected("PROGRAM");
 
-                    EndMarkerErrorHandling(sourceId);
+                    EndMarkerErrorHandling(CurrentId.Pop());
 
                     break;
 
@@ -1151,7 +1148,7 @@ public static partial class Analyzer
                     Expected("END");
                     Expected("FUNCTION");
 
-                    EndMarkerErrorHandling(sourceId);
+                    EndMarkerErrorHandling(CurrentId.Pop());
 
                     break;
 
@@ -1194,7 +1191,7 @@ public static partial class Analyzer
                     Expected("END");
                     Expected("CLASS");
 
-                    EndMarkerErrorHandling(sourceId);
+                    EndMarkerErrorHandling(CurrentId.Pop());
 
                     break;
 
@@ -1204,7 +1201,7 @@ public static partial class Analyzer
                     Expected("END");
                     Expected("INTERFACE");
 
-                    EndMarkerErrorHandling(sourceId);
+                    EndMarkerErrorHandling(CurrentId.Pop());
 
                     break;
 
@@ -1298,10 +1295,13 @@ public static partial class Analyzer
             }
         }
     }
-    public static void SetCurrentSourceId(bool isRoot, Token sourceId)
-    {
-        if (isRoot) RootId = sourceId.Value;
 
-        CurrentId.Push(sourceId);
+    public static Token GetRootId()
+    {
+        var currentId = CurrentId.Pop();
+        var rootId = CurrentId.Peek();
+
+        CurrentId.Push(currentId);
+        return rootId;
     }
 }

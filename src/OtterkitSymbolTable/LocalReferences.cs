@@ -34,16 +34,16 @@ public sealed class LocalReferences<TValue> where TValue: notnull
         return false;
     }
 
-    public bool ReferenceExistsAndIsUnique(string localName)
+    public (bool, bool) ReferenceExistsAndIsUnique(string localName)
     {
         ref var references = ref CollectionsMarshal.GetValueRefOrNullRef(ReferenceLookup, localName);
 
         if (!Unsafe.IsNullRef(ref references) && references is not null)
         {
-            return references.Count == 1;
+            return (true, references.Count == 1);
         }
 
-        return false;
+        return (false, false);
     }
 
     public List<TValue> GetReferencesByName(string localName)

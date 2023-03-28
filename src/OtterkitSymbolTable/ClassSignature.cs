@@ -1,0 +1,18 @@
+namespace Otterkit;
+
+public class ClassSignature : AbstractSignature
+{
+    public bool IsFinal;
+    public List<string> Using = new();
+    public ClassSignature? Inherits;
+    public string ExternalizedName = "";
+
+    public List<InterfaceSignature> FactoryImplements = new();
+    public List<InterfaceSignature> ObjectImplements = new();
+
+    public List<CallableSignature> FactoryMethod = new();    
+    public List<CallableSignature> ObjectMethod = new();
+
+    public ClassSignature(Token identifier, SourceUnit sourcetype)
+        : base (identifier, sourcetype) { }
+}

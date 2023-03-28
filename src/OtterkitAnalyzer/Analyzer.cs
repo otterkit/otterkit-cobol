@@ -312,10 +312,10 @@ public static partial class Analyzer
                 if (!isPrototype) Optional("PROGRAM");
             }
 
-            var signature = new SourceUnitSignature(SourceId.Peek(), SourceType.Peek());
+            var signature = new CallableSignature(SourceId.Peek(), SourceType.Peek());
 
             SymbolTable.SourceUnitGlobals
-                .AddGlobalReference(SourceId.Peek().Value, signature);
+                .TryAddGlobalReference(SourceId.Peek().Value, signature);
 
             if (!Expected(".", false))
             {
@@ -360,10 +360,10 @@ public static partial class Analyzer
                 SourceType.Push(SourceUnit.FunctionPrototype);
             }
 
-            var signature = new SourceUnitSignature(SourceId.Peek(), SourceType.Peek());
+            var signature = new CallableSignature(SourceId.Peek(), SourceType.Peek());
 
             SymbolTable.SourceUnitGlobals
-                .AddGlobalReference(SourceId.Peek().Value, signature);
+                .TryAddGlobalReference(SourceId.Peek().Value, signature);
 
             if (!Expected(".", false))
             {
@@ -446,10 +446,10 @@ public static partial class Analyzer
                 while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
-            var signature = new SourceUnitSignature(SourceId.Peek(), SourceType.Peek());
+            var signature = new CallableSignature(SourceId.Peek(), SourceType.Peek());
 
             SymbolTable.SourceUnitGlobals
-                .AddGlobalReference(SourceId.Peek().Value, signature);
+                .TryAddGlobalReference(SourceId.Peek().Value, signature);
 
             if (!Expected(".", false))
             {
@@ -526,10 +526,10 @@ public static partial class Analyzer
                 while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
-            var signature = new SourceUnitSignature(SourceId.Peek(), SourceType.Peek());
+            var signature = new InterfaceSignature(SourceId.Peek(), SourceType.Peek());
 
             SymbolTable.SourceUnitGlobals
-                .AddGlobalReference(SourceId.Peek().Value, signature);
+                .TryAddGlobalReference(SourceId.Peek().Value, signature);
 
             if (!Expected(".", false))
             {
@@ -961,7 +961,7 @@ public static partial class Analyzer
                             ErrorHandler.Analyzer.PrettyError(FileName, Current());
                         }
                         
-                        SourceUnitSignature signature;
+                        CallableSignature signature;
 
                         if (SourceType.Peek() is SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter)
                         {
@@ -1006,7 +1006,7 @@ public static partial class Analyzer
                             ErrorHandler.Analyzer.PrettyError(FileName, Current());
                         }
                         
-                        SourceUnitSignature signature;
+                        CallableSignature signature;
 
                         if (SourceType.Peek() is SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter)
                         {
@@ -1103,7 +1103,7 @@ public static partial class Analyzer
                 return;
             }
 
-            SourceUnitSignature signature;
+            CallableSignature signature;
 
             if (SourceType.Peek() is SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter)
             {

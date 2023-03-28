@@ -7,19 +7,17 @@ public sealed class GlobalReferences<TValue> where TValue: notnull
 {
     private readonly Dictionary<string, TValue> ReferenceLookup = new(StringComparer.OrdinalIgnoreCase);
 
-    public void AddGlobalReference(string globalName, TValue globalReference)
+    public bool TryAddGlobalReference(string globalName, TValue globalReference)
     {
         ref var reference = ref CollectionsMarshal.GetValueRefOrAddDefault(ReferenceLookup, globalName, out var exists);
 
         if (!exists)
         {
             reference = globalReference;
+            return true;
         }
 
-        if (exists)
-        {
-            throw new ArgumentException("Global reference name already exists in the ReferenceLookup dictionary", nameof(globalName));
-        }
+        return false;
     }
 
     public bool ReferenceExists(string globalName)
@@ -31,15 +29,26 @@ public sealed class GlobalReferences<TValue> where TValue: notnull
         return false;
     }
 
-    public TValue GetGlobalReferenceByName(string globalName)
+    public bool ReferenceExists<TGlobal>(string globalName)
+        where TGlobal : class
     {
         ref var reference = ref CollectionsMarshal.GetValueRefOrNullRef(ReferenceLookup, globalName);
 
-        if (!Unsafe.IsNullRef(ref reference) && reference is not null)
+        if (!Unsafe.IsNullRef(ref reference)) return reference is TGlobal;
+
+        return false;
+    }
+
+    public TGlobal? GetSignature<TGlobal>(string globalName)
+        where TGlobal : class
+    {
+        ref var reference = ref CollectionsMarshal.GetValueRefOrNullRef(ReferenceLookup, globalName);
+
+        if (!Unsafe.IsNullRef(ref reference))
         {
-            return reference;
+            return reference as TGlobal;
         }
 
-        throw new ArgumentException("Global reference name does not exist in the ReferenceLookup dictionary", nameof(globalName));
+        return null;
     }
 }

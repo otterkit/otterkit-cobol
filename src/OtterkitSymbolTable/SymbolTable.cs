@@ -3,8 +3,8 @@ namespace Otterkit;
 public static partial class SymbolTable
 {
     internal static readonly Dictionary<string, SymbolPointer> Symbols = new(StringComparer.OrdinalIgnoreCase);
-    private static readonly List<SourceUnitSignature> SourceUnitSignatures = new();
-    public static readonly GlobalReferences<SourceUnitSignature> SourceUnitGlobals = new();
+    private static readonly List<CallableSignature> SourceUnitSignatures = new();
+    public static readonly GlobalReferences<AbstractSignature> SourceUnitGlobals = new();
     public static readonly LocalReferences<RepositorySignature> RepositoryLocals = new();
     public static readonly LocalReferences<DataSignature> DataLocals = new();
 
@@ -27,7 +27,7 @@ public static partial class SymbolTable
         Symbols.Add(symbolHash, pointer);
     }
 
-    public static SourceUnitSignature GetSourceUnit(string symbolHash)
+    public static CallableSignature GetSourceUnit(string symbolHash)
     {
         var pointer = GetPointer(symbolHash);
 

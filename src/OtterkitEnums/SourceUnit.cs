@@ -6,18 +6,12 @@ public enum SourceUnit
     ProgramPrototype,
     Function,
     FunctionPrototype,
-    Class,
     Interface,
-    Method,
-    FactoryMethod,
-    ObjectMethod,
     MethodPrototype,
-    FactoryGetter,
-    FactorySetter,
-    ObjectGetter,
-    ObjectSetter,
-    MethodGetter,
-    MethodSetter,
+    Class,
+    Factory,
     Object,
-    Factory
+    Method,
+    MethodGetter,
+    MethodSetter
 }

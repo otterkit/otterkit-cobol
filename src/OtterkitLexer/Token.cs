@@ -5,7 +5,7 @@ public sealed partial record Token
     public int Line;
     public int Column;
     public string Value;
-    public string Mangled;
+    public int Mangled;
     public int FileIndex;
     public TokenType Type;
     public TokenScope? Scope;
@@ -17,16 +17,12 @@ public sealed partial record Token
         Column = column;
         Value = value;
         Type = type;
-
-        Mangled = string.Empty;
     }
 
     public Token(string value, TokenType type)
     {
         Value = value;
         Type = type;
-
-        Mangled = string.Empty;
     }
 
 }

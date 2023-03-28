@@ -26,7 +26,7 @@ public static partial class Preprocessor
         
             line.CopyTo(sharedArray);
        
-            Lexer.TokenizeLine(CompilerOptions.SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), lineIndex);
+            Lexer.TokenizeLine(CompilerContext.SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), lineIndex);
         
             ArrayPool.Return(sharedArray);
             
@@ -35,9 +35,9 @@ public static partial class Preprocessor
 
         pipeReader.AdvanceTo(buffer.End);
 
-        CompilerOptions.SourceTokens.Add(new Token("EOF", TokenType.EOF, -5, -5){ Context = TokenContext.IsEOF });
+        CompilerContext.SourceTokens.Add(new Token("EOF", TokenType.EOF, -5, -5){ Context = TokenContext.IsEOF });
 
-        return CompilerOptions.SourceTokens;
+        return CompilerContext.SourceTokens;
     }
 
     public static async ValueTask<List<Token>> ReadCopybook(string copybookFile)

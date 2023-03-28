@@ -139,7 +139,7 @@ public static class ErrorHandler
 
     public static void SuccessfulParsing()
     {
-        var filesCount = CompilerOptions.FileNames.Count + 1;
+        var filesCount = CompilerContext.FileNames.Count;
         var isPlural = filesCount > 1 ? "s" : "";
 
         Console.ForegroundColor = ConsoleColor.Blue;

@@ -24,7 +24,7 @@ public static partial class Preprocessor
         var allSourceFiles = Directory.EnumerateFiles(Workspace, "*.cob", SearchOption.AllDirectories)
             .Select(static path => Path.GetRelativePath(Workspace, path));
         
-        CompilerOptions.FileNames.Add(relativeEntryPoint);
+        CompilerContext.FileNames.Add(relativeEntryPoint);
 
         var tokens = ReadSourceFile(relativeEntryPoint).Result;
 
@@ -32,14 +32,14 @@ public static partial class Preprocessor
         {
             if (file.Equals(relativeEntryPoint)) continue;
 
-            CompilerOptions.FileNames.Add(file);
+            CompilerContext.FileNames.Add(file);
 
             tokens = ReadSourceFile(file).Result;
         }
 
-        PreprocessCopybooks(CompilerOptions.SourceTokens);
+        PreprocessCopybooks(CompilerContext.SourceTokens);
 
-        return CompilerOptions.SourceTokens;
+        return CompilerContext.SourceTokens;
     }
 
     public static void PreprocessSourceFormat(ReadOnlySpan<byte> bytes, Span<char> chars)
@@ -173,7 +173,7 @@ public static partial class Preprocessor
 
                 var copybookName = Current().Value;
 
-                CompilerOptions.FileNames.Add(copybookName);
+                CompilerContext.FileNames.Add(copybookName);
 
                 var copybookTokens = ReadCopybook(copybookName).Result;
 
@@ -181,9 +181,9 @@ public static partial class Preprocessor
 
                 var currentIndex = tokenIndex;
 
-                CompilerOptions.SourceTokens.RemoveRange(statementIndex, currentIndex - statementIndex);
+                CompilerContext.SourceTokens.RemoveRange(statementIndex, currentIndex - statementIndex);
 
-                CompilerOptions.SourceTokens.InsertRange(statementIndex, copybookTokens);
+                CompilerContext.SourceTokens.InsertRange(statementIndex, copybookTokens);
                 
             }
         }

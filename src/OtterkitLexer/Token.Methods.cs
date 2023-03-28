@@ -6,7 +6,7 @@ namespace Otterkit;
 
 public sealed partial record Token
 {
-    public string FetchFile => CompilerOptions.FileNames[FileIndex];
+    public string FetchFile => CompilerContext.FileNames[FileIndex];
 
     private static bool TryValidateIdentifier(Token token)
     {

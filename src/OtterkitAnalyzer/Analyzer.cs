@@ -34,7 +34,7 @@ public static partial class Analyzer
         if (ErrorHandler.HasError) ErrorHandler.Terminate("parsing");
 
         // Return parsed list of tokens.
-        return CompilerOptions.SourceTokens;
+        return CompilerContext.SourceTokens;
 
         // Source() is the main method of the parser.
         // It's responsible for parsing COBOL divisions until the EOF token.
@@ -75,7 +75,7 @@ public static partial class Analyzer
                 Source();
             }
 
-            if (CurrentEquals("EOF") && CurrentIndex() < CompilerOptions.SourceTokens.Count - 1)
+            if (CurrentEquals("EOF") && CurrentIndex() < CompilerContext.SourceTokens.Count - 1)
             {
                 FileName = Lookahead(1).FetchFile;
 

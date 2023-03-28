@@ -143,7 +143,7 @@ public static class Otterkit
 
             if (CompilerOptions.BuildMode is BuildType.BuildOnly)
             {
-                Codegen.Generate(CompilerOptions.SourceTokens, CompilerOptions.EntryPoint);
+                Codegen.Generate(CompilerContext.SourceTokens, CompilerOptions.EntryPoint);
 
                 Directory.CreateDirectory(".otterkit/Build");
                 CallDotnetCompiler("build");
@@ -151,7 +151,7 @@ public static class Otterkit
             
             if (CompilerOptions.BuildMode is BuildType.BuildAndRun)
             {
-                Codegen.Generate(CompilerOptions.SourceTokens, CompilerOptions.EntryPoint);
+                Codegen.Generate(CompilerContext.SourceTokens, CompilerOptions.EntryPoint);
 
                 Directory.CreateDirectory(".otterkit/Build");
                 CallDotnetCompiler("run");

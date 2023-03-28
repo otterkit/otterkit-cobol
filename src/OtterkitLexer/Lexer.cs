@@ -43,7 +43,7 @@ public static partial class Lexer
 
         var pictureEndIndex = 0;
 
-        var fileIndex = CompilerOptions.FileNames.Count - 1;
+        var fileIndex = CompilerContext.FileNames.Count - 1;
 
         foreach (var token in LexerRegex().EnumerateMatches(sourceChars))
         {

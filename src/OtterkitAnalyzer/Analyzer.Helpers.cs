@@ -6,7 +6,7 @@ namespace Otterkit;
 public static partial class Analyzer
 {
     private static int Index;
-    private static List<Token> TokenList => CompilerOptions.SourceTokens;
+    private static List<Token> TokenList => CompilerContext.SourceTokens;
     
     // Analyzer Helper methods.
     // These are the main methods used to interact with and iterate through the List of Tokens.

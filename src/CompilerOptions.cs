@@ -8,6 +8,4 @@ public static class CompilerOptions
     public static SourceFormat SourceFormat = SourceFormat.Fixed;
     public static OutputType Output = OutputType.Application;
     public static BuildType BuildMode = BuildType.BuildOnly;
-    public static List<Token> SourceTokens = new();
-    public static List<string> FileNames = new();
 }

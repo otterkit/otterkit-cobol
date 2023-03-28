@@ -63,7 +63,7 @@ public static partial class Analyzer
         }
         else if (SourceType.Peek() == SourceUnit.Class)
         {
-            FactoryObject();
+            ClassObjects();
         }
         else if (SourceType.Peek() == SourceUnit.Interface)
         {
@@ -677,7 +677,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void FactoryObject()
+    public static void ClassObjects()
     {
         if (CurrentEquals("FACTORY") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "FACTORY"))
         {

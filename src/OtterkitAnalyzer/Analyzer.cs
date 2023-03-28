@@ -418,13 +418,12 @@ public static partial class Analyzer
                         Class definition, missing INHERITS class.
                         """)
                     .WithSourceLine(Lookahead(-1), """
-                        The INHERITS phrase must contain at least one class name.
+                        The INHERITS phrase must contain a class name.
                         """)
                     .CloseError();
                 }
 
                 Identifier();
-                while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
             if (CurrentEquals("USING"))
@@ -446,7 +445,7 @@ public static partial class Analyzer
                 while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
-            var signature = new CallableSignature(SourceId.Peek(), SourceType.Peek());
+            var signature = new ClassSignature(SourceId.Peek(), SourceType.Peek());
 
             SymbolTable.SourceUnitGlobals
                 .TryAddGlobalReference(SourceId.Peek().Value, signature);

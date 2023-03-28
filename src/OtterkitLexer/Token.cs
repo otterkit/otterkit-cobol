@@ -5,7 +5,6 @@ public sealed partial record Token
     public int Line;
     public int Column;
     public string Value;
-    public int Mangled;
     public int FileIndex;
     public TokenType Type;
     public TokenScope? Scope;

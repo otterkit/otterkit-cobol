@@ -576,13 +576,30 @@ public static partial class Analyzer
 
             if (currentSource is SourceUnit.Interface)
             {
-                
+                var parent = SymbolTable.GetSignature<InterfaceSignature>(currentId.Value);
+
+                var method = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
+
+                parent.Methods.Add(method);
             }
 
-            var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
+            if (currentSource is SourceUnit.Object)
+            {
+                var parent = SymbolTable.GetSignature<ClassSignature>(currentId.Value);
 
-            SymbolTable.SourceUnitGlobals
-                .TryAddGlobalReference(CurrentId.Peek().Value, signature);
+                var method = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
+
+                parent.ObjectMethods.Add(method);
+            }
+
+            if (currentSource is SourceUnit.Factory)
+            {
+                var parent = SymbolTable.GetSignature<ClassSignature>(currentId.Value);
+
+                var method = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
+
+                parent.FactoryMethods.Add(method);
+            }
 
             if (!Expected(".", false))
             {

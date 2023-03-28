@@ -8,7 +8,7 @@ public class InterfaceSignature : AbstractSignature
     public string ExternalizedName = "";
 
     // Interface prototype methods
-    public Dictionary<string, CallableSignature> Methods = new();
+    public List<CallableSignature> Methods = new();
 
     public InterfaceSignature(Token identifier, SourceUnit sourcetype)
         : base (identifier, sourcetype) { }

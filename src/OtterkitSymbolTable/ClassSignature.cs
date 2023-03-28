@@ -7,11 +7,11 @@ public class ClassSignature : AbstractSignature
     public ClassSignature? Inherits;
     public string ExternalizedName = "";
 
-    public List<InterfaceSignature> FactoryImplements = new();
-    public List<InterfaceSignature> ObjectImplements = new();
+    public Dictionary<string, InterfaceSignature> FactoryImplements = new();
+    public Dictionary<string, InterfaceSignature> ObjectImplements = new();
 
-    public List<CallableSignature> FactoryMethods = new();    
-    public List<CallableSignature> ObjectMethods = new();
+    public Dictionary<string, CallableSignature> FactoryMethods = new();    
+    public Dictionary<string, CallableSignature> ObjectMethods = new();
 
     public ClassSignature(Token identifier, SourceUnit sourcetype)
         : base (identifier, sourcetype) { }

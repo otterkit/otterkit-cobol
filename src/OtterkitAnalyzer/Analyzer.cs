@@ -10,43 +10,11 @@ namespace Otterkit;
 /// </summary>
 public static partial class Analyzer
 {
-    /// <summary>
-    /// String <c>FileName</c> is used in the parser as a parameter for the <c>ErrorHandler</c> method.
-    /// <para>The error handler will use this to fetch the file and get the correct line and column when displaying the error message.</para>
-    /// </summary>
     private static string FileName = string.Empty;
-
-    /// <summary>
-    /// Stack string <c>SourceId</c> is used in the parser whenever it needs to know the name of the current source unit (The identifier after PROGRAM-ID).
-    /// <para>This is used when checking if a variable already exists in the current source unit, and when adding them to the DataItemSymbolTable class's variable table.
-    /// The DataItemSymbolTable class is then used to simplify the codegen process of generating data items.</para>
-    /// </summary>
-    private static readonly Stack<Token> SourceId = new();
-
-    /// <summary>
-    /// Stack SourceUnit <c>SourceType</c> is used in the parser whenever it needs to know which <c>-ID</c> it is currently parsing.
-    /// <para>This is used when handling certain syntax rules for different <c>-ID</c>s, like the <c>"RETURNING data-name"</c> being required for every <c>FUNCTION-ID</c> source unit.</para>
-    /// </summary>
-    private static readonly Stack<SourceUnit> SourceType = new();
-
-    /// <summary>
-    /// CurrentScope <c>CurrentSection</c> is used in the parser whenever it needs to know which section it is currently parsing (WORKING-STORAGE and LOCAL-STORAGE for example).
-    /// <para>This is used when handling certain syntax rules for different sections and to add extra context needed for the SymbolTable class's variable table.
-    /// This will also be used by the SymbolTable class during codegen to simplify the process to figuring out if a variable is static or not.</para>
-    /// </summary>
+    private static string RootId = "";
     private static CurrentScope CurrentSection;
-
-    /// <summary>
-    /// List of Tokens <c>TokenList</c>: This is the main data structure that the parser will be iterating through.
-    /// <para>The parser expects a list of already preprocessed and classified COBOL tokens in the form of full COBOL words (CALL, END-IF, COMPUTE for example)</para>
-    /// </summary>
-    private static List<Token> TokenList = new();
-
-    /// <summary>
-    /// Int <c>Index</c>: This is the index of the current token, used by most helper methods including Continue, Current and Lookahead.
-    /// <para>The index should only move forwards, but if the previous token is needed you can use the Lookahead and LookaheadEquals methods with a negative integer parameter</para>
-    /// </summary>
-    private static int Index;
+    private static readonly Stack<Token> CurrentId = new();
+    private static readonly Stack<SourceUnit> SourceType = new();
 
     /// <summary>
     /// Otterkit COBOL Syntax Analyzer
@@ -56,9 +24,8 @@ public static partial class Analyzer
     public static List<Token> Analyze(List<Token> tokenList, string entryPoint)
     {
         FileName = entryPoint;
-        TokenList = tokenList;
 
-        // Call the parser's main method
+        // Call the parser's main recursive method
         // This should only return when the parser reaches the true EOF token
         Source();
 
@@ -67,7 +34,7 @@ public static partial class Analyzer
         if (ErrorHandler.HasError) ErrorHandler.Terminate("parsing");
 
         // Return parsed list of tokens.
-        return TokenList;
+        return CompilerOptions.SourceTokens;
 
         // Source() is the main method of the parser.
         // It's responsible for parsing COBOL divisions until the EOF token.
@@ -108,7 +75,7 @@ public static partial class Analyzer
                 Source();
             }
 
-            if (CurrentEquals("EOF") && Index < TokenList.Count - 1)
+            if (CurrentEquals("EOF") && CurrentIndex() < CompilerOptions.SourceTokens.Count - 1)
             {
                 FileName = Lookahead(1).FetchFile;
 
@@ -234,7 +201,7 @@ public static partial class Analyzer
             Expected("PROGRAM-ID");
             Expected(".");
 
-            SourceId.Push(Current());
+            CurrentId.Push(Current());
             SourceType.Push(SourceUnit.Program);
             CurrentSection = CurrentScope.ProgramId;
 
@@ -242,9 +209,9 @@ public static partial class Analyzer
             if (CurrentEquals("AS"))
             {
                 Expected("AS");
-                SourceId.Pop();
+                CurrentId.Pop();
                 String();
-                SourceId.Push(Lookahead(-1));
+                CurrentId.Push(Lookahead(-1));
             }
 
             if (CurrentEquals("IS", "COMMON", "INITIAL", "RECURSIVE", "PROTOTYPE"))
@@ -291,7 +258,7 @@ public static partial class Analyzer
                     .Build(ErrorType.Syntax, ConsoleColor.Red, 55,"""
                         Invalid program prototype definition.
                         """)
-                    .WithSourceLine(SourceId.Peek(), """
+                    .WithSourceLine(CurrentId.Peek(), """
                         Program prototypes cannot be defined as common, initial or recursive.
                         """)
                     .CloseError();
@@ -303,7 +270,7 @@ public static partial class Analyzer
                     .Build(ErrorType.Syntax, ConsoleColor.Red, 55,"""
                         Invalid program definition.
                         """)
-                    .WithSourceLine(SourceId.Peek(), """
+                    .WithSourceLine(CurrentId.Peek(), """
                         Initial programs cannot be defined as recursive.
                         """)
                     .CloseError();
@@ -312,10 +279,10 @@ public static partial class Analyzer
                 if (!isPrototype) Optional("PROGRAM");
             }
 
-            var signature = new CallableSignature(SourceId.Peek(), SourceType.Peek());
+            var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
 
             SymbolTable.SourceUnitGlobals
-                .TryAddGlobalReference(SourceId.Peek().Value, signature);
+                .TryAddGlobalReference(CurrentId.Peek().Value, signature);
 
             if (!Expected(".", false))
             {
@@ -340,7 +307,6 @@ public static partial class Analyzer
             Expected("FUNCTION-ID");
             Expected(".");
 
-            SourceId.Push(Current());
             SourceType.Push(SourceUnit.Function);
             CurrentSection = CurrentScope.FunctionId;
 
@@ -360,10 +326,10 @@ public static partial class Analyzer
                 SourceType.Push(SourceUnit.FunctionPrototype);
             }
 
-            var signature = new CallableSignature(SourceId.Peek(), SourceType.Peek());
+            var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
 
             SymbolTable.SourceUnitGlobals
-                .TryAddGlobalReference(SourceId.Peek().Value, signature);
+                .TryAddGlobalReference(CurrentId.Peek().Value, signature);
 
             if (!Expected(".", false))
             {
@@ -388,7 +354,8 @@ public static partial class Analyzer
             Expected("CLASS-ID");
             Expected(".");
 
-            SourceId.Push(Current());
+            SetCurrentSourceId(true, Current());
+
             SourceType.Push(SourceUnit.Class);
             CurrentSection = CurrentScope.ClassId;
 
@@ -445,10 +412,10 @@ public static partial class Analyzer
                 while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
-            var signature = new ClassSignature(SourceId.Peek(), SourceType.Peek());
+            var signature = new ClassSignature(CurrentId.Peek(), SourceType.Peek());
 
             SymbolTable.SourceUnitGlobals
-                .TryAddGlobalReference(SourceId.Peek().Value, signature);
+                .TryAddGlobalReference(CurrentId.Peek().Value, signature);
 
             if (!Expected(".", false))
             {
@@ -472,8 +439,9 @@ public static partial class Analyzer
         {
             Expected("INTERFACE-ID");
             Expected(".");
+            
+            SetCurrentSourceId(true, Current());
 
-            SourceId.Push(Current());
             SourceType.Push(SourceUnit.Interface);
             CurrentSection = CurrentScope.InterfaceId;
 
@@ -525,10 +493,10 @@ public static partial class Analyzer
                 while (CurrentEquals(TokenType.Identifier)) Identifier();
             }
 
-            var signature = new InterfaceSignature(SourceId.Peek(), SourceType.Peek());
+            var signature = new InterfaceSignature(CurrentId.Peek(), SourceType.Peek());
 
             SymbolTable.SourceUnitGlobals
-                .TryAddGlobalReference(SourceId.Peek().Value, signature);
+                .TryAddGlobalReference(CurrentId.Peek().Value, signature);
 
             if (!Expected(".", false))
             {
@@ -555,16 +523,14 @@ public static partial class Analyzer
 
             CurrentSection = CurrentScope.MethodId;
             var currentSource = SourceType.Peek();
-            var currentId = SourceId.Peek();
+            var currentId = CurrentId.Peek();
 
             if (currentSource != SourceUnit.Interface && CurrentEquals("GET"))
             {
                 Expected("GET");
                 Expected("PROPERTY");
-                SourceId.Push(Current());
+                CurrentId.Push(Current());
                 SourceType.Push(SourceUnit.MethodGetter);
-
-                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek().Value}", SymbolType.SourceUnitSignature);
 
                 Identifier();
 
@@ -573,23 +539,22 @@ public static partial class Analyzer
             {
                 Expected("SET");
                 Expected("PROPERTY");
-
-                SourceId.Push(Current());
+                CurrentId.Push(Current());
                 SourceType.Push(SourceUnit.MethodSetter);
-
-                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek().Value}", SymbolType.SourceUnitSignature);
 
                 Identifier();
             }
             else // If not a getter or a setter
             {
+
+                CurrentId.Push(Current());
                 Identifier();
+
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
                     String();
                 }
-                SourceId.Push(Lookahead(-1));
 
                 if (currentSource == SourceUnit.Interface)
                 {
@@ -599,8 +564,6 @@ public static partial class Analyzer
                 {
                     SourceType.Push(SourceUnit.Method);
                 }
-
-                SymbolTable.AddSymbol($"{currentId}->{SourceId.Peek()}", SymbolType.SourceUnitSignature);
             }
 
             if (CurrentEquals("OVERRIDE")) Expected("OVERRIDE");
@@ -611,9 +574,32 @@ public static partial class Analyzer
                 Expected("FINAL");
             }
 
-            Expected(".", """
-            Missing separator period at the end of this method definition
-            """, -1, "OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+            if (currentSource is SourceUnit.Interface)
+            {
+                
+            }
+
+            var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
+
+            SymbolTable.SourceUnitGlobals
+                .TryAddGlobalReference(CurrentId.Peek().Value, signature);
+
+            if (!Expected(".", false))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    Interface definition, missing separator period.
+                    """)
+                .WithSourceLine(Lookahead(-1), """
+                    Expected a separator period '. ' after this token.
+                    """)
+                .WithNote("""
+                    Every source unit definition must end with a separator period.
+                    """)
+                .CloseError();
+
+                AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+            }
         }
 
         void Factory()
@@ -942,13 +928,11 @@ public static partial class Analyzer
 
                     if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
                     {
-                        var optional = false;
                         Optional("BY");
                         Expected("REFERENCE");
 
                         if (CurrentEquals("OPTIONAL"))
                         {
-                            optional = true;
                             Expected("OPTIONAL");
                         }
 
@@ -960,35 +944,16 @@ public static partial class Analyzer
                             ErrorHandler.Analyzer.PrettyError(FileName, Current());
                         }
                         
-                        CallableSignature signature;
-
-                        if (SourceType.Peek() is SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter)
-                        {
-                            var currentId = SourceId.Pop();
-                            signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}->{currentId}");
-                            SourceId.Push(currentId);
-                        }
-                        else
-                        {
-                            signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}");
-                        }
-
-                        signature.Parameters.Add(Current().Value);
-                        signature.IsOptional.Add(optional);
-                        signature.IsByRef.Add(true);
+                        // TODO: Reimplement parameter item resolution
 
                         Identifier();
                         while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
                         {
-                            optional = false;
                             if (CurrentEquals("OPTIONAL"))
                             {
-                                optional = true;
                                 Expected("OPTIONAL");
                             }
-                            signature.Parameters.Add(Current().Value);
-                            signature.IsOptional.Add(optional);
-                            signature.IsByRef.Add(true);
+                            // TODO: Reimplement parameter item resolution
                             Identifier();
                         }
                     }
@@ -1005,28 +970,11 @@ public static partial class Analyzer
                             ErrorHandler.Analyzer.PrettyError(FileName, Current());
                         }
                         
-                        CallableSignature signature;
-
-                        if (SourceType.Peek() is SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter)
-                        {
-                            var currentId = SourceId.Pop();
-                            signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}->{currentId}");
-                            SourceId.Push(currentId);
-                        }
-                        else
-                        {
-                            signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}");
-                        }
-
-                        signature.Parameters.Add(Current().Value);
-                        signature.IsOptional.Add(false);
-                        signature.IsByRef.Add(false);
+                        // TODO: Reimplement parameter item resolution
                         Identifier();
                         while (CurrentEquals(TokenType.Identifier))
                         {
-                            signature.Parameters.Add(Current().Value);
-                            signature.IsOptional.Add(false);
-                            signature.IsByRef.Add(false);
+                            // TODO: Reimplement parameter item resolution
                             Identifier();
                         }
                     }
@@ -1102,20 +1050,7 @@ public static partial class Analyzer
                 return;
             }
 
-            CallableSignature signature;
-
-            if (SourceType.Peek() is SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter)
-            {
-                var currentId = SourceId.Pop();
-                signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}->{currentId}");
-                SourceId.Push(currentId);
-            }
-            else
-            {
-                signature = SymbolTable.GetSourceUnit($"{SourceId.Peek()}");
-            }
-
-            signature.Returning = Current().Value;
+            // TODO: Reimplement returning item resolution
             Identifier();
         }
 
@@ -1176,7 +1111,7 @@ public static partial class Analyzer
                 return;
             }
 
-            var sourceId = SourceId.Pop();
+            var sourceId = CurrentId.Pop();
 
             switch (currentSource)
             {
@@ -1212,10 +1147,10 @@ public static partial class Analyzer
                     Expected("END");
                     Expected("METHOD");
                     if (currentSource is SourceUnit.Method or SourceUnit.MethodPrototype)
-                        Identifier(SourceId.Pop());
+                        Identifier(CurrentId.Pop());
 
                     if (currentSource is SourceUnit.MethodGetter or SourceUnit.MethodSetter)
-                        SourceId.Pop();
+                        CurrentId.Pop();
 
                     if (!Expected(".", false))
                     {
@@ -1345,5 +1280,11 @@ public static partial class Analyzer
                 AnchorPoint("IDENTIFICATION", "OBJECT", "METHOD-ID", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
             }
         }
+    }
+    public static void SetCurrentSourceId(bool isRoot, Token sourceId)
+    {
+        if (isRoot) RootId = sourceId.Value;
+
+        CurrentId.Push(sourceId);
     }
 }

@@ -5,6 +5,9 @@ namespace Otterkit;
 
 public static partial class Analyzer
 {
+    private static int Index;
+    private static List<Token> TokenList => CompilerOptions.SourceTokens;
+    
     // Analyzer Helper methods.
     // These are the main methods used to interact with and iterate through the List of Tokens.
     // (And other helpers that it easier to iterate through the List)
@@ -535,11 +538,9 @@ public static partial class Analyzer
             return;
         }
 
-        string dataItemHash = $"{SourceId.Peek()}#{Current().Value}";
-
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
-            if (!SymbolTable.SymbolExists(dataItemHash))
+            if (!SymbolTable.DataLocals.ReferenceExists(Current().Value))
             {
                 Error
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -621,11 +622,9 @@ public static partial class Analyzer
             return;
         }
 
-        string dataItemHash = $"{SourceId.Peek()}#{Current().Value}";
-
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
-            if (!SymbolTable.SymbolExists(dataItemHash))
+            if (!SymbolTable.DataLocals.ReferenceExists(Current().Value))
             {
                 Error
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """

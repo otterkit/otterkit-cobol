@@ -8,6 +8,7 @@ namespace Otterkit;
 public static partial class Analyzer
 {
     private static string FileName = string.Empty;
+    private static bool IsResolutionPass;
     private static CurrentScope CurrentSection;
     private static readonly Stack<Token> CurrentId = new();
     private static readonly Stack<SourceUnit> SourceType = new();
@@ -17,7 +18,7 @@ public static partial class Analyzer
     /// <para>This parser was built to be easily extensible, with some reusable COBOL parts.</para>
     /// <para>It requires a List of Tokens generated from the Lexer and the Token Classifier.</para>
     /// </summary>
-    public static List<Token> Analyze(List<Token> tokenList, string entryPoint)
+    public static List<Token> Analyze(string entryPoint)
     {
         FileName = entryPoint;
 

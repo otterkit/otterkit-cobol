@@ -17,57 +17,72 @@ public static partial class Analyzer
             Expected("IDENTIFICATION");
             Expected("DIVISION");
 
-            Expected(".", """
-            Missing separator period at the end of this IDENTIFICATION DIVISION header, every division header must end with a separator period
-            """, -1, "PROGRAM-ID", "FUNCTION-ID", "ENVIRONMENT", "DATA", "PROCEDURE");
+            if (!Expected(".", false))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    Division header, missing separator period.
+                    """)
+                .WithSourceLine(Lookahead(-1), """
+                    Expected a separator period '. ' after this token
+                    """)
+                .WithNote("""
+                    Every division header must end with a separator period
+                    """)
+                .CloseError();
+
+                AnchorPoint("PROGRAM-ID", "FUNCTION-ID", "ENVIRONMENT", "DATA", "PROCEDURE");
+            }
         }
 
-        if (!CurrentEquals("PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "METHOD-ID", "INTERFACE-ID", "OBJECT", "FACTORY"))
+        switch (Current().Value)
         {
-            Expected("PROGRAM-ID", """
-            Missing source unit ID name (PROGRAM-ID, FUNCTION-ID, CLASS-ID...), the identification division header is optional but every source unit must still have an ID.
-            """, 0, "OPTIONS", "ENVIRONMENT", "DATA", "PROCEDURE");
+            case "CLASS-ID": 
+                ClassId(); 
+                break;
+
+            case "PROGRAM-ID": 
+                ProgramId(); 
+                break;
+
+            case "FUNCTION-ID": 
+                FunctionId(); 
+                break;
+
+            case "INTERFACE-ID": 
+                InterfaceId(); 
+                break;
+
+            case "METHOD-ID":
+                MethodId(); 
+                break;
+
+            case "FACTORY":
+                Factory();
+                break;
+
+            case "OBJECT":
+                Object();
+                break;
+
+            default:
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 85,"""
+                    Missing source unit definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    Expected a source unit id definition.
+                    """)
+                .WithNote("""
+                    The identification header is optional but every source unit must still have an ID.
+                    """)
+                .CloseError();
+
+                AnchorPoint("OPTIONS", "ENVIRONMENT", "DATA", "PROCEDURE");
+                break;
         }
 
-        if (CurrentEquals("PROGRAM-ID"))
-        {
-            ProgramId();
-        }
-
-        else if (CurrentEquals("FUNCTION-ID"))
-        {
-            FunctionId();
-        }
-
-        else if (CurrentEquals("CLASS-ID"))
-        {
-            ClassId();
-        }
-
-        else if (CurrentEquals("INTERFACE-ID"))
-        {
-            InterfaceId();
-        }
-
-        else if (SourceType.Peek() is SourceUnit.Class && CurrentEquals("FACTORY"))
-        {
-            Factory();
-        }
-
-        else if (SourceType.Peek() is SourceUnit.Class && CurrentEquals("OBJECT"))
-        {
-            Object();
-        }
-
-        else if (SourceType.Peek() is SourceUnit.Object or SourceUnit.Factory or SourceUnit.Interface && CurrentEquals("METHOD-ID"))
-        {
-            MethodId();
-        }
-
-        if (CurrentEquals("OPTIONS"))
-        {
-            Options();
-        }
+        if (CurrentEquals("OPTIONS")) Options();
     }
 
     public static void Options()
@@ -445,10 +460,23 @@ public static partial class Analyzer
 
     public static void MethodId()
     {
+        if (SourceType.Peek() is not (SourceUnit.Object or SourceUnit.Factory or SourceUnit.Interface))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 90,"""
+                Misplaced source unit definition.
+                """)
+            .WithSourceLine(Current(), """
+                Method definitions can only be specified inside class or interface definitions.
+                """)
+            .CloseError();
+        }
+
         Expected("METHOD-ID");
         Expected(".");
 
         CurrentSection = CurrentScope.MethodId;
+
         var currentSource = SourceType.Peek();
         var currentId = CurrentId.Peek();
 
@@ -456,6 +484,7 @@ public static partial class Analyzer
         {
             Expected("GET");
             Expected("PROPERTY");
+
             CurrentId.Push(Current());
             SourceType.Push(SourceUnit.MethodGetter);
 
@@ -466,6 +495,7 @@ public static partial class Analyzer
         {
             Expected("SET");
             Expected("PROPERTY");
+
             CurrentId.Push(Current());
             SourceType.Push(SourceUnit.MethodSetter);
 
@@ -473,8 +503,8 @@ public static partial class Analyzer
         }
         else // If not a getter or a setter
         {
-
             CurrentId.Push(Current());
+
             Identifier();
 
             if (CurrentEquals("AS"))
@@ -548,6 +578,18 @@ public static partial class Analyzer
 
     public static void Factory()
     {
+        if (SourceType.Peek() is not SourceUnit.Class)
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 90,"""
+                Misplaced source unit definition.
+                """)
+            .WithSourceLine(Current(), """
+                Factory definitions can only be specified inside class definitions.
+                """)
+            .CloseError();
+        }
+
         Expected("FACTORY");
         Expected(".");
 
@@ -558,13 +600,18 @@ public static partial class Analyzer
             Expected("IMPLEMENTS");
             if (!CurrentEquals(TokenType.Identifier))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                The IMPLEMENTS clause must contain at least one interface name.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 95,"""
+                    Missing implements interfaces.
+                    """)
+                .WithSourceLine(Lookahead(-1), """
+                    The IMPLEMENTS phrase must contain at least one interface name.
+                    """)
+                .CloseError();
             }
 
             Identifier();
+
             while (CurrentEquals(TokenType.Identifier)) Identifier();
 
             Expected(".");
@@ -573,6 +620,18 @@ public static partial class Analyzer
 
     public static void Object()
     {
+        if (SourceType.Peek() is not SourceUnit.Class)
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 90,"""
+                Misplaced source unit definition.
+                """)
+            .WithSourceLine(Current(), """
+                Object definitions can only be specified inside class definitions.
+                """)
+            .CloseError();
+        }
+
         Expected("OBJECT");
         Expected(".");
 
@@ -583,13 +642,18 @@ public static partial class Analyzer
             Expected("IMPLEMENTS");
             if (!CurrentEquals(TokenType.Identifier))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                The IMPLEMENTS clause must contain at least one interface name.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 95,"""
+                    Missing implements interfaces.
+                    """)
+                .WithSourceLine(Lookahead(-1), """
+                    The IMPLEMENTS phrase must contain at least one interface name.
+                    """)
+                .CloseError();
             }
 
             Identifier();
+
             while (CurrentEquals(TokenType.Identifier)) Identifier();
 
             Expected(".");

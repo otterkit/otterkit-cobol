@@ -9,4 +9,9 @@ public static partial class SymbolTable
     {
         return SourceUnits.GetSignature<TSignature>(signatureName);
     }
+
+    public static bool TryAddName(string globalName, AbstractSignature globalSignature, bool isResolutionPass)
+    {
+        return SourceUnits.TryAddGlobalName(globalName, globalSignature, isResolutionPass);
+    }
 }

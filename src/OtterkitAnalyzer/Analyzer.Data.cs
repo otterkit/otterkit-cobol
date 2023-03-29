@@ -419,7 +419,7 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        sourceUnit.Definitions.AddOrUpdateLocal(dataName, dataLocal);
+        sourceUnit.Definitions.AddLocal(dataName, dataLocal, IsResolutionPass);
 
         CheckConditionNames(dataLocal);
     }
@@ -461,19 +461,19 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        DataSignature dataReference = new();
+        DataSignature dataLocal = new();
 
-        dataReference.Identifier = dataName;
-        dataReference.LevelNumber = levelNumber;
-        dataReference.Section = CurrentSection;
-        dataReference.IsConstant = true;
+        dataLocal.Identifier = dataName;
+        dataLocal.LevelNumber = levelNumber;
+        dataLocal.Section = CurrentSection;
+        dataLocal.IsConstant = true;
 
         Expected("CONSTANT");
         if (CurrentEquals("IS") || CurrentEquals("GLOBAL"))
         {
             Optional("IS");
             Expected("GLOBAL");
-                dataReference.IsGlobal = true;
+                dataLocal.IsGlobal = true;
         }
 
         if (CurrentEquals("FROM"))
@@ -530,7 +530,7 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        sourceUnit.Definitions.AddOrUpdateLocal(dataName, dataReference);
+        sourceUnit.Definitions.AddLocal(dataName, dataLocal, IsResolutionPass);
     }
 
     private static void CheckLevelNumber(int level)
@@ -770,7 +770,7 @@ public static partial class Analyzer
                 .CloseError();
             }
 
-            sourceUnit.Definitions.AddOrUpdateLocal(dataName, dataLocal);
+            sourceUnit.Definitions.AddLocal(dataName, dataLocal, IsResolutionPass);
         }
     }
 

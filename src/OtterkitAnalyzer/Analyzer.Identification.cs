@@ -215,11 +215,9 @@ public static partial class Analyzer
             if (!isPrototype) Optional("PROGRAM");
         }
 
-        var globals = SymbolTable.SourceUnits;
-
         var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
 
-        globals.TryAddGlobalReference(CurrentId.Peek().Value, signature);
+        SymbolTable.TryAddName(CurrentId.Peek().Value, signature, IsResolutionPass);
 
         CurrentSourceUnit = signature;
 
@@ -265,11 +263,9 @@ public static partial class Analyzer
             SourceType.Push(SourceUnit.FunctionPrototype);
         }
 
-        var globals = SymbolTable.SourceUnits;
-
         var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
 
-        globals.TryAddGlobalReference(CurrentId.Peek().Value, signature);
+        SymbolTable.TryAddName(CurrentId.Peek().Value, signature, IsResolutionPass);
 
         CurrentSourceUnit = signature;
 
@@ -356,8 +352,7 @@ public static partial class Analyzer
 
         var signature = new ClassSignature(CurrentId.Peek(), SourceType.Peek());
 
-        SymbolTable.SourceUnits
-            .TryAddGlobalReference(CurrentId.Peek().Value, signature);
+        SymbolTable.TryAddName(CurrentId.Peek().Value, signature, IsResolutionPass);
 
         if (!Expected(".", false))
         {
@@ -437,8 +432,7 @@ public static partial class Analyzer
 
         var signature = new InterfaceSignature(CurrentId.Peek(), SourceType.Peek());
 
-        SymbolTable.SourceUnits
-            .TryAddGlobalReference(CurrentId.Peek().Value, signature);
+        SymbolTable.TryAddName(CurrentId.Peek().Value, signature, IsResolutionPass);
 
         if (!Expected(".", false))
         {

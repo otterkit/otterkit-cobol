@@ -16,17 +16,40 @@ public static partial class Analyzer
         Expected("DIVISION");
         CurrentSection = CurrentScope.EnvironmentDivision;
 
-        Expected(".", """
-        Missing separator period at the end of this ENVIRONMENT DIVISION header, every division header must end with a separator period
-        """, -1, "DATA", "PROCEDURE", "PROGRAM-ID", "FUNCTION-ID");
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                Division header, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token
+                """)
+            .WithNote("""
+                Every division header must end with a separator period
+                """)
+            .CloseError();
+        }
 
         if (CurrentEquals("CONFIGURATION"))
         {
             Expected("CONFIGURATION");
             Expected("SECTION");
-            Expected(".", """
-            Missing separator period at the end of this CONFIGURATION SECTION header, every section must end with a separator period
-            """, -1, "REPOSITORY", "DATA", "PROCEDURE", "PROGRAM-ID", "FUNCTION-ID");
+
+            if (!Expected(".", false))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    Section header, missing separator period.
+                    """)
+                .WithSourceLine(Lookahead(-1), """
+                    Expected a separator period '. ' after this token
+                    """)
+                .WithNote("""
+                    Every section header must end with a separator period
+                    """)
+                .CloseError();
+            }
 
             if (CurrentEquals("REPOSITORY")) REPOSITORY();
         }
@@ -37,9 +60,20 @@ public static partial class Analyzer
         Expected("REPOSITORY");
         CurrentSection = CurrentScope.Repository;
 
-        Expected(".", """
-        Missing separator period at the end of this REPOSITORY paragraph header, every paragraph must end with a separator period
-        """, -1, "CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY", "DATA", "PROCEDURE");
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                Paragraph header, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token.
+                """)
+            .WithNote("""
+                Every paragraph header must end with a separator period.
+                """)
+            .CloseError();
+        }
 
         while (CurrentEquals("CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY"))
         {
@@ -58,21 +92,24 @@ public static partial class Analyzer
                 {
                     Expected("EXPANDS");
                     Identifier();
+
                     Expected("USING");
                     if (!CurrentEquals(TokenType.Identifier))
                     {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING clause must contain at least one class, object or interface name.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    }
+                        Error
+                        .Build(ErrorType.Analyzer, ConsoleColor.Red, 105,"""
+                            Missing USING phrase class or interface name.
+                            """)
+                        .WithSourceLine(Lookahead(-1), """
+                            The USING phrase must define at least one class or interface name.
+                            """)
+                        .CloseError();
 
-                    if (!CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Identifier))
-                    {
                         AnchorPoint("CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY", "DATA", "PROCEDURE");
                     }
 
                     Identifier();
+
                     while (CurrentEquals(TokenType.Identifier)) Identifier();
                 }
             }
@@ -92,21 +129,24 @@ public static partial class Analyzer
                 {
                     Expected("EXPANDS");
                     Identifier();
+
                     Expected("USING");
                     if (!CurrentEquals(TokenType.Identifier))
                     {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING clause must contain at least one class, object or interface name.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    }
+                        Error
+                        .Build(ErrorType.Analyzer, ConsoleColor.Red, 105,"""
+                            Missing USING phrase class or interface name.
+                            """)
+                        .WithSourceLine(Lookahead(-1), """
+                            The USING phrase must define at least one class or interface name.
+                            """)
+                        .CloseError();
 
-                    if (!CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Identifier))
-                    {
                         AnchorPoint("CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY", "DATA", "PROCEDURE");
                     }
 
                     Identifier();
+
                     while (CurrentEquals(TokenType.Identifier)) Identifier();
                 }
             }
@@ -128,11 +168,6 @@ public static partial class Analyzer
                     }
 
                     Expected("INTRINSIC");
-
-                    if (!CurrentEquals("CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY", "."))
-                    {
-                        AnchorPoint("CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY", "DATA", "PROCEDURE");
-                    }
                 }
                 else
                 {
@@ -168,8 +203,19 @@ public static partial class Analyzer
             }
         }
 
-        Expected(".", """
-        Missing separator period at the end of this REPOSITORY paragraph body, the last definition in the REPOSITORY paragraph must end with a period
-        """, -1, "CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY", "DATA", "PROCEDURE");
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                Paragraph body, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token.
+                """)
+            .WithNote("""
+                Every paragraph body must end with a separator period.
+                """)
+            .CloseError();
+        }
     }
 }

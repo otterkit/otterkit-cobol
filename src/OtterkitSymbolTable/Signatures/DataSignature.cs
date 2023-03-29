@@ -3,16 +3,16 @@ namespace Otterkit;
 public record DataSignature
 {
     public CurrentScope Section;
-    public string Parent = string.Empty;
+    public DataSignature? Parent;
     public int LevelNumber;
-    public string Identifier = string.Empty;
-    public string Type = string.Empty;
-    public string PictureString = string.Empty;
+    public string Identifier = "";
+    public string Type = "";
+    public string PictureString = "";
     public int PictureLength;
-    public string ExternalName = string.Empty;
-    public string DefaultValue = string.Empty;
+    public string ExternalName = "";
+    public string DefaultValue = "";
     public UsageType UsageType;
-    public string UsageContext = string.Empty;
+    public string UsageContext = "";
     public bool IsExternal;
     public bool IsElementary;
     public bool IsGroup;

@@ -206,12 +206,19 @@ public static partial class Analyzer
 
         if (!canContainStatements && (CurrentEquals(TokenContext.IsStatement) || CurrentEquals(TokenType.Identifier)))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The procedure division of function, program and method prototypes must not contain any statements, sections or paragraphs
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 205, """
+                Misplaced statement definition.
+                """)
+            .WithSourceLine(Current(), """
+                A statement cannot be defined here.
+                """)
+            .WithNote("""
+                Prototypes must not contain any statements, sections or paragraphs.
+                """)
+            .CloseError();
 
-            AnchorPoint("END");
+            AnchorPoint("END", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
         }
     }
 

@@ -537,9 +537,11 @@ public static partial class Analyzer
             return;
         }
 
+        var sourceUnit = CompilerContext.CurrentCallable[0];
+
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
-            if (!SymbolTable.DataLocals.LocalExists(Current().Value))
+            if (!sourceUnit.Definitions.LocalExists(Current().Value))
             {
                 Error
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -621,9 +623,11 @@ public static partial class Analyzer
             return;
         }
 
+        var sourceUnit = CompilerContext.CurrentCallable[0];
+
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
-            if (!SymbolTable.DataLocals.LocalExists(Current().Value))
+            if (!sourceUnit.Definitions.LocalExists(Current().Value))
             {
                 Error
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """

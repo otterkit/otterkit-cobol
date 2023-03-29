@@ -129,7 +129,7 @@ public static partial class Analyzer
     // This method is part of the PROCEDURE DIVISION parsing. It's used to parse the "RETURNING" data item specified in
     // the PROCEDURE DIVISION header. It's separate from the previous method because its code is needed more than once.
     // COBOL user-defined functions should always return a data item.
-    public static void ReturningDataName(CallableSignature currentCallable)
+    public static void ReturningDataName(CallableSignature sourceUnit)
     {
         if (!CurrentEquals(TokenType.Identifier))
         {
@@ -144,7 +144,7 @@ public static partial class Analyzer
             return;
         }
 
-        var (exists, isUnique) = SymbolTable.VariableExistsAndIsUnique(Current().Value);
+        var (exists, isUnique) = sourceUnit.Definitions.LocalExistsAndIsUnique(Current().Value);
 
         if (!exists)
         {
@@ -176,9 +176,9 @@ public static partial class Analyzer
             return;
         }
 
-        var returning = SymbolTable.GetUniqueVariableByName(Current().Value);
+        var returning = sourceUnit.Definitions.GetUniqueLocalByName(Current().Value);
 
-        currentCallable.Returning = returning;
+        sourceUnit.Returning = returning;
 
         // TODO: Handle name qualifiers.
 

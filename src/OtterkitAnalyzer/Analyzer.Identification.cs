@@ -215,7 +215,7 @@ public static partial class Analyzer
             if (!isPrototype) Optional("PROGRAM");
         }
 
-        var globals = SymbolTable.SourceUnitGlobals;
+        var globals = SymbolTable.SourceUnits;
 
         var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
 
@@ -265,7 +265,7 @@ public static partial class Analyzer
             SourceType.Push(SourceUnit.FunctionPrototype);
         }
 
-        var globals = SymbolTable.SourceUnitGlobals;
+        var globals = SymbolTable.SourceUnits;
 
         var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
 
@@ -356,7 +356,7 @@ public static partial class Analyzer
 
         var signature = new ClassSignature(CurrentId.Peek(), SourceType.Peek());
 
-        SymbolTable.SourceUnitGlobals
+        SymbolTable.SourceUnits
             .TryAddGlobalReference(CurrentId.Peek().Value, signature);
 
         if (!Expected(".", false))
@@ -437,7 +437,7 @@ public static partial class Analyzer
 
         var signature = new InterfaceSignature(CurrentId.Peek(), SourceType.Peek());
 
-        SymbolTable.SourceUnitGlobals
+        SymbolTable.SourceUnits
             .TryAddGlobalReference(CurrentId.Peek().Value, signature);
 
         if (!Expected(".", false))

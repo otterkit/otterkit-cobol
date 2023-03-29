@@ -132,7 +132,9 @@ public static partial class Analyzer
         
         Identifier();
 
-        if (SymbolTable.DataLocals.LocalExists(dataName) && levelNumber is 1)
+        var sourceUnit = CompilerContext.CurrentCallable[0];
+
+        if (sourceUnit.Definitions.LocalExists(dataName) && levelNumber is 1)
         {
             Error
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -421,7 +423,7 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        SymbolTable.DataLocals.AddOrUpdateLocal(dataName, dataReference);
+        sourceUnit.Definitions.AddOrUpdateLocal(dataName, dataReference);
 
         CheckConditionNames(dataName);
     }
@@ -446,7 +448,9 @@ public static partial class Analyzer
         var dataName = Current().Value;
         Identifier();
 
-        if (SymbolTable.DataLocals.LocalExists(dataName))
+        var sourceUnit = CompilerContext.CurrentCallable[0];
+
+        if (sourceUnit.Definitions.LocalExists(dataName))
         {
             Error
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -530,7 +534,7 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        SymbolTable.DataLocals.AddOrUpdateLocal(dataName, dataReference);
+        sourceUnit.Definitions.AddOrUpdateLocal(dataName, dataReference);
     }
 
     private static void CheckLevelNumber(int level)
@@ -686,7 +690,9 @@ public static partial class Analyzer
 
             Identifier();
 
-            if (SymbolTable.DataLocals.LocalExists(dataName))
+            var sourceUnit = CompilerContext.CurrentCallable[0];
+
+            if (sourceUnit.Definitions.LocalExists(dataName))
             {
                 // TODO: This is incorrect, but was done to replace the old error message system
                 Error
@@ -768,7 +774,7 @@ public static partial class Analyzer
                 .CloseError();
             }
 
-            SymbolTable.DataLocals.AddOrUpdateLocal(dataName, dataReference);
+            sourceUnit.Definitions.AddOrUpdateLocal(dataName, dataReference);
         }
     }
 

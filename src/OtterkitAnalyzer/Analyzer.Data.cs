@@ -688,10 +688,18 @@ public static partial class Analyzer
 
             if (SymbolTable.DataLocals.ReferenceExists(dataName))
             {
-                ErrorHandler.Analyzer.Report(FileName, itemToken, ErrorType.General, $"""
-                A data item with this name already exists in this source unit, data items must have a unique name.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, itemToken);
+                // TODO: This is incorrect, but was done to replace the old error message system
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
+                    Duplicate condition name definition.
+                    """)
+                .WithSourceLine(Lookahead(-1), """
+                    A condition variable already exists with this name
+                    """)
+                .WithNote("""
+                    condition items must have a unique name. 
+                    """)
+                .CloseError();
             }
 
             DataSignature dataReference = new();

@@ -13,7 +13,7 @@ public static partial class Analyzer
     // That includes the user-defined paragraphs, sections and declaratives
     // or when parsing OOP COBOL code, it's responsible for parsing COBOL methods, objects and factories. 
     // It is also responsible for showing appropriate error messages when an error occurs in the PROCEDURE DIVISION.
-    public static void PROCEDURE(CallableSignature currentCallable)
+    public static void PROCEDURE()
     {
         Expected("PROCEDURE");
         Expected("DIVISION");
@@ -98,12 +98,12 @@ public static partial class Analyzer
         if (SourceType.Peek() is SourceUnit.Function or SourceUnit.FunctionPrototype)
         {
             Expected("RETURNING");
-            ReturningDataName(currentCallable);
+            ReturningDataName();
         }
         else if (CurrentEquals("RETURNING"))
         {
             Expected("RETURNING");
-            ReturningDataName(currentCallable);
+            ReturningDataName();
         }
 
         if (!Expected(".", false))
@@ -129,7 +129,7 @@ public static partial class Analyzer
     // This method is part of the PROCEDURE DIVISION parsing. It's used to parse the "RETURNING" data item specified in
     // the PROCEDURE DIVISION header. It's separate from the previous method because its code is needed more than once.
     // COBOL user-defined functions should always return a data item.
-    public static void ReturningDataName(CallableSignature sourceUnit)
+    public static void ReturningDataName()
     {
         if (!CurrentEquals(TokenType.Identifier))
         {
@@ -143,6 +143,8 @@ public static partial class Analyzer
             .CloseError();
             return;
         }
+
+        var sourceUnit = CurrentSourceUnit;
 
         var (exists, isUnique) = sourceUnit.Definitions.LocalExistsAndIsUnique(Current().Value);
 
@@ -467,7 +469,7 @@ public static partial class Analyzer
 
                 if (CurrentEquals("DATA")) DATA();
 
-                PROCEDURE(CurrentSourceUnit);
+                PROCEDURE();
 
                 EndMarker();
             }
@@ -494,7 +496,7 @@ public static partial class Analyzer
 
                 if (CurrentEquals("DATA")) DATA();
 
-                PROCEDURE(CurrentSourceUnit);
+                PROCEDURE();
 
                 EndMarker();
             }
@@ -536,7 +538,7 @@ public static partial class Analyzer
 
                 if (CurrentEquals("PROCEDURE")) 
                 {
-                    PROCEDURE(CurrentSourceUnit);
+                    PROCEDURE();
                 }
 
                 EndMarker();

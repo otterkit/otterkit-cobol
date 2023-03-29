@@ -62,7 +62,7 @@ public static partial class Analyzer
         if (notClassOrInterface)
         {
             if (CurrentEquals("PROCEDURE")) 
-                PROCEDURE(CurrentSourceUnit);
+                PROCEDURE();
         }
         else if (SourceType.Peek() == SourceUnit.Class)
         {

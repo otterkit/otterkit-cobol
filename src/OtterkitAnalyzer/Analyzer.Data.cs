@@ -132,7 +132,7 @@ public static partial class Analyzer
         
         Identifier();
 
-        if (SymbolTable.DataLocals.ReferenceExists(dataName) && levelNumber is 1)
+        if (SymbolTable.DataLocals.LocalExists(dataName) && levelNumber is 1)
         {
             Error
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -421,7 +421,7 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        SymbolTable.DataLocals.AddOrUpdateReference(dataName, dataReference);
+        SymbolTable.DataLocals.AddOrUpdateLocal(dataName, dataReference);
 
         CheckConditionNames(dataName);
     }
@@ -446,7 +446,7 @@ public static partial class Analyzer
         var dataName = Current().Value;
         Identifier();
 
-        if (SymbolTable.DataLocals.ReferenceExists(dataName))
+        if (SymbolTable.DataLocals.LocalExists(dataName))
         {
             Error
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -530,7 +530,7 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        SymbolTable.DataLocals.AddOrUpdateReference(dataName, dataReference);
+        SymbolTable.DataLocals.AddOrUpdateLocal(dataName, dataReference);
     }
 
     private static void CheckLevelNumber(int level)
@@ -686,7 +686,7 @@ public static partial class Analyzer
 
             Identifier();
 
-            if (SymbolTable.DataLocals.ReferenceExists(dataName))
+            if (SymbolTable.DataLocals.LocalExists(dataName))
             {
                 // TODO: This is incorrect, but was done to replace the old error message system
                 Error
@@ -768,7 +768,7 @@ public static partial class Analyzer
                 .CloseError();
             }
 
-            SymbolTable.DataLocals.AddOrUpdateReference(dataName, dataReference);
+            SymbolTable.DataLocals.AddOrUpdateLocal(dataName, dataReference);
         }
     }
 

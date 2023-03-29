@@ -539,7 +539,7 @@ public static partial class Analyzer
 
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
-            if (!SymbolTable.DataLocals.ReferenceExists(Current().Value))
+            if (!SymbolTable.DataLocals.LocalExists(Current().Value))
             {
                 Error
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -623,7 +623,7 @@ public static partial class Analyzer
 
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
-            if (!SymbolTable.DataLocals.ReferenceExists(Current().Value))
+            if (!SymbolTable.DataLocals.LocalExists(Current().Value))
             {
                 Error
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """

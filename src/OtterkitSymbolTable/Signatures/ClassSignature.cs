@@ -5,7 +5,6 @@ public class ClassSignature : AbstractSignature
     public bool IsFinal;
     public List<string> Using = new();
     public ClassSignature? Inherits;
-    public string ExternalizedName = "";
 
     public List<InterfaceSignature> FactoryImplements = new();
     public List<InterfaceSignature> ObjectImplements = new();

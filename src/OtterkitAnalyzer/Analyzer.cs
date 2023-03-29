@@ -12,6 +12,12 @@ public static partial class Analyzer
     private static CurrentScope CurrentSection;
     private static readonly Stack<Token> CurrentId = new();
     private static readonly Stack<SourceUnit> SourceType = new();
+    private static CallableSignature CurrentSourceUnit
+    {
+        get => CompilerContext.CurrentCallable[0];
+
+        set => CompilerContext.CurrentCallable[0] = value;
+    }
 
     /// <summary>
     /// Otterkit COBOL Syntax Analyzer
@@ -56,7 +62,7 @@ public static partial class Analyzer
         if (notClassOrInterface)
         {
             if (CurrentEquals("PROCEDURE")) 
-                PROCEDURE(CompilerContext.CurrentCallable[0]);
+                PROCEDURE(CurrentSourceUnit);
         }
         else if (SourceType.Peek() == SourceUnit.Class)
         {

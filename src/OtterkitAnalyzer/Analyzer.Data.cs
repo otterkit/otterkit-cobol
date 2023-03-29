@@ -132,7 +132,7 @@ public static partial class Analyzer
         
         Identifier();
 
-        var sourceUnit = CompilerContext.CurrentCallable[0];
+        var sourceUnit = CurrentSourceUnit;
 
         if (sourceUnit.Definitions.LocalExists(dataName) && levelNumber is 1)
         {
@@ -448,7 +448,7 @@ public static partial class Analyzer
         var dataName = Current().Value;
         Identifier();
 
-        var sourceUnit = CompilerContext.CurrentCallable[0];
+        var sourceUnit = CurrentSourceUnit;
 
         if (sourceUnit.Definitions.LocalExists(dataName))
         {
@@ -690,7 +690,7 @@ public static partial class Analyzer
 
             Identifier();
 
-            var sourceUnit = CompilerContext.CurrentCallable[0];
+            var sourceUnit = CurrentSourceUnit;
 
             if (sourceUnit.Definitions.LocalExists(dataName))
             {

@@ -467,7 +467,7 @@ public static partial class Analyzer
 
                 if (CurrentEquals("DATA")) DATA();
 
-                PROCEDURE(CompilerContext.CurrentCallable[0]);
+                PROCEDURE(CurrentSourceUnit);
 
                 EndMarker();
             }
@@ -494,7 +494,7 @@ public static partial class Analyzer
 
                 if (CurrentEquals("DATA")) DATA();
 
-                PROCEDURE(CompilerContext.CurrentCallable[0]);
+                PROCEDURE(CurrentSourceUnit);
 
                 EndMarker();
             }
@@ -536,7 +536,7 @@ public static partial class Analyzer
 
                 if (CurrentEquals("PROCEDURE")) 
                 {
-                    PROCEDURE(CompilerContext.CurrentCallable[0]);
+                    PROCEDURE(CurrentSourceUnit);
                 }
 
                 EndMarker();

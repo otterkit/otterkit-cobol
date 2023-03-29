@@ -221,7 +221,7 @@ public static partial class Analyzer
 
         globals.TryAddGlobalReference(CurrentId.Peek().Value, signature);
 
-        CompilerContext.CurrentCallable[0] = signature;
+        CurrentSourceUnit = signature;
 
         if (!Expected(".", false))
         {
@@ -271,7 +271,7 @@ public static partial class Analyzer
 
         globals.TryAddGlobalReference(CurrentId.Peek().Value, signature);
 
-        CompilerContext.CurrentCallable[0] = signature;
+        CurrentSourceUnit = signature;
 
         if (!Expected(".", false))
         {
@@ -556,7 +556,7 @@ public static partial class Analyzer
 
             parentInterface.Methods.Add(methodPrototype);
 
-            CompilerContext.CurrentCallable[0] = methodPrototype;
+            CurrentSourceUnit = methodPrototype;
         }
 
         var parentClass = SymbolTable.GetSignature<ClassSignature>(currentId.Value);
@@ -573,7 +573,7 @@ public static partial class Analyzer
             parentClass.FactoryMethods.Add(method);
         }
         
-        CompilerContext.CurrentCallable[0] = method;
+        CurrentSourceUnit = method;
     }
 
     public static void Factory()

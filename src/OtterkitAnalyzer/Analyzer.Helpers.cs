@@ -537,7 +537,7 @@ public static partial class Analyzer
             return;
         }
 
-        var sourceUnit = CompilerContext.CurrentCallable[0];
+        var sourceUnit = CurrentSourceUnit;
 
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {
@@ -623,7 +623,7 @@ public static partial class Analyzer
             return;
         }
 
-        var sourceUnit = CompilerContext.CurrentCallable[0];
+        var sourceUnit = CurrentSourceUnit;
 
         if (CurrentSection is CurrentScope.ProcedureDivision)
         {

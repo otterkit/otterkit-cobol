@@ -2,9 +2,11 @@ namespace Otterkit;
 
 public enum ErrorType
 {
-    Analyzer,
-    General,
+    None,
     Syntax,
+    Analyzer,
+    Resolution,
+    General,
     Expected,
     Choice,
     Recovery,

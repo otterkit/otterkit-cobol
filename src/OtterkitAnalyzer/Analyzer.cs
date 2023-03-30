@@ -32,6 +32,13 @@ public static partial class Analyzer
         // This should only return when the parser reaches the true EOF token
         Source();
 
+        // Reset token index and setup resolution pass
+        SetupResolutionPass();
+
+        // Call the parser's main recursive method again
+        // But this time with name resolution enabled
+        Source();
+
         // If a parsing error has occured, terminate the compilation process.
         // We do not want the compiler to continue when the source code is not valid.
         if (ErrorHandler.HasError) ErrorHandler.Terminate("parsing");
@@ -87,5 +94,18 @@ public static partial class Analyzer
             Continue();
             Source();
         }
+    }
+
+    public static void SetupResolutionPass()
+    {
+        // Set the index back to 0 to restart the parser
+        Index = 0;
+
+        // Enable name resolution checks
+        IsResolutionPass = true;
+
+        // Suppress analyzer error messages to avoid duplicates
+        // Note: Resolution errors should use 'ErrorType.Resolution'
+        Error.SuppressedError = ErrorType.Analyzer;
     }
 }

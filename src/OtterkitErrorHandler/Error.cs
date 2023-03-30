@@ -2,11 +2,11 @@ namespace Otterkit;
 
 public readonly ref partial struct Error
 {
-    private readonly static ConsoleColor Green = ConsoleColor.Green;
-    private readonly static ConsoleColor DarkGray = ConsoleColor.DarkGray;
+    public static ErrorType SuppressedError { private get; set; }
 
     private readonly ErrorType ErrorType;
     private readonly ConsoleColor ConsoleColor;
+
 
     public Error(ErrorType errorType, ConsoleColor consoleColor)
     {

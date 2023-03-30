@@ -2,6 +2,7 @@ namespace Otterkit;
 
 public enum TokenScope
 {
+    Root,
     ProgramId,
     FunctionId,
     InterfaceId,

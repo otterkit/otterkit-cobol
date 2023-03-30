@@ -7,8 +7,8 @@ public sealed partial record Token
     public string Value;
     public int FileIndex;
     public TokenType Type;
-    public TokenScope? Scope;
-    public TokenContext? Context;
+    public TokenScope Scope;
+    public TokenContext Context;
 
     public Token(string value, TokenType type, int line, int column)
     {

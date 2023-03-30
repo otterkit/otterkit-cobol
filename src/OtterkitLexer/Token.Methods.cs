@@ -224,7 +224,7 @@ public sealed partial record Token
         return TokenType.Identifier;
     }
 
-    private static TokenContext? FindContext(Token token)
+    private static TokenContext FindContext(Token token)
     {
         // check if the token belongs to a data division clause
         if (TokenLookup.IsReservedClause(token.Value))
@@ -239,10 +239,10 @@ public sealed partial record Token
             return TokenContext.IsEOF;
 
         // if none of the above, return null
-            return null;
+            return TokenContext.None;
     }
 
-    private static TokenScope? FindScope(Token token, Token previousToken)
+    private static TokenScope FindScope(Token token, Token previousToken)
     {
         if (token.Value.Equals("PROGRAM-ID", StringComparison.OrdinalIgnoreCase))
             return TokenScope.ProgramId;

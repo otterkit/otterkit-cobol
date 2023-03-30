@@ -2,6 +2,9 @@ namespace Otterkit;
 
 public readonly ref partial struct Error
 {
+    private readonly static ConsoleColor Green = ConsoleColor.Green;
+    private readonly static ConsoleColor DarkGray = ConsoleColor.DarkGray;
+    
     private static void ColoredWrite(ConsoleColor consoleColor, string text)
     {
         Console.ForegroundColor = consoleColor;

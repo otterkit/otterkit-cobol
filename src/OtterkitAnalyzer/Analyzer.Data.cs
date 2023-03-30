@@ -132,24 +132,6 @@ public static partial class Analyzer
         
         Identifier();
 
-        var sourceUnit = CurrentSourceUnit;
-
-        if (sourceUnit.Definitions.LocalExists(dataName) && levelNumber is 1)
-        {
-            Error
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
-                Duplicate root level definition.
-                """)
-            .WithSourceLine(Current(), """
-                A 01 level variable already exists with this name
-                """)
-            .WithNote("""
-                Every root level item must have a unique name. 
-                """)
-            .CloseError();
-        }
-
-
         DataSignature dataLocal = new();
 
         dataLocal.Identifier = dataName;
@@ -419,9 +401,30 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        sourceUnit.Definitions.AddLocal(dataName, dataLocal, IsResolutionPass);
-
         CheckConditionNames(dataLocal);
+
+        // We're returning during a resolution pass
+        if (IsResolutionPass) return;
+
+        // Because we don't want to run this again during it
+        var sourceUnit = CurrentSourceUnit;
+
+        if (sourceUnit.Definitions.LocalExists(dataName) && levelNumber is 1 or 77)
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
+                Duplicate root level definition.
+                """)
+            .WithSourceLine(itemToken, """
+                A 01 or 77 level variable already exists with this name.
+                """)
+            .WithNote("""
+                Every root level item must have a unique name. 
+                """)
+            .CloseError();
+        }
+
+        sourceUnit.Definitions.AddLocal(dataName, dataLocal, IsResolutionPass);
     }
 
     private static void ConstantEntry()
@@ -441,25 +444,10 @@ public static partial class Analyzer
         var levelNumber = int.Parse(Current().Value);
         Number();
 
-        var dataName = Current().Value;
+        Token itemToken = Current();
+        string dataName = itemToken.Value;
+
         Identifier();
-
-        var sourceUnit = CurrentSourceUnit;
-
-        if (sourceUnit.Definitions.LocalExists(dataName))
-        {
-            Error
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
-                Duplicate root level definition.
-                """)
-            .WithSourceLine(Lookahead(-1), """
-                A 01 level variable already exists with this name
-                """)
-            .WithNote("""
-                Root level items must have a unique name. 
-                """)
-            .CloseError();
-        }
 
         DataSignature dataLocal = new();
 
@@ -526,6 +514,27 @@ public static partial class Analyzer
                 """)
             .WithNote("""
                 Every item must end with a separator period
+                """)
+            .CloseError();
+        }
+
+        // We're returning during a resolution pass
+        if (IsResolutionPass) return;
+
+        // Because we don't want to run this again during it
+        var sourceUnit = CurrentSourceUnit;
+
+        if (sourceUnit.Definitions.LocalExists(dataName) && levelNumber is 1 or 77)
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
+                Duplicate root level definition.
+                """)
+            .WithSourceLine(itemToken, """
+                A 01 or 77 level variable already exists with this name.
+                """)
+            .WithNote("""
+                Every root level item must have a unique name. 
                 """)
             .CloseError();
         }
@@ -686,24 +695,6 @@ public static partial class Analyzer
 
             Identifier();
 
-            var sourceUnit = CurrentSourceUnit;
-
-            if (sourceUnit.Definitions.LocalExists(dataName))
-            {
-                // TODO: This is incorrect, but was done to replace the old error message system
-                Error
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
-                    Duplicate condition name definition.
-                    """)
-                .WithSourceLine(Lookahead(-1), """
-                    A condition variable already exists with this name
-                    """)
-                .WithNote("""
-                    condition items must have a unique name. 
-                    """)
-                .CloseError();
-            }
-
             DataSignature dataLocal = new();
 
             dataLocal.Parent = parent;
@@ -766,6 +757,28 @@ public static partial class Analyzer
                     """)
                 .WithNote("""
                     Every item must end with a separator period
+                    """)
+                .CloseError();
+            }
+
+            // We're returning during a resolution pass
+            if (IsResolutionPass) continue;
+
+            // Because we don't want to run this again during it
+            var sourceUnit = CurrentSourceUnit;
+
+            if (sourceUnit.Definitions.LocalExists(dataName))
+            {
+                // TODO: This is incorrect, but was done to replace the old error message system
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
+                    Duplicate condition name definition.
+                    """)
+                .WithSourceLine(itemToken, """
+                    A condition variable already exists with this name
+                    """)
+                .WithNote("""
+                    condition items must have a unique name. 
                     """)
                 .CloseError();
             }

@@ -7,10 +7,8 @@ public sealed class GlobalReferences
 {
     private readonly Dictionary<string, AbstractSignature> ReferenceLookup = new(StringComparer.OrdinalIgnoreCase);
 
-    public bool TryAddGlobalName(string globalName, AbstractSignature globalSignature, bool isResolutionPass)
+    public bool TryAddGlobalName(string globalName, AbstractSignature globalSignature)
     {
-        if (isResolutionPass) return true;
-
         ref var reference = ref CollectionsMarshal.GetValueRefOrAddDefault(ReferenceLookup, globalName, out var exists);
 
         if (!exists)

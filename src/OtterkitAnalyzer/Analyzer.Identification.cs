@@ -215,11 +215,19 @@ public static partial class Analyzer
             if (!isPrototype) Optional("PROGRAM");
         }
 
-        var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
+        if (!IsResolutionPass)
+        {
+            var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
 
-        SymbolTable.TryAddName(CurrentId.Peek().Value, signature, IsResolutionPass);
+            SymbolTable.TryAddName(CurrentId.Peek().Value, signature);
 
-        CurrentSourceUnit = signature;
+            CurrentSourceUnit = signature;
+        }
+
+        if (IsResolutionPass)
+        {
+            CurrentSourceUnit = SymbolTable.GetSignature<CallableSignature>(CurrentId.Peek().Value);
+        }
 
         if (!Expected(".", false))
         {
@@ -263,11 +271,19 @@ public static partial class Analyzer
             SourceType.Push(SourceUnit.FunctionPrototype);
         }
 
-        var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
+        if (!IsResolutionPass)
+        {
+            var signature = new CallableSignature(CurrentId.Peek(), SourceType.Peek());
 
-        SymbolTable.TryAddName(CurrentId.Peek().Value, signature, IsResolutionPass);
+            SymbolTable.TryAddName(CurrentId.Peek().Value, signature);
 
-        CurrentSourceUnit = signature;
+            CurrentSourceUnit = signature;
+        }
+
+        if (IsResolutionPass)
+        {
+            CurrentSourceUnit = SymbolTable.GetSignature<CallableSignature>(CurrentId.Peek().Value);
+        }
 
         if (!Expected(".", false))
         {
@@ -350,9 +366,12 @@ public static partial class Analyzer
             while (CurrentEquals(TokenType.Identifier)) Identifier();
         }
 
-        var signature = new ClassSignature(CurrentId.Peek(), SourceType.Peek());
+        if (!IsResolutionPass)
+        {
+            var signature = new ClassSignature(CurrentId.Peek(), SourceType.Peek());
 
-        SymbolTable.TryAddName(CurrentId.Peek().Value, signature, IsResolutionPass);
+            SymbolTable.TryAddName(CurrentId.Peek().Value, signature);
+        }
 
         if (!Expected(".", false))
         {
@@ -430,9 +449,12 @@ public static partial class Analyzer
             while (CurrentEquals(TokenType.Identifier)) Identifier();
         }
 
-        var signature = new InterfaceSignature(CurrentId.Peek(), SourceType.Peek());
+        if (!IsResolutionPass)
+        {
+            var signature = new InterfaceSignature(CurrentId.Peek(), SourceType.Peek());
 
-        SymbolTable.TryAddName(CurrentId.Peek().Value, signature, IsResolutionPass);
+            SymbolTable.TryAddName(CurrentId.Peek().Value, signature);
+        }
 
         if (!Expected(".", false))
         {
@@ -541,6 +563,11 @@ public static partial class Analyzer
 
             AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
         }
+
+        // We're returning during a resolution pass
+        if (IsResolutionPass) return;
+
+        // Because we don't want to run this again during it:
 
         if (currentSource is SourceUnit.Interface)
         {

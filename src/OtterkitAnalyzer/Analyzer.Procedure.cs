@@ -25,85 +25,18 @@ public static partial class Analyzer
         {
             Expected("USING");
 
-            while (CurrentEquals("BY", "REFERENCE", "VALUE"))
-            {
-                // TODO: This is incorrect:
-                // By reference can be implicit
-
-                if (CurrentEquals("BY") && !LookaheadEquals(1, "VALUE", "REFERENCE"))
-                {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    The USING BY clause in the procedure division header must be followed by "VALUE" or "REFERENCE"
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
-
-                    CombinedAnchorPoint(TokenContext.IsStatement, "RETURNING", ".");
-                }
-
-                if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
-                {
-                    Optional("BY");
-                    Expected("REFERENCE");
-
-                    if (CurrentEquals("OPTIONAL"))
-                    {
-                        Expected("OPTIONAL");
-                    }
-
-                    if (!CurrentEquals(TokenType.Identifier))
-                    {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING BY REFERENCE clause must contain at least one data item name.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    }
-                    
-                    // TODO: Reimplement parameter item resolution
-
-                    Identifier();
-                    while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
-                    {
-                        if (CurrentEquals("OPTIONAL"))
-                        {
-                            Expected("OPTIONAL");
-                        }
-                        // TODO: Reimplement parameter item resolution
-                        Identifier();
-                    }
-                }
-
-                if (CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
-                {
-                    Optional("BY");
-                    Expected("VALUE");
-                    if (!CurrentEquals(TokenType.Identifier))
-                    {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING BY VALUE clause must contain at least one data item name.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    }
-                    
-                    // TODO: Reimplement parameter item resolution
-                    Identifier();
-                    while (CurrentEquals(TokenType.Identifier))
-                    {
-                        // TODO: Reimplement parameter item resolution
-                        Identifier();
-                    }
-                }
-            }
+            Using();
         }
 
         if (SourceType.Peek() is SourceUnit.Function or SourceUnit.FunctionPrototype)
         {
             Expected("RETURNING");
-            ReturningDataName();
+            Returning();
         }
         else if (CurrentEquals("RETURNING"))
         {
             Expected("RETURNING");
-            ReturningDataName();
+            Returning();
         }
 
         if (!Expected(".", false))
@@ -129,7 +62,103 @@ public static partial class Analyzer
     // This method is part of the PROCEDURE DIVISION parsing. It's used to parse the "RETURNING" data item specified in
     // the PROCEDURE DIVISION header. It's separate from the previous method because its code is needed more than once.
     // COBOL user-defined functions should always return a data item.
-    public static void ReturningDataName()
+
+    public static void Using()
+    {
+        while (CurrentEquals("BY", "REFERENCE", "VALUE") || CurrentEquals(TokenType.Identifier))
+        {   
+            if (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
+                {
+                    if (CurrentEquals("OPTIONAL"))
+                    {
+                        Expected("OPTIONAL");
+                    }
+                    // TODO: Reimplement parameter item resolution
+                    Identifier();
+                }  
+            }
+
+            if (CurrentEquals("BY") && !LookaheadEquals(1, "VALUE", "REFERENCE"))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 128,"""
+                    Using phrase, missing keyword.
+                    """)
+                .WithSourceLine(Current(), """
+                    Expected 'VALUE' or 'REFERENCE' after this token
+                    """)
+                .CloseError();
+
+                CombinedAnchorPoint(TokenContext.IsStatement, "RETURNING", ".");
+            }
+
+            if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
+            {
+                Optional("BY");
+                Expected("REFERENCE");
+
+                if (CurrentEquals("OPTIONAL"))
+                {
+                    Expected("OPTIONAL");
+                }
+
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 128,"""
+                        Using phrase, missing identifier.
+                        """)
+                    .WithSourceLine(Current(), """
+                        BY REFERENCE phrase must contain at least one data item name.
+                        """)
+                    .CloseError();
+                }
+                
+                // TODO: Reimplement parameter item resolution
+
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
+                {
+                    if (CurrentEquals("OPTIONAL"))
+                    {
+                        Expected("OPTIONAL");
+                    }
+                    // TODO: Reimplement parameter item resolution
+                    Identifier();
+                }
+            }
+
+            if (CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
+            {
+                Optional("BY");
+                Expected("VALUE");
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 128,"""
+                        Using phrase, missing identifier.
+                        """)
+                    .WithSourceLine(Current(), """
+                        BY VALUE phrase must contain at least one data item name.
+                        """)
+                    .CloseError();
+                }
+                
+                // TODO: Reimplement parameter item resolution
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier))
+                {
+                    // TODO: Reimplement parameter item resolution
+                    Identifier();
+                }
+            }
+        }
+    }
+
+    public static void Returning()
     {
         if (!CurrentEquals(TokenType.Identifier))
         {

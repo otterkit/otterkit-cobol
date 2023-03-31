@@ -13,4 +13,9 @@ public class CallableSignature : AbstractSignature
 
     public CallableSignature(Token identifier, SourceUnit sourcetype)
         : base (identifier, sourcetype) { }
+
+    public (List<DataSignature>, List<bool>, List<bool>) GetParameters()
+    {
+        return (Parameters, IsOptional, IsByRef);
+    }
 }

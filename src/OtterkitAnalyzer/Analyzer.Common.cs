@@ -20,7 +20,7 @@ public static partial class Analyzer
     // The Arithmetic() and Condition() methods are responsible for parsing expressions and verifying if those expressions were
     // written correctly. This is using a combination of the Shunting Yard algorithm, and some methods to verify if the 
     // parentheses are balanced and if it can be evaluated correctly.
-    
+
     private static void TimesPhrase()
     {
         if (CurrentEquals(TokenType.Identifier))
@@ -152,10 +152,14 @@ public static partial class Analyzer
     {
         if (!CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "FOR"))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The tallying phrase must start with a data item identifier, which must be followed by the FOR keyword
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                Tallying phrase, missing identifier.
+                """)
+            .WithSourceLine(Current(), """
+                Tallying must start with an identifier, followed by the 'FOR' keyword.
+                """)
+            .CloseError();
         }
 
         while (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "FOR"))
@@ -165,10 +169,17 @@ public static partial class Analyzer
 
             if (!CurrentEquals("CHARACTERS", "ALL", "LEADING"))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                The tallying phrase must contain at least one of the following clauses: CHARACTERS, ALL or LEADING
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Tallying phrase, missing keyword.
+                    """)
+                .WithSourceLine(Current(), """
+                    Missing phrase keyword.
+                    """)
+                .WithNote("""
+                    Tallying must contain one of the following words: CHARACTERS, ALL or LEADING
+                    """)
+                .CloseError();
             }
 
             while (CurrentEquals("CHARACTERS", "ALL", "LEADING"))
@@ -257,10 +268,17 @@ public static partial class Analyzer
     {
         if (!CurrentEquals("CHARACTERS", "ALL", "LEADING", "FIRST"))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The replacing phrase must contain at least one of the following clauses: CHARACTERS, ALL, LEADING or FIRST
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                Replacing phrase, missing keyword.
+                """)
+            .WithSourceLine(Current(), """
+                Missing phrase keyword.
+                """)
+            .WithNote("""
+                Tallying must contain one of the following words: CHARACTERS, ALL, LEADING or FIRST.
+                """)
+            .CloseError();
         }
 
         while (CurrentEquals("CHARACTERS", "ALL", "LEADING", "FIRST"))
@@ -480,11 +498,17 @@ public static partial class Analyzer
         {
             if (afterExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                AFTER can only be specified once in this part of the statement. 
-                The same applies to BEFORE.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    After phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    AFTER can only be specified once in this part of the statement.
+                    """)
+                .WithNote("""
+                    The same applies to BEFORE.
+                    """)
+                .CloseError();
             }
 
             afterExists = true;
@@ -508,11 +532,17 @@ public static partial class Analyzer
         {
             if (beforeExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                BEFORE can only be specified once in this part of the statement. 
-                The same applies to AFTER.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Before phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    BEFORE can only be specified once in this part of the statement.
+                    """)
+                .WithNote("""
+                    The same applies to AFTER.
+                    """)
+                .CloseError();
             }
 
             beforeExists = true;
@@ -538,37 +568,54 @@ public static partial class Analyzer
         {
             if (invalidKeyExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                INVALID KEY can only be specified once in this statement. 
-                The same applies to the NOT INVALID KEY.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Invalid key phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    INVALID KEY can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to NOT INVALID KEY.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             invalidKeyExists = true;
+
             Expected("INVALID");
             Optional("KEY");
-            ParseStatements(true);
-            InvalidKey(ref isConditional, invalidKeyExists, notInvalidKeyExists);
 
+            ParseStatements(true);
+
+            InvalidKey(ref isConditional, invalidKeyExists, notInvalidKeyExists);
         }
 
         if (CurrentEquals("NOT"))
         {
             if (notInvalidKeyExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                NOT INVALID KEY can only be specified once in this statement. 
-                The same applies to the INVALID KEY.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Not invalid key phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    NOT INVALID KEY can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to INVALID KEY.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             notInvalidKeyExists = true;
+
             Expected("NOT");
             Expected("INVALID");
             Optional("KEY");
+
             ParseStatements(true);
+
             InvalidKey(ref isConditional, invalidKeyExists, notInvalidKeyExists);
         }
     }
@@ -579,37 +626,54 @@ public static partial class Analyzer
         {
             if (onExceptionExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                ON EXCEPTION can only be specified once in this statement. 
-                The same applies to the NOT ON EXCEPTION.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    On exception phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    ON EXCEPTION can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to NOT ON EXCEPTION.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             onExceptionExists = true;
+
             Optional("ON");
             Expected("EXCEPTION");
-            ParseStatements(true);
-            OnException(ref isConditional, onExceptionExists, notOnExceptionExists);
 
+            ParseStatements(true);
+
+            OnException(ref isConditional, onExceptionExists, notOnExceptionExists);
         }
 
         if (CurrentEquals("NOT"))
         {
             if (notOnExceptionExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                NOT ON EXCEPTION can only be specified once in this statement. 
-                The same applies to the ON EXCEPTION.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Not on exception phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    NOT ON EXCEPTION can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to ON EXCEPTION.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             notOnExceptionExists = true;
+
             Expected("NOT");
             Optional("ON");
             Expected("EXCEPTION");
+
             ParseStatements(true);
+
             OnException(ref isConditional, onExceptionExists, notOnExceptionExists);
         }
     }
@@ -620,11 +684,17 @@ public static partial class Analyzer
         {
             if (raisingExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                RAISING can only be specified once in this statement. 
-                The same applies to the WITH NORMAL/ERROR STATUS.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Raising phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    Raising can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to WITH ... ERROR STATUS.
+                    """)
+                .CloseError();
             }
 
             Expected("RAISING");
@@ -650,11 +720,17 @@ public static partial class Analyzer
         {
             if (statusExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                WITH NORMAL/ERROR STATUS can only be specified once in this statement. 
-                The same applies to the RAISING.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Error status phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    ERROR STATUS can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to RAISING.
+                    """)
+                .CloseError();
             }
 
             Optional("WITH");
@@ -684,37 +760,54 @@ public static partial class Analyzer
         {
             if (atEndExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                AT END can only be specified once in this statement. 
-                The same applies to the NOT AT END.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    At end phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    AT END can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to NOT AT END.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             atEndExists = true;
+
             Optional("AT");
             Expected("END");
-            ParseStatements(true);
-            AtEnd(ref isConditional, atEndExists, notAtEndExists);
 
+            ParseStatements(true);
+
+            AtEnd(ref isConditional, atEndExists, notAtEndExists);
         }
 
         if (CurrentEquals("NOT"))
         {
             if (notAtEndExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                NOT AT END can only be specified once in this statement. 
-                The same applies to the AT END.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Not at end phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    NOT AT END can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to AT END.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             notAtEndExists = true;
+
             Expected("NOT");
             Optional("AT");
             Expected("END");
+
             ParseStatements(true);
+
             AtEnd(ref isConditional, atEndExists, notAtEndExists);
         }
     }
@@ -725,39 +818,56 @@ public static partial class Analyzer
         {
             if (onErrorExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                ON SIZE ERROR can only be specified once in this statement. 
-                The same applies to NOT ON SIZE ERROR.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    On size error phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    ON SIZE ERROR can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to NOT ON SIZE ERROR.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             onErrorExists = true;
+
             Optional("ON");
             Expected("SIZE");
             Expected("ERROR");
-            ParseStatements(true);
-            SizeError(ref isConditional, onErrorExists, notOnErrorExists);
 
+            ParseStatements(true);
+
+            SizeError(ref isConditional, onErrorExists, notOnErrorExists);
         }
 
         if (CurrentEquals("NOT"))
         {
             if (notOnErrorExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                NOT ON SIZE ERROR can only be specified once in this statement. 
-                The same applies to ON SIZE ERROR.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Not on size error phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    NOT ON SIZE ERROR can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to ON SIZE ERROR.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             notOnErrorExists = true;
+
             Expected("NOT");
             Optional("ON");
             Expected("SIZE");
             Expected("ERROR");
+
             ParseStatements(true);
+
             SizeError(ref isConditional, onErrorExists, notOnErrorExists);
         }
     }
@@ -768,37 +878,54 @@ public static partial class Analyzer
         {
             if (onOverflowExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                ON OVERFLOW can only be specified once in this statement. 
-                The same applies to NOT ON OVERFLOW.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    On overflow phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    ON OVERFLOW can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to NOT ON OVERFLOW.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             onOverflowExists = true;
+
             Optional("ON");
             Expected("OVERFLOW");
-            ParseStatements(true);
-            OnOverflow(ref isConditional, onOverflowExists, notOnOverflowExists);
 
+            ParseStatements(true);
+
+            OnOverflow(ref isConditional, onOverflowExists, notOnOverflowExists);
         }
 
         if (CurrentEquals("NOT"))
         {
             if (notOnOverflowExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                NOT ON OVERFLOW can only be specified once in this statement. 
-                The same applies to ON OVERFLOW.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Not on overflow phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    NOT ON OVERFLOW can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to ON OVERFLOW.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             notOnOverflowExists = true;
+
             Expected("NOT");
             Optional("ON");
             Expected("OVERFLOW");
+
             ParseStatements(true);
+
             OnOverflow(ref isConditional, onOverflowExists, notOnOverflowExists);
         }
     }
@@ -809,30 +936,43 @@ public static partial class Analyzer
         {
             if (beforeExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                BEFORE can only be specified once in this statement. 
-                The same applies to AFTER.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Before phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    BEFORE can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to AFTER.
+                    """)
+                .CloseError();
             }
             beforeExists = true;
+
             Expected("BEFORE");
 
             WriteBeforeAfter(beforeExists, afterExists);
-
         }
 
         if (CurrentEquals("AFTER"))
         {
             if (afterExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                AFTER can only be specified once in this statement. 
-                The same applies to BEFORE.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    After phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    AFTER can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to BEFORE.
+                    """)
+                .CloseError();
             }
             afterExists = true;
+
             Expected("AFTER");
 
             WriteBeforeAfter(beforeExists, afterExists);
@@ -845,119 +985,161 @@ public static partial class Analyzer
         {
             if (locales.LC_ALL)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                LC_ALL can only be specified once in this statement. 
-                The same applies to each of the other locale names.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132,"""
+                    Locale phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    LC_ALL can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to each of the other locale names.
+                    """)
+                .CloseError();
             }
             locales.LC_ALL = true;
+
             Expected("LC_ALL");
 
             SetLocale(locales);
-
         }
 
         if (CurrentEquals("LC_COLLATE"))
         {
             if (locales.LC_COLLATE)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                LC_COLLATE can only be specified once in this statement. 
-                The same applies to each of the other locale names.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132,"""
+                    Locale phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    LC_COLLATE can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to each of the other locale names.
+                    """)
+                .CloseError();
             }
             locales.LC_COLLATE = true;
+
             Expected("LC_COLLATE");
 
             SetLocale(locales);
-
         }
 
         if (CurrentEquals("LC_CTYPE"))
         {
             if (locales.LC_CTYPE)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                LC_CTYPE can only be specified once in this statement. 
-                The same applies to each of the other locale names.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132,"""
+                    Locale phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    LC_CTYPE can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to each of the other locale names.
+                    """)
+                .CloseError();
             }
             locales.LC_CTYPE = true;
+
             Expected("LC_CTYPE");
 
             SetLocale(locales);
-
         }
 
         if (CurrentEquals("LC_MESSAGES"))
         {
             if (locales.LC_MESSAGES)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                LC_MESSAGES can only be specified once in this statement. 
-                The same applies to each of the other locale names.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132,"""
+                    Locale phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    LC_MESSAGES can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to each of the other locale names.
+                    """)
+                .CloseError();
             }
             locales.LC_MESSAGES = true;
+
             Expected("LC_MESSAGES");
 
             SetLocale(locales);
-
         }
 
         if (CurrentEquals("LC_MONETARY"))
         {
             if (locales.LC_MONETARY)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                LC_MONETARY can only be specified once in this statement. 
-                The same applies to each of the other locale names.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132,"""
+                    Locale phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    LC_MONETARY can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to each of the other locale names.
+                    """)
+                .CloseError();
             }
             locales.LC_MONETARY = true;
+
             Expected("LC_MONETARY");
 
             SetLocale(locales);
-
         }
 
         if (CurrentEquals("LC_NUMERIC"))
         {
             if (locales.LC_NUMERIC)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                LC_NUMERIC can only be specified once in this statement. 
-                The same applies to each of the other locale names.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132,"""
+                    Locale phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    LC_NUMERIC can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to each of the other locale names.
+                    """)
+                .CloseError();
             }
             locales.LC_NUMERIC = true;
+
             Expected("LC_NUMERIC");
 
             SetLocale(locales);
-
         }
 
         if (CurrentEquals("LC_TIME"))
         {
             if (locales.LC_TIME)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                LC_TIME can only be specified once in this statement. 
-                The same applies to each of the other locale names.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132,"""
+                    Locale phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    LC_TIME can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to each of the other locale names.
+                    """)
+                .CloseError();
             }
             locales.LC_TIME = true;
+
             Expected("LC_TIME");
 
             SetLocale(locales);
-
         }
     }
 
@@ -967,37 +1149,54 @@ public static partial class Analyzer
         {
             if (atEndOfPageExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                AT END-OF-PAGE can only be specified once in this statement. 
-                The same applies to NOT AT END-OF-PAGE.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    At end-of-page phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    AT END-OF-PAGE can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to NOT AT END-OF-PAGE.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             atEndOfPageExists = true;
+
             Optional("AT");
             Choice("END-OF-PAGE", "EOP");
-            ParseStatements(true);
-            AtEndOfPage(ref isConditional, atEndOfPageExists, notAtEndOfPageExists);
 
+            ParseStatements(true);
+
+            AtEndOfPage(ref isConditional, atEndOfPageExists, notAtEndOfPageExists);
         }
 
         if (CurrentEquals("NOT"))
         {
             if (notAtEndOfPageExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                NOT AT END-OF-PAGE can only be specified once in this statement. 
-                The same applies to AT END-OF-PAGE.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Not at end-of-page phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    NOT AT END-OF-PAGE can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to AT END-OF-PAGE.
+                    """)
+                .CloseError();
             }
             isConditional = true;
             notAtEndOfPageExists = true;
+
             Expected("NOT");
             Optional("AT");
             Choice("END-OF-PAGE", "EOP");
+
             ParseStatements(true);
+
             AtEndOfPage(ref isConditional, atEndOfPageExists, notAtEndOfPageExists);
         }
     }
@@ -1008,36 +1207,51 @@ public static partial class Analyzer
         {
             if (forAlphanumericExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                FOR ALPHANUMERIC can only be specified once in this statement. 
-                The same applies to FOR NATIONAL.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    For alphanumeric phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    FOR ALPHANUMERIC can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to FOR NATIONAL.
+                    """)
+                .CloseError();
             }
             forAlphanumericExists = true;
+
             Optional("FOR");
             Expected("ALPHANUMERIC");
             Optional("IS");
+
             Identifier();
 
             ForAlphanumericForNational(forAlphanumericExists, forNationalExists);
-
         }
 
         if (CurrentEquals("FOR") && LookaheadEquals(1, "NATIONAL") || CurrentEquals("NATIONAL"))
         {
             if (forNationalExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                FOR NATIONAL can only be specified once in this statement. 
-                The same applies to FOR ALPHANUMERIC.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    For national phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    FOR NATIONAL can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to FOR ALPHANUMERIC.
+                    """)
+                .CloseError();
             }
             forNationalExists = true;
+
             Optional("FOR");
             Expected("NATIONAL");
             Optional("IS");
+
             Identifier();
 
             ForAlphanumericForNational(forAlphanumericExists, forNationalExists);
@@ -1050,16 +1264,23 @@ public static partial class Analyzer
         {
             if (lineExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                LINE NUMBER can only be specified once in this statement. 
-                The same applies to the COLUMN NUMBER.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Line number phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    LINE NUMBER can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to COLUMN NUMBER.
+                    """)
+                .CloseError();
             }
-
             lineExists = true;
+
             Expected("LINE");
             Optional("NUMBER");
+
             if (CurrentEquals(TokenType.Identifier))
             {
                 Identifier();
@@ -1069,25 +1290,30 @@ public static partial class Analyzer
                 Number();
             }
 
-
             LineColumn(lineExists, columnExists);
-
         }
 
         if (CurrentEquals("COLUMN", "COL"))
         {
             if (columnExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                COLUMN NUMBER can only be specified once in this statement. 
-                The same applies to the LINE NUMBER.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Column number phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    COLUMN NUMBER can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to LINE NUMBER.
+                    """)
+                .CloseError();
             }
-
             columnExists = true;
+
             Expected(Current().Value);
             Optional("NUMBER");
+
             if (CurrentEquals(TokenType.Identifier))
             {
                 Identifier();
@@ -1413,24 +1639,24 @@ public static partial class Analyzer
             EvaluateOperand.Arithmetic or EvaluateOperand.Boolean;
 
         bool literal = operand is
-            EvaluateOperand.Identifier or EvaluateOperand.Arithmetic or 
+            EvaluateOperand.Identifier or EvaluateOperand.Arithmetic or
             EvaluateOperand.Boolean;
 
         bool arithmetic = operand is
-            EvaluateOperand.Identifier or EvaluateOperand.Literal or 
+            EvaluateOperand.Identifier or EvaluateOperand.Literal or
             EvaluateOperand.Arithmetic;
 
         bool boolean = operand is
-            EvaluateOperand.Identifier or EvaluateOperand.Literal or 
+            EvaluateOperand.Identifier or EvaluateOperand.Literal or
             EvaluateOperand.Boolean;
 
         bool range = operand is
-            EvaluateOperand.Identifier or EvaluateOperand.Literal or 
+            EvaluateOperand.Identifier or EvaluateOperand.Literal or
             EvaluateOperand.Arithmetic;
 
-        bool condition = operand is 
+        bool condition = operand is
             EvaluateOperand.Condition or EvaluateOperand.TrueOrFalse;
-            
+
         bool truefalse = operand is
             EvaluateOperand.Condition or EvaluateOperand.TrueOrFalse;
 
@@ -1524,13 +1750,13 @@ public static partial class Analyzer
     private static bool IdentifierOrLiteral()
     {
         return CurrentEquals(
-            TokenType.Identifier, 
-            TokenType.Numeric, 
-            TokenType.String, 
-            TokenType.HexString, 
-            TokenType.Boolean, 
-            TokenType.HexBoolean, 
-            TokenType.National, 
+            TokenType.Identifier,
+            TokenType.Numeric,
+            TokenType.String,
+            TokenType.HexString,
+            TokenType.Boolean,
+            TokenType.HexBoolean,
+            TokenType.National,
             TokenType.HexNational
         );
     }

@@ -251,7 +251,7 @@ int32_t nativeDecQuadCompare(managedDecQuad left, managedDecQuad right)
 
 /* Non-computational comparisons */
 DLLEXPORT
-int32_t nativeDecQuadIsCanonical(managedDecQuad value)
+uint32_t nativeDecQuadIsCanonical(managedDecQuad value)
 {
   decQuad nativeValue;
   decContext context;
@@ -264,7 +264,7 @@ int32_t nativeDecQuadIsCanonical(managedDecQuad value)
 }
 
 DLLEXPORT
-int32_t nativeDecQuadIsFinite(managedDecQuad value)
+uint32_t nativeDecQuadIsFinite(managedDecQuad value)
 {
   decQuad nativeValue;
   decContext context;
@@ -277,7 +277,7 @@ int32_t nativeDecQuadIsFinite(managedDecQuad value)
 }
 
 DLLEXPORT
-int32_t nativeDecQuadIsInteger(managedDecQuad value)
+uint32_t nativeDecQuadIsInteger(managedDecQuad value)
 {
   decQuad nativeValue;
   decContext context;
@@ -290,7 +290,7 @@ int32_t nativeDecQuadIsInteger(managedDecQuad value)
 }
 
 DLLEXPORT
-int32_t nativeDecQuadIsNaN(managedDecQuad value)
+uint32_t nativeDecQuadIsNaN(managedDecQuad value)
 {
   decQuad nativeValue;
   decContext context;
@@ -303,7 +303,7 @@ int32_t nativeDecQuadIsNaN(managedDecQuad value)
 }
 
 DLLEXPORT
-int32_t nativeDecQuadIsNegative(managedDecQuad value)
+uint32_t nativeDecQuadIsNegative(managedDecQuad value)
 {
   decQuad nativeValue;
   decContext context;
@@ -316,7 +316,7 @@ int32_t nativeDecQuadIsNegative(managedDecQuad value)
 }
 
 DLLEXPORT
-int32_t nativeDecQuadIsNormal(managedDecQuad value)
+uint32_t nativeDecQuadIsNormal(managedDecQuad value)
 {
   decQuad nativeValue;
   decContext context;
@@ -329,7 +329,7 @@ int32_t nativeDecQuadIsNormal(managedDecQuad value)
 }
 
 DLLEXPORT
-int32_t nativeDecQuadIsPositive(managedDecQuad value)
+uint32_t nativeDecQuadIsPositive(managedDecQuad value)
 {
   decQuad nativeValue;
   decContext context;
@@ -342,7 +342,7 @@ int32_t nativeDecQuadIsPositive(managedDecQuad value)
 }
 
 DLLEXPORT
-int32_t nativeDecQuadIsSignaling(managedDecQuad value)
+uint32_t nativeDecQuadIsSignaling(managedDecQuad value)
 {
   decQuad nativeValue;
   decContext context;
@@ -355,7 +355,7 @@ int32_t nativeDecQuadIsSignaling(managedDecQuad value)
 }
 
 DLLEXPORT
-int32_t nativeDecQuadIsSigned(managedDecQuad value)
+uint32_t nativeDecQuadIsSigned(managedDecQuad value)
 {
   decQuad nativeValue;
   decContext context;
@@ -368,7 +368,7 @@ int32_t nativeDecQuadIsSigned(managedDecQuad value)
 }
 
 DLLEXPORT
-int32_t nativeDecQuadIsZero(managedDecQuad value)
+uint32_t nativeDecQuadIsZero(managedDecQuad value)
 {
   decQuad nativeValue;
   decContext context;
@@ -381,7 +381,7 @@ int32_t nativeDecQuadIsZero(managedDecQuad value)
 }
 
 DLLEXPORT
-int32_t nativeDecQuadRadix(managedDecQuad value)
+uint32_t nativeDecQuadRadix(managedDecQuad value)
 {
   decQuad nativeValue;
   decContext context;
@@ -394,7 +394,7 @@ int32_t nativeDecQuadRadix(managedDecQuad value)
 }
 
 DLLEXPORT
-int32_t nativeDecQuadSameQuantum(managedDecQuad left, managedDecQuad right)
+uint32_t nativeDecQuadSameQuantum(managedDecQuad left, managedDecQuad right)
 {
   decQuad nativeLeft;
   decQuad nativeRight;

@@ -15,6 +15,12 @@ public readonly struct DecimalQuad
         this = DecQuadBindings.FromString(MemoryMarshal.GetReference(utf8String));
     }
 
+    public DecimalQuad(ulong upperBits, ulong lowerBits)
+    {
+        _upperBits = upperBits;
+        _lowerBits = lowerBits;
+    }
+
     public static DecimalQuad Add(DecimalQuad left, DecimalQuad right)
     {
         return DecQuadBindings.Add(left, right);
@@ -58,8 +64,8 @@ internal static partial class DecQuadBindings
     internal static unsafe partial byte* ToString(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadAdd")]
-    internal static  partial DecimalQuad Add(DecimalQuad left, DecimalQuad right);
+    internal static partial DecimalQuad Add(DecimalQuad left, DecimalQuad right);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadSub")]
-    internal static  partial DecimalQuad Subtract(DecimalQuad left, DecimalQuad right);
+    internal static partial DecimalQuad Subtract(DecimalQuad left, DecimalQuad right);
 }

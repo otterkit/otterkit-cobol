@@ -1,2 +1,1 @@
-# otterkit-numerics
-Otterkit Standard Decimal Math Library
+# Otterkit Standard Decimal Math Library

@@ -14,6 +14,26 @@
 
 // compile win-x64: cl.exe /O2 /LD decQuadBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c
 
+decQuad decQuadFromManaged(marshalDecQuad value)
+{
+  decQuad nativeQuad;
+
+  nativeQuad.longs[0] = value._upperBits;
+  nativeQuad.longs[1] = value._lowerBits;
+
+  return nativeQuad;
+}
+
+marshalDecQuad decQuadToManaged(decQuad value)
+{
+  marshalDecQuad managedQuad;
+
+  managedQuad._upperBits = value.longs[0];
+  managedQuad._lowerBits = value.longs[1];
+
+  return managedQuad;
+}
+
 DLLEXPORT
 marshalDecQuad nativeDecQuadAdd(marshalDecQuad left, marshalDecQuad right)
 {
@@ -23,11 +43,8 @@ marshalDecQuad nativeDecQuadAdd(marshalDecQuad left, marshalDecQuad right)
 
   decContextDefault(&context, DEC_INIT_DECQUAD);
 
-  nativeLeft.longs[0] = left._upperBits;
-  nativeLeft.longs[1] = left._lowerBits;
-
-  nativeRight.longs[0] = right._upperBits;
-  nativeRight.longs[1] = right._lowerBits;
+  nativeLeft = decQuadFromManaged(left);
+  nativeRight = decQuadFromManaged(right);
 
   decQuadAdd(&nativeLeft, &nativeLeft, &nativeRight, &context);
 

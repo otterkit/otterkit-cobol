@@ -1,8 +1,7 @@
 #define DECUSE64 1
 
 #include "..\decNumber\decQuad.h" // decQuad library
-#include "marshalDecQuad.h"
-#include <stdio.h> // for printf
+#include <stdio.h>
 
 #ifdef _WIN32
   #define DLLEXPORT __declspec(dllexport)
@@ -14,7 +13,13 @@
 
 // compile win-x64: cl.exe /O2 /LD decQuadBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c
 
-decQuad decQuadFromManaged(marshalDecQuad value)
+typedef struct
+{
+  uint64_t _upperBits;
+  uint64_t _lowerBits;
+} managedDecQuad;
+
+decQuad decQuadFromManaged(managedDecQuad value)
 {
   decQuad nativeQuad;
 
@@ -24,9 +29,9 @@ decQuad decQuadFromManaged(marshalDecQuad value)
   return nativeQuad;
 }
 
-marshalDecQuad decQuadToManaged(decQuad value)
+managedDecQuad decQuadToManaged(decQuad value)
 {
-  marshalDecQuad managedQuad;
+  managedDecQuad managedQuad;
 
   managedQuad._upperBits = value.longs[0];
   managedQuad._lowerBits = value.longs[1];
@@ -35,10 +40,11 @@ marshalDecQuad decQuadToManaged(decQuad value)
 }
 
 DLLEXPORT
-marshalDecQuad nativeDecQuadAdd(marshalDecQuad left, marshalDecQuad right)
+managedDecQuad nativeDecQuadAdd(managedDecQuad left, managedDecQuad right)
 {
-  decQuad nativeLeft, nativeRight;
-  marshalDecQuad result;
+  decQuad nativeLeft;
+  decQuad nativeRight;
+
   decContext context;
 
   decContextDefault(&context, DEC_INIT_DECQUAD);
@@ -48,37 +54,29 @@ marshalDecQuad nativeDecQuadAdd(marshalDecQuad left, marshalDecQuad right)
 
   decQuadAdd(&nativeLeft, &nativeLeft, &nativeRight, &context);
 
-  result._upperBits = nativeLeft.longs[0];
-  result._lowerBits = nativeLeft.longs[1];
-
-  return result;
+  return decQuadToManaged(nativeLeft);
 }
 
 DLLEXPORT
-marshalDecQuad nativeDecQuadSub(marshalDecQuad left, marshalDecQuad right)
+managedDecQuad nativeDecQuadSub(managedDecQuad left, managedDecQuad right)
 {
-  decQuad nativeLeft, nativeRight;
-  marshalDecQuad result;
+  decQuad nativeLeft; 
+  decQuad nativeRight;
+  
   decContext context;
 
   decContextDefault(&context, DEC_INIT_DECQUAD);
 
-  nativeLeft.longs[0] = left._upperBits;
-  nativeLeft.longs[1] = left._lowerBits;
-
-  nativeRight.longs[0] = right._upperBits;
-  nativeRight.longs[1] = right._lowerBits;
+  nativeLeft = decQuadFromManaged(left);
+  nativeRight = decQuadFromManaged(right);
 
   decQuadSubtract(&nativeLeft, &nativeLeft, &nativeRight, &context);
 
-  result._upperBits = nativeLeft.longs[0];
-  result._lowerBits = nativeLeft.longs[1];
-
-  return result;
+  return decQuadToManaged(nativeLeft);
 }
 
 DLLEXPORT
-char *nativeDecQuadToString(marshalDecQuad value)
+char *nativeDecQuadToString(managedDecQuad value)
 {
   static char string[DECQUAD_String];
   decQuad nativeQuad;
@@ -86,8 +84,7 @@ char *nativeDecQuadToString(marshalDecQuad value)
 
   decContextDefault(&context, DEC_INIT_DECQUAD);
 
-  nativeQuad.longs[0] = value._upperBits;
-  nativeQuad.longs[1] = value._lowerBits;
+  nativeQuad = decQuadFromManaged(value);
 
   decQuadToString(&nativeQuad, string);
 
@@ -95,18 +92,14 @@ char *nativeDecQuadToString(marshalDecQuad value)
 }
 
 DLLEXPORT
-marshalDecQuad nativeDecQuadFromString(char *value)
+managedDecQuad nativeDecQuadFromString(char *value)
 {
   decQuad nativeQuad;
-  marshalDecQuad result;
   decContext context;
 
   decContextDefault(&context, DEC_INIT_DECQUAD);
 
   decQuadFromString(&nativeQuad, value, &context);
 
-  result._upperBits = nativeQuad.longs[0];
-  result._lowerBits = nativeQuad.longs[1];
-
-  return result;
+  return decQuadToManaged(nativeQuad);
 }

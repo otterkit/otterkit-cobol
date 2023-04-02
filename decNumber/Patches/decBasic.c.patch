@@ -1,0 +1,16 @@
+556c556,560
+<   num.msd=bcdacc+1+(msuq-lsuq+1)*9-quodigits;
+---
+>   // GCC will generate an array bound error in later code (line 620) since it
+>   // sees the assignment of num.msd to bcdacc and does not consider the +1.
+>   //num.msd=bcdacc+1+(msuq-lsuq+1)*9-quodigits;
+>   num.msd=(&bcdacc[1]);
+>   num.msd+=(msuq-lsuq+1)*9-quodigits;
+611c615
+<      else {                        // round to nearest even [sigh]
+---
+>     else {                         // round to nearest even [sigh]
+3041c3045
+<           if (sourhil&DECFLOAT_Sign && reround>0) bump=1;
+---
+>           if ((sourhil&DECFLOAT_Sign) && reround>0) bump=1;

@@ -1,0 +1,60 @@
+375c375
+<   if (dn->bits&DECSPECIAL || dn->digits>10 || dn->exponent!=0) ; // bad
+---
+>   if ((dn->bits&DECSPECIAL) || dn->digits>10 || dn->exponent!=0){;} // bad
+392c392
+<       if (dn->bits&DECNEG && hi==214748364 && lo==8) return 0x80000000;
+---
+>       if ((dn->bits&DECNEG) && hi==214748364 && lo==8) return 0x80000000;
+410,411c410,411
+<   if (dn->bits&DECSPECIAL || dn->digits>10 || dn->exponent!=0
+<     || (dn->bits&DECNEG && !ISZERO(dn)));                   // bad
+---
+>   if ((dn->bits&DECSPECIAL) || dn->digits>10 || dn->exponent!=0
+>     || ((dn->bits&DECNEG) && !ISZERO(dn))){;}               // bad
+427c427
+<     if (hi>429496729 || (hi==429496729 && lo>5)) ; // no reprieve possible
+---
+>     if (hi>429496729 || (hi==429496729 && lo>5)){;} // no reprieve possible
+1477,1478c1477,1478
+<     if (status&DEC_NaNs && !(status&DEC_sNaN)) break;
+<     if (a->bits&DECSPECIAL || ISZERO(a)) {
+---
+>     if ((status&DEC_NaNs) && !(status&DEC_sNaN)) break;
+>     if ((a->bits&DECSPECIAL) || ISZERO(a)) {
+2198c2198
+<           if (status&DEC_Overflow || ISZERO(dac)) break;
+---
+>           if ((status&DEC_Overflow) || ISZERO(dac)) break;
+4292c4292
+<             op & (REMAINDER | REMNEAR)) { // as is remainder of infinity
+---
+>             (op&(REMAINDER | REMNEAR))) { // as is remainder of infinity
+4386c4386
+<         if (op&REMAINDER || exponent<-1) {
+---
+>         if ((op&REMAINDER) || exponent<-1) {
+5468c5468
+<           if (*status&DEC_Overflow || ISZERO(t)) break;}
+---
+>           if ((*status&DEC_Overflow) || ISZERO(t)) break;}
+6050c6050
+<       if (op==COMPARE);                 // result will be NaN
+---
+>       if (op==COMPARE){;}               // result will be NaN
+6071c6071
+<        else if (merged & DECSNAN);           // sNaN -> qNaN
+---
+>        else if (merged & DECSNAN){;}         // sNaN -> qNaN
+6109c6109
+<      else if (op==COMPNAN);             // special, drop through
+---
+>      else if (op==COMPNAN){;}           // special, drop through
+7695c7695
+<    else if (rhs==NULL);
+---
+>    else if (rhs==NULL){;}
+7700c7700
+<    else if (lhs->bits & DECNAN);
+---
+>    else if (lhs->bits & DECNAN){;}

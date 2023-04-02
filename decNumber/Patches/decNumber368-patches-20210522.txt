@@ -1,0 +1,93 @@
+
+This .zip file contains three .patch files, contributed by Matthew
+Hagerty.  The patches are needed for the decNumber 3.68 code to
+compile cleanly with gcc 10.2.0.  Clang 11.0.0 compiles without
+warnings, but gcc has added new checks since decNumber was developed.
+
+These are the compiler options suggested by Matthew.  Using -O3 with
+gcc causes addditional warnings.
+  gcc -Wall -Wextra -O2
+  clang -Wall -Wextra -O3
+
+Matthew has also kindly supplied more details on the warnings and
+patches, quoted below.
+
+Mike Cowlishaw  2021.05.22
+
+--------
+
+Here are the messages that gcc spits out for the -O2 level compile:
+
+  $ gcc --version
+  gcc.exe (Rev6, Built by MSYS2 project) 10.2.0
+
+
+Every place the UBFROMUS and UBFROMUI macros are used, the compiler
+emits a warning.
+
+
+  $ gcc -Wall -Extra -O2 -c decNumber-ucu-368/decQuad.c
+
+
+  decNumber-icu-368/decBasic.c:3735:5: note: in expansion of macro 'UBFROMUI'
+   3735 |     UBFROMUI(bufr+DECPMAX+QUAD*2, 0);   // add eight zeros
+        |     ^~~~~~~~
+  decNumber-icu-368/decNumberLocal.h:159:69: warning: right-hand operand of comma expression has no effect [-Wunused-value]
+    159 |   #define UBFROMUI(b, i)  (uiwork=(i), memcpy(b, (void *)&uiwork, 4), uiwork)
+        |                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~
+
+
+That by far produces the most warnings.  The other is this:
+
+  In file included from decNumber-icu-368/decQuad.c:134:
+  decNumber-icu-368/decBasic.c: In function 'decDivide':
+  decNumber-icu-368/decBasic.c:616:7: warning: array subscript -1 is outside array bounds of 'uint8_t[47]' {aka 'unsigned char[47]'} [-Warray-bounds]
+    616 |       *(num.msd-1)=0;              // in case of left carry, or make 0
+        |       ^~~~~~~~~~~~
+  decNumber-icu-368/decBasic.c:174:10: note: while referencing 'bcdacc'
+    174 |   uByte  bcdacc[(DIVOPLEN+1)*9+2]; // for quotient in BCD, +1, +1
+        |          ^~~~~~
+
+
+When I add the pragma to ignore -Warray_bounds, it then changes to
+-Wstringop-overflow.  GCC really does not like that line of code.  I
+tried to see if I could rearrange some things to make it go away, but
+it did not look like it was going to be a simple change; besides, GCC
+is wrong. ;)
+
+Ignoring just -Warray_bounds:
+
+  In file included from decNumber-icu-368/decQuad.c:134:
+  decNumber-icu-368/decBasic.c: In function 'decDivide':
+  decNumber-icu-368/decBasic.c:619:19: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+    619 |       *(num.msd-1)=0;              // in case of left carry, or make 0
+        |       ~~~~~~~~~~~~^~
+  decNumber-icu-368/decBasic.c:174:10: note: at offset -1 to object 'bcdacc' with size 47 declared here
+    174 |   uByte  bcdacc[(DIVOPLEN+1)*9+2]; // for quotient in BCD, +1, +1
+        |          ^~~~~~
+
+Adding the two pragmas around that line of code, and taking the last
+", uiwork" part out of the macros fixes all of the things GCC
+complains about at -O2.  Clang is fine, even at -O3, with the original code.
+
+
+The changes in decNumber.c were just precautions (parens around the
+& operator in expressions, mostly).
+
+Stepping up to -O3 with GCC causes this warning in decNumber.c:
+
+  $ gcc -Wall -Wextra -O3 -c decNumber-icu-368/decNumber.c
+
+
+  In function 'decNumberCopy',
+      inlined from 'decNumberPower' at decNumber-icu-368/decNumber.c:2186:11:
+  decNumber-icu-368/decNumber.c:3373:45: warning: '__builtin_memcpy' reading 2 or more bytes from a region of size 0 [-Wstringop-overflow=]
+   3373 |     for (s=src->lsu+1; s<smsup; s++, d++) *d=*s;
+        |                                           ~~^~~
+
+So, this happens when decNumberCopy is inlined, then some
+optimization is performed on the loop (I think).  I did not dig too
+deep into this one, but a pragma did not correct it, so I just
+dropped to -O2 for GCC.
+
+

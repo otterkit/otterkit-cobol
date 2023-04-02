@@ -41,40 +41,40 @@ internal static partial class DecQuadBindings
 
     /* Non-computational comparisons */
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsCanonical")]
-    internal static partial int IsCanonical(DecimalQuad value);
+    internal static partial uint IsCanonical(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsFinite")]
-    internal static partial int IsFinite(DecimalQuad value);
+    internal static partial uint IsFinite(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsInteger")]
-    internal static partial int IsInteger(DecimalQuad value);
+    internal static partial uint IsInteger(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsNaN")]
-    internal static partial int IsNaN(DecimalQuad value);
+    internal static partial uint IsNaN(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsNegative")]
-    internal static partial int IsNegative(DecimalQuad value);
+    internal static partial uint IsNegative(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsNormal")]
-    internal static partial int IsNormal(DecimalQuad value);
+    internal static partial uint IsNormal(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsPositive")]
-    internal static partial int IsPositive(DecimalQuad value);
+    internal static partial uint IsPositive(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsSignaling")]
-    internal static partial int IsSignaling(DecimalQuad value);
+    internal static partial uint IsSignaling(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsSigned")]
-    internal static partial int IsSigned(DecimalQuad value);
+    internal static partial uint IsSigned(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsZero")]
-    internal static partial int IsZero(DecimalQuad value);
+    internal static partial uint IsZero(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadRadix")]
-    internal static partial int Radix(DecimalQuad value);
+    internal static partial uint Radix(DecimalQuad value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecSameQuantum")]
-    internal static partial int SameQuantum(DecimalQuad left, DecimalQuad right);
+    internal static partial uint SameQuantum(DecimalQuad left, DecimalQuad right);
 
 
     /* Utilities and conversions */

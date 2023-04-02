@@ -14,6 +14,11 @@ public readonly partial struct DecimalQuad
         return DecQuadBindings.Add(left, right);
     }
 
+    public static DecimalQuad operator ++(DecimalQuad value)
+    {
+        return DecQuadBindings.Add(value, DecimalQuad.One);
+    }
+
     public static DecimalQuad operator -(DecimalQuad left, DecimalQuad right)
     {
         return DecQuadBindings.Subtract(left, right);
@@ -24,9 +29,19 @@ public readonly partial struct DecimalQuad
         return DecQuadBindings.Minus(value);
     }
 
+    public static DecimalQuad operator --(DecimalQuad value)
+    {
+        return DecQuadBindings.Subtract(value, DecimalQuad.One);
+    }
+
     public static DecimalQuad operator /(DecimalQuad left, DecimalQuad right)
     {
         return DecQuadBindings.Divide(left, right);
+    }
+
+    public static DecimalQuad operator %(DecimalQuad left, DecimalQuad right)
+    {
+        return DecQuadBindings.Remainder(left, right);
     }
 
     public static DecimalQuad operator *(DecimalQuad left, DecimalQuad right)

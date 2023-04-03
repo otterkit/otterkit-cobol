@@ -38,7 +38,7 @@
 
   <ItemGroup>
     <Content Include="decQuadBindings.*">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
 

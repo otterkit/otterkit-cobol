@@ -116,10 +116,32 @@ public static class Functions
         return new Numeric(date, false);
     }
 
-    public static string CONCAT(params string[] strings)
+    public static ICOBOLType CONCAT(params ICOBOLType[] inputs)
     {
+        string[] strings = new String[inputs.Length];
+        for (int i = 0; i < inputs.Length; i++)
+        {
+            strings[i] = inputs[i].Display;
+        }
         string concat = String.Concat(strings);
-        return concat;
+
+        string returnType = inputs[1].GetType().Name.ToString();
+
+        if (returnType == typeof(Alphabetic).Name.ToString()){
+            return new Alphabetic(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
+        } else if (returnType == typeof(Alphanumeric).Name.ToString()){
+            return new Alphanumeric(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
+        } else if (returnType == typeof(Numeric).Name.ToString()) {
+            return new Alphanumeric(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
+        } else if (returnType == typeof(Bit).Name.ToString()){
+            return  new Alphanumeric(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
+        } else if (returnType == typeof(National).Name.ToString()){
+            return new National(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
+        } else {
+            return new Alphabetic(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
+        }
+            
+
     }
 
     public static void CONVERT(Numeric value, Numeric source, Numeric target)
@@ -506,10 +528,12 @@ public static class Functions
         return new Numeric(IntegerPart, 0, argument.Length, 0, new byte[argument.Length]);
     }
 
-    public static int LENGTH(string argument)
+    public static Numeric LENGTH(ICOBOLType argument)//Technically, this is supposed to only be national, alphanumeric, or bit/boolean
     {
         // Does not cover all LENGTH functionality
-        return argument.Length;
+        string inside = argument.Display;
+        int len = inside.Length;
+        return new Numeric(Encoding.UTF8.GetBytes(len.ToString()), 0, len.ToString().Length, 0, new byte[len.ToString().Length]);
     }
 
     public static void LOCALE_COMPARE(Alphanumeric argument)
@@ -747,11 +771,24 @@ public static class Functions
         return new Numeric(output, true);
     }
 
-    public static string REVERSE(string argument)
+    public static ICOBOLType REVERSE(ICOBOLType input)
     {
-        char[] array = argument.ToCharArray();
+        char[] array = input.Display.ToCharArray();
         Array.Reverse(array);
-        return new String(array);
+        var output = new String(array);
+        string returnType = input.GetType().Name.ToString();
+
+        if (returnType == typeof(Alphabetic).Name.ToString()){
+            return new Alphabetic(Encoding.UTF8.GetBytes(output), 0, output.Length, new byte[output.Length]);
+        } else if (returnType == typeof(Alphanumeric).Name.ToString()){
+            return new Alphanumeric(Encoding.UTF8.GetBytes(output), 0, output.Length, new byte[output.Length]);
+        } else if (returnType == typeof(National).Name.ToString()){
+            return new National(Encoding.UTF8.GetBytes(output), 0, output.Length, new byte[output.Length]);
+        } else {
+            return new Alphabetic(Encoding.UTF8.GetBytes(output), 0, output.Length, new byte[output.Length]);
+        }
+        // TODO: implement Type error 
+
     }
 
     public static void SECONDS_FROM_FORMATTED_TIME(Alphanumeric format, Alphanumeric time)

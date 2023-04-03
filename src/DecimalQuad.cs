@@ -6,8 +6,8 @@ namespace Otterkit.Numerics;
 [StructLayout(LayoutKind.Sequential)]
 public readonly partial struct DecimalQuad
 {
-    public readonly ulong _upperBits;
-    public readonly ulong _lowerBits;
+    internal readonly ulong _upperBits;
+    internal readonly ulong _lowerBits;
 
     public DecimalQuad(ulong upperBits, ulong lowerBits)
     {

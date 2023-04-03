@@ -43,4 +43,9 @@
     </Content>
     <Content Remove="OtterkitMath/Decimal128.c"></Content>
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Otterkit.Numerics" Version="1.7.0" />
+  </ItemGroup>
+  
 </Project>

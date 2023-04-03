@@ -28,3 +28,54 @@ DecimalDouble and DecimalQuad.
 - **Standardized format**: Decimal floating-point is standardized in the IEEE-754 standard, which means that it is 
 well-defined and portable across different computer systems and programming languages. This is mainly an advantage 
 when compared to less portable, non-standardardized decimal formats.
+
+## Installation and usage
+
+### NuGet Install
+
+Otterkit.Numerics is available to install on the [Nuget package manager](https://www.nuget.org/packages/Otterkit/) ([.NET 7](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) is required). To install the latest version, type the following into the command line:
+```
+dotnet add package Otterkit.Numerics
+```
+
+### Example usage
+
+Adding `0.1` to `0.2` to get an exact representation of `0.3`:
+```csharp
+// Create a new DecimalQuad from a UTF-8 string literal
+var pointOne = new DecimalQuad("0.1"u8);
+var pointTwo = new DecimalQuad("0.2"u8);
+
+// Arithmetic operators are available for the decimal types
+var exactPointThree = pointOne + pointTwo;
+
+// Will print exactly 0.3, ToString does not need to remove rounding errors
+Console.WriteLine(exactPointThree);
+```
+
+Some common constants are also available:
+```csharp
+var E = DecimalQuad.E;
+var Pi = DecimalQuad.Pi;
+var Tau = DecimalQuad.Tau;
+
+// E will print exactly: 2.718281828459045235360287471352662
+Console.WriteLine(E);
+
+// Pi will print exactly: 3.141592653589793238462643383279503
+Console.WriteLine(Pi);
+
+// Tau will print exactly: 6.283185307179586476925286766559006
+Console.WriteLine(Tau);
+```
+
+A method is provided for printing an engineering string if needed:
+```csharp
+var scientificNotation = new DecimalQuad("4.5E10"u8);
+
+// Will print: 4.5E+10
+Console.WriteLine(scientificNotation);
+
+// Will print: 45E+9
+Console.WriteLine(scientificNotation.ToEngineeringString());
+```

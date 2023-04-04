@@ -2,6 +2,21 @@ namespace Otterkit.Numerics;
 
 public readonly partial struct Decimal128
 {
+    public static Decimal128 Pow(Decimal128 left, Decimal128 right)
+    {
+        return DecQuadBindings.Pow(left, right);
+    }
+
+    public static Decimal128 Max(Decimal128 left, Decimal128 right)
+    {
+        return DecQuadBindings.Max(left, right);
+    }
+
+    public static Decimal128 Min(Decimal128 left, Decimal128 right)
+    {
+        return DecQuadBindings.Min(left, right);
+    }
+
     public static Decimal128 Factorial(int value)
     {
         // Does this switch expression look horrible? YES!

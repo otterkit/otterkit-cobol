@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace Otterkit.Numerics;
 
@@ -101,5 +102,15 @@ public readonly partial struct Decimal128
         if (compare == -5) throw new ArithmeticException("Operand was NaN");
 
         return compare is 1 or 0;
+    }
+
+    public static implicit operator Decimal128(int value)
+    {
+        return DecQuadBindings.FromInt32(value);
+    }
+
+    public static explicit operator Decimal128(ReadOnlySpan<byte> value)
+    {
+        return DecQuadBindings.FromString(MemoryMarshal.GetReference(value));
     }
 }

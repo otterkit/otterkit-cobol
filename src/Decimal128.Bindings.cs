@@ -35,6 +35,15 @@ internal static partial class DecQuadBindings
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadFMA")]
     internal static partial Decimal128 FusedMultiplyAdd(Decimal128 leftMultiply, Decimal128 rightMultiply, Decimal128 valueAdd);
 
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMax")]
+    internal static partial Decimal128 Max(Decimal128 left, Decimal128 right);
+
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMin")]
+    internal static partial Decimal128 Min(Decimal128 left, Decimal128 right);
+
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadPow")]
+    internal static partial Decimal128 Pow(Decimal128 left, Decimal128 right);
+
 
     /* decQuad Comparisons */
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadCompare")]
@@ -82,6 +91,9 @@ internal static partial class DecQuadBindings
     /* Utilities and conversions */
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadFromString")]
     internal static partial Decimal128 FromString(in byte value);
+
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadFromInt32")]
+    internal static partial Decimal128 FromInt32(int value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadToString")]
     internal static unsafe partial byte* ToString(Decimal128 value);

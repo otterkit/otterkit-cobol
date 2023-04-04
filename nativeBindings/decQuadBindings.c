@@ -44,6 +44,69 @@ managedDecQuad decQuadToManaged(decQuad value)
 
 /* Computational operations */
 DLLEXPORT
+managedDecQuad nativeDecQuadSqrt(managedDecQuad value)
+{
+    decQuad nativeValue;
+    decNumber decNumValue;
+
+    decContext context;
+
+    decContextDefault(&context, DEC_INIT_DECQUAD);
+
+    nativeValue = decQuadFromManaged(value);
+
+    decQuadToNumber(&nativeValue, &decNumValue);
+
+    decNumberSquareRoot(&decNumValue, &decNumValue, &context);
+
+    decQuadFromNumber(&nativeValue, &decNumValue, &context);
+
+    return decQuadToManaged(nativeValue);
+}
+
+DLLEXPORT
+managedDecQuad nativeDecQuadLn(managedDecQuad value)
+{
+    decQuad nativeValue;
+    decNumber decNumValue;
+
+    decContext context;
+
+    decContextDefault(&context, DEC_INIT_DECQUAD);
+
+    nativeValue = decQuadFromManaged(value);
+
+    decQuadToNumber(&nativeValue, &decNumValue);
+
+    decNumberLn(&decNumValue, &decNumValue, &context);
+
+    decQuadFromNumber(&nativeValue, &decNumValue, &context);
+
+    return decQuadToManaged(nativeValue);
+}
+
+DLLEXPORT
+managedDecQuad nativeDecQuadExp(managedDecQuad value)
+{
+    decQuad nativeValue;
+    decNumber decNumValue;
+
+    decContext context;
+
+    decContextDefault(&context, DEC_INIT_DECQUAD);
+
+    nativeValue = decQuadFromManaged(value);
+
+    decQuadToNumber(&nativeValue, &decNumValue);
+
+    decNumberExp(&decNumValue, &decNumValue, &context);
+
+    decQuadFromNumber(&nativeValue, &decNumValue, &context);
+
+    return decQuadToManaged(nativeValue);
+}
+
+DLLEXPORT
 managedDecQuad nativeDecQuadLogB(managedDecQuad value)
 {
     decQuad nativeValue;
@@ -212,26 +275,6 @@ managedDecQuad nativeDecQuadRemNear(managedDecQuad left, managedDecQuad right)
 }
 
 DLLEXPORT
-managedDecQuad nativeDecQuadFMA(managedDecQuad leftMul, managedDecQuad rightMul, managedDecQuad valueAdd)
-{
-    decQuad nativeLeftMul;
-    decQuad nativeRightMul;
-    decQuad nativeValueAdd;
-
-    decContext context;
-
-    decContextDefault(&context, DEC_INIT_DECQUAD);
-
-    nativeLeftMul = decQuadFromManaged(leftMul);
-    nativeRightMul = decQuadFromManaged(rightMul);
-    nativeValueAdd = decQuadFromManaged(valueAdd);
-
-    decQuadFMA(&nativeLeftMul, &nativeLeftMul, &nativeRightMul, &nativeValueAdd, &context);
-
-    return decQuadToManaged(nativeLeftMul);
-}
-
-DLLEXPORT
 managedDecQuad nativeDecQuadMax(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
@@ -291,6 +334,26 @@ managedDecQuad nativeDecQuadPow(managedDecQuad left, managedDecQuad right)
     decQuadFromNumber(&nativeLeft, &decNumLeft, &context);
 
     return decQuadToManaged(nativeLeft);
+}
+
+DLLEXPORT
+managedDecQuad nativeDecQuadFMA(managedDecQuad leftMul, managedDecQuad rightMul, managedDecQuad valueAdd)
+{
+    decQuad nativeLeftMul;
+    decQuad nativeRightMul;
+    decQuad nativeValueAdd;
+
+    decContext context;
+
+    decContextDefault(&context, DEC_INIT_DECQUAD);
+
+    nativeLeftMul = decQuadFromManaged(leftMul);
+    nativeRightMul = decQuadFromManaged(rightMul);
+    nativeValueAdd = decQuadFromManaged(valueAdd);
+
+    decQuadFMA(&nativeLeftMul, &nativeLeftMul, &nativeRightMul, &nativeValueAdd, &context);
+
+    return decQuadToManaged(nativeLeftMul);
 }
 
 

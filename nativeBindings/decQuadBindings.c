@@ -249,6 +249,61 @@ int32_t nativeDecQuadCompare(managedDecQuad left, managedDecQuad right)
   return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
 }
 
+DLLEXPORT
+int32_t nativeDecQuadCompareSignal(managedDecQuad left, managedDecQuad right)
+{
+  decQuad nativeLeft;
+  decQuad nativeRight;
+
+  decContext context;
+
+  decContextDefault(&context, DEC_INIT_DECQUAD);
+
+  nativeLeft = decQuadFromManaged(left);
+  nativeRight = decQuadFromManaged(right);
+
+  decQuadCompareSignal(&nativeLeft, &nativeLeft, &nativeRight, &context);
+
+  return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
+}
+
+DLLEXPORT
+int32_t nativeDecQuadCompareTotal(managedDecQuad left, managedDecQuad right)
+{
+  decQuad nativeLeft;
+  decQuad nativeRight;
+
+  decContext context;
+
+  decContextDefault(&context, DEC_INIT_DECQUAD);
+
+  nativeLeft = decQuadFromManaged(left);
+  nativeRight = decQuadFromManaged(right);
+
+  decQuadCompareTotal(&nativeLeft, &nativeLeft, &nativeRight);
+
+  return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
+}
+
+DLLEXPORT
+int32_t nativeDecQuadCompareTotalMag(managedDecQuad left, managedDecQuad right)
+{
+  decQuad nativeLeft;
+  decQuad nativeRight;
+
+  decContext context;
+
+  decContextDefault(&context, DEC_INIT_DECQUAD);
+
+  nativeLeft = decQuadFromManaged(left);
+  nativeRight = decQuadFromManaged(right);
+
+  decQuadCompareTotalMag(&nativeLeft, &nativeLeft, &nativeRight);
+
+  return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
+}
+
+
 /* Non-computational comparisons */
 DLLEXPORT
 uint32_t nativeDecQuadIsCanonical(managedDecQuad value)

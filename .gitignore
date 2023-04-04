@@ -9,6 +9,9 @@ nupkg/
 publish/
 
 # Build files
+nativeBindings/*.dylib
+nativeBindings/*.dll
+nativeBindings/*.so
 *.exp
 *.lib
 *.obj

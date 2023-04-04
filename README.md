@@ -22,8 +22,7 @@ binary approximation, especially when dealing with fractional values. We shoudln
 rounding errors if we can store and run calculations as an exact decimal number.
 
 - **Flexible sizes**: Decimal floating-point supports the same three format sizes as binary floating-point. The IEEE-754 
-specification defines the Decimal32, Decimal64 and Decimal128 formats. In this library they are named DecimalSingle, 
-DecimalDouble and DecimalQuad.
+specification defines the Decimal32, Decimal64 and Decimal128 formats.
 
 - **Standardized format**: Decimal floating-point is standardized in the IEEE-754 standard, which means that it is 
 well-defined and portable across different computer systems and programming languages. This is mainly an advantage 
@@ -42,9 +41,9 @@ dotnet add package Otterkit.Numerics
 
 Adding `0.1` to `0.2` to get an exact representation of `0.3`:
 ```csharp
-// Create a new DecimalQuad from a UTF-8 string literal
-var pointOne = new DecimalQuad("0.1"u8);
-var pointTwo = new DecimalQuad("0.2"u8);
+// Create a new Decimal128 from a UTF-8 string literal
+var pointOne = new Decimal128("0.1"u8);
+var pointTwo = new Decimal128("0.2"u8);
 
 // Arithmetic operators are available for the decimal types
 var exactPointThree = pointOne + pointTwo;
@@ -55,9 +54,9 @@ Console.WriteLine(exactPointThree);
 
 Some common constants are also available:
 ```csharp
-var E = DecimalQuad.E;
-var Pi = DecimalQuad.Pi;
-var Tau = DecimalQuad.Tau;
+var E = Decimal128.E;
+var Pi = Decimal128.Pi;
+var Tau = Decimal128.Tau;
 
 // E will print exactly: 2.718281828459045235360287471352662
 Console.WriteLine(E);
@@ -71,7 +70,7 @@ Console.WriteLine(Tau);
 
 A method is provided for printing an engineering string if needed:
 ```csharp
-var scientificNotation = new DecimalQuad("4.5E10"u8);
+var scientificNotation = new Decimal128("4.5E10"u8);
 
 // Will print: 4.5E+10
 Console.WriteLine(scientificNotation);

@@ -5,23 +5,23 @@ using System.Text;
 namespace Otterkit.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly partial struct DecimalQuad
+public readonly partial struct Decimal128
 {
     internal readonly ulong _upperBits;
     internal readonly ulong _lowerBits;
 
-    public DecimalQuad(ulong upperBits, ulong lowerBits)
+    public Decimal128(ulong upperBits, ulong lowerBits)
     {
         _upperBits = upperBits;
         _lowerBits = lowerBits;
     }
 
-    public DecimalQuad(ReadOnlySpan<byte> utf8String)
+    public Decimal128(ReadOnlySpan<byte> utf8String)
     {
         this = DecQuadBindings.FromString(MemoryMarshal.GetReference(utf8String));
     }
 
-    public DecimalQuad(ReadOnlySpan<char> characters)
+    public Decimal128(ReadOnlySpan<char> characters)
     {
         var length = Encoding.UTF8.GetByteCount(characters);
 
@@ -39,7 +39,7 @@ public readonly partial struct DecimalQuad
             return false;
         }
         
-        if (obj is DecimalQuad decQuad)
+        if (obj is Decimal128 decQuad)
         {
             return Equals(decQuad);
         }
@@ -47,7 +47,7 @@ public readonly partial struct DecimalQuad
         return false;
     }
 
-    public bool Equals(DecimalQuad decQuad)
+    public bool Equals(Decimal128 decQuad)
     {
         return DecQuadBindings.Compare(this, decQuad) == 0;
     }

@@ -3,9 +3,9 @@ using System.Text;
 
 namespace Otterkit.Numerics;
 
-public readonly partial struct DecimalQuad
+public readonly partial struct Decimal128
 {
-    public static DecimalQuad FromString(ReadOnlySpan<byte> utf8String)
+    public static Decimal128 FromString(ReadOnlySpan<byte> utf8String)
     {
         return DecQuadBindings.FromString(MemoryMarshal.GetReference(utf8String));
     }

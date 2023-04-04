@@ -246,6 +246,8 @@ int32_t nativeDecQuadCompare(managedDecQuad left, managedDecQuad right)
 
   decQuadCompare(&nativeLeft, &nativeLeft, &nativeRight, &context);
 
+  if (decQuadIsNaN(&nativeLeft)) return -5;
+
   return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
 }
 

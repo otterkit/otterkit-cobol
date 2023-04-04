@@ -48,4 +48,58 @@ public readonly partial struct DecimalQuad
     {
         return DecQuadBindings.Multiply(left, right);
     }
+
+    public static bool operator ==(DecimalQuad left, DecimalQuad right)
+    {
+        var compare = DecQuadBindings.Compare(left, right);
+
+        if (compare == -5) throw new ArithmeticException("Operand was NaN");
+
+        return compare is 0;
+    }
+
+    public static bool operator !=(DecimalQuad left, DecimalQuad right)
+    {
+        var compare = DecQuadBindings.Compare(left, right);
+
+        if (compare == -5) throw new ArithmeticException("Operand was NaN");
+
+        return compare is not 0;
+    }
+
+    public static bool operator <(DecimalQuad left, DecimalQuad right)
+    {
+        var compare = DecQuadBindings.Compare(left, right);
+
+        if (compare == -5) throw new ArithmeticException("Operand was NaN");
+
+        return compare is -1;
+    }
+
+    public static bool operator <=(DecimalQuad left, DecimalQuad right)
+    {
+        var compare = DecQuadBindings.Compare(left, right);
+
+        if (compare == -5) throw new ArithmeticException("Operand was NaN");
+
+        return compare is -1 or 0;
+    }
+
+    public static bool operator >(DecimalQuad left, DecimalQuad right)
+    {
+        var compare = DecQuadBindings.Compare(left, right);
+
+        if (compare == -5) throw new ArithmeticException("Operand was NaN");
+
+        return compare is 1;
+    }
+
+    public static bool operator >=(DecimalQuad left, DecimalQuad right)
+    {
+        var compare = DecQuadBindings.Compare(left, right);
+
+        if (compare == -5) throw new ArithmeticException("Operand was NaN");
+
+        return compare is 1 or 0;
+    }
 }

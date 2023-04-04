@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Otterkit.Numerics;
@@ -29,5 +30,30 @@ public readonly partial struct DecimalQuad
         Encoding.UTF8.GetBytes(characters, utf8String);
         
         this = DecQuadBindings.FromString(MemoryMarshal.GetReference(utf8String));
+    }
+
+    public override bool Equals([NotNullWhen(true)] object? obj)
+    {
+        if (obj == null || GetType() != obj.GetType())
+        {
+            return false;
+        }
+        
+        if (obj is DecimalQuad decQuad)
+        {
+            return Equals(decQuad);
+        }
+
+        return false;
+    }
+
+    public bool Equals(DecimalQuad decQuad)
+    {
+        return DecQuadBindings.Compare(this, decQuad) == 0;
+    }
+    
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(_upperBits, _lowerBits);
     }
 }

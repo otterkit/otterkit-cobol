@@ -37,7 +37,9 @@ internal static partial class DecQuadBindings
 
 
     /* decQuad Comparisons */
-
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadCompare")]
+    internal static partial int Compare(DecimalQuad left, DecimalQuad right);
+    
 
     /* Non-computational comparisons */
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsCanonical")]

@@ -1,7 +1,7 @@
 using System.Text;
+using Otterkit.Numerics;
 
 namespace Otterkit.Library;
-
 
 public sealed class Numeric : ICOBOLType, IComparable<Numeric>
 {
@@ -122,6 +122,60 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
         Format(decimalHolder.Bytes);
     }
 
+    public Numeric(ReadOnlySpan<byte> utf8String, bool isSigned)
+    {
+        this.Fields = Array.Empty<ICOBOLType>();
+        this.Offset = 0;
+
+        int DecimalPointIndex = utf8String.IndexOf("."u8);
+
+        if (DecimalPointIndex >= 0)
+        {
+            int minusSignOffset = utf8String[0] != 45 ? 0 : 1;
+
+            this.Length = isSigned ? DecimalPointIndex - minusSignOffset : DecimalPointIndex;
+            this.FractionalLength = isSigned ? utf8String.Length - Length - (minusSignOffset + 1) : utf8String.Length - Length - 1;
+        }
+        else
+        {
+            if (utf8String[0] is 45 or 43)
+            {
+                this.Length = utf8String.Length - 1;
+            }
+            else
+            {
+                this.Length = utf8String.Length;
+            }
+
+            this.FractionalLength = 0;
+        }
+
+        this.IsSigned = isSigned;
+        this.IsInteger = FractionalLength == 0;
+
+        if (this.FractionalLength == 0)
+        {
+            int signedSpace = isSigned ? 1 : 0;
+            this.Memory = new byte[Length + signedSpace];
+        }
+
+        if (this.FractionalLength > 0)
+        {
+            int signedSpace = isSigned ? 2 : 1;
+            this.Memory = new byte[Length + FractionalLength + signedSpace];
+        }
+
+        Memory.Span.Fill(48);
+
+        if (isSigned)
+        {
+            FormatSigned(utf8String);
+            return;
+        }
+
+        Format(utf8String);
+    }
+
     private void Format(ReadOnlySpan<byte> bytes, bool isSigned = false)
     {
         Span<byte> formatted = stackalloc byte[Memory.Length];
@@ -210,6 +264,20 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
 
         IsNegative = false;
         Format(bytes, true);
+    }
+
+    public static implicit operator Numeric(Decimal128 value)
+    {
+        Span<byte> span = stackalloc byte[43];
+
+        var length = value.AsSpan(span);
+
+        return new Numeric(span.Slice(0, length), true);
+    }
+
+    public static implicit operator Decimal128(Numeric value)
+    {
+        return Decimal128.Parse(value.Bytes);
     }
 
     public static bool operator >(Numeric left, Numeric right)

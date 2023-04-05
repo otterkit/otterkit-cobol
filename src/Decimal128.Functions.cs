@@ -32,19 +32,29 @@ public readonly partial struct Decimal128
         return DecQuadBindings.Exp(value);
     }
 
+    public static Decimal128 LogB(Decimal128 value)
+    {
+        return DecQuadBindings.LogB(value);
+    }
+
+    public static Decimal128 Log10(Decimal128 value)
+    {
+        return DecQuadBindings.Log10(value);
+    }
+
     public static Decimal128 Factorial(int value)
     {
         // Does this switch expression look horrible? YES!
-        // But is it a lot faster than the loop version,
+        // But is it a lot faster than the loop/recursion version,
         // and does it return the factorial in constant time?
         // ABSOLUTELY!
 
         // "But why not use an array to hold the values?"
-        // Using a switch statement avoids having to allocate an array
+        // Using a switch expression avoids having to allocate an array
 
-        // "Why does the switch statement end at 31 factorial?"
+        // "Why does the switch expression end at 31 factorial?"
         // 31! has 34 digits which is the maximum number of digits
-        // that the IEEE754 DecimalHolder can hold, 32! has 36 digits
+        // that the IEEE754 Decimal128 can hold, 32! has 36 digits
 
         return value switch
         {

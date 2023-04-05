@@ -5,33 +5,34 @@ namespace Otterkit.Numerics;
 
 public readonly partial struct Decimal128
 {
-    public static Decimal128 FromString(ReadOnlySpan<byte> utf8String)
+    public static Decimal128 Parse(ReadOnlySpan<byte> utf8String)
     {
         return DecQuadBindings.FromString(MemoryMarshal.GetReference(utf8String));
     }
+    
+    public static Decimal128 Parse(ReadOnlySpan<char> stringValue)
+    {
+        var length = Encoding.UTF8.GetByteCount(stringValue);
+        
+        Span<byte> span = stackalloc byte[length];
 
-    public unsafe byte[] ToUtf8Array()
+        Encoding.UTF8.GetBytes(stringValue, span);
+        
+        return DecQuadBindings.FromString(MemoryMarshal.GetReference(span));
+    }
+    
+    public unsafe ReadOnlyMemory<byte> ToUtf8Memory()
     {
         // This is a C string (char*), becomes a byte* in C#.
         var pointer = DecQuadBindings.ToString(this);
 
-        var length = 0;
-        var current = pointer[0];
-
-        // Look for the C string null terminator.
-        while (current != 0)
-        {
-            current = pointer[length];
-            length++;
-        }
-
-        // Create UTF-8 ROS<byte> from the C string.
-        var span = new ReadOnlySpan<byte>(pointer, length);
+        // Because C strings are null terminated.
+        var span = MemoryMarshal.CreateReadOnlySpanFromNullTerminated(pointer);
 
         // Create a new byte array to hold a copy of the C string.
         // This is necessary to convert the unsafe malloc allocated
         // buffer into a managed buffer that we can safely return.
-        var copy = new byte[length];
+        var copy = new byte[span.Length];
         
         span.CopyTo(copy);
 
@@ -41,40 +42,39 @@ public readonly partial struct Decimal128
         NativeMemory.Free(pointer);
         
         // Return the copy
-        return copy;        
+        return copy; 
     }
 
-    public ReadOnlySpan<byte> ToUtf8Span()
+    public unsafe int AsSpan(Span<byte> destination)
     {
-        return ToUtf8Array();
-    }
+        // This is a C string (char*), becomes a byte* in C#.
+        var pointer = DecQuadBindings.ToString(this);
+        
+        // Because C strings are null terminated.
+        var span = MemoryMarshal.CreateReadOnlySpanFromNullTerminated(pointer);
+        
+        // Copy to destination because we cannot safely
+        // return a new span without allocating heap memory.
+        span.CopyTo(destination);
+        
+        // The pointer must be freed before returning, otherwise
+        // we'll get a memory leak from not freeing a malloc
+        // allocated C string.
+        NativeMemory.Free(pointer);
 
-    public ReadOnlyMemory<byte> ToUtf8Memory()
-    {
-        return ToUtf8Array();
+        // Return the length of the copied span.
+        return span.Length;        
     }
-
-    public unsafe ReadOnlySpan<byte> AsUnsafeSpan(out byte* nativePointer)
+    
+    public unsafe byte* AsNullTerminatedPointer()
     {
         // This is a C string (char*), becomes a byte* in C#.
         var pointer = DecQuadBindings.ToString(this);
 
-        var length = 0;
-        var current = pointer[0];
-
-        // Look for the C string null terminator.
-        while (current != 0)
-        {
-            current = pointer[length];
-            length++;
-        }
-
-        // Return C string pointer as an out parameter.
-        // Warning: The caller must free this pointer.
-        nativePointer = pointer;
-
-        // Return UTF-8 ROS<byte> created from the C string.
-        return new ReadOnlySpan<byte>(pointer, length);        
+        // Return the C string directly
+        // WARNING: This pointer needs to be freed after
+        // otherwise we'll get a memory leak
+        return pointer;        
     }
 
     public override unsafe string ToString()
@@ -82,18 +82,11 @@ public readonly partial struct Decimal128
         // This is a C string (char*), becomes a byte* in C#.
         var pointer = DecQuadBindings.ToString(this);
 
-        var length = 0;
-        var current = pointer[0];
+        // Because C strings are null terminated.
+        var span = MemoryMarshal.CreateReadOnlySpanFromNullTerminated(pointer);
 
-        // Look for the C string null terminator.
-        while (current != 0)
-        {
-            current = pointer[length];
-            length++;
-        }
-
-        // Create C# string from a null terminated C string.
-        var outString = Encoding.UTF8.GetString(pointer, length);
+        // Create C# string from a C string.
+        var outString = Encoding.UTF8.GetString(span);
 
         // The pointer must be freed before returning, otherwise
         // we'll get a memory leak from not freeing a malloc
@@ -108,18 +101,11 @@ public readonly partial struct Decimal128
         // This is a C string (char*), becomes a byte* in C#.
         var pointer = DecQuadBindings.ToString(this);
 
-        var length = 0;
-        var current = pointer[0];
+        // Because C strings are null terminated.
+        var span = MemoryMarshal.CreateReadOnlySpanFromNullTerminated(pointer);
 
-        // Look for the C string null terminator.
-        while (current != 0)
-        {
-            current = pointer[length];
-            length++;
-        }
-
-        // Create C# string from a null terminated C string.
-        var outString = Encoding.UTF8.GetString(pointer, length);
+        // Create C# string from a C string.
+        var outString = Encoding.UTF8.GetString(span);
 
         // The pointer must be freed before returning, otherwise
         // we'll get a memory leak from not freeing a malloc

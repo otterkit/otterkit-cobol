@@ -122,6 +122,27 @@ managedDecQuad nativeDecQuadLogB(managedDecQuad value)
 }
 
 DLLEXPORT
+managedDecQuad nativeDecQuadLog10(managedDecQuad value)
+{
+    decQuad nativeValue;
+    decNumber decNumValue;
+
+    decContext context;
+
+    decContextDefault(&context, DEC_INIT_DECQUAD);
+
+    nativeValue = decQuadFromManaged(value);
+
+    decQuadToNumber(&nativeValue, &decNumValue);
+
+    decNumberLog10(&decNumValue, &decNumValue, &context);
+
+    decQuadFromNumber(&nativeValue, &decNumValue, &context);
+
+    return decQuadToManaged(nativeValue);
+}
+
+DLLEXPORT
 managedDecQuad nativeDecQuadAbs(managedDecQuad value)
 {
     decQuad nativeValue;

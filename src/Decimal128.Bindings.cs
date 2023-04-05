@@ -14,6 +14,12 @@ internal static partial class DecQuadBindings
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadExp")]
     internal static partial Decimal128 Exp(Decimal128 value);
 
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadLogB")]
+    internal static partial Decimal128 LogB(Decimal128 value);
+
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadLog10")]
+    internal static partial Decimal128 Log10(Decimal128 value);
+
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadAbs")]
     internal static partial Decimal128 Abs(Decimal128 value);
 

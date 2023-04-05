@@ -34,55 +34,11 @@ public static partial class Analyzer
                 AnchorPoint("PROGRAM-ID", "FUNCTION-ID", "ENVIRONMENT", "DATA", "PROCEDURE");
             }
         }
+        
+        IdDefinitions();
 
-        switch (Current().Value)
-        {
-            case "CLASS-ID": 
-                ClassId(); 
-                break;
-
-            case "PROGRAM-ID": 
-                ProgramId(); 
-                break;
-
-            case "FUNCTION-ID": 
-                FunctionId(); 
-                break;
-
-            case "INTERFACE-ID": 
-                InterfaceId(); 
-                break;
-
-            case "METHOD-ID":
-                MethodId(); 
-                break;
-
-            case "FACTORY":
-                Factory();
-                break;
-
-            case "OBJECT":
-                Object();
-                break;
-
-            default:
-                Error
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 85,"""
-                    Missing source unit definition.
-                    """)
-                .WithSourceLine(Current(), """
-                    Expected a source unit id definition.
-                    """)
-                .WithNote("""
-                    The identification header is optional but every source unit must still have an ID.
-                    """)
-                .CloseError();
-
-                AnchorPoint("OPTIONS", "ENVIRONMENT", "DATA", "PROCEDURE");
-                break;
-        }
-
-        if (CurrentEquals("OPTIONS")) Options();
+        if (CurrentEquals("OPTIONS")) 
+            Options();
     }
 
     public static void Options()
@@ -132,6 +88,66 @@ public static partial class Analyzer
     // The following methods are responsible for parsing the -ID paragraph.
     // That includes the program, user-defined function, method, class, interface, factory or object identifier that should be specified right after.
     // This is where SourceId and SourceType get their values for a COBOL source unit.
+
+    public static void IdDefinitions()
+    {
+        if (CurrentEquals("CLASS-ID")) 
+        {
+            ClassId();
+            return;
+        }
+
+        if (CurrentEquals("PROGRAM-ID")) 
+        {
+            ProgramId();
+            return;
+        }
+
+        if (CurrentEquals("FUNCTION-ID")) 
+        {
+            FunctionId();
+            return;
+        }
+
+        if (CurrentEquals("INTERFACE-ID")) 
+        {
+            InterfaceId(); 
+            return;
+        }
+
+        if (CurrentEquals("METHOD-ID")) 
+        {
+            MethodId();
+            return;
+        }
+
+        if (CurrentEquals("FACTORY")) 
+        {
+            Factory();
+            return;
+        }
+
+        if (CurrentEquals("OBJECT")) 
+        {
+            Object();
+            return;
+        }
+
+        Error
+        .Build(ErrorType.Analyzer, ConsoleColor.Red, 85,"""
+            Missing source unit definition.
+            """)
+        .WithSourceLine(Current(), """
+            Expected a source unit id definition.
+            """)
+        .WithNote("""
+            The identification header is optional but every source unit must still have an ID.
+            """)
+        .CloseError();
+
+        AnchorPoint("OPTIONS", "ENVIRONMENT", "DATA", "PROCEDURE");
+    }
+
     public static void ProgramId()
     {
         Expected("PROGRAM-ID");

@@ -325,7 +325,16 @@ public static partial class Analyzer
     {
         if (isNested) return;
 
-        Expected(".");
+        if (CurrentEquals(".", ". "))
+        {
+            Expected(".");
+            return;
+        }
+
+        if (!CurrentEquals(TokenContext.IsStatement))
+        {
+            Expected(".");
+        }
     }
 
 

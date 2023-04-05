@@ -1667,6 +1667,10 @@ public static partial class Analyzer
                 Identifier();
                 RangeExpression(range, EvaluateOperand.Identifier);
             }
+            else if (CurrentEquals("ANY"))
+            {
+                Expected("ANY");
+            }
             else
             {
                 ParseLiteral(true, true);
@@ -1680,6 +1684,10 @@ public static partial class Analyzer
                 Arithmetic("ALSO", "WHEN");
                 RangeExpression(range, EvaluateOperand.Arithmetic);
             }
+            else if (CurrentEquals("ANY"))
+            {
+                Expected("ANY");
+            }
             else
             {
                 Condition("ALSO", "WHEN");
@@ -1687,7 +1695,7 @@ public static partial class Analyzer
         }
         else if (truefalse && CurrentEquals("TRUE", "FALSE"))
         {
-            Choice("TRUE", "FALSE");
+            Choice("TRUE", "FALSE", "ANY");
         }
         else if (CurrentEquals("ANY"))
         {

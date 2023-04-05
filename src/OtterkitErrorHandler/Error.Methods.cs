@@ -100,5 +100,6 @@ public readonly ref partial struct Error
 
         // ────╯
         ColoredWrite(DarkGray, " ────╯\n");
+        Console.ResetColor();
     }
 }

@@ -5,6 +5,15 @@ namespace Otterkit.Numerics;
 internal static partial class DecQuadBindings
 {
     /* Computational operations */
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadSqrt")]
+    internal static partial Decimal128 Sqrt(Decimal128 value);
+
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadLn")]
+    internal static partial Decimal128 Ln(Decimal128 value);
+
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadExp")]
+    internal static partial Decimal128 Exp(Decimal128 value);
+
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadAbs")]
     internal static partial Decimal128 Abs(Decimal128 value);
 

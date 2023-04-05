@@ -17,6 +17,21 @@ public readonly partial struct Decimal128
         return DecQuadBindings.Min(left, right);
     }
 
+    public static Decimal128 Sqrt(Decimal128 value)
+    {
+        return DecQuadBindings.Sqrt(value);
+    }
+
+    public static Decimal128 Ln(Decimal128 value)
+    {
+        return DecQuadBindings.Ln(value);
+    }
+
+    public static Decimal128 Exp(Decimal128 value)
+    {
+        return DecQuadBindings.Exp(value);
+    }
+
     public static Decimal128 Factorial(int value)
     {
         // Does this switch expression look horrible? YES!

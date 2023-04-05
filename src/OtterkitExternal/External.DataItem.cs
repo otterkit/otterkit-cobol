@@ -1,4 +1,4 @@
-namespace OtterkitLibrary;
+namespace Otterkit.Library;
 
 readonly struct ExternalDataItem
 {

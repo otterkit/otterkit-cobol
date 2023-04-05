@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace OtterkitLibrary;
+namespace Otterkit.Library;
 
 public sealed class Constant : ICOBOLType
 {

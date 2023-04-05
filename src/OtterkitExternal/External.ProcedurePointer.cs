@@ -1,4 +1,4 @@
-namespace OtterkitLibrary;
+namespace Otterkit.Library;
 
 // FAQ 1: Why is this in its own file?
 // It allows for more comments and documentation without poluting other files.

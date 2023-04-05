@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using System.Text;
-namespace OtterkitLibrary;
+namespace Otterkit.Library;
 
 public static class Functions
 {

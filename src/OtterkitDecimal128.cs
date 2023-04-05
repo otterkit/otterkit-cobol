@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices;
-namespace OtterkitLibrary;
+namespace Otterkit.Library;
 
 /// <summary>
 /// Otterkit DecimalHolder ref struct

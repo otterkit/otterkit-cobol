@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Buffers;
 
-namespace OtterkitLibrary;
+namespace Otterkit.Library;
 
 public sealed unsafe class OtterkitNativeMemory<TBytes>
     : MemoryManager<TBytes>

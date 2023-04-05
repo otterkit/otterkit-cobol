@@ -10,86 +10,121 @@ public readonly partial struct Decimal128
         return DecQuadBindings.FromString(MemoryMarshal.GetReference(utf8String));
     }
 
-    public unsafe byte[] ToUTF8Array()
+    public unsafe byte[] ToUtf8Array()
     {
+        // This is a C string (char*), becomes a byte* in C#.
         var pointer = DecQuadBindings.ToString(this);
-    
-        int length = 0;
-        byte current = pointer[0];
 
+        var length = 0;
+        var current = pointer[0];
+
+        // Look for the C string null terminator.
         while (current != 0)
         {
             current = pointer[length];
             length++;
         }
 
-        var span = new ReadOnlySpan<byte> (pointer, length);
+        // Create UTF-8 ROS<byte> from the C string.
+        var span = new ReadOnlySpan<byte>(pointer, length);
+
+        // Create a new byte array to hold a copy of the C string.
+        // This is necessary to convert the unsafe malloc allocated
+        // buffer into a managed buffer that we can safely return.
         var copy = new byte[length];
         
         span.CopyTo(copy);
+
+        // The pointer must be freed before returning, otherwise
+        // we'll get a memory leak from not freeing a malloc
+        // allocated C string.
+        NativeMemory.Free(pointer);
         
+        // Return the copy
         return copy;        
     }
 
-    public ReadOnlySpan<byte> ToUTF8Span()
+    public ReadOnlySpan<byte> ToUtf8Span()
     {
-        return ToUTF8Array();
+        return ToUtf8Array();
     }
 
-    public ReadOnlyMemory<byte> ToUTF8Memory()
+    public ReadOnlyMemory<byte> ToUtf8Memory()
     {
-        return ToUTF8Array();
+        return ToUtf8Array();
     }
 
-    public unsafe ReadOnlySpan<byte> AsUnsafeSpan()
+    public unsafe ReadOnlySpan<byte> AsUnsafeSpan(out byte* nativePointer)
     {
+        // This is a C string (char*), becomes a byte* in C#.
         var pointer = DecQuadBindings.ToString(this);
-    
-        int length = 0;
-        byte current = pointer[0];
 
+        var length = 0;
+        var current = pointer[0];
+
+        // Look for the C string null terminator.
         while (current != 0)
         {
             current = pointer[length];
             length++;
         }
 
-        return new ReadOnlySpan<byte> (pointer, length);        
-    }
+        // Return C string pointer as an out parameter.
+        // Warning: The caller must free this pointer.
+        nativePointer = pointer;
 
+        // Return UTF-8 ROS<byte> created from the C string.
+        return new ReadOnlySpan<byte>(pointer, length);        
+    }
 
     public override unsafe string ToString()
     {
+        // This is a C string (char*), becomes a byte* in C#.
         var pointer = DecQuadBindings.ToString(this);
 
-        int length = 0;
-        byte current = pointer[0];
+        var length = 0;
+        var current = pointer[0];
 
+        // Look for the C string null terminator.
         while (current != 0)
         {
             current = pointer[length];
             length++;
         }
 
+        // Create C# string from a null terminated C string.
         var outString = Encoding.UTF8.GetString(pointer, length);
+
+        // The pointer must be freed before returning, otherwise
+        // we'll get a memory leak from not freeing a malloc
+        // allocated C string.
+        NativeMemory.Free(pointer);
 
         return outString;
     }
 
     public unsafe string ToEngineeringString()
     {
-        var pointer = DecQuadBindings.ToEngineeringString(this);
+        // This is a C string (char*), becomes a byte* in C#.
+        var pointer = DecQuadBindings.ToString(this);
 
-        int length = 0;
-        byte current = pointer[0];
+        var length = 0;
+        var current = pointer[0];
 
+        // Look for the C string null terminator.
         while (current != 0)
         {
             current = pointer[length];
             length++;
         }
 
+        // Create C# string from a null terminated C string.
         var outString = Encoding.UTF8.GetString(pointer, length);
+
+        // The pointer must be freed before returning, otherwise
+        // we'll get a memory leak from not freeing a malloc
+        // allocated C string.
+        NativeMemory.Free(pointer);
 
         return outString;
     }

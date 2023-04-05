@@ -2,7 +2,7 @@
 
 #include "..\decNumber\decimal128.h"
 #include "..\decNumber\decQuad.h" // decQuad library
-#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef _WIN32
 #define DLLEXPORT __declspec(dllexport)
@@ -591,14 +591,13 @@ uint32_t nativeDecQuadSameQuantum(managedDecQuad left, managedDecQuad right)
     nativeRight = decQuadFromManaged(right);
 
     return decQuadSameQuantum(&nativeLeft, &nativeRight);
-    ;
 }
 
 /* Utilities and conversions */
 DLLEXPORT
 char *nativeDecQuadToString(managedDecQuad value)
 {
-    static char string[DECQUAD_String];
+    char *string = malloc(DECQUAD_String);
     decQuad nativeQuad;
     decContext context;
 
@@ -614,7 +613,7 @@ char *nativeDecQuadToString(managedDecQuad value)
 DLLEXPORT
 char *nativeDecQuadToEngString(managedDecQuad value)
 {
-    static char string[DECQUAD_String];
+    char *string = malloc(DECQUAD_String);
     decQuad nativeQuad;
     decContext context;
 

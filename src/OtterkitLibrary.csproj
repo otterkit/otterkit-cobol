@@ -23,7 +23,7 @@
     <Company>Otterkit Project</Company>
     <PackageIcon>OtterkitIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>Otterkit;COBOL;Compiler;Transpiler</PackageTags>
+    <PackageTags>Otterkit;COBOL;Runtime;Library</PackageTags>
     <PackageProjectUrl>https://github.com/otterkit</PackageProjectUrl>
     <RepositoryUrl>https://github.com/otterkit/libotterkit</RepositoryUrl> 
     <RepositoryType>git</RepositoryType>
@@ -45,7 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Otterkit.Numerics" Version="1.7.0" />
+    <PackageReference Include="Otterkit.Numerics" Version="1.7.20" />
   </ItemGroup>
   
 </Project>

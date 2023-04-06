@@ -49,37 +49,24 @@ public readonly partial struct Decimal128
 
     public static Decimal128 Sin(Decimal128 radians)
     {
-        Decimal128 Pi = Decimal128.Pi;
-        radians %= Decimal128.Tau;
+        var sum = radians;
+        var term = radians;
 
-        if (radians < 0)
-            radians = Decimal128.Tau - radians;
+        var iteration = 1;
 
-        Decimal128 sign = 1;
-
-        if (radians > Pi)
+        while(true) 
         {
-            radians -= Pi;
-            sign = -1;
+            var previous = sum;
+
+            term = -term * radians * radians / (2 * iteration) / (2 * iteration + 1);
+            sum += term;
+
+            iteration++;
+
+            if (previous == sum) break;
         }
-
-        Decimal128 result = radians;
-        int coefficient = 3;
-
-        for (int i = 0; i < 14; i++)
-        {
-            Decimal128 power = Decimal128.Pow(radians, coefficient);
-
-            Decimal128 factorial = Factorial(coefficient);
-
-            if (i % 2 == 0) result -= power / factorial;
-
-            else result += power / factorial;
-
-            coefficient += 2;
-        }
-
-        return sign * result;
+        
+        return sum;
     }
 
     public static Decimal128 Cos(Decimal128 radians)

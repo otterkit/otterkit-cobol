@@ -32,7 +32,7 @@ when compared to less portable, non-standardardized decimal formats.
 
 ### NuGet Install
 
-Otterkit.Numerics is available to install on the [Nuget package manager](https://www.nuget.org/packages/Otterkit/) ([.NET 7](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) is required). To install the latest version, type the following into the command line:
+Otterkit.Numerics is available to install on the [Nuget package manager](https://www.nuget.org/packages/Otterkit.Numerics/) ([.NET 7](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) is required). To install the latest version, type the following into the command line:
 ```
 dotnet add package Otterkit.Numerics
 ```

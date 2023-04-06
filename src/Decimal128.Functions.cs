@@ -42,6 +42,99 @@ public readonly partial struct Decimal128
         return DecQuadBindings.Log10(value);
     }
 
+    public static Decimal128 Tan(Decimal128 radians)
+    {
+        return Sin(radians) / Cos(radians);
+    }
+
+    public static Decimal128 Sin(Decimal128 radians)
+    {
+        Decimal128 Pi = Decimal128.Pi;
+        radians %= Decimal128.Tau;
+
+        if (radians < 0)
+            radians = Decimal128.Tau - radians;
+
+        Decimal128 sign = 1;
+
+        if (radians > Pi)
+        {
+            radians -= Pi;
+            sign = -1;
+        }
+
+        Decimal128 result = radians;
+        int coefficient = 3;
+
+        for (int i = 0; i < 14; i++)
+        {
+            Decimal128 power = Decimal128.Pow(radians, coefficient);
+
+            Decimal128 factorial = Factorial(coefficient);
+
+            if (i % 2 == 0) result -= power / factorial;
+
+            else result += power / factorial;
+
+            coefficient += 2;
+        }
+
+        return sign * result;
+    }
+
+    public static Decimal128 Cos(Decimal128 radians)
+    {
+        return Sin(Decimal128.Pi / 2 - radians);
+    }
+
+    public static Decimal128 Atan(Decimal128 ratio)
+    {
+        Decimal128 halfPi = Decimal128.Pi / 2;
+
+        if (ratio < -1)
+            return -halfPi - Atan(1 / ratio);
+
+        if (ratio > 1)
+            return halfPi - Atan(1 / ratio);
+
+        Decimal128 coefficient = 2;
+
+        Decimal128 iteration = ratio / (ratio * ratio + 1);
+
+        Decimal128 result = iteration;
+
+        for (int i = 0; i < 64; i++)
+        {
+            iteration *= (ratio * ratio / (ratio * ratio + 1) * coefficient / (coefficient + 1));
+
+            result += iteration;
+
+            coefficient += 2;
+        }
+
+        return result;
+    }
+
+    public static Decimal128 Asin(Decimal128 ratio)
+    {
+        if (ratio < -1 || ratio > 1)
+            throw new ArgumentException($"ASIN argument must be >= -1 and <= +1");
+
+        Decimal128 sqrtArg = (1 - ratio * ratio);
+
+        return Atan(ratio / (Decimal128.Sqrt(sqrtArg) + 1)) * 2;
+    }
+
+    public static Decimal128 Acos(Decimal128 ratio)
+    {
+        if (ratio < -1 || ratio > 1)
+            throw new ArgumentException($"ACOS argument must be >= -1 and <= +1");
+
+        Decimal128 sqrtArg = (1 - ratio * ratio);
+
+        return Atan(Decimal128.Sqrt(sqrtArg) / (ratio + 1)) * 2;
+    }
+
     public static Decimal128 Factorial(int value)
     {
         // Does this switch expression look horrible? YES!

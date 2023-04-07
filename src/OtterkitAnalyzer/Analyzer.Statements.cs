@@ -592,145 +592,13 @@ public static partial class Analyzer
         {
             Expected("USING");
 
-            while (CurrentEquals("BY", "REFERENCE", "CONTENT"))
-            {
-                if (CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
-                {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    The USING BY VALUE clause must only be specified in a program prototype call.
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    Continue();
-
-                    AnchorPoint("BY", "REFERENCE", "CONTENT", "RETURNING");
-                    if (CurrentEquals("RETURNING", ".")) break;
-
-                }
-
-                if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
-                {
-                    Optional("BY");
-                    Expected("REFERENCE");
-
-                    if (CurrentEquals("OPTIONAL")) Expected("OPTIONAL");
-
-                    if (!CurrentEquals(TokenType.Identifier))
-                    {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING BY REFERENCE clause must contain at least one data item name.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    }
-
-                    Identifier();
-                    while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
-                    {
-                        if (CurrentEquals("OPTIONAL")) Expected("OPTIONAL");
-                        Identifier();
-                    }
-                }
-
-                if (CurrentEquals("CONTENT") || CurrentEquals("BY") && LookaheadEquals(1, "CONTENT"))
-                {
-                    Optional("BY");
-                    Expected("CONTENT");
-                    if (!CurrentEquals(TokenType.Identifier))
-                    {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING BY CONTENT clause must contain at least one data item name.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-
-                        AnchorPoint("BY", "REFERENCE", "CONTENT", "RETURNING");
-                        if (CurrentEquals("RETURNING", ".")) break;
-                    }
-
-                    Identifier();
-                    while (CurrentEquals(TokenType.Identifier)) Identifier();
-                }
-            }
+            StatementUsing(false, true);
         }
         else if (isPrototype && CurrentEquals("USING"))
         {
             Expected("USING");
 
-            while (CurrentEquals("BY", "REFERENCE", "CONTENT", "VALUE"))
-            {
-                if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
-                {
-                    Optional("BY");
-                    Expected("REFERENCE");
-
-                    if (!CurrentEquals(TokenType.Identifier) && !CurrentEquals("OMMITED"))
-                    {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING BY REFERENCE clause must contain at least one data item name.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    }
-
-                    if (CurrentEquals("OMMITED"))
-                    {
-                        Expected("OMMITED");
-                    }
-                    else
-                    {
-                        Identifier();
-                    }
-                }
-
-                if (CurrentEquals("CONTENT") || CurrentEquals("BY") && LookaheadEquals(1, "CONTENT"))
-                {
-                    Optional("BY");
-                    Expected("CONTENT");
-                    if (NotIdentifierOrLiteral())
-                    {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING BY CONTENT clause must contain at least one data item name or literal.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    }
-
-                    if (CurrentEquals(TokenType.Identifier))
-                    {
-                        Identifier();
-                    }
-                    else if (CurrentEquals(TokenType.Numeric))
-                    {
-                        Number();
-                    }
-                    else
-                    {
-                        String();
-                    }
-                }
-
-                if (CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
-                {
-                    Optional("BY");
-                    Expected("VALUE");
-                    if (NotIdentifierOrLiteral())
-                    {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING BY VALUE clause must contain at least one data item name or literal.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    }
-
-                    if (CurrentEquals(TokenType.Identifier))
-                    {
-                        Identifier();
-                    }
-                    else if (CurrentEquals(TokenType.Numeric))
-                    {
-                        Number();
-                    }
-                    else
-                    {
-                        String();
-                    }
-                }
-            }
+            StatementUsing(true, true);
         }
 
         if (CurrentEquals("RETURNING"))
@@ -1249,83 +1117,7 @@ public static partial class Analyzer
         {
             Expected("USING");
 
-            while (CurrentEquals("BY", "REFERENCE", "CONTENT", "VALUE"))
-            {
-                if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
-                {
-                    Optional("BY");
-                    Expected("REFERENCE");
-
-                    if (!CurrentEquals(TokenType.Identifier) && !CurrentEquals("OMMITED"))
-                    {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING BY REFERENCE clause must contain at least one data item name.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    }
-
-                    if (CurrentEquals("OMMITED"))
-                    {
-                        Expected("OMMITED");
-                    }
-                    else
-                    {
-                        Identifier();
-                    }
-                }
-
-                if (CurrentEquals("CONTENT") || CurrentEquals("BY") && LookaheadEquals(1, "CONTENT"))
-                {
-                    Optional("BY");
-                    Expected("CONTENT");
-                    if (NotIdentifierOrLiteral())
-                    {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING BY CONTENT clause must contain at least one data item name or literal.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    }
-
-                    if (CurrentEquals(TokenType.Identifier))
-                    {
-                        Identifier();
-                    }
-                    else if (CurrentEquals(TokenType.Numeric))
-                    {
-                        Number();
-                    }
-                    else
-                    {
-                        String();
-                    }
-                }
-
-                if (CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
-                {
-                    Optional("BY");
-                    Expected("VALUE");
-                    if (NotIdentifierOrLiteral())
-                    {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        The USING BY VALUE clause must contain at least one data item name or literal.
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
-                    }
-
-                    if (CurrentEquals(TokenType.Identifier))
-                    {
-                        Identifier();
-                    }
-                    else if (CurrentEquals(TokenType.Numeric))
-                    {
-                        Number();
-                    }
-                    else
-                    {
-                        String();
-                    }
-                }
-            }
+            StatementUsing(true, true);
         }
 
         if (CurrentEquals("RETURNING"))
@@ -3417,5 +3209,126 @@ public static partial class Analyzer
     private static void PARAGRAPH()
     {
         Identifier(Current());
+    }
+
+    // Different from Using(), this one is for the CALL and INVOKE only.
+    public static void StatementUsing(bool byValue, bool byContent)
+    {
+        while (CurrentEquals("BY", "REFERENCE", "VALUE") || CurrentEquals(TokenType.Identifier))
+        {   
+            if (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
+                {
+                    if (CurrentEquals("OPTIONAL"))
+                    {
+                        Expected("OPTIONAL");
+                    }
+                    // TODO: Reimplement parameter item resolution
+                    Identifier();
+                }  
+            }
+
+            if (CurrentEquals("BY") && !LookaheadEquals(1, "VALUE", "REFERENCE", "CONTENT"))
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 128,"""
+                    Using phrase, missing keyword.
+                    """)
+                .WithSourceLine(Current(), """
+                    Expected REFERENCE, VALUE or CONTENT after this token
+                    """)
+                .CloseError();
+
+                CombinedAnchorPoint(TokenContext.IsStatement, "RETURNING", ".");
+            }
+
+            if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
+            {
+                Optional("BY");
+                Expected("REFERENCE");
+
+                if (CurrentEquals("OPTIONAL"))
+                {
+                    Expected("OPTIONAL");
+                }
+
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 128,"""
+                        Using phrase, missing identifier.
+                        """)
+                    .WithSourceLine(Current(), """
+                        BY REFERENCE phrase must contain at least one data item name.
+                        """)
+                    .CloseError();
+                }
+                
+                // TODO: Reimplement parameter item resolution
+
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
+                {
+                    if (CurrentEquals("OPTIONAL"))
+                    {
+                        Expected("OPTIONAL");
+                    }
+                    // TODO: Reimplement parameter item resolution
+                    Identifier();
+                }
+            }
+
+            if (byValue && CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
+            {
+                Optional("BY");
+                Expected("VALUE");
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 128,"""
+                        Using phrase, missing identifier.
+                        """)
+                    .WithSourceLine(Current(), """
+                        BY VALUE phrase must contain at least one data item name.
+                        """)
+                    .CloseError();
+                }
+                
+                // TODO: Reimplement parameter item resolution
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier))
+                {
+                    // TODO: Reimplement parameter item resolution
+                    Identifier();
+                }
+            }
+
+            if (byContent && CurrentEquals("CONTENT") || CurrentEquals("BY") && LookaheadEquals(1, "CONTENT"))
+            {
+                Optional("BY");
+                Expected("CONTENT");
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 128,"""
+                        Using phrase, missing identifier.
+                        """)
+                    .WithSourceLine(Current(), """
+                        BY CONTENT phrase must contain at least one data item name.
+                        """)
+                    .CloseError();
+                }
+                
+                // TODO: Reimplement parameter item resolution
+                Identifier();
+                while (CurrentEquals(TokenType.Identifier))
+                {
+                    // TODO: Reimplement parameter item resolution
+                    Identifier();
+                }
+            }
+        }
     }
 }

@@ -40,4 +40,53 @@ public static class EnumExtensions
             _ => "NONE"
         };
     }
+
+    public static string Display(this TokenType tokenType, bool uppercased)
+    {
+        return (tokenType, uppercased) switch
+        {
+            (TokenType.Identifier, true) => "Identifier",
+            (TokenType.Identifier, false) => "identifier",
+
+            (TokenType.ReservedKeyword, true) => "Reserved word",
+            (TokenType.ReservedKeyword, false) => "reserved word",
+
+            (TokenType.IntrinsicFunction, true) => "Intrinsic function",
+            (TokenType.IntrinsicFunction, false) => "intrinsic function",
+
+            (TokenType.String, true) => "Alphanumeric literal",
+            (TokenType.String, false) => "alphanumeric literal",
+            
+            (TokenType.HexString, true) => "Hexadecimal alphanumeric literal",
+            (TokenType.HexString, false) => "hexadecimal alphanumeric literal",
+
+            (TokenType.National, true) => "National literal",
+            (TokenType.National, false) => "national literal",
+
+            (TokenType.HexNational, true) => "Hexadecimal national literal",
+            (TokenType.HexNational, false) => "hexadecimal national literal",
+
+            (TokenType.Boolean, true) => "Boolean literal",
+            (TokenType.Boolean, false) => "boolean literal",
+
+            (TokenType.HexBoolean, true) => "Hexadecimal boolean literal",
+            (TokenType.HexBoolean, false) => "hexadecimal boolean literal",
+
+            (TokenType.Numeric, true) => "Numeric literal",
+            (TokenType.Numeric, false) => "numeric literal",
+
+            (TokenType.Symbol, true) => "Symbol",
+            (TokenType.Symbol, false) => "symbol",
+
+            (TokenType.Device, true) => "Device name",
+            (TokenType.Device, false) => "device name",
+
+            (TokenType.EOF, true) => "End of file",
+            (TokenType.EOF, false) => "end of file",
+
+            (TokenType.Expression, true) => "Expression",
+            (TokenType.Expression, false) => "expression",
+            _ => "Error"
+        };
+    }
 }

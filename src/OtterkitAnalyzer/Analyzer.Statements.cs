@@ -15,10 +15,14 @@ public static partial class Analyzer
 
         if (errorCheck)
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-            Expected the start of a statement. Instead found "{Current().Value}"
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected start of a statement. Instead found {Current().Value}.
+                """)
+            .CloseError();
 
             AnchorPoint(TokenContext.IsStatement);
         }
@@ -307,10 +311,14 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            Expected AFTER EXCEPTION OBJECT, AFTER EXCEPTION CONDITION, BEFORE REPORTING or AFTER EXCEPTION/ERROR
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected AFTER EXCEPTION OBJECT, AFTER EXCEPTION CONDITION, BEFORE REPORTING or AFTER EXCEPTION/ERROR.
+                """)
+            .CloseError();
 
             AnchorPoint(TokenContext.IsStatement);
         }
@@ -361,8 +369,14 @@ public static partial class Analyzer
 
         if (NotIdentifierOrLiteral())
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "an identifier or a literal");
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected an identifier or a literal.
+                """)
+            .CloseError();
 
             AnchorPoint("UPON", "WITH", "NO");
         }
@@ -453,12 +467,18 @@ public static partial class Analyzer
             Optional("AT");
             if (!CurrentEquals("LINE", "COLUMN", "COL"))
             {
-                ErrorHandler.Analyzer.Report(FileName, Lookahead(-1), ErrorType.General, """
-                When specifying the AT keyword, it must be followed by a LINE NUMBER, COLUMN/COL NUMBER or both.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Lookahead(-1));
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Lookahead(-1).Type.Display(false)}.
+                    """)
+                .WithSourceLine(Lookahead(-1), $"""
+                    When specifying the AT keyword, it must be followed by a LINE NUMBER, COLUMN/COL NUMBER or both.
+                    """)
+                .CloseError();
             }
+
             LineColumn();
+            
             OnException(ref isConditional);
         }
 
@@ -494,8 +514,14 @@ public static partial class Analyzer
         Expected("COMPUTE");
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected an identifier.
+                """)
+            .CloseError();
         }
 
         while (CurrentEquals(TokenType.Identifier))
@@ -506,8 +532,14 @@ public static partial class Analyzer
         Expected("=");
         if (NotIdentifierOrLiteral())
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "an identifier, numeric literal or a valid arithmetic symbol");
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a valid arithmetic expression.
+                """)
+            .CloseError();
         }
 
         Arithmetic(".");
@@ -743,8 +775,14 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected an identifier or numeric literal.
+                """)
+            .CloseError();
         }
 
         while (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
@@ -770,16 +808,28 @@ public static partial class Analyzer
                     break;
 
                 default:
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                        Unexpected {Current().Type.Display(false)}.
+                        """)
+                    .WithSourceLine(Current(), $"""
+                        Expected an identifier or numeric literal.
+                        """)
+                    .CloseError();
                     break;
             }
 
             Expected("GIVING");
             if (Current().Type != TokenType.Identifier)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Expected an identifier.
+                    """)
+                .CloseError();
             }
 
             while (Current().Type == TokenType.Identifier)
@@ -790,8 +840,14 @@ public static partial class Analyzer
             Expected("GIVING");
             if (Current().Type != TokenType.Identifier)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Expected an identifier.
+                    """)
+                .CloseError();
             }
 
             while (Current().Type == TokenType.Identifier)
@@ -802,8 +858,14 @@ public static partial class Analyzer
             Expected("TO");
             if (Current().Type != TokenType.Identifier)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Expected an identifier.
+                    """)
+                .CloseError();
             }
 
             while (Current().Type == TokenType.Identifier)
@@ -811,8 +873,14 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "TO or GIVING");
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected TO or GIVING reserved words.
+                """)
+            .CloseError();
         }
 
         SizeError(ref isConditional);
@@ -827,8 +895,14 @@ public static partial class Analyzer
         Expected("SUBTRACT");
         if (Current().Type != TokenType.Identifier && Current().Type != TokenType.Numeric)
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected an identifier or numeric literal.
+                """)
+            .CloseError();
         }
 
         while (Current().Type == TokenType.Identifier
@@ -856,16 +930,28 @@ public static partial class Analyzer
                     break;
 
                 default:
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                        Unexpected {Current().Type.Display(false)}.
+                        """)
+                    .WithSourceLine(Current(), $"""
+                        Expected an identifier or numeric literal.
+                        """)
+                    .CloseError();
                     break;
             }
 
             Expected("GIVING");
             if (Current().Type != TokenType.Identifier)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Expected an identifier.
+                    """)
+                .CloseError();
             }
 
             while (Current().Type == TokenType.Identifier)
@@ -876,8 +962,14 @@ public static partial class Analyzer
             Expected("FROM");
             if (Current().Type != TokenType.Identifier)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Expected an identifier.
+                    """)
+                .CloseError();
             }
 
             while (Current().Type == TokenType.Identifier)
@@ -885,8 +977,14 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "FROM");
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected FROM reserved word.
+                """)
+            .CloseError();
         }
 
         SizeError(ref isConditional);
@@ -902,13 +1000,18 @@ public static partial class Analyzer
         Optional("THEN");
         if (CurrentEquals("NEXT") && LookaheadEquals(1, "SENTENCE"))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            Unsupported phrase: NEXT SENTENCE is an archaic feature. This phrase can be confusing and is a common source of errors.
-            The CONTINUE statement can be used to accomplish the same functionality while being much clearer and less prone to error
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unsupported phrase: NEXT SENTENCE is an archaic feature.
+                """)
+            .WithSourceLine(Current(), $"""
+                The CONTINUE statement can be used to accomplish the same functionality.
+                """)
+            .CloseError();
         }
+        
         ParseStatements(true);
+
         if (CurrentEquals("ELSE"))
         {
             Expected("ELSE");
@@ -979,10 +1082,14 @@ public static partial class Analyzer
 
                 if (NotIdentifierOrLiteral())
                 {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    Expected an identifier if message tag, object reference or a pointer as specified, and an identifier or literal otherwise
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                        Unexpected {Current().Type.Display(false)}.
+                        """)
+                    .WithSourceLine(Current(), $"""
+                        Expected an identifier or literal.
+                        """)
+                    .CloseError();
 
                     AnchorPoint(TokenContext.IsStatement);
                 }
@@ -1008,10 +1115,14 @@ public static partial class Analyzer
 
                     if (NotIdentifierOrLiteral())
                     {
-                        ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                        Expected an identifier if message tag, object reference or a pointer as specified, and an identifier or literal otherwise
-                        """);
-                        ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                        Error
+                        .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                            Unexpected {Current().Type.Display(false)}.
+                            """)
+                        .WithSourceLine(Current(), $"""
+                            Expected an identifier or literal.
+                            """)
+                        .CloseError();
 
                         AnchorPoint(TokenContext.IsStatement);
                     }
@@ -1047,10 +1158,14 @@ public static partial class Analyzer
         Expected("INITIATE");
         if (Current().Type != TokenType.Identifier)
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The INITIATE statement must only contain report entry identifiers defined in the report section.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a report entry identifier defined in the report section.
+                """)
+            .CloseError();
         }
         Identifier();
         while (Current().Type == TokenType.Identifier)
@@ -1058,10 +1173,14 @@ public static partial class Analyzer
 
         if (!CurrentEquals("."))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The INITIATE statement must only contain report entry identifiers defined in the report section.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a report entry identifier defined in the report section.
+                """)
+            .CloseError();
         }
     }
 
@@ -1235,10 +1354,14 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                The ON ASCENDING / DESCENDING KEY phrase must only contain key names.
+                """)
+            .CloseError();
         }
 
         Identifier();
@@ -1262,10 +1385,14 @@ public static partial class Analyzer
 
             if (!CurrentEquals(TokenType.Identifier))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    The ON ASCENDING / DESCENDING KEY phrase must only contain key names.
+                    """)
+                .CloseError();
             }
 
             Identifier();
@@ -1288,10 +1415,14 @@ public static partial class Analyzer
             {
                 if (!CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
                 {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    The COLLATING SEQUENCE clause must contain at least 1 alphabet name (max of 2 alphabet names) or at least one FOR ALPHANUMERIC and FOR NATIONAL clauses.
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                        Unexpected {Current().Type.Display(false)}.
+                        """)
+                    .WithSourceLine(Current(), $"""
+                        Expected an alphabet name or at least one FOR ALPHANUMERIC and FOR NATIONAL phrases.
+                        """)
+                    .CloseError();
 
                     CombinedAnchorPoint(TokenContext.IsStatement, "USING");
                 }
@@ -1344,8 +1475,14 @@ public static partial class Analyzer
                 break;
 
             default:
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Expected an identifier or numeric literal.
+                    """)
+                .CloseError();
                 break;
         }
 
@@ -1363,16 +1500,28 @@ public static partial class Analyzer
                     break;
 
                 default:
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier or numeric literal");
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                        Unexpected {Current().Type.Display(false)}.
+                        """)
+                    .WithSourceLine(Current(), $"""
+                        Expected an identifier or numeric literal.
+                        """)
+                    .CloseError();
                     break;
             }
 
             Expected("GIVING");
             if (Current().Type != TokenType.Identifier)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Expected an identifier.
+                    """)
+                .CloseError();
             }
 
             while (Current().Type == TokenType.Identifier)
@@ -1383,8 +1532,14 @@ public static partial class Analyzer
             Expected("BY");
             if (Current().Type != TokenType.Identifier)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "identifier");
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Expected an identifier.
+                    """)
+                .CloseError();
             }
 
             while (Current().Type == TokenType.Identifier)
@@ -1392,8 +1547,14 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.Expected, "BY");
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected BY reserved word.
+                """)
+            .CloseError();
         }
 
         SizeError(ref isConditional);
@@ -1416,10 +1577,14 @@ public static partial class Analyzer
 
         if (NotIdentifierOrLiteral())
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The MOVE statement must only contain a single data item identifier, datatype literal or an intrisic function which returns a data item before the "TO" reserved word.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a single data item identifier, literal or a function.
+                """)
+            .CloseError();
         }
 
         if (Current().Type == TokenType.Identifier)
@@ -1434,10 +1599,14 @@ public static partial class Analyzer
         Expected("TO");
         if (Current().Type != TokenType.Identifier)
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The MOVE statement must only contain data item identifiers after the "TO" reserved word.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected only data item identifiers.
+                """)
+            .CloseError();
         }
 
         while (Current().Type == TokenType.Identifier)
@@ -1445,10 +1614,14 @@ public static partial class Analyzer
 
         if (!CurrentEquals(".") && !CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(TokenContext.IsStatement))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The MOVE statement must only contain data item identifiers after the "TO" reserved word.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected only data item identifiers.
+                """)
+            .CloseError();
         }
     }
 
@@ -1478,10 +1651,17 @@ public static partial class Analyzer
             }
             else
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Expected ALL OTHER, NO OTHER or READ ONLY. One of them must be specified in the SHARING clause
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Expected ALL OTHER, NO OTHER or READ ONLY.
+                    """)
+                .WithNote("""
+                    One of them must be specified in the SHARING phrase.
+                    """)
+                .CloseError();
             }
         }
 
@@ -1534,10 +1714,17 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    Expected ALL OTHER, NO OTHER or READ ONLY. One of them must be specified in the SHARING clause
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                        Unexpected {Current().Type.Display(false)}.
+                        """)
+                    .WithSourceLine(Current(), $"""
+                        Expected ALL OTHER, NO OTHER or READ ONLY.
+                        """)
+                    .WithNote("""
+                        One of them must be specified in the SHARING phrase.
+                        """)
+                    .CloseError();
                 }
             }
 
@@ -1798,10 +1985,14 @@ public static partial class Analyzer
 
         if (!CurrentEquals("."))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The FREE statement must only contain based data item identifiers.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a data item defined with the BASED clause.
+                """)
+            .CloseError();
         }
 
     }
@@ -1863,11 +2054,14 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The CLOSE statement only accepts file connector names. 
-            NOTE: This statement must not specify more than one file connector when inside of an exception-checking phrase in a PERFORM statement.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a file connector name.
+                """)
+            .CloseError();
         }
 
         while (Current().Type == TokenType.Identifier)
@@ -1893,11 +2087,14 @@ public static partial class Analyzer
 
         if (!CurrentEquals("."))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The CLOSE statement only accepts file connector names. 
-            NOTE: This statement must not specify more than one file connector when inside of an exception-checking phrase in a PERFORM statement.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a file connector name.
+                """)
+            .CloseError();
         }
     }
 
@@ -1912,10 +2109,15 @@ public static partial class Analyzer
 
         else
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The CANCEL statement only accepts Alphanumeric or National literals and data items, or a program prototype name specified in the REPOSITORY paragraph.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected an alphanumeric or national literal, or a REPOSITORY paragraph program name.
+                """)
+            .CloseError();
+
             Continue();
         }
 
@@ -1930,10 +2132,14 @@ public static partial class Analyzer
 
         if (!CurrentEquals("."))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The CANCEL statement only accepts Alphanumeric or National literals and data items, or a program prototype name specified in the REPOSITORY paragraph.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected an alphanumeric or national literal, or a REPOSITORY paragraph program name.
+                """)
+            .CloseError();
         }
     }
 
@@ -2356,10 +2562,14 @@ public static partial class Analyzer
 
             if (!CurrentEquals("WHEN"))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                The SEARCH statement must contain at least one WHEN condition
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    Expected at least one WHEN condition phrase.
+                    """)
+                .CloseError();
             }
 
             while (CurrentEquals("WHEN"))
@@ -2368,11 +2578,14 @@ public static partial class Analyzer
                 Condition();
                 if (CurrentEquals("NEXT") && LookaheadEquals(1, "SENTENCE"))
                 {
-                    ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                    Unsupported phrase: NEXT SENTENCE is an archaic feature. This phrase can be confusing and is a common source of errors.
-                    The CONTINUE statement can be used to accomplish the same functionality while being much clearer and less prone to error
-                    """);
-                    ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                    Error
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                        Unsupported phrase: NEXT SENTENCE is an archaic feature.
+                        """)
+                    .WithSourceLine(Current(), $"""
+                        The CONTINUE statement can be used to accomplish the same functionality.
+                        """)
+                    .CloseError();
 
                     AnchorPoint("WHEN", "END-SEARCH");
                 }
@@ -2465,11 +2678,14 @@ public static partial class Analyzer
 
         if (CurrentEquals("NEXT") && LookaheadEquals(1, "SENTENCE"))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            Unsupported phrase: NEXT SENTENCE is an archaic feature. This phrase can be confusing and is a common source of errors.
-            The CONTINUE statement can be used to accomplish the same functionality while being much clearer and less prone to error
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unsupported phrase: NEXT SENTENCE is an archaic feature.
+                """)
+            .WithSourceLine(Current(), $"""
+                The CONTINUE statement can be used to accomplish the same functionality.
+                """)
+            .CloseError();
 
             AnchorPoint("END-SEARCH");
         }
@@ -2726,10 +2942,14 @@ public static partial class Analyzer
 
         if (!CurrentEquals(TokenType.Identifier))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                Unexpected {Current().Type.Display(false)}.
+                """)
+            .WithSourceLine(Current(), $"""
+                The ON ASCENDING / DESCENDING KEY phrase must only contain key names.
+                """)
+            .CloseError();
         }
 
         Identifier();
@@ -2753,10 +2973,14 @@ public static partial class Analyzer
 
             if (!CurrentEquals(TokenType.Identifier))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                The ON ASCENDING / DESCENDING KEY clause must only contain key data item names.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
+                    Unexpected {Current().Type.Display(false)}.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    The ON ASCENDING / DESCENDING KEY phrase must only contain key names.
+                    """)
+                .CloseError();
             }
 
             Identifier();

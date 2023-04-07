@@ -38,14 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="OtterkitMath/**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Remove="OtterkitMath/Decimal128.c"></Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Otterkit.Numerics" Version="1.7.25" />
+    <PackageReference Include="Otterkit.Numerics" Version="1.7.30" />
   </ItemGroup>
   
 </Project>

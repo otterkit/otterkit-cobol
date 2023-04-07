@@ -68,60 +68,6 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
         }
     }
 
-    public Numeric(DecimalHolder decimalHolder, bool isSigned)
-    {
-        this.Fields = Array.Empty<ICOBOLType>();
-        this.Offset = 0;
-
-        int DecimalPointIndex = decimalHolder.Bytes.IndexOf("."u8);
-
-        if (DecimalPointIndex >= 0)
-        {
-            int minusSignOffset = decimalHolder.Bytes[0] != 45 ? 0 : 1;
-
-            this.Length = isSigned ? DecimalPointIndex - minusSignOffset : DecimalPointIndex;
-            this.FractionalLength = isSigned ? decimalHolder.Bytes.Length - Length - (minusSignOffset + 1) : decimalHolder.Bytes.Length - Length - 1;
-        }
-        else
-        {
-            if (decimalHolder.Bytes[0] is 45 or 43)
-            {
-                this.Length = decimalHolder.Bytes.Length - 1;
-            }
-            else
-            {
-                this.Length = decimalHolder.Bytes.Length;
-            }
-
-            this.FractionalLength = 0;
-        }
-
-        this.IsSigned = isSigned;
-        this.IsInteger = FractionalLength == 0;
-
-        if (this.FractionalLength == 0)
-        {
-            int signedSpace = isSigned ? 1 : 0;
-            this.Memory = new byte[Length + signedSpace];
-        }
-
-        if (this.FractionalLength > 0)
-        {
-            int signedSpace = isSigned ? 2 : 1;
-            this.Memory = new byte[Length + FractionalLength + signedSpace];
-        }
-
-        Memory.Span.Fill(48);
-
-        if (isSigned)
-        {
-            FormatSigned(decimalHolder.Bytes);
-            return;
-        }
-
-        Format(decimalHolder.Bytes);
-    }
-
     public Numeric(ReadOnlySpan<byte> utf8String, bool isSigned)
     {
         this.Fields = Array.Empty<ICOBOLType>();
@@ -282,143 +228,132 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
 
     public static bool operator >(Numeric left, Numeric right)
     {
-        DecimalHolder Ldec = left;
-        DecimalHolder Rdec = right;
+        Decimal128 Ldec = left;
+        Decimal128 Rdec = right;
 
-        return (Ldec > Rdec);
+        return Ldec > Rdec;
     }
 
     public static bool operator <(Numeric left, Numeric right)
     {
-        DecimalHolder Ldec = left;
-        DecimalHolder Rdec = right;
+        Decimal128 Ldec = left;
+        Decimal128 Rdec = right;
 
-        return (Ldec < Rdec);
+        return Ldec < Rdec;
     }
 
     public static bool operator <=(Numeric left, Numeric right)
     {
-        DecimalHolder Ldec = left;
-        DecimalHolder Rdec = right;
+        Decimal128 Ldec = left;
+        Decimal128 Rdec = right;
 
-        return (Ldec <= Rdec);
+        return Ldec <= Rdec;
     }
 
     public static bool operator >=(Numeric left, Numeric right)
     {
-        DecimalHolder Ldec = left;
-        DecimalHolder Rdec = right;
+        Decimal128 Ldec = left;
+        Decimal128 Rdec = right;
 
-        return (Ldec >= Rdec);
+        return Ldec >= Rdec;
     }
 
     public static bool operator ==(Numeric left, Numeric right)
     {
-        DecimalHolder Ldec = left;
-        DecimalHolder Rdec = right;
+        Decimal128 Ldec = left;
+        Decimal128 Rdec = right;
 
-        return (Ldec == Rdec);
+        return Ldec == Rdec;
     }
 
     public static bool operator !=(Numeric left, Numeric right)
     {
-        DecimalHolder Ldec = left;
-        DecimalHolder Rdec = right;
+        Decimal128 Ldec = left;
+        Decimal128 Rdec = right;
 
-        return (Ldec != Rdec);
+        return Ldec != Rdec;
     }
 
     public static Numeric operator +(Numeric left, Numeric right)
     {
-        DecimalHolder Ldec = left;
-        DecimalHolder Rdec = right;
+        Decimal128 Ldec = left;
+        Decimal128 Rdec = right;
 
-        DecimalHolder Dres = Ldec + Rdec;
+        Decimal128 Dres = Ldec + Rdec;
 
-        Numeric result = new(Dres, true);
-
-        return result;
+        return Dres;
     }
 
     public static Numeric operator ++(Numeric number)
     {
-        DecimalHolder num = number;
+        Decimal128 num = number;
 
         num = num++;
 
-        Numeric result = new(num, true);
-
-        return result;
+        return num;
     }
 
     public static Numeric operator -(Numeric left, Numeric right)
     {
-        DecimalHolder Ldec = left;
-        DecimalHolder Rdec = right;
+        Decimal128 Ldec = left;
+        Decimal128 Rdec = right;
 
-        DecimalHolder Dres = Ldec - Rdec;
+        Decimal128 Dres = Ldec - Rdec;
 
-        Numeric result = new(Dres, true);
-
-        return result;
+        return Dres;
     }
 
     public static Numeric operator -(Numeric number)
     {
-        DecimalHolder num = number;
+        Decimal128 num = number;
 
         num = -num;
 
-        Numeric result = new(num, true);
-
-        return result;
+        return num;
     }
 
     public static Numeric operator --(Numeric number)
     {
-        DecimalHolder num = number;
+        Decimal128 num = number;
 
         num = num--;
 
-        Numeric result = new(num, true);
-
-        return result;
+        return num;
     }
 
     public static Numeric operator *(Numeric left, Numeric right)
     {
-        DecimalHolder Ldec = left;
-        DecimalHolder Rdec = right;
+        Decimal128 Ldec = left;
+        Decimal128 Rdec = right;
 
-        DecimalHolder Dres = Ldec * Rdec;
+        Decimal128 Dres = Ldec * Rdec;
 
-        Numeric result = new(Dres, true);
-
-        return result;
+        return Dres;
     }
 
     public static Numeric operator /(Numeric left, Numeric right)
     {
-        DecimalHolder Ldec = left;
-        DecimalHolder Rdec = right;
+        Decimal128 Ldec = left;
+        Decimal128 Rdec = right;
 
-        DecimalHolder Dres = Ldec / Rdec;
+        Decimal128 Dres = Ldec / Rdec;
 
-        Numeric result = new(Dres, true);
-
-        return result;
+        return Dres;
     }
 
     public static Numeric operator %(Numeric left, Numeric right)
     {
-        DecimalHolder Ldec = left;
-        DecimalHolder Rdec = right;
+        Decimal128 Ldec = left;
+        Decimal128 Rdec = right;
 
-        DecimalHolder Dres = Ldec % Rdec;
+        Decimal128 Dres = Ldec % Rdec;
 
-        Numeric result = new(Dres, true);
+        return Dres;
+    }
 
-        return result;
+    public static implicit operator ReadOnlySpan<object>(Numeric v)
+    {
+        throw new NotImplementedException();
     }
 
     public override bool Equals(object? obj)

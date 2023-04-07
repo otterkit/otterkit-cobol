@@ -1352,29 +1352,47 @@ public static partial class Analyzer
 
             if (CurrentEquals(TokenType.Symbol) && !CurrentEquals(".") && !IsArithmeticSymbol(Current()))
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                Invalid symbol in this arithmetic expression. Valid operators are: +, -, *, /, **, ( and )
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 315, """
+                    Invalid arithmetic expression symbol.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    This symbol is invalid.
+                    """)
+                .WithNote("""
+                    Valid operators are: +, -, *, /, **, ( and ).
+                    """)
+                .CloseError();
             }
         }
 
         if (!IsBalanced(expression))
         {
-            ErrorHandler.Analyzer.Report(FileName, expression[0], ErrorType.General, """
-            This expression is not balanced, one or more parenthesis to not have their matching opening or closing pair, it is an invalid expression
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, expression[0]);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 320, """
+                Unbalanced arithmetic expression.
+                """)
+            .WithSourceLine(expression[0], $"""
+                one or more parenthesis don't have their matching pair.
+                """)
+            .CloseError();
         }
 
         var shuntingYard = ShuntingYard(expression, ArithmeticPrecedence);
 
         if (!EvaluatePostfix(shuntingYard, ArithmeticPrecedence, out Token error))
         {
-            ErrorHandler.Analyzer.Report(FileName, error, ErrorType.General, """
-            This expression cannot be correctly evaluated. Please make sure that all operators have their matching operands.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, error);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 325, """
+                Invalid arithmetic expression.
+                """)
+            .WithSourceLine(expression[0], $"""
+                This expression cannot be correctly evaluated.
+                """)
+            .WithNote("""
+                Make sure that all operators have their matching operands.
+                """)
+            .CloseError();
         }
     }
 
@@ -1482,20 +1500,31 @@ public static partial class Analyzer
 
         if (!IsBalanced(expression))
         {
-            ErrorHandler.Analyzer.Report(FileName, expression[0], ErrorType.General, """
-            This expression is not balanced, one or more parenthesis to not have their matching opening or closing pair, it is an invalid expression
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, expression[0]);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 320, """
+                Unbalanced conditional expression.
+                """)
+            .WithSourceLine(expression[0], $"""
+                one or more parenthesis don't have their matching pair.
+                """)
+            .CloseError();
         }
 
         var shuntingYard = ShuntingYard(expression, ConditionalPrecedence);
 
         if (!EvaluatePostfix(shuntingYard, ConditionalPrecedence, out Token error))
         {
-            ErrorHandler.Analyzer.Report(FileName, error, ErrorType.General, """
-            This expression cannot be correctly evaluated. Please make sure that all operators have their matching operands.
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, error);
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 325, """
+                Invalid arithmetic expression.
+                """)
+            .WithSourceLine(expression[0], $"""
+                This expression cannot be correctly evaluated.
+                """)
+            .WithNote("""
+                Make sure that all operators have their matching operands.
+                """)
+            .CloseError();
         }
     }
 
@@ -1552,10 +1581,17 @@ public static partial class Analyzer
         }
         else
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-            Expected a relational operator. With the exceptions being the "IS NOT EQUAL TO" and "IS NOT =" operators 
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a relational operator.
+                """)
+            .WithNote("""
+                With the exceptions being the "IS NOT EQUAL TO" and "IS NOT =" operators.
+                """)
+            .CloseError();
 
             Continue();
         }
@@ -1567,33 +1603,46 @@ public static partial class Analyzer
         {
             if (encodingExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                The encoding phrase can only be specified once in this clause. 
-                The same applies to the endianness phrase.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Encoding phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    The encoding phrase can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to the endianness phrase.
+                    """)
+                .CloseError();
             }
             encodingExists = true;
+
             Expected(Current().Value);
 
-            WriteBeforeAfter(encodingExists, endiannessExists);
-
+            EncodingEndianness(encodingExists, endiannessExists);
         }
 
         if (CurrentEquals("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT"))
         {
             if (endiannessExists)
             {
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-                The endianness phrase can only be specified once in this clause. 
-                The same applies to the encoding phrase.
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    Endianness phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    The endianness phrase can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to the encoding phrase.
+                    """)
+                .CloseError();
             }
             endiannessExists = true;
+
             Expected(Current().Value);
 
-            WriteBeforeAfter(encodingExists, endiannessExists);
+            EncodingEndianness(encodingExists, endiannessExists);
         }
     }
 
@@ -1734,10 +1783,14 @@ public static partial class Analyzer
     {
         if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
         {
-            ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, """
-            Expected an identifier or a literal
-            """);
-            ErrorHandler.Analyzer.PrettyError(FileName, Current());
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected an identifier or a literal.
+                """)
+            .CloseError();
         }
 
         if (numeric && CurrentEquals(TokenType.Numeric))

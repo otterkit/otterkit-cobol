@@ -567,20 +567,14 @@ public static partial class Analyzer
 
             if (!hasAllowedUsage)
             {
-                StringBuilder errorBuilder = new();
-                string separator = string.Empty;
-
-                foreach (var usage in allowedUsage)
-                {
-                    errorBuilder.Append(separator);
-                    errorBuilder.Append(usage.Display());
-                    separator = ",";
-                }
-
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-                Expected a data item defined with the following: {errorBuilder} USAGE clauses or PICTURE types
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 305, """
+                    Unexpected data item type.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    The type of this item is not allowed here.
+                    """)
+                .CloseError();
             }
         }
 
@@ -658,20 +652,14 @@ public static partial class Analyzer
 
             if (!hasAllowedUsage)
             {
-                StringBuilder errorBuilder = new();
-                string separator = string.Empty;
-
-                foreach (var usage in allowedUsage)
-                {
-                    errorBuilder.Append(separator);
-                    errorBuilder.Append(usage.Display());
-                    separator = ",";
-                }
-
-                ErrorHandler.Analyzer.Report(FileName, Current(), ErrorType.General, $"""
-                Expected a data item defined with the following: {errorBuilder} USAGE clauses or PICTURE types
-                """);
-                ErrorHandler.Analyzer.PrettyError(FileName, Current());
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 305, """
+                    Unexpected data item type.
+                    """)
+                .WithSourceLine(Current(), $"""
+                    The type of this item is not allowed here.
+                    """)
+                .CloseError();
             }
         }
 

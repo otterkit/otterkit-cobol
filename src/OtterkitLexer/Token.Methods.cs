@@ -218,7 +218,7 @@ public sealed partial record Token
         // if none of the above, it's an identifier
         if (!TryValidateIdentifier(token))
         {
-            ErrorHandler.HasError = true;
+            Error.HasOccurred = true;
         }
 
         return TokenType.Identifier;
@@ -292,7 +292,7 @@ public sealed partial record Token
         // If a lexing error has occured, terminate the compilation process.
         // We do not want the compiler to continue when the source code
         // potentially contains invalid Unicode.
-        if (ErrorHandler.HasError) ErrorHandler.Terminate("lexing");
+        if (Error.HasOccurred) ErrorHandler.Terminate("lexing");
 
         return tokens;
     }

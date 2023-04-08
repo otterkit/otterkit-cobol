@@ -116,7 +116,7 @@ public static class Otterkit
 
             if (CompilerOptions.BuildMode is BuildType.ParseOnly)
             {
-                if (!ErrorHandler.HasError) ErrorHandler.SuccessfulParsing();
+                if (!Error.HasOccurred) ErrorHandler.SuccessfulParsing();
             }
 
             if (CompilerOptions.BuildMode is BuildType.PrintTokens)
@@ -138,7 +138,7 @@ public static class Otterkit
                     Console.WriteLine(token);
                 }
 
-                if (!ErrorHandler.HasError) ErrorHandler.SuccessfulParsing();
+                if (!Error.HasOccurred) ErrorHandler.SuccessfulParsing();
             }
 
             if (CompilerOptions.BuildMode is BuildType.BuildOnly)

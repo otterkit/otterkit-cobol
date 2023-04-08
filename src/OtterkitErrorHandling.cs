@@ -2,18 +2,6 @@ namespace Otterkit;
 
 public static class ErrorHandler
 {
-    internal static bool HasError = false;
-
-    public static class Compiler
-    {
-        public static void Report(string error)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(error);
-            Console.ResetColor();
-        }
-    }
-
     public static void SuccessfulParsing()
     {
         var filesCount = CompilerContext.FileNames.Count;

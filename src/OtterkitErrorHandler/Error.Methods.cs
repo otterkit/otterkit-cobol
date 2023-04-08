@@ -13,7 +13,7 @@ public readonly ref partial struct Error
 
         ColoredWrite(ResetColor(), $": {errorMessage}\n");
 
-        ErrorHandler.HasError = true;
+        Error.HasOccurred = true;
         return new(errorType, consoleColor);
     }
 
@@ -86,6 +86,26 @@ public readonly ref partial struct Error
 
         //   │  Note: {noteMessage} 
         ShowNote(Green, noteMessage);
+
+        //   │
+        Separator();
+
+        return this;
+    }
+
+    public Error WithStartingError(string errorNote)
+    {
+        // Return early, don't display any further messages:
+        if (SuppressedError == ErrorType) return this;
+
+        //   ╭─/> 
+        StartingSeparator('╭', '\n');
+
+        //   │
+        Separator();
+
+        //   │  Note: {noteMessage} 
+        ShowNote(ConsoleColor.Red, errorNote);
 
         //   │
         Separator();

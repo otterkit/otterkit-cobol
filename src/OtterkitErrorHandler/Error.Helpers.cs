@@ -23,10 +23,15 @@ public readonly ref partial struct Error
         ColoredWrite(DarkGray, "     │\n");
     }
 
-    private static void ShowFileInformation(char joiningChar, Token token)
+    private static void StartingSeparator(char joiningChar, char extraChar)
     {
         // ╭
-        ColoredWrite(DarkGray     , $"     {joiningChar}─/> [");
+        ColoredWrite(DarkGray     , $"     {joiningChar}─/> {extraChar}");
+    }
+
+    private static void ShowFileInformation(char joiningChar, Token token)
+    {
+        StartingSeparator(joiningChar, '[');
         ColoredWrite(ResetColor() , $"{token.FetchFile}:{token.Line}:{token.Column}");
         ColoredWrite(DarkGray     , "]\n");
     }

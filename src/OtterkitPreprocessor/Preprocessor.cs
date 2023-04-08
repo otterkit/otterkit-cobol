@@ -12,8 +12,15 @@ public static partial class Preprocessor
     {
         if (!File.Exists(entryPoint))
         {
-            ErrorHandler.Compiler.Report("Otterkit compiler error: File Not Found");
-            ErrorHandler.Compiler.Report($"The compiler was not able not find the file: {entryPoint}");
+            Error
+            .Build(ErrorType.Compilation, ConsoleColor.Red, 950, """
+                Entry point file not found.
+                """)
+            .WithStartingError($"""
+                Unable to find the entry point file specified: {entryPoint}
+                """)
+            .CloseError();
+
             Environment.Exit(1);
         }
 

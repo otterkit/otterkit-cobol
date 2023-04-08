@@ -292,7 +292,7 @@ public sealed partial record Token
         // If a lexing error has occured, terminate the compilation process.
         // We do not want the compiler to continue when the source code
         // potentially contains invalid Unicode.
-        if (Error.HasOccurred) ErrorHandler.Terminate("lexing");
+        if (Error.HasOccurred) Error.StopCompilation("lexing");
 
         return tokens;
     }

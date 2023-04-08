@@ -2,6 +2,24 @@ namespace Otterkit;
 
 public readonly ref partial struct Error
 {
+    public static void SuccessfulParse()
+    {
+        var filesCount = CompilerContext.FileNames.Count;
+        var isPlural = filesCount > 1 ? "s" : "";
+
+        Console.ForegroundColor = ConsoleColor.Blue;
+        Console.WriteLine($"Analyzed {filesCount} file{isPlural}, no errors found! \n");
+        Console.ResetColor();
+    }
+
+    public static void StopCompilation(string errorType)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"Compilation process cancelled due to a {errorType} error");
+        Console.ResetColor();
+        Environment.Exit(1);
+    }
+
     public static Error Build(ErrorType errorType, ConsoleColor consoleColor, int errorCode, string errorMessage)
     {
         // Return early, don't display the initial message:

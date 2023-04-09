@@ -685,11 +685,14 @@ public static partial class Analyzer
         }
     }
 
+    // The following methods are responsible for parsing the data item clauses, 
+    // each method is responsible for parsing only a single clause (Never parse two clauses with one method).
+    // The IsClauseErrorCheck() method handles an 'IS' keyword potentially missing its accompanying clause.
     private static void IsClauseErrorCheck()
     {
         Error
         .Build(ErrorType.Analyzer, ConsoleColor.Red, 35,"""
-            Missing clause or possible clause mismatch.
+            Missing clause or potential clause mismatch.
             """)
         .WithSourceLine(Current(), """
             The 'IS' clause must only be followed by EXTERNAL, GLOBAL or TYPEDEF.

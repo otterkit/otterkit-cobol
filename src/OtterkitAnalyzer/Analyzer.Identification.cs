@@ -237,12 +237,12 @@ public static partial class Analyzer
 
             SymbolTable.TryAddName(CurrentId.Peek().Value, signature);
 
-            CurrentSourceUnit = signature;
+            CurrentCallable = signature;
         }
 
         if (IsResolutionPass)
         {
-            CurrentSourceUnit = SymbolTable.GetSignature<CallableSignature>(CurrentId.Peek().Value);
+            CurrentCallable = SymbolTable.GetSignature<CallableSignature>(CurrentId.Peek().Value);
         }
 
         if (!Expected(".", false))
@@ -293,12 +293,12 @@ public static partial class Analyzer
 
             SymbolTable.TryAddName(CurrentId.Peek().Value, signature);
 
-            CurrentSourceUnit = signature;
+            CurrentCallable = signature;
         }
 
         if (IsResolutionPass)
         {
-            CurrentSourceUnit = SymbolTable.GetSignature<CallableSignature>(CurrentId.Peek().Value);
+            CurrentCallable = SymbolTable.GetSignature<CallableSignature>(CurrentId.Peek().Value);
         }
 
         if (!Expected(".", false))
@@ -593,7 +593,7 @@ public static partial class Analyzer
 
             parentInterface.Methods.Add(methodPrototype);
 
-            CurrentSourceUnit = methodPrototype;
+            CurrentCallable = methodPrototype;
         }
 
         var parentClass = SymbolTable.GetSignature<ClassSignature>(currentId.Value);
@@ -610,7 +610,7 @@ public static partial class Analyzer
             parentClass.FactoryMethods.Add(method);
         }
         
-        CurrentSourceUnit = method;
+        CurrentCallable = method;
     }
 
     public static void Factory()

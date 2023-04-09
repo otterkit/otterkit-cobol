@@ -173,7 +173,7 @@ public static partial class Analyzer
             return;
         }
 
-        var sourceUnit = CurrentSourceUnit;
+        var sourceUnit = CurrentCallable;
 
         var (exists, isUnique) = sourceUnit.Definitions.LocalExistsAndIsUnique(Current().Value);
 

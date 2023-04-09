@@ -11,7 +11,7 @@ public static partial class Analyzer
     private static CurrentScope CurrentSection;
     private static readonly Stack<Token> CurrentId = new();
     private static readonly Stack<SourceUnit> SourceType = new();
-    private static CallableSignature CurrentSourceUnit
+    private static CallableSignature CurrentCallable
     {
         get => CompilerContext.CurrentCallable[0];
 

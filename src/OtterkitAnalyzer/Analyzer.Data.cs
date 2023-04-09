@@ -305,7 +305,7 @@ public static partial class Analyzer
         if (IsResolutionPass) return;
 
         // Because we don't want to run this again during it
-        var sourceUnit = CurrentSourceUnit;
+        var sourceUnit = CurrentCallable;
 
         if (sourceUnit.Definitions.LocalExists(dataName) && levelNumber is 1 or 77)
         {
@@ -420,7 +420,7 @@ public static partial class Analyzer
         if (IsResolutionPass) return;
 
         // Because we don't want to run this again during it
-        var sourceUnit = CurrentSourceUnit;
+        var sourceUnit = CurrentCallable;
 
         if (sourceUnit.Definitions.LocalExists(dataName) && levelNumber is 1 or 77)
         {
@@ -663,7 +663,7 @@ public static partial class Analyzer
             if (IsResolutionPass) continue;
 
             // Because we don't want to run this again during it
-            var sourceUnit = CurrentSourceUnit;
+            var sourceUnit = CurrentCallable;
 
             if (sourceUnit.Definitions.LocalExists(dataName))
             {

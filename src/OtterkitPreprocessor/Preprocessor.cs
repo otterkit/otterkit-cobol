@@ -5,6 +5,7 @@ namespace Otterkit;
 
 public static partial class Preprocessor
 {
+    internal static bool HasDetectedSourceFormat;
     internal static DirectiveType LastDirective = DirectiveType.None;
     internal static string Workspace => Directory.GetCurrentDirectory(); 
 
@@ -60,7 +61,46 @@ public static partial class Preprocessor
 
         Encoding.UTF8.GetChars(bytes, sourceChars);
 
-        if (CompilerOptions.SourceFormat == SourceFormat.Fixed)
+        if (!HasDetectedSourceFormat && CompilerOptions.SourceFormat == SourceFormat.Auto)
+        {
+            if (sourceChars.Length >= 9 && sourceChars[7] is '>' && sourceChars[8] is '>')
+            {
+                CompilerOptions.SourceFormat = SourceFormat.Fixed;
+                HasDetectedSourceFormat = true;
+            }
+
+            if (sourceChars.Length >= 7 && sourceChars[6] is '*' or '-' or ' ')
+            {
+                CompilerOptions.SourceFormat = SourceFormat.Fixed;
+                HasDetectedSourceFormat = true;
+            }
+
+            if (sourceChars.Length >= 7 && sourceChars[6] is not ('*' or '-' or ' '))
+            {
+                CompilerOptions.SourceFormat = SourceFormat.Free;
+                HasDetectedSourceFormat = true;
+            }
+
+            if (sourceChars.TrimStart().StartsWith("*>"))
+            {
+                CompilerOptions.SourceFormat = SourceFormat.Free;
+                HasDetectedSourceFormat = true;
+            }
+
+            if (sourceChars.StartsWith(">>"))
+            {
+                CompilerOptions.SourceFormat = SourceFormat.Free;
+                HasDetectedSourceFormat = true;
+            }
+
+            if (sourceChars.Trim().Length == 0)
+            {
+                CompilerOptions.SourceFormat = SourceFormat.Auto;
+                HasDetectedSourceFormat = false;
+            }
+        }
+
+        if (CompilerOptions.SourceFormat == SourceFormat.Fixed || !HasDetectedSourceFormat)
         {
             if (sourceChars.Length >= CompilerOptions.ColumnLength)
             {

@@ -314,6 +314,24 @@ managedDecQuad nativeDecQuadMax(managedDecQuad left, managedDecQuad right)
 }
 
 DLLEXPORT
+managedDecQuad nativeDecQuadMaxMag(managedDecQuad left, managedDecQuad right)
+{
+    decQuad nativeLeft;
+    decQuad nativeRight;
+
+    decContext context;
+
+    decContextDefault(&context, DEC_INIT_DECQUAD);
+
+    nativeLeft = decQuadFromManaged(left);
+    nativeRight = decQuadFromManaged(right);
+
+    decQuadMaxMag(&nativeLeft, &nativeLeft, &nativeRight, &context);
+
+    return decQuadToManaged(nativeLeft);
+}
+
+DLLEXPORT
 managedDecQuad nativeDecQuadMin(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
@@ -327,6 +345,24 @@ managedDecQuad nativeDecQuadMin(managedDecQuad left, managedDecQuad right)
     nativeRight = decQuadFromManaged(right);
 
     decQuadMin(&nativeLeft, &nativeLeft, &nativeRight, &context);
+
+    return decQuadToManaged(nativeLeft);
+}
+
+DLLEXPORT
+managedDecQuad nativeDecQuadMinMag(managedDecQuad left, managedDecQuad right)
+{
+    decQuad nativeLeft;
+    decQuad nativeRight;
+
+    decContext context;
+
+    decContextDefault(&context, DEC_INIT_DECQUAD);
+
+    nativeLeft = decQuadFromManaged(left);
+    nativeRight = decQuadFromManaged(right);
+
+    decQuadMinMag(&nativeLeft, &nativeLeft, &nativeRight, &context);
 
     return decQuadToManaged(nativeLeft);
 }

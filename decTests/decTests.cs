@@ -1,6 +1,8 @@
 ﻿using Otterkit.Numerics;
 
-var decquad = Decimal128.One + Decimal128.One;
+var MaxValue = Decimal128.MaxValue;
 
-Console.WriteLine(Decimal128.Cos(Decimal128.Pi / 4));
-Console.WriteLine(Math.Cos(Math.PI / 4));
+
+Console.WriteLine(Decimal128.NaN);
+Console.WriteLine(Decimal128.NegativeInfinity);
+

@@ -53,8 +53,14 @@ internal static partial class DecQuadBindings
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMax")]
     internal static partial Decimal128 Max(Decimal128 left, Decimal128 right);
 
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMaxMag")]
+    internal static partial Decimal128 MaxMag(Decimal128 left, Decimal128 right);
+
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMin")]
     internal static partial Decimal128 Min(Decimal128 left, Decimal128 right);
+
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMinMag")]
+    internal static partial Decimal128 MinMag(Decimal128 left, Decimal128 right);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadPow")]
     internal static partial Decimal128 Pow(Decimal128 left, Decimal128 right);
@@ -69,6 +75,9 @@ internal static partial class DecQuadBindings
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsCanonical")]
     internal static partial uint IsCanonical(Decimal128 value);
 
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsInfinite")]
+    internal static partial uint IsInfinite(Decimal128 value);
+
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsFinite")]
     internal static partial uint IsFinite(Decimal128 value);
 
@@ -80,6 +89,9 @@ internal static partial class DecQuadBindings
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsNegative")]
     internal static partial uint IsNegative(Decimal128 value);
+
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsSubnormal")]
+    internal static partial uint IsSubnormal(Decimal128 value);
 
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsNormal")]
     internal static partial uint IsNormal(Decimal128 value);

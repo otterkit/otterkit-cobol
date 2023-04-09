@@ -7,16 +7,6 @@ public readonly partial struct Decimal128
         return DecQuadBindings.Pow(left, right);
     }
 
-    public static Decimal128 Max(Decimal128 left, Decimal128 right)
-    {
-        return DecQuadBindings.Max(left, right);
-    }
-
-    public static Decimal128 Min(Decimal128 left, Decimal128 right)
-    {
-        return DecQuadBindings.Min(left, right);
-    }
-
     public static Decimal128 Sqrt(Decimal128 value)
     {
         return DecQuadBindings.Sqrt(value);

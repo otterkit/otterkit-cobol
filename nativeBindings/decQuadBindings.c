@@ -482,6 +482,19 @@ uint32_t nativeDecQuadIsFinite(managedDecQuad value)
 }
 
 DLLEXPORT
+uint32_t nativeDecQuadIsInfinite(managedDecQuad value)
+{
+    decQuad nativeValue;
+    decContext context;
+
+    decContextDefault(&context, DEC_INIT_DECQUAD);
+
+    nativeValue = decQuadFromManaged(value);
+
+    return decQuadIsInfinite(&nativeValue);
+}
+
+DLLEXPORT
 uint32_t nativeDecQuadIsInteger(managedDecQuad value)
 {
     decQuad nativeValue;
@@ -531,6 +544,19 @@ uint32_t nativeDecQuadIsNormal(managedDecQuad value)
     nativeValue = decQuadFromManaged(value);
 
     return decQuadIsNormal(&nativeValue);
+}
+
+DLLEXPORT
+uint32_t nativeDecQuadIsSubnormal(managedDecQuad value)
+{
+    decQuad nativeValue;
+    decContext context;
+
+    decContextDefault(&context, DEC_INIT_DECQUAD);
+
+    nativeValue = decQuadFromManaged(value);
+
+    return decQuadIsSubnormal(&nativeValue);
 }
 
 DLLEXPORT

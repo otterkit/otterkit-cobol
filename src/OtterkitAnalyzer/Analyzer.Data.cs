@@ -92,27 +92,27 @@ public static partial class Analyzer
     // The Entries() method is responsible for identifying which kind of data item to 
     // parse based on it's level number.
 
-    // The RecordEntry(), BaseEntry(), and ConstantEntry() are then responsible for correctly
-    // parsing each data item, or in the case of the RecordEntry() a group item or 01-level elementary item.
+    // The GroupEntry(), DataEntry(), and ConstantEntry() are then responsible for correctly
+    // parsing each data item, or in the case of the GroupEntry() a group item or 01-level elementary item.
     private static void Entries()
     {
         if (CurrentEquals("77"))
-            BaseEntry();
+            DataEntry();
 
         if ((CurrentEquals("01") || CurrentEquals("1")) && !LookaheadEquals(2, "CONSTANT"))
-            RecordEntry();
+            GroupEntry();
 
         if (LookaheadEquals(2, "CONSTANT"))
             ConstantEntry();
     }
 
-    private static void RecordEntry()
+    private static void GroupEntry()
     {
-        BaseEntry();
+        DataEntry();
         _ = int.TryParse(Current().Value, out int outInt);
         while (outInt > 1 && outInt < 50)
         {
-            BaseEntry();
+            DataEntry();
             _ = int.TryParse(Current().Value, out outInt);
         }
 
@@ -120,7 +120,7 @@ public static partial class Analyzer
         GroupStack.Clear();
     }
 
-    private static void BaseEntry()
+    private static void DataEntry()
     {
         int levelNumber = int.Parse(Current().Value);
         Number();

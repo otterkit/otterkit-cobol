@@ -159,205 +159,103 @@ public static partial class Analyzer
         {
             if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL", "TYPEDEF"))
             {
-                Error
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 35,"""
-                    Missing clause or possible clause mismatch.
-                    """)
-                .WithSourceLine(Current(), """
-                    The 'IS' clause must only be followed by EXTERNAL, GLOBAL or TYPEDEF.
-                    """)
-                .CloseError();
+                IsClauseErrorCheck();
             }
 
             if ((CurrentEquals("IS") && LookaheadEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
             {
-                Optional("IS");
-                Expected("EXTERNAL");
-                if (CurrentEquals("AS"))
-                {
-                    Expected("AS");
-                    dataLocal.IsExternal = true;
-                    dataLocal.ExternalName = Current().Value;
-
-                    String();
-                }
-
-                if (!CurrentEquals("AS"))
-                {
-                    dataLocal.IsExternal = true;
-                    dataLocal.ExternalName = Current().Value;
-                }
+                ExternalClause(dataLocal);
             }
 
             if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
             {
-                Optional("IS");
-                Expected("GLOBAL");
-                dataLocal.IsGlobal = true;
+                GlobalClause(dataLocal);
             }
 
             if ((CurrentEquals("IS") && LookaheadEquals(1, "TYPEDEF")) || CurrentEquals("TYPEDEF"))
             {
-                Optional("IS");
-                Expected("TYPEDEF");
-                dataLocal.IsTypedef = true;
-
-                if (CurrentEquals("STRONG")) Expected("STRONG");
+                TypedefClause(dataLocal);
             }
 
             if (CurrentEquals("REDEFINES"))
             {
-                Expected("REDEFINES");
-                Identifier();
-                dataLocal.IsRedefines = true;
+                RedefinesClause(dataLocal);
             }
 
-            if (CurrentEquals("ALIGNED")) Expected("ALIGNED");
+            if (CurrentEquals("ALIGNED"))
+            {
+                AlignedClause(dataLocal);
+            }
 
             if (CurrentEquals("ANY") && LookaheadEquals(1, "LENGTH"))
             {
-                Expected("ANY");
-                Expected("LENGTH");
-                dataLocal.IsAnyLength = true;
+                AnyLengthClause(dataLocal);
             }
 
-            if (CurrentEquals("BASED")) Expected("BASED");
+            if (CurrentEquals("BASED"))
+            {
+                BasedClause(dataLocal);
+            }
 
             if (CurrentEquals("BLANK"))
             {
-                Expected("BLANK");
-                Optional("WHEN");
-                Expected("ZERO");
-                dataLocal.IsBlank = true;
+                BlankWhenClause(dataLocal);
             }
 
             if (CurrentEquals("CONSTANT") && LookaheadEquals(1, "RECORD"))
             {
-                Expected("CONSTANT");
-                Expected("RECORD");
-                dataLocal.IsConstantRecord = true;
+                ConstantRecordClause(dataLocal);
             }
 
             if (CurrentEquals("DYNAMIC"))
             {
-                Expected("DYNAMIC");
-                Optional("LENGTH");
-                dataLocal.IsDynamicLength = true;
-
-                if (CurrentEquals(TokenType.Identifier)) Identifier();
-
-                if (CurrentEquals("LIMIT"))
-                {
-                    Expected("LIMIT");
-                    Optional("IS");
-                    Number();
-                }
+                DynamicClause(dataLocal);
             }
 
             if (CurrentEquals("GROUP-USAGE"))
             {
-                Expected("GROUP-USAGE");
-                Optional("IS");
-                Choice("BIT", "NATIONAL");
+                GroupUsageClause(dataLocal);
             }
 
             if (CurrentEquals("JUSTIFIED", "JUST"))
             {
-                Choice("JUSTIFIED", "JUST");
-                Optional("RIGHT");
+                JustifiedClause(dataLocal);
             }
 
             if (CurrentEquals("SYNCHRONIZED", "SYNC"))
             {
-                Choice("SYNCHRONIZED", "SYNC");
-                if (CurrentEquals("LEFT")) Expected("LEFT");
-
-                else if (CurrentEquals("RIGHT")) Expected("RIGHT");
+                SynchronizedClause(dataLocal);
             }
 
             if (CurrentEquals("PROPERTY"))
             {
-                Expected("PROPERTY");
-                dataLocal.IsProperty = true;
-                if (CurrentEquals("WITH", "NO"))
-                {
-                    Optional("WITH");
-                    Expected("NO");
-                    Choice("GET", "SET");
-                }
-
-                if (CurrentEquals("IS", "FINAL"))
-                {
-                    Optional("IS");
-                    Expected("FINAL");
-                }
+                PropertyClause(dataLocal);
             }
 
             if (CurrentEquals("SAME"))
             {
-                Expected("SAME");
-                Expected("AS");
-                Identifier();
+                SameAsClause(dataLocal);
             }
 
             if (CurrentEquals("TYPE"))
             {
-                Expected("TYPE");
-                Identifier();
+                TypeClause(dataLocal);
             }
 
             if (CurrentEquals("PIC", "PICTURE"))
             {
-                Choice("PIC", "PICTURE");
-                Optional("IS");
-
-                var picture = Current();
-            
-                var isValidPicture = PictureString(picture.Value, out var size);
-
-                dataLocal.PictureString = picture.Value;
-
-                dataLocal.PictureLength = size;
-
-                dataLocal.HasPicture = true;
-
-                Continue();
+                PictureClause(dataLocal);
             }
 
             if (CurrentEquals("VALUE"))
             {
-                Expected("VALUE");
-
-                if (!CurrentEquals(TokenType.String, TokenType.Numeric))
-                {
-                    Error
-                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
-                        Unexpected token.
-                        """)
-                    .WithSourceLine(Current(), """
-                        Expected a string or numeric literal.
-                        """)
-                    .CloseError();
-                }
-
-                if (CurrentEquals(TokenType.String))
-                {
-                    dataLocal.DefaultValue = Current().Value;
-                    String();
-                }
-
-                if (CurrentEquals(TokenType.Numeric))
-                {
-                    dataLocal.DefaultValue = Current().Value;
-                    Number();
-                }
+                ValueClause(dataLocal);
             }
 
             if (CurrentEquals("USAGE"))
             {
                 UsageClause(dataLocal);
             }
-
         }
 
         if (CurrentEquals(".") && LookaheadEquals(1, TokenType.Numeric))
@@ -382,7 +280,7 @@ public static partial class Analyzer
             }
         }
 
-        CheckClauses(dataLocal, itemToken);
+        CheckClauseCompatibility(dataLocal, itemToken);
 
         if (dataLocal.IsGroup) GroupStack.Push(dataLocal);
 
@@ -588,7 +486,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void CheckClauses(DataSignature localReference, Token itemToken)
+    private static void CheckClauseCompatibility(DataSignature localReference, Token itemToken)
     {
         var dataItem = localReference;
 
@@ -784,6 +682,208 @@ public static partial class Analyzer
             }
 
             sourceUnit.Definitions.AddLocal(dataName, dataLocal, IsResolutionPass);
+        }
+    }
+
+    private static void IsClauseErrorCheck()
+    {
+        Error
+        .Build(ErrorType.Analyzer, ConsoleColor.Red, 35,"""
+            Missing clause or possible clause mismatch.
+            """)
+        .WithSourceLine(Current(), """
+            The 'IS' clause must only be followed by EXTERNAL, GLOBAL or TYPEDEF.
+            """)
+        .CloseError();
+    }
+
+    private static void ExternalClause(DataSignature dataLocal)
+    {
+        Optional("IS");
+        Expected("EXTERNAL");
+        if (CurrentEquals("AS"))
+        {
+            Expected("AS");
+            dataLocal.IsExternal = true;
+            dataLocal.ExternalName = Current().Value;
+
+            String();
+        }
+
+        if (!CurrentEquals("AS"))
+        {
+            dataLocal.IsExternal = true;
+            dataLocal.ExternalName = Current().Value;
+        }
+    }
+
+    private static void GlobalClause(DataSignature dataLocal)
+    {
+        Optional("IS");
+        Expected("GLOBAL");
+        dataLocal.IsGlobal = true;
+    }
+
+    private static void TypedefClause(DataSignature dataLocal)
+    {
+        Optional("IS");
+        Expected("TYPEDEF");
+        dataLocal.IsTypedef = true;
+
+        if (CurrentEquals("STRONG")) Expected("STRONG");
+    }
+
+    private static void RedefinesClause(DataSignature dataLocal)
+    {
+        Expected("REDEFINES");
+        Identifier();
+        dataLocal.IsRedefines = true;
+    }
+
+    private static void AlignedClause(DataSignature dataLocal) 
+    {
+        Expected("ALIGNED");
+    }
+
+    private static void AnyLengthClause(DataSignature dataLocal)
+    {
+        Expected("ANY");
+        Expected("LENGTH");
+        dataLocal.IsAnyLength = true;
+    }
+
+    private static void BasedClause(DataSignature dataLocal)
+    {
+        Expected("BASED");
+    }
+
+    private static void BlankWhenClause(DataSignature dataLocal)
+    {
+        Expected("BLANK");
+        Optional("WHEN");
+        Expected("ZERO");
+        dataLocal.IsBlank = true;
+    }
+
+    private static void ConstantRecordClause(DataSignature dataLocal)
+    {
+        Expected("CONSTANT");
+        Expected("RECORD");
+        dataLocal.IsConstantRecord = true;
+    }
+
+    private static void DynamicClause(DataSignature dataLocal)
+    {
+        Expected("DYNAMIC");
+        Optional("LENGTH");
+        dataLocal.IsDynamicLength = true;
+
+        if (CurrentEquals(TokenType.Identifier)) Identifier();
+
+        if (CurrentEquals("LIMIT"))
+        {
+            Expected("LIMIT");
+            Optional("IS");
+            Number();
+        }
+    }
+
+    private static void GroupUsageClause(DataSignature dataLocal)
+    {
+        Expected("GROUP-USAGE");
+        Optional("IS");
+        Choice("BIT", "NATIONAL");
+    }
+
+    private static void JustifiedClause(DataSignature dataLocal)
+    {
+        Choice("JUSTIFIED", "JUST");
+        Optional("RIGHT");
+    }
+
+    private static void SynchronizedClause(DataSignature dataLocal)
+    {
+        Choice("SYNCHRONIZED", "SYNC");
+        if (CurrentEquals("LEFT")) Expected("LEFT");
+
+        else if (CurrentEquals("RIGHT")) Expected("RIGHT");
+    }
+
+    private static void PropertyClause(DataSignature dataLocal)
+    {
+        Expected("PROPERTY");
+        dataLocal.IsProperty = true;
+        if (CurrentEquals("WITH", "NO"))
+        {
+            Optional("WITH");
+            Expected("NO");
+            Choice("GET", "SET");
+        }
+
+        if (CurrentEquals("IS", "FINAL"))
+        {
+            Optional("IS");
+            Expected("FINAL");
+        }
+    }
+
+    private static void SameAsClause(DataSignature dataLocal)
+    {
+        Expected("SAME");
+        Expected("AS");
+        Identifier();
+    }
+
+    private static void TypeClause(DataSignature dataLocal)
+    {
+        Expected("TYPE");
+        Identifier();
+    }
+
+    private static void PictureClause(DataSignature dataLocal)
+    {
+        Choice("PIC", "PICTURE");
+        Optional("IS");
+
+        var picture = Current();
+    
+        var isValidPicture = PictureString(picture.Value, out var size);
+
+        dataLocal.PictureString = picture.Value;
+
+        dataLocal.PictureLength = size;
+
+        dataLocal.HasPicture = true;
+
+        Continue();
+    }
+
+    private static void ValueClause(DataSignature dataLocal)
+    {
+        Expected("VALUE");
+
+        if (!CurrentEquals(TokenType.String, TokenType.Numeric))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
+                Unexpected token.
+                """)
+            .WithSourceLine(Current(), """
+                Expected a string or numeric literal.
+                """)
+            .CloseError();
+        }
+
+        if (CurrentEquals(TokenType.String))
+        {
+            dataLocal.DefaultValue = Current().Value;
+            String();
+        }
+
+        if (CurrentEquals(TokenType.Numeric))
+        {
+            dataLocal.DefaultValue = Current().Value;
+            Number();
         }
     }
 

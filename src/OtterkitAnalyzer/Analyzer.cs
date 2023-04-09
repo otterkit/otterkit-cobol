@@ -10,23 +10,23 @@ public static partial class Analyzer
     private static bool IsResolutionPass;
 
     /// <summary>
-    /// Used by the analyzer to keep track of the current scope 
+    /// Used for keeping track of the current scope 
     /// (scope meaning the current division, section or paragragh).
     /// </summary>
     private static CurrentScope CurrentScope;
 
     /// <summary>
-    /// Used by the analyzer to keep track of where the source unit was defined, including its containing parent.
+    /// Used for keeping track of where the source unit was defined, including its containing parent.
     /// </summary>
     private static readonly Stack<Token> CurrentId = new();
 
     /// <summary>
-    /// Used by the analyzer to keep track of the source unit types, including the type of its containing parent.
+    /// Used for keeping track of the source unit types, including the type of its containing parent.
     /// </summary>    
     private static readonly Stack<SourceUnit> SourceType = new();
 
     /// <summary>
-    /// Used by the analyzer to keep track of the current source unit signature.
+    /// Used for keeping track of the current source unit signature.
     /// </summary>    
     private static CallableSignature CurrentCallable
     {

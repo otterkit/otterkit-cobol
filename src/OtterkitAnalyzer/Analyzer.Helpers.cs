@@ -4,6 +4,9 @@ namespace Otterkit;
 
 public static partial class Analyzer
 {
+    /// <summary>
+    /// Used for keeping track of the current token list index.
+    /// </summary>  
     private static int Index;
     private static List<Token> TokenList => CompilerContext.SourceTokens;
     

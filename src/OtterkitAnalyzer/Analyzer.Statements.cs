@@ -3272,7 +3272,7 @@ public static partial class Analyzer
     }
 
     // Different from Using(), this one is for the CALL and INVOKE only.
-    public static void StatementUsing(bool byValue, bool byContent)
+    private static void StatementUsing(bool byValue, bool byContent)
     {
         while (CurrentEquals("BY", "REFERENCE", "VALUE") || CurrentEquals(TokenType.Identifier))
         {   

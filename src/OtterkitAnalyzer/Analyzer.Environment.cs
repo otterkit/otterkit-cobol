@@ -10,7 +10,7 @@ public static partial class Analyzer
     // Method responsible for parsing the ENVIRONMENT DIVISION.
     // That includes the CONFIGURATION and the INPUT-OUTPUT sections.
     // It is also responsible for showing appropriate error messages when an error occurs in the ENVIRONMENT DIVISION.
-    public static void ENVIRONMENT()
+    private static void ENVIRONMENT()
     {
         Expected("ENVIRONMENT");
         Expected("DIVISION");
@@ -55,7 +55,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void REPOSITORY()
+    private static void REPOSITORY()
     {
         Expected("REPOSITORY");
         CurrentSection = CurrentScope.Repository;

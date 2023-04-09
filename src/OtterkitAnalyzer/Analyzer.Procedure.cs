@@ -13,7 +13,7 @@ public static partial class Analyzer
     // That includes the user-defined paragraphs, sections and declaratives
     // or when parsing OOP COBOL code, it's responsible for parsing COBOL methods, objects and factories. 
     // It is also responsible for showing appropriate error messages when an error occurs in the PROCEDURE DIVISION.
-    public static void PROCEDURE()
+    private static void PROCEDURE()
     {
         Expected("PROCEDURE");
         Expected("DIVISION");
@@ -63,7 +63,7 @@ public static partial class Analyzer
     // the PROCEDURE DIVISION header. It's separate from the previous method because its code is needed more than once.
     // COBOL user-defined functions should always return a data item.
 
-    public static void Using()
+    private static void Using()
     {
         while (CurrentEquals("BY", "REFERENCE", "VALUE") || CurrentEquals(TokenType.Identifier))
         {   
@@ -158,7 +158,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void Returning()
+    private static void Returning()
     {
         if (!CurrentEquals(TokenType.Identifier))
         {
@@ -216,7 +216,7 @@ public static partial class Analyzer
         Identifier();
     }
 
-    public static void ProcedureBody()
+    private static void ProcedureBody()
     {
         var currentSource = SourceType.Peek();
 
@@ -253,7 +253,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void EndMarker()
+    private static void EndMarker()
     {
         SourceUnit currentSource = SourceType.Peek();
 
@@ -440,7 +440,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void EndMarkerErrorHandling(Token token)
+    private static void EndMarkerErrorHandling(Token token)
     {
         if (!Identifier(token, false))
         {
@@ -478,7 +478,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void ClassObjects()
+    private static void ClassObjects()
     {
         if (CurrentEquals("FACTORY") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "FACTORY"))
         {
@@ -534,7 +534,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void InterfaceProcedure()
+    private static void InterfaceProcedure()
     {
         if (CurrentEquals("PROCEDURE"))
         {

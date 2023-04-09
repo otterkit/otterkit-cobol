@@ -12,7 +12,7 @@ public static partial class Analyzer
     // (And other helpers that it easier to iterate through the List)
     // All other methods inside of the analyzer depend on these to parse through the tokens.
 
-    public static bool PictureString(ReadOnlySpan<char> picture, out int size)
+    private static bool PictureString(ReadOnlySpan<char> picture, out int size)
     {
         var set = new HashSet<char>();
         var isAfterDecimalPoint = false;

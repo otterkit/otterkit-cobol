@@ -10,7 +10,7 @@ public static partial class Analyzer
     // Method responsible for parsing the IDENTIFICATION DIVISION.
     // That includes PROGRAM-ID, FUNCTION-ID, CLASS-ID, METHOD-ID, INTERFACE-ID, OBJECT, FACTORY and OPTIONS paragraphs.
     // It is also responsible for showing appropriate error messages when an error occurs in the IDENTIFICATION DIVISION.
-    public static void IDENTIFICATION()
+    private static void IDENTIFICATION()
     {
         if (CurrentEquals("IDENTIFICATION"))
         {
@@ -41,7 +41,7 @@ public static partial class Analyzer
             Options();
     }
 
-    public static void Options()
+    private static void Options()
     {
         bool shouldHavePeriod = false;
 
@@ -89,7 +89,7 @@ public static partial class Analyzer
     // That includes the program, user-defined function, method, class, interface, factory or object identifier that should be specified right after.
     // This is where SourceId and SourceType get their values for a COBOL source unit.
 
-    public static void IdDefinitions()
+    private static void IdDefinitions()
     {
         if (CurrentEquals("CLASS-ID")) 
         {
@@ -148,7 +148,7 @@ public static partial class Analyzer
         AnchorPoint("OPTIONS", "ENVIRONMENT", "DATA", "PROCEDURE");
     }
 
-    public static void ProgramId()
+    private static void ProgramId()
     {
         Expected("PROGRAM-ID");
         Expected(".");
@@ -263,7 +263,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void FunctionId()
+    private static void FunctionId()
     {
         Expected("FUNCTION-ID");
         Expected(".");
@@ -319,7 +319,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void ClassId()
+    private static void ClassId()
     {
         Expected("CLASS-ID");
         Expected(".");
@@ -407,7 +407,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void InterfaceId()
+    private static void InterfaceId()
     {
         Expected("INTERFACE-ID");
         Expected(".");
@@ -490,7 +490,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void MethodId()
+    private static void MethodId()
     {
         if (SourceType.Peek() is not (SourceUnit.Object or SourceUnit.Factory or SourceUnit.Interface))
         {
@@ -613,7 +613,7 @@ public static partial class Analyzer
         CurrentCallable = method;
     }
 
-    public static void Factory()
+    private static void Factory()
     {
         if (SourceType.Peek() is not SourceUnit.Class)
         {
@@ -655,7 +655,7 @@ public static partial class Analyzer
         }
     }
 
-    public static void Object()
+    private static void Object()
     {
         if (SourceType.Peek() is not SourceUnit.Class)
         {

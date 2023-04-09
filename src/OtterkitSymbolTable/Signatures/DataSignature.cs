@@ -2,8 +2,8 @@ namespace Otterkit;
 
 public record DataSignature
 {
-    public CurrentScope Section;
     public DataSignature? Parent;
+    public CurrentScope Section;
     public int LevelNumber;
     public string Identifier = "";
     public string Type = "";

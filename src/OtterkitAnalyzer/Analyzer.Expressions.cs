@@ -85,7 +85,7 @@ public static partial class Analyzer
         return output;
     }
 
-    public static string PostfixToInfix(List<Token> postfix, Dictionary<string, int> precedence)
+    private static string PostfixToInfix(List<Token> postfix, Dictionary<string, int> precedence)
     {
         var stack = new Stack<string>();
 
@@ -173,7 +173,7 @@ public static partial class Analyzer
         return stack.Pop();
     }
 
-    public static bool IsBalanced(List<Token> tokens)
+    private static bool IsBalanced(List<Token> tokens)
     {
         Stack<Token> stack = new();
 
@@ -195,7 +195,7 @@ public static partial class Analyzer
         return stack.Count == 0;
     }
 
-    public static bool EvaluatePostfix(List<Token> expression, Dictionary<string, int> precedence, out Token error)
+    private static bool EvaluatePostfix(List<Token> expression, Dictionary<string, int> precedence, out Token error)
     {
         Stack<Token> stack = new();
 

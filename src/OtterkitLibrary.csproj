@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Otterkit.Numerics" Version="1.7.30" />
+    <PackageReference Include="Otterkit.Numerics" Version="1.7.35" />
   </ItemGroup>
   
 </Project>

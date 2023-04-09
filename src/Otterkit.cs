@@ -112,7 +112,7 @@ public static class Otterkit
 
             var classified = Token.FromValue(preprocessedLines);
 
-            var analized = Analyzer.Analyze(CompilerOptions.EntryPoint);
+            var analized = Analyzer.Analyze(classified);
 
             if (CompilerOptions.BuildMode is BuildType.ParseOnly)
             {

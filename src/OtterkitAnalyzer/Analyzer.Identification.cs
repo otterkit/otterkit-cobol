@@ -155,7 +155,7 @@ public static partial class Analyzer
 
         CurrentId.Push(Current());
         SourceType.Push(SourceUnit.Program);
-        CurrentSection = CurrentScope.ProgramId;
+        CurrentScope = CurrentScope.ProgramId;
 
         Identifier();
         if (CurrentEquals("AS"))
@@ -269,7 +269,7 @@ public static partial class Analyzer
         Expected(".");
 
         SourceType.Push(SourceUnit.Function);
-        CurrentSection = CurrentScope.FunctionId;
+        CurrentScope = CurrentScope.FunctionId;
 
         Identifier();
 
@@ -327,7 +327,7 @@ public static partial class Analyzer
         CurrentId.Push(Current());
 
         SourceType.Push(SourceUnit.Class);
-        CurrentSection = CurrentScope.ClassId;
+        CurrentScope = CurrentScope.ClassId;
 
         Identifier();
 
@@ -415,7 +415,7 @@ public static partial class Analyzer
         CurrentId.Push(Current());
 
         SourceType.Push(SourceUnit.Interface);
-        CurrentSection = CurrentScope.InterfaceId;
+        CurrentScope = CurrentScope.InterfaceId;
 
         Identifier();
 
@@ -507,7 +507,7 @@ public static partial class Analyzer
         Expected("METHOD-ID");
         Expected(".");
 
-        CurrentSection = CurrentScope.MethodId;
+        CurrentScope = CurrentScope.MethodId;
 
         var currentSource = SourceType.Peek();
         var currentId = CurrentId.Peek();

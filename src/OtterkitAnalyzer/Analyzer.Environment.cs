@@ -14,7 +14,7 @@ public static partial class Analyzer
     {
         Expected("ENVIRONMENT");
         Expected("DIVISION");
-        CurrentSection = CurrentScope.EnvironmentDivision;
+        CurrentScope = CurrentScope.EnvironmentDivision;
 
         if (!Expected(".", false))
         {
@@ -58,7 +58,7 @@ public static partial class Analyzer
     private static void REPOSITORY()
     {
         Expected("REPOSITORY");
-        CurrentSection = CurrentScope.Repository;
+        CurrentScope = CurrentScope.Repository;
 
         if (!Expected(".", false))
         {

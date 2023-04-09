@@ -18,7 +18,7 @@ public static partial class Analyzer
         Expected("PROCEDURE");
         Expected("DIVISION");
 
-        CurrentSection = CurrentScope.ProcedureDivision;
+        CurrentScope = CurrentScope.ProcedureDivision;
         var currentSource = SourceType.Peek();
 
         if (CurrentEquals("USING"))

@@ -2,15 +2,32 @@ namespace Otterkit;
 
 /// <summary>
 /// Otterkit COBOL Syntax and Semantic Analyzer
-/// <para>This parser was built to be easily extensible, with some reusable COBOL parts.</para>
-/// <para>It requires a List of Tokens generated from the Lexer and the Token Classifier.</para>
+/// <para>This analyzer was built to be easily extensible, with some reusable COBOL parts.</para>
+/// <para>It requires a <see cref="CompilerContext.SourceTokens">list of tokens</see> generated from the Lexer and the Token Classifier.</para>
 /// </summary>
 public static partial class Analyzer
 {
     private static bool IsResolutionPass;
-    private static CurrentScope CurrentSection;
+
+    /// <summary>
+    /// Used by the analyzer to keep track of the current scope 
+    /// (scope meaning the current division, section or paragragh).
+    /// </summary>
+    private static CurrentScope CurrentScope;
+
+    /// <summary>
+    /// Used by the analyzer to keep track of where the source unit was defined, including its containing parent.
+    /// </summary>
     private static readonly Stack<Token> CurrentId = new();
+
+    /// <summary>
+    /// Used by the analyzer to keep track of the source unit types, including the type of its containing parent.
+    /// </summary>    
     private static readonly Stack<SourceUnit> SourceType = new();
+
+    /// <summary>
+    /// Used by the analyzer to keep track of the current source unit signature.
+    /// </summary>    
     private static CallableSignature CurrentCallable
     {
         get => CompilerContext.CurrentCallable[0];
@@ -19,20 +36,20 @@ public static partial class Analyzer
     }
 
     /// <summary>
-    /// Otterkit COBOL Syntax Analyzer
-    /// <para>This parser was built to be easily extensible, with some reusable COBOL parts.</para>
-    /// <para>It requires a List of Tokens generated from the Lexer and the Token Classifier.</para>
+    /// Otterkit COBOL Syntax and Semantic Analyzer
+    /// <para>This analyzer was built to be easily extensible, with some reusable COBOL parts.</para>
+    /// <para>It requires a <see cref="CompilerContext.SourceTokens">list of tokens</see> generated from the Lexer and the Token Classifier.</para>
     /// </summary>
-    public static List<Token> Analyze(string entryPoint)
+    public static List<Token> Analyze(List<Token> tokenList)
     {
-        // Call the parser's main recursive method
-        // This should only return when the parser reaches the true EOF token
+        // Call the analyzer's main recursive method
+        // This should only return when the analyzer reaches the true EOF token
         Source();
 
         // Reset token index and setup resolution pass
         SetupResolutionPass();
 
-        // Call the parser's main recursive method again
+        // Call the analyzer's main recursive method again
         // But this time with name resolution enabled
         Source();
 
@@ -41,14 +58,14 @@ public static partial class Analyzer
         if (Error.HasOccurred) Error.StopCompilation("parsing");
 
         // Return parsed list of tokens.
-        return CompilerContext.SourceTokens;
+        return tokenList;
     }
 
-    // Source() is the main method of the parser.
+    // Source() is the main method of the analyzer.
     // It's responsible for parsing COBOL divisions until the EOF token.
     // If EOF was not returned as the last Token in the list then,
-    // the parser has not finished reading through the list of tokens correctly.
-    public static void Source()
+    // the analyzer has not finished reading through the list of tokens correctly.
+    private static void Source()
     {
         IDENTIFICATION();
 
@@ -91,9 +108,9 @@ public static partial class Analyzer
         }
     }
 
-    public static void SetupResolutionPass()
+    private static void SetupResolutionPass()
     {
-        // Set the index back to 0 to restart the parser
+        // Set the index back to 0 to restart the analyzer
         Index = 0;
 
         // Enable name resolution checks

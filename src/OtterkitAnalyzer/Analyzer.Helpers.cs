@@ -539,7 +539,7 @@ public static partial class Analyzer
 
         var sourceUnit = CurrentCallable;
 
-        if (CurrentSection is CurrentScope.ProcedureDivision)
+        if (CurrentScope is CurrentScope.ProcedureDivision)
         {
             if (!sourceUnit.Definitions.LocalExists(Current().Value))
             {
@@ -619,7 +619,7 @@ public static partial class Analyzer
 
         var sourceUnit = CurrentCallable;
 
-        if (CurrentSection is CurrentScope.ProcedureDivision)
+        if (CurrentScope is CurrentScope.ProcedureDivision)
         {
             if (!sourceUnit.Definitions.LocalExists(Current().Value))
             {

@@ -21,7 +21,7 @@ public static partial class Analyzer
     {
         Expected("DATA");
         Expected("DIVISION");
-        CurrentSection = CurrentScope.DataDivision;
+        CurrentScope = CurrentScope.DataDivision;
 
         if (!Expected(".", false))
         {
@@ -58,7 +58,7 @@ public static partial class Analyzer
     {
         Expected("WORKING-STORAGE");
         Expected("SECTION");
-        CurrentSection = CurrentScope.WorkingStorage;
+        CurrentScope = CurrentScope.WorkingStorage;
 
         Expected(".");
         while (Current().Type == TokenType.Numeric)
@@ -69,7 +69,7 @@ public static partial class Analyzer
     {
         Expected("LOCAL-STORAGE");
         Expected("SECTION");
-        CurrentSection = CurrentScope.LocalStorage;
+        CurrentScope = CurrentScope.LocalStorage;
 
         Expected(".");
         while (Current().Type is TokenType.Numeric)
@@ -80,7 +80,7 @@ public static partial class Analyzer
     {
         Expected("LINKAGE");
         Expected("SECTION");
-        CurrentSection = CurrentScope.LinkageSection;
+        CurrentScope = CurrentScope.LinkageSection;
 
         Expected(".");
         while (Current().Type is TokenType.Numeric)
@@ -136,7 +136,7 @@ public static partial class Analyzer
 
         dataLocal.Identifier = dataName;
         dataLocal.LevelNumber = levelNumber;
-        dataLocal.Section = CurrentSection;
+        dataLocal.Section = CurrentScope;
 
         if (GroupStack.Count is not 0)
         {
@@ -351,7 +351,7 @@ public static partial class Analyzer
 
         dataLocal.Identifier = dataName;
         dataLocal.LevelNumber = levelNumber;
-        dataLocal.Section = CurrentSection;
+        dataLocal.Section = CurrentScope;
         dataLocal.IsConstant = true;
 
         Expected("CONSTANT");
@@ -598,7 +598,7 @@ public static partial class Analyzer
             dataLocal.Parent = parent;
             dataLocal.Identifier = dataName;
             dataLocal.LevelNumber = 88;
-            dataLocal.Section = CurrentSection;
+            dataLocal.Section = CurrentScope;
 
             if (CurrentEquals("VALUES"))
             {

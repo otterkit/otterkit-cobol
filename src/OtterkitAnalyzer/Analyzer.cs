@@ -7,7 +7,6 @@ namespace Otterkit;
 /// </summary>
 public static partial class Analyzer
 {
-    private static string FileName = string.Empty;
     private static bool IsResolutionPass;
     private static CurrentScope CurrentSection;
     private static readonly Stack<Token> CurrentId = new();
@@ -26,8 +25,6 @@ public static partial class Analyzer
     /// </summary>
     public static List<Token> Analyze(string entryPoint)
     {
-        FileName = entryPoint;
-
         // Call the parser's main recursive method
         // This should only return when the parser reaches the true EOF token
         Source();
@@ -89,8 +86,6 @@ public static partial class Analyzer
 
         if (CurrentEquals("EOF") && CurrentIndex() < CompilerContext.SourceTokens.Count - 1)
         {
-            FileName = Lookahead(1).FetchFile;
-
             Continue();
             Source();
         }

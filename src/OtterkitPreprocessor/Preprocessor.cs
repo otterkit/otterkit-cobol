@@ -69,25 +69,24 @@ public static partial class Preprocessor
                 HasDetectedSourceFormat = true;
             }
 
-            if (sourceChars.Length >= 7 && sourceChars[6] is '*' or '-' or ' ')
+            if (sourceChars.Length >= 7 && sourceChars[6] is '*' or '-' or '/' or ' ')
             {
                 CompilerOptions.SourceFormat = SourceFormat.Fixed;
                 HasDetectedSourceFormat = true;
             }
-
-            if (sourceChars.Length >= 7 && sourceChars[6] is not ('*' or '-' or ' '))
+            else
             {
                 CompilerOptions.SourceFormat = SourceFormat.Free;
                 HasDetectedSourceFormat = true;
             }
 
-            if (sourceChars.TrimStart().StartsWith("*>"))
+            if (sourceChars.Slice(0, 7).Trim().StartsWith("*>"))
             {
                 CompilerOptions.SourceFormat = SourceFormat.Free;
                 HasDetectedSourceFormat = true;
             }
 
-            if (sourceChars.StartsWith(">>"))
+            if (sourceChars.Slice(0, 7).Trim().StartsWith(">>"))
             {
                 CompilerOptions.SourceFormat = SourceFormat.Free;
                 HasDetectedSourceFormat = true;

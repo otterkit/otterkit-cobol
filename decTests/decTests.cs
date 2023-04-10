@@ -1,8 +1,5 @@
 ﻿using Otterkit.Numerics;
 
-var MaxValue = Decimal128.MaxValue;
+var OnePointFive = new Decimal128("1.5");
 
-
-Console.WriteLine(Decimal128.NaN);
-Console.WriteLine(Decimal128.NegativeInfinity);
-
+Console.WriteLine(Decimal128.Round(OnePointFive, (RoundingMode)9));

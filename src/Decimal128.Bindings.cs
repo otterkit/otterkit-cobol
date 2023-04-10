@@ -20,6 +20,9 @@ internal static partial class DecQuadBindings
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadLog10")]
     internal static partial Decimal128 Log10(Decimal128 value);
 
+    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadToIntegralValue")]
+    internal static partial Decimal128 ToIntegralValue(Decimal128 value, RoundingMode mode);
+
     [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadAbs")]
     internal static partial Decimal128 Abs(Decimal128 value);
 

@@ -44,6 +44,21 @@ managedDecQuad decQuadToManaged(decQuad value)
 
 /* Computational operations */
 DLLEXPORT
+managedDecQuad nativeDecQuadToIntegralValue(managedDecQuad value, enum rounding mode)
+{
+    decQuad nativeValue;
+    decContext context;
+
+    decContextDefault(&context, DEC_INIT_DECQUAD);
+
+    nativeValue = decQuadFromManaged(value);
+
+    decQuadToIntegralValue(&nativeValue, &nativeValue, &context, mode);
+
+    return decQuadToManaged(nativeValue);
+}
+
+DLLEXPORT
 managedDecQuad nativeDecQuadSqrt(managedDecQuad value)
 {
     decQuad nativeValue;

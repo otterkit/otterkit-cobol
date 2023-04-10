@@ -2,6 +2,21 @@ namespace Otterkit.Numerics;
 
 public readonly partial struct Decimal128
 {
+    public static Decimal128 Round(Decimal128 value, RoundingMode mode)
+    {
+        if (mode == RoundingMode.RoundForReround)
+        {
+            throw new NotSupportedException("Round for reround is not supported");
+        }
+
+        if ((int)mode is not < 8)
+        {
+            throw new ArgumentOutOfRangeException(nameof(mode), mode, "Rounding mode must be within enum range");
+        }
+
+        return DecQuadBindings.ToIntegralValue(value, mode);
+    }
+
     public static Decimal128 Abs(Decimal128 value)
     {
         return DecQuadBindings.Abs(value);

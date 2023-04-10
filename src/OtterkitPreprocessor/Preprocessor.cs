@@ -63,7 +63,7 @@ public static partial class Preprocessor
 
         if (!HasDetectedSourceFormat && CompilerOptions.SourceFormat == SourceFormat.Auto)
         {
-            if (sourceChars.Length >= 9 && sourceChars[7] is '>' && sourceChars[8] is '>')
+            if (sourceChars.Length >= 15 && sourceChars.Slice(7, 8).StartsWith(">>SOURCE"))
             {
                 CompilerOptions.SourceFormat = SourceFormat.Fixed;
                 HasDetectedSourceFormat = true;

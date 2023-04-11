@@ -1028,6 +1028,15 @@ public static partial class Analyzer
         }        
 
         Continue();
+        if (CurrentEquals("("))
+        {
+            // TODO:
+            // This needs a check from the symbol table 
+            // to verify the identifier type.
+            Expected("(");
+            while (!CurrentEquals(")")) Continue();
+            Expected(")");
+        }
     }
 
     private static bool Identifier(Token identifierToken, bool useDefaultError = true)

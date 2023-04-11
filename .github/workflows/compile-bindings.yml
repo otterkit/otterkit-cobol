@@ -25,6 +25,7 @@ jobs:
       run: |
         git config --global user.name "${{ env.COMMIT_AUTHOR }}"
         git config --global user.email "KTSnowy@users.noreply.github.com"
+        git pull
         git add .
         git commit -m "${{ env.COMMIT_MESSAGE }}"
         git push
@@ -51,6 +52,7 @@ jobs:
       run: |
         git config --global user.name "${{ env.COMMIT_AUTHOR }}"
         git config --global user.email "KTSnowy@users.noreply.github.com"
+        git pull
         git add .
         git commit -m "${{ env.COMMIT_MESSAGE }}"
         git push

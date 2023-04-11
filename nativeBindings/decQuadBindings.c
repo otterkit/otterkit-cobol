@@ -14,6 +14,10 @@
 
 // compile win-x64: cl.exe /O2 /LD decQuadBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
 
+// compile linux-x64: clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o decQuadBindings.so decQuadBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+
+// compile macos-x64: clang -dynamiclib -O2 -fPIC -Wall -W -o decQuadBindings.dylib decQuadBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+
 /* Same as the C# type definition */
 typedef struct
 {

@@ -16,8 +16,8 @@ jobs:
     - name: Compile decNumber Bindings
       run: |
         cd nativeBindings
-        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o decDoubleBindings.so decDoubleBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decDouble.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
-        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o decQuadBindings.so decQuadBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
+        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o decDoubleBindings.so decDoubleBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decDouble.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o decQuadBindings.so decQuadBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
         cp decDoubleBindings.so decQuadBindings.so ../src
         cd ../src
         

@@ -1,15 +1,19 @@
-#define DECUSE64 1
-
-#include "..\decNumber\decimal64.h"
-#include "..\decNumber\decDouble.h" // decDouble library
 #include <stdlib.h>
 
 #ifdef _WIN32
-#define DLLEXPORT __declspec(dllexport)
+    #define DLLEXPORT __declspec(dllexport)
+    #define DECUSE64 1
+
+    #include "..\decNumber\decimal64.h"
+    #include "..\decNumber\decDouble.h" // decDouble library
 #endif
 
 #ifndef _WIN32
-#define DLLEXPORT
+    #define DLLEXPORT
+    #define DECUSE64 1
+
+    #include "../decNumber/decimal64.h"
+    #include "../decNumber/decDouble.h" // decDouble library
 #endif
 
 // compile win-x64: cl.exe /O2 /LD decDoubleBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decDouble.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c

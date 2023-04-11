@@ -130,7 +130,15 @@ public static partial class Analyzer
 
         CheckLevelNumber(levelNumber);
         
-        Identifier();
+        if (CurrentEquals("FILLER"))
+        {
+            Expected("FILLER");
+        }
+        else
+        {
+            Identifier();
+        }
+
 
         DataSignature dataLocal = new();
 
@@ -242,6 +250,11 @@ public static partial class Analyzer
                 TypeClause(dataLocal);
             }
 
+            if (CurrentEquals("OCCURS"))
+            {
+                OccursClause(dataLocal);
+            }
+
             if (CurrentEquals("PIC", "PICTURE"))
             {
                 PictureClause(dataLocal);
@@ -303,6 +316,8 @@ public static partial class Analyzer
 
         // We're returning during a resolution pass
         if (IsResolutionPass) return;
+
+        if (dataName is "FILLER") return;
 
         // Because we don't want to run this again during it
         var sourceUnit = CurrentCallable;
@@ -841,6 +856,94 @@ public static partial class Analyzer
     {
         Expected("TYPE");
         Identifier();
+    }
+
+    private static void OccursClause(DataSignature dataLocal)
+    {
+        Expected("OCCURS");
+
+        if (CurrentEquals("DYNAMIC"))
+        {
+            Expected("DYNAMIC");
+
+            if (CurrentEquals("CAPACITY"))
+            {
+                Expected("CAPACITY");
+                Optional("IN");
+                Identifier();
+            }
+
+            if (CurrentEquals("FROM"))
+            {
+                Expected("FROM");
+                Number();
+            }
+
+            if (CurrentEquals("TO"))
+            {
+                Expected("TO");
+                Number();
+            }
+
+            if (CurrentEquals("INITIALIZED"))
+            {
+                Expected("INITIALIZED");
+            }
+
+            AscendingDescendingKey();
+
+            if (CurrentEquals("INDEXED"))
+            {
+                IndexedBy();
+            }
+
+            return;
+        }
+
+        if (LookaheadEquals(1, "TO"))
+        {
+            Number();
+            Expected("TO");
+
+            Number();
+            Optional("TIMES");
+
+            Expected("DEPENDING");
+            Optional("ON");
+
+            Identifier();
+
+            AscendingDescendingKey();
+
+            if (CurrentEquals("INDEXED"))
+            {
+                IndexedBy();
+            }
+
+            return;
+        }
+
+        Number();
+        Optional("TIMES");
+
+        AscendingDescendingKey();
+
+        if (CurrentEquals("INDEXED"))
+        {
+            IndexedBy();
+        }
+
+        static void IndexedBy()
+        {
+            Expected("INDEXED");
+            Optional("BY");
+
+            Identifier();
+            while (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+            }
+        }
     }
 
     private static void PictureClause(DataSignature dataLocal)

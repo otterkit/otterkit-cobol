@@ -1,0 +1,30 @@
+name: Compile decNumber bindings
+
+on: workflow_dispatch
+
+jobs:
+  compile-linux-x64:
+    runs-on: ubuntu-latest
+    env: 
+      COMMIT_MESSAGE: Continuous Integration Build Files
+      COMMIT_AUTHOR: Continuous Integration
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.OTTERKIT_GITHUB_TOKEN }}
+    
+    - name: Compile decNumber Bindings
+      run: |
+        cd nativeBindings
+        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o decDoubleBindings.so decDoubleBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decDouble.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
+        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o decQuadBindings.so decQuadBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
+        cp decDoubleBindings.so decQuadBindings.so ../src
+        cd ../src
+        
+    - name: GIT Commit Build Files
+      run: |
+        git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+        git config --global user.email "KTSnowy@users.noreply.github.com"
+        git add .
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git push

@@ -21,6 +21,18 @@ public static partial class Analyzer
     // written correctly. This is using a combination of the Shunting Yard algorithm, and some methods to verify if the 
     // parentheses are balanced and if it can be evaluated correctly.
 
+    private static void AscendingDescendingKey()
+    {
+        while(CurrentEquals("ASCENDING", "DESCENDING"))
+        {
+            Choice("ASCENDING", "DESCENDING");
+            Optional("KEY");
+            Optional("IS");
+
+            Identifier();
+        }
+    }
+
     private static void TimesPhrase()
     {
         if (CurrentEquals(TokenType.Identifier))

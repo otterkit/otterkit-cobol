@@ -1403,18 +1403,6 @@ public static partial class Analyzer
 
         while (Current().Type == TokenType.Identifier)
             Identifier();
-
-        if (!CurrentEquals(".") && !CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(TokenContext.IsStatement))
-        {
-            Error
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
-                Unexpected {Current().Type.Display(false)}.
-                """)
-            .WithSourceLine(Current(), $"""
-                Expected only data item identifiers.
-                """)
-            .CloseError();
-        }
     }
 
     private static void OPEN()

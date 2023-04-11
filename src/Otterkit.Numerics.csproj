@@ -16,7 +16,7 @@
     <PackageId>Otterkit.Numerics</PackageId>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.7.30</Version>
+    <Version>1.7.40</Version>
     <Copyright>Copyright (c) Otterkit 2023</Copyright>
     <Authors>Otterkit Authors</Authors>
     <Company>Otterkit Project</Company>
@@ -38,6 +38,11 @@
 
   <ItemGroup>
     <Content Include="decQuadBindings.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+
+    <Content Include="decDoubleBindings.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>

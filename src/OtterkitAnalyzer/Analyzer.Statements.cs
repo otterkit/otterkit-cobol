@@ -2681,7 +2681,7 @@ public static partial class Analyzer
                     Arithmetic();
                 }
             }
-            else if (dataItem.UsageType is UsageType.Integer or UsageType.Index)
+            else if (dataItem.UsageType is UsageType.Index)
             {
 
                 Identifier();

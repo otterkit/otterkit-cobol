@@ -6,13 +6,6 @@ public static class EnumExtensions
     {
         return usage switch
         {
-            //> Used only for identifier validation:
-            UsageType.Alphanumeric => "Alphanumeric",
-            UsageType.Alphabetic => "Alphabetic",
-            UsageType.Boolean => "Boolean",
-            UsageType.Decimal => "Decimal",
-            UsageType.Integer => "Integer",
-            //<
             UsageType.Binary => "BINARY",
             UsageType.BinaryChar => "BINARY-CHAR",
             UsageType.BinaryShort => "BINARY-SHORT",

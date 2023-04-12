@@ -6,7 +6,7 @@ namespace Otterkit;
 public static partial class Preprocessor
 {
     internal static bool HasDetectedSourceFormat;
-    internal static DirectiveType LastDirective = DirectiveType.None;
+    internal static DirectiveType LastDirective;
     internal static string Workspace => Directory.GetCurrentDirectory(); 
 
     public static List<Token> Preprocess(string entryPoint)

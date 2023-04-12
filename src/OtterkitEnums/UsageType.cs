@@ -3,13 +3,6 @@ namespace Otterkit;
 public enum UsageType
 {
     None,
-    //> Used only for identifier validation:
-    Alphanumeric,
-    Alphabetic,
-    Boolean,
-    Decimal,
-    Integer,
-    //< 
     Binary,
     BinaryChar,
     BinaryShort,

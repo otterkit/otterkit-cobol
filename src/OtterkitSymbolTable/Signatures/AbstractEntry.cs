@@ -2,6 +2,7 @@ namespace Otterkit;
 
 public enum EntryType
 {
+    None,
     FileControl,
     FileDescription,
     ScreenDescription,

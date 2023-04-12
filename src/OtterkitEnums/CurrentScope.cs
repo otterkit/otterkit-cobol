@@ -10,6 +10,7 @@ public enum CurrentScope
     EnvironmentDivision,
     Repository,
     DataDivision,
+    FileSection,
     ScreenSection,
     WorkingStorage,
     LocalStorage,

@@ -1834,4 +1834,11 @@ public static partial class Analyzer
         );
     }
 
+    private static bool IdentifierOrLiteral(TokenType literalType)
+    {
+        return CurrentEquals(
+            TokenType.Identifier,
+            literalType
+        );
+    }
 }

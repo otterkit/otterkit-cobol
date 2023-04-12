@@ -18,6 +18,67 @@ public static partial class Analyzer
         .CloseError();
     }
 
+    private static void FileEntryClauses(EntryDefinition fileLocal)
+    {
+        if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL"))
+        {
+            IsClauseErrorCheck();
+        }
+
+        if ((CurrentEquals("IS") && LookaheadEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
+        {
+            ExternalClause(fileLocal);
+        }
+
+        if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
+        {
+            GlobalClause(fileLocal);
+        }
+
+        if (CurrentEquals("FORMAT"))
+        {
+            // TODO: This needs to be fixed later
+            Expected("FORMAT");
+            Choice("BIT", "CHARACTER", "NUMERIC");
+            Optional("DATA");
+        }
+
+        if (CurrentEquals("BLOCK"))
+        {
+            Expected("BLOCK");
+            Optional("CONTAINS");
+            
+            if (LookaheadEquals(1, "TO"))
+            {
+                Number();
+                Expected("TO");
+            }
+
+            Number();
+            Choice("CHARACTERS", "RECORDS");
+        }
+
+        if (CurrentEquals("RECORD"))
+        {
+            RecordClause(fileLocal);
+        }
+
+        if (CurrentEquals("LINAGE"))
+        {
+            LinageClause(fileLocal);
+        }
+
+        if (CurrentEquals("CODE-SET"))
+        {
+            CodeSetClause(fileLocal);
+        }
+
+        if (CurrentEquals("REPORT", "REPORTS"))
+        {
+            ReportsClause(fileLocal);
+        }
+    }
+
     private static void DataEntryClauses(EntryDefinition dataLocal)
     {
         if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL", "TYPEDEF"))
@@ -254,6 +315,144 @@ public static partial class Analyzer
         }
 
         ScreenValueClause(screenLocal);
+    }
+
+    private static void LinageClause(EntryDefinition fileLocal)
+    {
+        Expected("LINAGE");
+        Optional("IS");
+
+        IdentifierOrLiteral(TokenType.Numeric);
+        Optional("LINES");
+
+        if (CurrentEquals("WITH", "FOOTING"))
+        {
+            Optional("WITH");
+            Expected("FOOTING");
+            IdentifierOrLiteral(TokenType.Numeric);
+        }
+
+        if (CurrentEquals("LINES", "AT", "TOP"))
+        {
+            Optional("LINES");
+            Optional("AT");
+            Expected("TOP");
+            IdentifierOrLiteral(TokenType.Numeric);
+        }
+
+        if (CurrentEquals("LINES", "AT", "BOTTOM"))
+        {
+            Optional("LINES");
+            Optional("AT");
+            Expected("BOTTOM");
+            IdentifierOrLiteral(TokenType.Numeric);
+        }
+    }
+
+    private static void RecordClause(EntryDefinition fileLocal)
+    {
+        Expected("RECORD");
+
+        if (CurrentEquals("IS", "VARYING"))
+        {
+            Optional("IS");
+            Expected("VARYING");
+            Optional("IN");
+            Optional("SIZE");
+
+            if (CurrentEquals("FROM") || CurrentEquals(TokenType.Numeric))
+            {
+                Optional("FROM");
+                Number();
+            }
+
+            if (CurrentEquals("TO"))
+            {
+                Optional("TO");
+                Number();
+            }
+            
+            if (CurrentEquals("BYTES", "CHARACTERS"))
+            {
+                Expected(Current().Value);
+            }
+
+            if (CurrentEquals("DEPENDING"))
+            {
+                Expected("DEPENDING");
+                Optional("ON");
+                Identifier();
+            }
+
+            return;
+        }
+
+        // If the record is not varying in size
+        Optional("CONTAINS");
+        
+        if (!LookaheadEquals(1, "TO"))
+        {
+            Number();
+
+            if (CurrentEquals("BYTES", "CHARACTERS"))
+            {
+                Expected(Current().Value);
+            }
+
+            return;
+        }
+
+        // If the record is fixed-or-variable
+        Number();
+
+        Expected("TO");
+
+        Number();
+
+        if (CurrentEquals("BYTES", "CHARACTERS"))
+        {
+            Expected(Current().Value);
+        }
+    }
+
+    private static void ReportsClause(EntryDefinition fileLocal)
+    {
+        Choice("REPORT", "REPORTS");
+
+        if (LookaheadEquals(-1, "REPORT"))
+        {
+            Optional("IS");
+        }
+        else
+        {
+            Optional("ARE");
+        }
+
+        Identifier();
+
+        while (CurrentEquals(TokenType.Identifier))
+        {
+            Identifier();
+        }
+    }
+
+    private static void CodeSetClause(EntryDefinition fileLocal)
+    {
+        Expected("CODE-SET");
+
+        if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+        {
+            ForAlphanumericForNational();
+            return;
+        }
+
+        Optional("IS");
+        Identifier();
+
+        if (CurrentEquals(TokenType.Identifier))
+        {
+            Identifier();
+        } 
     }
 
     private static void ScreenValueClause(EntryDefinition screenLocal)

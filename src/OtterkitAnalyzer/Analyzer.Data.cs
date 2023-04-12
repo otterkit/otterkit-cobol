@@ -40,6 +40,9 @@ public static partial class Analyzer
             AnchorPoint("WORKING-STORAGE", "LOCAL-STORAGE", "LINKAGE", "PROCEDURE");
         }
 
+        if (CurrentEquals("FILE"))
+            FileSection();
+
         if (CurrentEquals("WORKING-STORAGE"))
             WorkingStorage();
 
@@ -57,6 +60,19 @@ public static partial class Analyzer
     // The following methods are responsible for parsing the DATA DIVISION sections
     // They are technically only responsible for parsing the section header, 
     // the Entries() method handles parsing the actual data items in their correct sections.
+    private static void FileSection()
+    {
+        Expected("FILE");
+        Expected("SECTION");
+        CurrentScope = CurrentScope.FileSection;
+
+        Expected(".");
+        while (CurrentEquals("FD", "SD"))
+        {
+            FileEntry();
+        }
+    }
+    
     private static void ScreenSection()
     {
         Expected("SCREEN");
@@ -64,8 +80,10 @@ public static partial class Analyzer
         CurrentScope = CurrentScope.ScreenSection;
 
         Expected(".");
-        while (Current().Type == TokenType.Numeric)
+        while (CurrentEquals(TokenType.Numeric))
+        {
             ScreenEntries();
+        }
     }
 
     private static void WorkingStorage()
@@ -75,8 +93,10 @@ public static partial class Analyzer
         CurrentScope = CurrentScope.WorkingStorage;
 
         Expected(".");
-        while (Current().Type == TokenType.Numeric)
+        while (CurrentEquals(TokenType.Numeric))
+        {
             DataEntries();
+        }
     }
 
     private static void LocalStorage()
@@ -87,7 +107,9 @@ public static partial class Analyzer
 
         Expected(".");
         while (Current().Type is TokenType.Numeric)
+        {
             DataEntries();
+        }
     }
 
     private static void LinkageSection()
@@ -98,7 +120,9 @@ public static partial class Analyzer
 
         Expected(".");
         while (Current().Type is TokenType.Numeric)
+        {
             DataEntries();
+        }
     }
 
 
@@ -120,10 +144,22 @@ public static partial class Analyzer
             ConstantEntry();
     }
 
-    private static void ScreenEntries()
+    private static void RecordEntries()
     {
-        if (CurrentEquals("77"))
-            ScreenEntry();
+        if (!CurrentEquals("01", "1"))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
+                Unexpected token.
+                """)
+            .WithSourceLine(Current(), """
+                Expected a 01 level number.
+                """)
+            .WithNote("""
+                Root level records must have a 01 level number.
+                """)
+            .CloseError(); 
+        }
 
         if (CurrentEquals("01", "1") && !LookaheadEquals(2, "CONSTANT"))
             GroupEntry();
@@ -131,6 +167,107 @@ public static partial class Analyzer
         if (LookaheadEquals(2, "CONSTANT"))
             ConstantEntry();
     }
+
+    private static void ScreenEntries()
+    {
+        if (!CurrentEquals("01", "1"))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
+                Unexpected token.
+                """)
+            .WithSourceLine(Current(), """
+                Expected a 01 level number.
+                """)
+            .WithNote("""
+                Root level screen items must have a 01 level number.
+                """)
+            .CloseError(); 
+        }
+
+        if (CurrentEquals("01", "1") && !LookaheadEquals(2, "CONSTANT"))
+            GroupEntry();
+
+        if (LookaheadEquals(2, "CONSTANT"))
+            ConstantEntry();
+    }
+
+    private static void FileEntry()
+    {
+        Choice("FD", "SD");
+
+        Token itemToken = Current();
+        string fileName = itemToken.Value;
+
+        Identifier();
+
+        EntryDefinition fileLocal = new();
+
+        fileLocal.Identifier = fileName;
+        fileLocal.Section = CurrentScope;
+
+        if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
+                Unexpected token.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected file description clauses or a separator period after this token
+                """)
+            .CloseError();
+        }
+
+        while (CurrentEquals(TokenContext.IsClause))
+        {
+            FileEntryClauses(fileLocal);
+        }
+
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                File description, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token
+                """)
+            .WithNote("""
+                Every FD item must end with a separator period
+                """)
+            .CloseError();
+        }
+
+        while(CurrentEquals(TokenType.Numeric))
+        {
+            RecordEntries();
+        }
+
+        // We're returning during a resolution pass
+        if (IsResolutionPass) return;
+
+        // Because we don't want to run this again during it
+        var sourceUnit = CurrentCallable;
+
+        if (sourceUnit.Definitions.LocalExists(fileName))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
+                Duplicate root level definition.
+                """)
+            .WithSourceLine(itemToken, """
+                A root level variable already exists with this name.
+                """)
+            .WithNote("""
+                Every root level item must have a unique name. 
+                """)
+            .CloseError();
+        }
+
+        sourceUnit.Definitions.AddLocal(fileName, fileLocal);
+    }
+
+
 
     private static void GroupEntry()
     {
@@ -162,7 +299,7 @@ public static partial class Analyzer
         LevelStack.Clear();
         GroupStack.Clear();
     }
-
+    
     private static void DataEntry()
     {
         int levelNumber = int.Parse(Current().Value);

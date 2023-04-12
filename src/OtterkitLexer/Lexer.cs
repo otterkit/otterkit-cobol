@@ -59,13 +59,20 @@ public static partial class Lexer
 
             if (IsPictureNext && !currentMatch.Equals("IS", StringComparison.OrdinalIgnoreCase))
             {
-                var temporary = sourceChars.Slice(token.Index, sourceChars.Length - token.Index - 1);
+                var temporary = sourceChars.Slice(token.Index, sourceChars.Length - token.Index);
 
                 var regex = PictureEndRegex().EnumerateMatches(temporary);
 
                 regex.MoveNext();
 
-                var pictureChars = temporary.Slice(0, regex.Current.Index);
+                var matchIndex = regex.Current.Index;
+
+                var pictureChars = temporary.Slice(0, matchIndex);
+
+                if (matchIndex is 0)
+                {
+                    pictureChars = temporary;
+                }
 
                 Token picture = new(new string(pictureChars), TokenType.Picture)
                 {
@@ -76,7 +83,7 @@ public static partial class Lexer
 
                 sourceTokens.Add(picture);
 
-                pictureEndIndex = regex.Current.Index + token.Index;
+                pictureEndIndex = pictureChars.Length + token.Index;
 
                 IsPictureNext = false;
                 continue;

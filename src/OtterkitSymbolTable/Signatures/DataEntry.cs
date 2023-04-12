@@ -1,15 +1,13 @@
 namespace Otterkit;
 
-public record EntryDefinition
+public class DataEntry : AbstractEntry
 {
-    public EntryDefinition? Parent;
+    public DataEntry? Parent;
     public CurrentScope Section;
     public int LevelNumber;
-    public string Identifier = "";
     public string Type = "";
     public string PictureString = "";
     public int PictureLength;
-    public string ExternalName = "";
     public string DefaultValue = "";
     public UsageType UsageType;
     public string UsageContext = "";
@@ -31,4 +29,7 @@ public record EntryDefinition
     public bool HasUsage;
     public bool HasPicture;
     public bool HasValue;
+
+    public DataEntry(Token identifier, EntryType entryType) 
+        : base(identifier, entryType) { }
 }

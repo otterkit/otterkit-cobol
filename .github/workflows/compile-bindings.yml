@@ -21,14 +21,14 @@ jobs:
         cp decDoubleBindings.so decQuadBindings.so ../src
         cd ../src
         
-#     - name: GIT Commit Build Files
-#       run: |
-#         git config --global user.name "${{ env.COMMIT_AUTHOR }}"
-#         git config --global user.email "KTSnowy@users.noreply.github.com"
-#         git pull
-#         git add .
-#         git commit -m "${{ env.COMMIT_MESSAGE }}"
-#         git push
+    - name: GIT Commit Build Files
+      run: |
+        git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+        git config --global user.email "KTSnowy@users.noreply.github.com"
+        git pull
+        git add .
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git push
 
   compile-macos-x64:
     runs-on: macos-latest
@@ -48,14 +48,14 @@ jobs:
         cp decDoubleBindings.dylib decQuadBindings.dylib ../src
         cd ../src
         
-#     - name: GIT Commit Build Files
-#       run: |
-#         git config --global user.name "${{ env.COMMIT_AUTHOR }}"
-#         git config --global user.email "KTSnowy@users.noreply.github.com"
-#         git pull
-#         git add .
-#         git commit -m "${{ env.COMMIT_MESSAGE }}"
-#         git push
+    - name: GIT Commit Build Files
+      run: |
+        git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+        git config --global user.email "KTSnowy@users.noreply.github.com"
+        git pull
+        git add .
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git push
   
   compile-windows-x64:
     runs-on: windows-latest
@@ -78,10 +78,10 @@ jobs:
         copy decDoubleBindings.dll decQuadBindings.dll ..\src
         cd ..\src
         
-#     - name: GIT Commit Build Files
-#       run: |
-#         git config --global user.name "${{ env.COMMIT_AUTHOR }}"
-#         git config --global user.email "KTSnowy@users.noreply.github.com"
-#         git add .
-#         git commit -m "${{ env.COMMIT_MESSAGE }}"
-#         git push
+    - name: GIT Commit Build Files
+      run: |
+        git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+        git config --global user.email "KTSnowy@users.noreply.github.com"
+        git add .
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git push

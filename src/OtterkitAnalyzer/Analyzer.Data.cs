@@ -12,7 +12,7 @@ public static partial class Analyzer
     /// Stack string <c>GroupStack</c> is used in the parser whenever it needs to know which group the current data item belongs to.
     /// <para>This is used when handling the group item syntax rules, like which data items belong to which groups</para>
     /// </summary>
-    private static readonly Stack<DataSignature> GroupStack = new();
+    private static readonly Stack<EntryDefinition> GroupStack = new();
 
     // Method responsible for parsing the DATA DIVISION.
     // That includes the FILE, WORKING-STORAGE, LOCAL-STORAGE, LINKAGE, REPORT and SCREEN sections.
@@ -182,7 +182,7 @@ public static partial class Analyzer
             Identifier();
         }
 
-        DataSignature dataLocal = new();
+        EntryDefinition dataLocal = new();
 
         dataLocal.Identifier = dataName;
         dataLocal.LevelNumber = levelNumber;
@@ -281,7 +281,7 @@ public static partial class Analyzer
 
         Identifier();
 
-        DataSignature dataLocal = new();
+        EntryDefinition dataLocal = new();
 
         dataLocal.Identifier = dataName;
         dataLocal.LevelNumber = levelNumber;
@@ -393,7 +393,7 @@ public static partial class Analyzer
             Identifier();
         }
 
-        DataSignature screenLocal = new();
+        EntryDefinition screenLocal = new();
 
         screenLocal.Identifier = screenName;
         screenLocal.LevelNumber = levelNumber;
@@ -466,7 +466,7 @@ public static partial class Analyzer
         sourceUnit.Definitions.AddLocal(screenName, screenLocal);
     }
 
-    private static void HandleLevelStack(DataSignature entryLocal)
+    private static void HandleLevelStack(EntryDefinition entryLocal)
     {
         if (CurrentEquals(".") && LookaheadEquals(1, TokenType.Numeric))
         {
@@ -537,7 +537,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void CheckClauseCompatibility(DataSignature localReference, Token itemToken)
+    private static void CheckClauseCompatibility(EntryDefinition localReference, Token itemToken)
     {
         var dataItem = localReference;
 
@@ -631,7 +631,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void CheckConditionNames(DataSignature parent)
+    private static void CheckConditionNames(EntryDefinition parent)
     {
         if (!CurrentEquals("88")) return;
 
@@ -644,7 +644,7 @@ public static partial class Analyzer
 
             Identifier();
 
-            DataSignature dataLocal = new();
+            EntryDefinition dataLocal = new();
 
             dataLocal.Parent = parent;
             dataLocal.Identifier = dataName;

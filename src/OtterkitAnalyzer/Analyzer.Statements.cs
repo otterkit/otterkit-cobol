@@ -2570,7 +2570,7 @@ public static partial class Analyzer
         if (CurrentEquals(TokenType.Identifier) || CurrentEquals("SIZE", "ADDRESS"))
         {
             // TODO: This needs to be fixed to lookup a qualified reference
-            DataSignature dataItem = new();
+            EntryDefinition dataItem = new();
 
             if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "UP", "DOWN", "TO"))
             {

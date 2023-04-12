@@ -1,8 +1,8 @@
 namespace Otterkit;
 
-public record DataSignature
+public record EntryDefinition
 {
-    public DataSignature? Parent;
+    public EntryDefinition? Parent;
     public CurrentScope Section;
     public int LevelNumber;
     public string Identifier = "";

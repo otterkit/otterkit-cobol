@@ -1,6 +1,6 @@
 namespace Otterkit;
 
-public record RepositorySignature
+public record RepositoryDefinition
 {
     public string Identifier = string.Empty;
     public SourceUnit SourceType;

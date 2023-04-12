@@ -564,7 +564,7 @@ public static partial class Analyzer
             foreach (var usage in allowedUsage)
             {
                 // TODO: This needs to be fixed to lookup a qualified reference
-                if (new DataSignature().UsageType == usage) 
+                if (new EntryDefinition().UsageType == usage) 
                     hasAllowedUsage = true;
             }
 
@@ -642,7 +642,7 @@ public static partial class Analyzer
             bool hasAllowedUsage = false;
 
             // TODO: This needs to be fixed to lookup a qualified reference
-            DataSignature dataItem = new();
+            EntryDefinition dataItem = new();
             
             foreach (var usage in allowedUsage)
             {

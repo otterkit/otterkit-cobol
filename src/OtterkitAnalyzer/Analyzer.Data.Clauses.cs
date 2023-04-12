@@ -18,7 +18,7 @@ public static partial class Analyzer
         .CloseError();
     }
 
-    private static void DataEntryClauses(DataSignature dataLocal)
+    private static void DataEntryClauses(EntryDefinition dataLocal)
     {
         if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL", "TYPEDEF"))
         {
@@ -126,7 +126,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void ScreenEntryClauses(DataSignature screenLocal)
+    private static void ScreenEntryClauses(EntryDefinition screenLocal)
     {
         if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
         {
@@ -256,7 +256,7 @@ public static partial class Analyzer
         ScreenValueClause(screenLocal);
     }
 
-    private static void ScreenValueClause(DataSignature screenLocal)
+    private static void ScreenValueClause(EntryDefinition screenLocal)
     {
         if (CurrentEquals("FROM"))
         {
@@ -291,7 +291,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void LineClause(DataSignature screenLocal)
+    private static void LineClause(EntryDefinition screenLocal)
     {
         Expected("LINE");
         Optional("NUMBER");
@@ -312,7 +312,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void ColumnClause(DataSignature screenLocal)
+    private static void ColumnClause(EntryDefinition screenLocal)
     {
         Choice("COLUMN", "COL");
         Optional("NUMBER");
@@ -333,7 +333,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void SignClause(DataSignature entryLocal)
+    private static void SignClause(EntryDefinition entryLocal)
     {
         Expected("SIGN");
         Optional("IS");
@@ -347,7 +347,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void ExternalClause(DataSignature entryLocal)
+    private static void ExternalClause(EntryDefinition entryLocal)
     {
         Optional("IS");
         Expected("EXTERNAL");
@@ -367,14 +367,14 @@ public static partial class Analyzer
         }
     }
 
-    private static void GlobalClause(DataSignature entryLocal)
+    private static void GlobalClause(EntryDefinition entryLocal)
     {
         Optional("IS");
         Expected("GLOBAL");
         entryLocal.IsGlobal = true;
     }
 
-    private static void TypedefClause(DataSignature entryLocal)
+    private static void TypedefClause(EntryDefinition entryLocal)
     {
         Optional("IS");
         Expected("TYPEDEF");
@@ -383,32 +383,32 @@ public static partial class Analyzer
         if (CurrentEquals("STRONG")) Expected("STRONG");
     }
 
-    private static void RedefinesClause(DataSignature entryLocal)
+    private static void RedefinesClause(EntryDefinition entryLocal)
     {
         Expected("REDEFINES");
         Identifier();
         entryLocal.IsRedefines = true;
     }
 
-    private static void AlignedClause(DataSignature entryLocal)
+    private static void AlignedClause(EntryDefinition entryLocal)
     {
         Expected("ALIGNED");
     }
 
-    private static void AnyLengthClause(DataSignature entryLocal)
+    private static void AnyLengthClause(EntryDefinition entryLocal)
     {
         Expected("ANY");
         Expected("LENGTH");
         entryLocal.IsAnyLength = true;
     }
 
-    private static void BasedClause(DataSignature entryLocal)
+    private static void BasedClause(EntryDefinition entryLocal)
     {
         Expected("BASED");
         entryLocal.IsBased = true;
     }
 
-    private static void BlankWhenClause(DataSignature entryLocal)
+    private static void BlankWhenClause(EntryDefinition entryLocal)
     {
         Expected("BLANK");
         Optional("WHEN");
@@ -416,14 +416,14 @@ public static partial class Analyzer
         entryLocal.IsBlank = true;
     }
 
-    private static void ConstantRecordClause(DataSignature entryLocal)
+    private static void ConstantRecordClause(EntryDefinition entryLocal)
     {
         Expected("CONSTANT");
         Expected("RECORD");
         entryLocal.IsConstantRecord = true;
     }
 
-    private static void DynamicClause(DataSignature entryLocal)
+    private static void DynamicClause(EntryDefinition entryLocal)
     {
         Expected("DYNAMIC");
         Optional("LENGTH");
@@ -439,20 +439,20 @@ public static partial class Analyzer
         }
     }
 
-    private static void GroupUsageClause(DataSignature entryLocal)
+    private static void GroupUsageClause(EntryDefinition entryLocal)
     {
         Expected("GROUP-USAGE");
         Optional("IS");
         Choice("BIT", "NATIONAL");
     }
 
-    private static void JustifiedClause(DataSignature entryLocal)
+    private static void JustifiedClause(EntryDefinition entryLocal)
     {
         Choice("JUSTIFIED", "JUST");
         Optional("RIGHT");
     }
 
-    private static void SynchronizedClause(DataSignature entryLocal)
+    private static void SynchronizedClause(EntryDefinition entryLocal)
     {
         Choice("SYNCHRONIZED", "SYNC");
         if (CurrentEquals("LEFT")) Expected("LEFT");
@@ -460,7 +460,7 @@ public static partial class Analyzer
         else if (CurrentEquals("RIGHT")) Expected("RIGHT");
     }
 
-    private static void PropertyClause(DataSignature entryLocal)
+    private static void PropertyClause(EntryDefinition entryLocal)
     {
         Expected("PROPERTY");
         entryLocal.IsProperty = true;
@@ -478,20 +478,20 @@ public static partial class Analyzer
         }
     }
 
-    private static void SameAsClause(DataSignature entryLocal)
+    private static void SameAsClause(EntryDefinition entryLocal)
     {
         Expected("SAME");
         Expected("AS");
         Identifier();
     }
 
-    private static void TypeClause(DataSignature entryLocal)
+    private static void TypeClause(EntryDefinition entryLocal)
     {
         Expected("TYPE");
         Identifier();
     }
 
-    private static void OccursClause(DataSignature entryLocal)
+    private static void OccursClause(EntryDefinition entryLocal)
     {
         Expected("OCCURS");
 
@@ -579,7 +579,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void PictureClause(DataSignature entryLocal)
+    private static void PictureClause(EntryDefinition entryLocal)
     {
         Choice("PIC", "PICTURE");
         Optional("IS");
@@ -597,7 +597,7 @@ public static partial class Analyzer
         Continue();
     }
 
-    private static void ValueClause(DataSignature entryLocal)
+    private static void ValueClause(EntryDefinition entryLocal)
     {
         Expected("VALUE");
 
@@ -626,7 +626,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void UsageClause(DataSignature entryLocal)
+    private static void UsageClause(EntryDefinition entryLocal)
     {
         Expected("USAGE");
         Optional("IS");

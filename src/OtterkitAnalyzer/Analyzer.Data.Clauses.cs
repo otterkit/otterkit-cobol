@@ -18,7 +18,7 @@ public static partial class Analyzer
         .CloseError();
     }
 
-    private static void FileEntryClauses(EntryDefinition fileLocal)
+    private static void FileEntryClauses(DataEntry fileLocal)
     {
         if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL"))
         {
@@ -79,7 +79,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void DataEntryClauses(EntryDefinition dataLocal)
+    private static void DataEntryClauses(DataEntry dataLocal)
     {
         if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL", "TYPEDEF"))
         {
@@ -187,7 +187,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void ScreenEntryClauses(EntryDefinition screenLocal)
+    private static void ScreenEntryClauses(DataEntry screenLocal)
     {
         if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
         {
@@ -317,7 +317,7 @@ public static partial class Analyzer
         ScreenValueClause(screenLocal);
     }
 
-    private static void LinageClause(EntryDefinition fileLocal)
+    private static void LinageClause(DataEntry fileLocal)
     {
         Expected("LINAGE");
         Optional("IS");
@@ -349,7 +349,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void RecordClause(EntryDefinition fileLocal)
+    private static void RecordClause(DataEntry fileLocal)
     {
         Expected("RECORD");
 
@@ -415,7 +415,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void ReportsClause(EntryDefinition fileLocal)
+    private static void ReportsClause(DataEntry fileLocal)
     {
         Choice("REPORT", "REPORTS");
 
@@ -436,7 +436,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void CodeSetClause(EntryDefinition fileLocal)
+    private static void CodeSetClause(DataEntry fileLocal)
     {
         Expected("CODE-SET");
 
@@ -455,7 +455,7 @@ public static partial class Analyzer
         } 
     }
 
-    private static void ScreenValueClause(EntryDefinition screenLocal)
+    private static void ScreenValueClause(DataEntry screenLocal)
     {
         if (CurrentEquals("FROM"))
         {
@@ -490,7 +490,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void LineClause(EntryDefinition screenLocal)
+    private static void LineClause(DataEntry screenLocal)
     {
         Expected("LINE");
         Optional("NUMBER");
@@ -511,7 +511,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void ColumnClause(EntryDefinition screenLocal)
+    private static void ColumnClause(DataEntry screenLocal)
     {
         Choice("COLUMN", "COL");
         Optional("NUMBER");
@@ -532,7 +532,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void SignClause(EntryDefinition entryLocal)
+    private static void SignClause(DataEntry entryLocal)
     {
         Expected("SIGN");
         Optional("IS");
@@ -546,7 +546,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void ExternalClause(EntryDefinition entryLocal)
+    private static void ExternalClause(DataEntry entryLocal)
     {
         Optional("IS");
         Expected("EXTERNAL");
@@ -554,7 +554,7 @@ public static partial class Analyzer
         {
             Expected("AS");
             entryLocal.IsExternal = true;
-            entryLocal.ExternalName = Current().Value;
+            entryLocal.ExternalizedName = Current().Value;
 
             String();
         }
@@ -562,18 +562,18 @@ public static partial class Analyzer
         if (!CurrentEquals("AS"))
         {
             entryLocal.IsExternal = true;
-            entryLocal.ExternalName = Current().Value;
+            entryLocal.ExternalizedName = Current().Value;
         }
     }
 
-    private static void GlobalClause(EntryDefinition entryLocal)
+    private static void GlobalClause(DataEntry entryLocal)
     {
         Optional("IS");
         Expected("GLOBAL");
         entryLocal.IsGlobal = true;
     }
 
-    private static void TypedefClause(EntryDefinition entryLocal)
+    private static void TypedefClause(DataEntry entryLocal)
     {
         Optional("IS");
         Expected("TYPEDEF");
@@ -582,32 +582,32 @@ public static partial class Analyzer
         if (CurrentEquals("STRONG")) Expected("STRONG");
     }
 
-    private static void RedefinesClause(EntryDefinition entryLocal)
+    private static void RedefinesClause(DataEntry entryLocal)
     {
         Expected("REDEFINES");
         Identifier();
         entryLocal.IsRedefines = true;
     }
 
-    private static void AlignedClause(EntryDefinition entryLocal)
+    private static void AlignedClause(DataEntry entryLocal)
     {
         Expected("ALIGNED");
     }
 
-    private static void AnyLengthClause(EntryDefinition entryLocal)
+    private static void AnyLengthClause(DataEntry entryLocal)
     {
         Expected("ANY");
         Expected("LENGTH");
         entryLocal.IsAnyLength = true;
     }
 
-    private static void BasedClause(EntryDefinition entryLocal)
+    private static void BasedClause(DataEntry entryLocal)
     {
         Expected("BASED");
         entryLocal.IsBased = true;
     }
 
-    private static void BlankWhenClause(EntryDefinition entryLocal)
+    private static void BlankWhenClause(DataEntry entryLocal)
     {
         Expected("BLANK");
         Optional("WHEN");
@@ -615,14 +615,14 @@ public static partial class Analyzer
         entryLocal.IsBlank = true;
     }
 
-    private static void ConstantRecordClause(EntryDefinition entryLocal)
+    private static void ConstantRecordClause(DataEntry entryLocal)
     {
         Expected("CONSTANT");
         Expected("RECORD");
         entryLocal.IsConstantRecord = true;
     }
 
-    private static void DynamicClause(EntryDefinition entryLocal)
+    private static void DynamicClause(DataEntry entryLocal)
     {
         Expected("DYNAMIC");
         Optional("LENGTH");
@@ -638,20 +638,20 @@ public static partial class Analyzer
         }
     }
 
-    private static void GroupUsageClause(EntryDefinition entryLocal)
+    private static void GroupUsageClause(DataEntry entryLocal)
     {
         Expected("GROUP-USAGE");
         Optional("IS");
         Choice("BIT", "NATIONAL");
     }
 
-    private static void JustifiedClause(EntryDefinition entryLocal)
+    private static void JustifiedClause(DataEntry entryLocal)
     {
         Choice("JUSTIFIED", "JUST");
         Optional("RIGHT");
     }
 
-    private static void SynchronizedClause(EntryDefinition entryLocal)
+    private static void SynchronizedClause(DataEntry entryLocal)
     {
         Choice("SYNCHRONIZED", "SYNC");
         if (CurrentEquals("LEFT")) Expected("LEFT");
@@ -659,7 +659,7 @@ public static partial class Analyzer
         else if (CurrentEquals("RIGHT")) Expected("RIGHT");
     }
 
-    private static void PropertyClause(EntryDefinition entryLocal)
+    private static void PropertyClause(DataEntry entryLocal)
     {
         Expected("PROPERTY");
         entryLocal.IsProperty = true;
@@ -677,20 +677,20 @@ public static partial class Analyzer
         }
     }
 
-    private static void SameAsClause(EntryDefinition entryLocal)
+    private static void SameAsClause(DataEntry entryLocal)
     {
         Expected("SAME");
         Expected("AS");
         Identifier();
     }
 
-    private static void TypeClause(EntryDefinition entryLocal)
+    private static void TypeClause(DataEntry entryLocal)
     {
         Expected("TYPE");
         Identifier();
     }
 
-    private static void OccursClause(EntryDefinition entryLocal)
+    private static void OccursClause(DataEntry entryLocal)
     {
         Expected("OCCURS");
 
@@ -778,7 +778,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void PictureClause(EntryDefinition entryLocal)
+    private static void PictureClause(DataEntry entryLocal)
     {
         Choice("PIC", "PICTURE");
         Optional("IS");
@@ -796,7 +796,7 @@ public static partial class Analyzer
         Continue();
     }
 
-    private static void ValueClause(EntryDefinition entryLocal)
+    private static void ValueClause(DataEntry entryLocal)
     {
         Expected("VALUE");
 
@@ -825,7 +825,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void UsageClause(EntryDefinition entryLocal)
+    private static void UsageClause(DataEntry entryLocal)
     {
         Expected("USAGE");
         Optional("IS");

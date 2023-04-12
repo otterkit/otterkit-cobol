@@ -1103,7 +1103,7 @@ public static partial class Analyzer
     private static void INVOKE()
     {
         Expected("INVOKE");
-        Identifier(UsageType.ObjectReference);
+        Identifier();
         if (CurrentEquals(TokenType.Identifier))
         {
             Identifier();
@@ -2570,7 +2570,7 @@ public static partial class Analyzer
         if (CurrentEquals(TokenType.Identifier) || CurrentEquals("SIZE", "ADDRESS"))
         {
             // TODO: This needs to be fixed to lookup a qualified reference
-            EntryDefinition dataItem = new();
+            DataEntry dataItem = new(Current(), EntryType.DataDescription);
 
             if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "UP", "DOWN", "TO"))
             {
@@ -2592,7 +2592,7 @@ public static partial class Analyzer
 
                 if (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier(UsageType.Integer);
+                    Identifier();
                 }
                 else
                 {
@@ -2608,7 +2608,7 @@ public static partial class Analyzer
             }
             else if (dataItem.UsageType == UsageType.MessageTag)
             {
-                Identifier(UsageType.MessageTag);
+                Identifier();
                 Expected("TO");
                 if (CurrentEquals("NULL"))
                 {
@@ -2616,7 +2616,7 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    Identifier(UsageType.MessageTag);
+                    Identifier();
                 }
             }
             else if (dataItem.IsDynamicLength || CurrentEquals("SIZE"))
@@ -2651,7 +2651,7 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    Identifier(UsageType.DataPointer);
+                    Identifier();
                 }
 
                 while (CurrentEquals(TokenType.Identifier) || CurrentEquals("ADDRESS"))
@@ -2665,14 +2665,14 @@ public static partial class Analyzer
                     }
                     else
                     {
-                        Identifier(UsageType.DataPointer);
+                        Identifier();
                     }
                 }
 
                 if (hasAddress || CurrentEquals("TO"))
                 {
                     Expected("TO");
-                    Identifier(UsageType.DataPointer);
+                    Identifier();
                 }
                 else if (!hasAddress && CurrentEquals("UP", "DOWN"))
                 {
@@ -2688,14 +2688,14 @@ public static partial class Analyzer
                 bool checkUsage = true;
 
                 while (CurrentEquals(TokenType.Identifier))
-                    Identifier(out checkUsage, UsageType.Index, UsageType.Integer);
+                    Identifier();
 
                 if (CurrentEquals("TO"))
                 {
                     Expected("TO");
                     if (CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier(UsageType.Integer, UsageType.Index);
+                        Identifier();
                     }
                     else
                     {

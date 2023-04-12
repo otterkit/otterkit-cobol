@@ -12,7 +12,7 @@ public static partial class Analyzer
     /// Stack string <c>GroupStack</c> is used in the parser whenever it needs to know which group the current data item belongs to.
     /// <para>This is used when handling the group item syntax rules, like which data items belong to which groups</para>
     /// </summary>
-    private static readonly Stack<EntryDefinition> GroupStack = new();
+    private static readonly Stack<DataEntry> GroupStack = new();
 
     // Method responsible for parsing the DATA DIVISION.
     // That includes the FILE, WORKING-STORAGE, LOCAL-STORAGE, LINKAGE, REPORT and SCREEN sections.
@@ -201,9 +201,8 @@ public static partial class Analyzer
 
         Identifier();
 
-        EntryDefinition fileLocal = new();
+        DataEntry fileLocal = new(itemToken, EntryType.FileDescription);
 
-        fileLocal.Identifier = fileName;
         fileLocal.Section = CurrentScope;
 
         if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
@@ -319,9 +318,8 @@ public static partial class Analyzer
             Identifier();
         }
 
-        EntryDefinition dataLocal = new();
+        DataEntry dataLocal = new(itemToken, EntryType.DataDescription);
 
-        dataLocal.Identifier = dataName;
         dataLocal.LevelNumber = levelNumber;
         dataLocal.Section = CurrentScope;
 
@@ -418,9 +416,8 @@ public static partial class Analyzer
 
         Identifier();
 
-        EntryDefinition dataLocal = new();
+        DataEntry dataLocal = new(itemToken, EntryType.DataDescription);
 
-        dataLocal.Identifier = dataName;
         dataLocal.LevelNumber = levelNumber;
         dataLocal.Section = CurrentScope;
         dataLocal.IsConstant = true;
@@ -530,9 +527,8 @@ public static partial class Analyzer
             Identifier();
         }
 
-        EntryDefinition screenLocal = new();
+        DataEntry screenLocal = new(itemToken, EntryType.ScreenDescription);
 
-        screenLocal.Identifier = screenName;
         screenLocal.LevelNumber = levelNumber;
         screenLocal.Section = CurrentScope;
 
@@ -603,7 +599,7 @@ public static partial class Analyzer
         sourceUnit.Definitions.AddLocal(screenName, screenLocal);
     }
 
-    private static void HandleLevelStack(EntryDefinition entryLocal)
+    private static void HandleLevelStack(DataEntry entryLocal)
     {
         if (CurrentEquals(".") && LookaheadEquals(1, TokenType.Numeric))
         {
@@ -674,7 +670,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void CheckClauseCompatibility(EntryDefinition localReference, Token itemToken)
+    private static void CheckClauseCompatibility(DataEntry localReference, Token itemToken)
     {
         var dataItem = localReference;
 
@@ -768,7 +764,7 @@ public static partial class Analyzer
         }
     }
 
-    private static void CheckConditionNames(EntryDefinition parent)
+    private static void CheckConditionNames(DataEntry parent)
     {
         if (!CurrentEquals("88")) return;
 
@@ -781,10 +777,9 @@ public static partial class Analyzer
 
             Identifier();
 
-            EntryDefinition dataLocal = new();
+            DataEntry dataLocal = new(itemToken, EntryType.DataDescription);
 
             dataLocal.Parent = parent;
-            dataLocal.Identifier = dataName;
             dataLocal.LevelNumber = 88;
             dataLocal.Section = CurrentScope;
 

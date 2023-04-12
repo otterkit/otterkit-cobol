@@ -7,6 +7,7 @@ public enum EntryType
     FileDescription,
     ScreenDescription,
     DataDescription,
+    RepositoryEntry
 }
 
 public abstract class AbstractEntry

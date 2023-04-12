@@ -166,6 +166,8 @@ public static partial class Preprocessor
         {
             Continue();
 
+            LastDirective = DirectiveType.SourceFormat;
+
             if (CurrentEquals("FORMAT")) Continue();
 
             if (CurrentEquals("IS")) Continue();

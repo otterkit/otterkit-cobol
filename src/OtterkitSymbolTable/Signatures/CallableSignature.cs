@@ -2,9 +2,9 @@ namespace Otterkit;
 
 public class CallableSignature : AbstractSignature
 {
-    public List<FileControlEntry> FileControlEntries = new();
-    public LocalReferences<DataEntry> Definitions = new();
-    public List<RepositoryDefinition> Repository = new();
+    public LocalEntries<RepositoryEntry> RepositoryEntries = new();
+    public LocalEntries<FileControlEntry> FileEntries = new();
+    public LocalEntries<DataEntry> DataEntries = new();
     public List<DataEntry> Parameters = new();
     public List<bool> IsOptional = new();
     public List<bool> IsByRef = new();

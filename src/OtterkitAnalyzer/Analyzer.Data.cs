@@ -248,7 +248,7 @@ public static partial class Analyzer
         // Because we don't want to run this again during it
         var sourceUnit = CurrentCallable;
 
-        if (sourceUnit.Definitions.LocalExists(fileName))
+        if (sourceUnit.DataEntries.EntryExists(fileName))
         {
             Error
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -263,7 +263,7 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        sourceUnit.Definitions.AddLocal(fileName, fileLocal);
+        sourceUnit.DataEntries.AddEntry(fileName, fileLocal);
     }
 
 
@@ -376,7 +376,7 @@ public static partial class Analyzer
         // Because we don't want to run this again during it
         var sourceUnit = CurrentCallable;
 
-        if (sourceUnit.Definitions.LocalExists(dataName) && levelNumber is 1 or 77)
+        if (sourceUnit.DataEntries.EntryExists(dataName) && levelNumber is 1 or 77)
         {
             Error
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -391,7 +391,7 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        sourceUnit.Definitions.AddLocal(dataName, dataLocal);
+        sourceUnit.DataEntries.AddEntry(dataName, dataLocal);
     }
 
     private static void ConstantEntry()
@@ -490,7 +490,7 @@ public static partial class Analyzer
         // Because we don't want to run this again during it
         var sourceUnit = CurrentCallable;
 
-        if (sourceUnit.Definitions.LocalExists(dataName) && levelNumber is 1 or 77)
+        if (sourceUnit.DataEntries.EntryExists(dataName) && levelNumber is 1 or 77)
         {
             Error
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -505,7 +505,7 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        sourceUnit.Definitions.AddLocal(dataName, dataLocal);
+        sourceUnit.DataEntries.AddEntry(dataName, dataLocal);
     }
 
     private static void ScreenEntry()
@@ -581,7 +581,7 @@ public static partial class Analyzer
         // Because we don't want to run this again during it
         var sourceUnit = CurrentCallable;
 
-        if (sourceUnit.Definitions.LocalExists(screenName) && levelNumber is 1 or 77)
+        if (sourceUnit.DataEntries.EntryExists(screenName) && levelNumber is 1 or 77)
         {
             Error
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -596,7 +596,7 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        sourceUnit.Definitions.AddLocal(screenName, screenLocal);
+        sourceUnit.DataEntries.AddEntry(screenName, screenLocal);
     }
 
     private static void HandleLevelStack(DataEntry entryLocal)
@@ -848,7 +848,7 @@ public static partial class Analyzer
             // Because we don't want to run this again during it
             var sourceUnit = CurrentCallable;
 
-            if (sourceUnit.Definitions.LocalExists(dataName))
+            if (sourceUnit.DataEntries.EntryExists(dataName))
             {
                 // TODO: This is incorrect, but was done to replace the old error message system
                 Error
@@ -864,7 +864,7 @@ public static partial class Analyzer
                 .CloseError();
             }
 
-            sourceUnit.Definitions.AddLocal(dataName, dataLocal);
+            sourceUnit.DataEntries.AddEntry(dataName, dataLocal);
         }
     }
 }

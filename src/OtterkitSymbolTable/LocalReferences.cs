@@ -7,10 +7,8 @@ public sealed class LocalReferences<TValue> where TValue: notnull
 {
     private readonly Dictionary<string, List<TValue>> ReferenceLookup = new(StringComparer.OrdinalIgnoreCase);
 
-    public void AddLocal(string localName, TValue localReference, bool isResolutionPass)
+    public void AddLocal(string localName, TValue localReference)
     {
-        if (isResolutionPass) return;
-
         ref var references = ref CollectionsMarshal.GetValueRefOrAddDefault(ReferenceLookup, localName, out var exists);
 
         if (!exists)

@@ -48,12 +48,26 @@ public static partial class Analyzer
 
         if (CurrentEquals("LINKAGE"))
             LinkageSection();
+
+        if (CurrentEquals("SCREEN"))
+            ScreenSection();
     }
 
 
     // The following methods are responsible for parsing the DATA DIVISION sections
     // They are technically only responsible for parsing the section header, 
     // the Entries() method handles parsing the actual data items in their correct sections.
+    private static void ScreenSection()
+    {
+        Expected("SCREEN");
+        Expected("SECTION");
+        CurrentScope = CurrentScope.ScreenSection;
+
+        Expected(".");
+        while (Current().Type == TokenType.Numeric)
+            ScreenEntries();
+    }
+
     private static void WorkingStorage()
     {
         Expected("WORKING-STORAGE");
@@ -62,7 +76,7 @@ public static partial class Analyzer
 
         Expected(".");
         while (Current().Type == TokenType.Numeric)
-            Entries();
+            DataEntries();
     }
 
     private static void LocalStorage()
@@ -73,7 +87,7 @@ public static partial class Analyzer
 
         Expected(".");
         while (Current().Type is TokenType.Numeric)
-            Entries();
+            DataEntries();
     }
 
     private static void LinkageSection()
@@ -84,7 +98,7 @@ public static partial class Analyzer
 
         Expected(".");
         while (Current().Type is TokenType.Numeric)
-            Entries();
+            DataEntries();
     }
 
 
@@ -94,7 +108,7 @@ public static partial class Analyzer
 
     // The GroupEntry(), DataEntry(), and ConstantEntry() are then responsible for correctly
     // parsing each data item, or in the case of the GroupEntry() a group item or 01-level elementary item.
-    private static void Entries()
+    private static void DataEntries()
     {
         if (CurrentEquals("77"))
             DataEntry();
@@ -106,13 +120,42 @@ public static partial class Analyzer
             ConstantEntry();
     }
 
+    private static void ScreenEntries()
+    {
+        if (CurrentEquals("77"))
+            ScreenEntry();
+
+        if (CurrentEquals("01", "1") && !LookaheadEquals(2, "CONSTANT"))
+            GroupEntry();
+
+        if (LookaheadEquals(2, "CONSTANT"))
+            ConstantEntry();
+    }
+
     private static void GroupEntry()
     {
-        DataEntry();
-        _ = int.TryParse(Current().Value, out int outInt);
-        while (outInt > 1 && outInt < 50)
+        if (CurrentScope is CurrentScope.ScreenSection)
+        {
+            ScreenEntry();
+        }
+        else
         {
             DataEntry();
+        }
+
+        _ = int.TryParse(Current().Value, out int outInt);
+        
+        while (outInt > 1 && outInt < 50)
+        {
+            if (CurrentScope is CurrentScope.ScreenSection)
+            {
+                ScreenEntry();
+            }
+            else
+            {
+                DataEntry();
+            }
+
             _ = int.TryParse(Current().Value, out outInt);
         }
 
@@ -129,16 +172,15 @@ public static partial class Analyzer
         string dataName = itemToken.Value;
 
         CheckLevelNumber(levelNumber);
-        
+
         if (CurrentEquals("FILLER"))
         {
             Expected("FILLER");
         }
-        else
+        else if (CurrentEquals(TokenType.Identifier))
         {
             Identifier();
         }
-
 
         DataSignature dataLocal = new();
 
@@ -165,133 +207,10 @@ public static partial class Analyzer
 
         while (CurrentEquals(TokenContext.IsClause))
         {
-            if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL", "TYPEDEF"))
-            {
-                IsClauseErrorCheck();
-            }
-
-            if ((CurrentEquals("IS") && LookaheadEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
-            {
-                ExternalClause(dataLocal);
-            }
-
-            if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
-            {
-                GlobalClause(dataLocal);
-            }
-
-            if ((CurrentEquals("IS") && LookaheadEquals(1, "TYPEDEF")) || CurrentEquals("TYPEDEF"))
-            {
-                TypedefClause(dataLocal);
-            }
-
-            if (CurrentEquals("REDEFINES"))
-            {
-                RedefinesClause(dataLocal);
-            }
-
-            if (CurrentEquals("ALIGNED"))
-            {
-                AlignedClause(dataLocal);
-            }
-
-            if (CurrentEquals("ANY") && LookaheadEquals(1, "LENGTH"))
-            {
-                AnyLengthClause(dataLocal);
-            }
-
-            if (CurrentEquals("BASED"))
-            {
-                BasedClause(dataLocal);
-            }
-
-            if (CurrentEquals("BLANK"))
-            {
-                BlankWhenClause(dataLocal);
-            }
-
-            if (CurrentEquals("CONSTANT") && LookaheadEquals(1, "RECORD"))
-            {
-                ConstantRecordClause(dataLocal);
-            }
-
-            if (CurrentEquals("DYNAMIC"))
-            {
-                DynamicClause(dataLocal);
-            }
-
-            if (CurrentEquals("GROUP-USAGE"))
-            {
-                GroupUsageClause(dataLocal);
-            }
-
-            if (CurrentEquals("JUSTIFIED", "JUST"))
-            {
-                JustifiedClause(dataLocal);
-            }
-
-            if (CurrentEquals("SYNCHRONIZED", "SYNC"))
-            {
-                SynchronizedClause(dataLocal);
-            }
-
-            if (CurrentEquals("PROPERTY"))
-            {
-                PropertyClause(dataLocal);
-            }
-
-            if (CurrentEquals("SAME"))
-            {
-                SameAsClause(dataLocal);
-            }
-
-            if (CurrentEquals("TYPE"))
-            {
-                TypeClause(dataLocal);
-            }
-
-            if (CurrentEquals("OCCURS"))
-            {
-                OccursClause(dataLocal);
-            }
-
-            if (CurrentEquals("PIC", "PICTURE"))
-            {
-                PictureClause(dataLocal);
-            }
-
-            if (CurrentEquals("VALUE"))
-            {
-                ValueClause(dataLocal);
-            }
-
-            if (CurrentEquals("USAGE"))
-            {
-                UsageClause(dataLocal);
-            }
+            DataEntryClauses(dataLocal);
         }
 
-        if (CurrentEquals(".") && LookaheadEquals(1, TokenType.Numeric))
-        {
-            if (LevelStack.Count == 0)
-            {
-                dataLocal.IsElementary = true;
-            }
-            else
-            {
-                _ = int.TryParse(Lookahead(1).Value, out int outInt);
-                var currentLevel = LevelStack.Peek();
-
-                if (currentLevel == 1 && outInt >= 2 && outInt <= 49 || outInt >= 2 && outInt <= 49 && outInt > currentLevel)
-                {
-                    dataLocal.IsGroup = true;
-                }
-                else
-                {
-                    dataLocal.IsElementary = true;
-                }
-            }
-        }
+        HandleLevelStack(dataLocal);
 
         CheckClauseCompatibility(dataLocal, itemToken);
 
@@ -337,7 +256,7 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        sourceUnit.Definitions.AddLocal(dataName, dataLocal, IsResolutionPass);
+        sourceUnit.Definitions.AddLocal(dataName, dataLocal);
     }
 
     private static void ConstantEntry()
@@ -452,7 +371,124 @@ public static partial class Analyzer
             .CloseError();
         }
 
-        sourceUnit.Definitions.AddLocal(dataName, dataLocal, IsResolutionPass);
+        sourceUnit.Definitions.AddLocal(dataName, dataLocal);
+    }
+
+    private static void ScreenEntry()
+    {
+        int levelNumber = int.Parse(Current().Value);
+        Number();
+
+        Token itemToken = Current();
+        string screenName = itemToken.Value;
+
+        CheckLevelNumber(levelNumber);
+        
+        if (CurrentEquals("FILLER"))
+        {
+            Expected("FILLER");
+        }
+        else if (CurrentEquals(TokenType.Identifier) && !CurrentEquals(TokenContext.IsClause))
+        {
+            Identifier();
+        }
+
+        DataSignature screenLocal = new();
+
+        screenLocal.Identifier = screenName;
+        screenLocal.LevelNumber = levelNumber;
+        screenLocal.Section = CurrentScope;
+
+        if (GroupStack.Count is not 0)
+        {
+            screenLocal.Parent = GroupStack.Peek();
+        }
+        
+        if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
+                Unexpected token.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected screen item clauses or a separator period after this token
+                """)
+            .CloseError();
+        }
+
+        while (CurrentEquals(TokenContext.IsClause))
+        {
+            ScreenEntryClauses(screenLocal);
+        }
+
+        HandleLevelStack(screenLocal);
+
+        if (screenLocal.IsGroup) GroupStack.Push(screenLocal);
+
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                Screen item definition, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token
+                """)
+            .WithNote("""
+                Every item must end with a separator period
+                """)
+            .CloseError();
+        }
+
+        CheckConditionNames(screenLocal);
+
+        // We're returning during a resolution pass
+        if (IsResolutionPass) return;
+
+        // Because we don't want to run this again during it
+        var sourceUnit = CurrentCallable;
+
+        if (sourceUnit.Definitions.LocalExists(screenName) && levelNumber is 1 or 77)
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
+                Duplicate root level definition.
+                """)
+            .WithSourceLine(itemToken, """
+                A 01 or 77 level variable already exists with this name.
+                """)
+            .WithNote("""
+                Every root level item must have a unique name. 
+                """)
+            .CloseError();
+        }
+
+        sourceUnit.Definitions.AddLocal(screenName, screenLocal);
+    }
+
+    private static void HandleLevelStack(DataSignature entryLocal)
+    {
+        if (CurrentEquals(".") && LookaheadEquals(1, TokenType.Numeric))
+        {
+            if (LevelStack.Count == 0)
+            {
+                entryLocal.IsElementary = true;
+            }
+            else
+            {
+                _ = int.TryParse(Lookahead(1).Value, out int outInt);
+                var currentLevel = LevelStack.Peek();
+
+                if (currentLevel == 1 && outInt >= 2 && outInt <= 49 || outInt >= 2 && outInt <= 49 && outInt > currentLevel)
+                {
+                    entryLocal.IsGroup = true;
+                }
+                else
+                {
+                    entryLocal.IsElementary = true;
+                }
+            }
+        }
     }
 
     private static void CheckLevelNumber(int level)
@@ -696,490 +732,7 @@ public static partial class Analyzer
                 .CloseError();
             }
 
-            sourceUnit.Definitions.AddLocal(dataName, dataLocal, IsResolutionPass);
-        }
-    }
-
-    // The following methods are responsible for parsing the data item clauses, 
-    // each method is responsible for parsing only a single clause (Never parse two clauses with one method).
-    // The IsClauseErrorCheck() method handles an 'IS' keyword potentially missing its accompanying clause.
-    private static void IsClauseErrorCheck()
-    {
-        Error
-        .Build(ErrorType.Analyzer, ConsoleColor.Red, 35,"""
-            Missing clause or potential clause mismatch.
-            """)
-        .WithSourceLine(Current(), """
-            The 'IS' clause must only be followed by EXTERNAL, GLOBAL or TYPEDEF.
-            """)
-        .CloseError();
-    }
-
-    private static void ExternalClause(DataSignature dataLocal)
-    {
-        Optional("IS");
-        Expected("EXTERNAL");
-        if (CurrentEquals("AS"))
-        {
-            Expected("AS");
-            dataLocal.IsExternal = true;
-            dataLocal.ExternalName = Current().Value;
-
-            String();
-        }
-
-        if (!CurrentEquals("AS"))
-        {
-            dataLocal.IsExternal = true;
-            dataLocal.ExternalName = Current().Value;
-        }
-    }
-
-    private static void GlobalClause(DataSignature dataLocal)
-    {
-        Optional("IS");
-        Expected("GLOBAL");
-        dataLocal.IsGlobal = true;
-    }
-
-    private static void TypedefClause(DataSignature dataLocal)
-    {
-        Optional("IS");
-        Expected("TYPEDEF");
-        dataLocal.IsTypedef = true;
-
-        if (CurrentEquals("STRONG")) Expected("STRONG");
-    }
-
-    private static void RedefinesClause(DataSignature dataLocal)
-    {
-        Expected("REDEFINES");
-        Identifier();
-        dataLocal.IsRedefines = true;
-    }
-
-    private static void AlignedClause(DataSignature dataLocal) 
-    {
-        Expected("ALIGNED");
-    }
-
-    private static void AnyLengthClause(DataSignature dataLocal)
-    {
-        Expected("ANY");
-        Expected("LENGTH");
-        dataLocal.IsAnyLength = true;
-    }
-
-    private static void BasedClause(DataSignature dataLocal)
-    {
-        Expected("BASED");
-    }
-
-    private static void BlankWhenClause(DataSignature dataLocal)
-    {
-        Expected("BLANK");
-        Optional("WHEN");
-        Expected("ZERO");
-        dataLocal.IsBlank = true;
-    }
-
-    private static void ConstantRecordClause(DataSignature dataLocal)
-    {
-        Expected("CONSTANT");
-        Expected("RECORD");
-        dataLocal.IsConstantRecord = true;
-    }
-
-    private static void DynamicClause(DataSignature dataLocal)
-    {
-        Expected("DYNAMIC");
-        Optional("LENGTH");
-        dataLocal.IsDynamicLength = true;
-
-        if (CurrentEquals(TokenType.Identifier)) Identifier();
-
-        if (CurrentEquals("LIMIT"))
-        {
-            Expected("LIMIT");
-            Optional("IS");
-            Number();
-        }
-    }
-
-    private static void GroupUsageClause(DataSignature dataLocal)
-    {
-        Expected("GROUP-USAGE");
-        Optional("IS");
-        Choice("BIT", "NATIONAL");
-    }
-
-    private static void JustifiedClause(DataSignature dataLocal)
-    {
-        Choice("JUSTIFIED", "JUST");
-        Optional("RIGHT");
-    }
-
-    private static void SynchronizedClause(DataSignature dataLocal)
-    {
-        Choice("SYNCHRONIZED", "SYNC");
-        if (CurrentEquals("LEFT")) Expected("LEFT");
-
-        else if (CurrentEquals("RIGHT")) Expected("RIGHT");
-    }
-
-    private static void PropertyClause(DataSignature dataLocal)
-    {
-        Expected("PROPERTY");
-        dataLocal.IsProperty = true;
-        if (CurrentEquals("WITH", "NO"))
-        {
-            Optional("WITH");
-            Expected("NO");
-            Choice("GET", "SET");
-        }
-
-        if (CurrentEquals("IS", "FINAL"))
-        {
-            Optional("IS");
-            Expected("FINAL");
-        }
-    }
-
-    private static void SameAsClause(DataSignature dataLocal)
-    {
-        Expected("SAME");
-        Expected("AS");
-        Identifier();
-    }
-
-    private static void TypeClause(DataSignature dataLocal)
-    {
-        Expected("TYPE");
-        Identifier();
-    }
-
-    private static void OccursClause(DataSignature dataLocal)
-    {
-        Expected("OCCURS");
-
-        if (CurrentEquals("DYNAMIC"))
-        {
-            Expected("DYNAMIC");
-
-            if (CurrentEquals("CAPACITY"))
-            {
-                Expected("CAPACITY");
-                Optional("IN");
-                Identifier();
-            }
-
-            if (CurrentEquals("FROM"))
-            {
-                Expected("FROM");
-                Number();
-            }
-
-            if (CurrentEquals("TO"))
-            {
-                Expected("TO");
-                Number();
-            }
-
-            if (CurrentEquals("INITIALIZED"))
-            {
-                Expected("INITIALIZED");
-            }
-
-            AscendingDescendingKey();
-
-            if (CurrentEquals("INDEXED"))
-            {
-                IndexedBy();
-            }
-
-            return;
-        }
-
-        if (LookaheadEquals(1, "TO"))
-        {
-            Number();
-            Expected("TO");
-
-            Number();
-            Optional("TIMES");
-
-            Expected("DEPENDING");
-            Optional("ON");
-
-            Identifier();
-
-            AscendingDescendingKey();
-
-            if (CurrentEquals("INDEXED"))
-            {
-                IndexedBy();
-            }
-
-            return;
-        }
-
-        Number();
-        Optional("TIMES");
-
-        AscendingDescendingKey();
-
-        if (CurrentEquals("INDEXED"))
-        {
-            IndexedBy();
-        }
-
-        static void IndexedBy()
-        {
-            Expected("INDEXED");
-            Optional("BY");
-
-            Identifier();
-            while (CurrentEquals(TokenType.Identifier))
-            {
-                Identifier();
-            }
-        }
-    }
-
-    private static void PictureClause(DataSignature dataLocal)
-    {
-        Choice("PIC", "PICTURE");
-        Optional("IS");
-
-        var picture = Current();
-    
-        var isValidPicture = PictureString(picture.Value, out var size);
-
-        dataLocal.PictureString = picture.Value;
-
-        dataLocal.PictureLength = size;
-
-        dataLocal.HasPicture = true;
-
-        Continue();
-    }
-
-    private static void ValueClause(DataSignature dataLocal)
-    {
-        Expected("VALUE");
-
-        if (!CurrentEquals(TokenType.String, TokenType.Numeric))
-        {
-            Error
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
-                Unexpected token.
-                """)
-            .WithSourceLine(Current(), """
-                Expected a string or numeric literal.
-                """)
-            .CloseError();
-        }
-
-        if (CurrentEquals(TokenType.String))
-        {
-            dataLocal.DefaultValue = Current().Value;
-            String();
-        }
-
-        if (CurrentEquals(TokenType.Numeric))
-        {
-            dataLocal.DefaultValue = Current().Value;
-            Number();
-        }
-    }
-
-    private static void UsageClause(DataSignature dataLocal)
-    {
-        Expected("USAGE");
-        Optional("IS");
-        switch (Current().Value)
-        {
-            case "BINARY":
-                Expected("BINARY");
-                dataLocal.UsageType = UsageType.Binary;
-                break;
-
-            case "BINARY-CHAR":
-            case "BINARY-SHORT":
-            case "BINARY-LONG":
-            case "BINARY-DOUBLE":
-                Expected(Current().Value);
-                if (CurrentEquals("SIGNED"))
-                {
-                    Expected("SIGNED");
-                }
-                else if (CurrentEquals("UNSIGNED"))
-                {
-                    Expected("UNSIGNED");
-                }
-                break;
-
-            case "BIT":
-                Expected("BIT");
-                dataLocal.UsageType = UsageType.Bit;
-                break;
-
-            case "COMP":
-            case "COMPUTATIONAL":
-                Expected(Current().Value);
-                dataLocal.UsageType = UsageType.Computational;
-                break;
-
-            case "DISPLAY":
-                Expected("DISPLAY");
-                dataLocal.UsageType = UsageType.Display;
-                break;
-
-            case "FLOAT-BINARY-32":
-                Expected("FLOAT-BINARY-32");
-                Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
-                break;
-
-            case "FLOAT-BINARY-64":
-                Expected("FLOAT-BINARY-64");
-                Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
-                break;
-
-            case "FLOAT-BINARY-128":
-                Expected("FLOAT-BINARY-128");
-                Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
-                break;
-
-            case "FLOAT-DECIMAL-16":
-                Expected("FLOAT-DECIMAL-16");
-                EncodingEndianness();
-                break;
-
-            case "FLOAT-DECIMAL-32":
-                Expected("FLOAT-DECIMAL-32");
-                EncodingEndianness();
-                break;
-
-            case "FLOAT-EXTENDED":
-                Expected("FLOAT-EXTENDED");
-                break;
-
-            case "FLOAT-LONG":
-                Expected("FLOAT-LONG");
-                break;
-
-            case "FLOAT-SHORT":
-                Expected("FLOAT-SHORT");
-                break;
-
-            case "INDEX":
-                Expected("INDEX");
-                dataLocal.UsageType = UsageType.Index;
-                break;
-
-            case "MESSAGE-TAG":
-                Expected("MESSAGE-TAG");
-                dataLocal.UsageType = UsageType.MessageTag;
-                break;
-
-            case "NATIONAL":
-                Expected("NATIONAL");
-                dataLocal.UsageType = UsageType.National;
-                break;
-
-            case "OBJECT":
-                Expected("OBJECT");
-                Expected("REFERENCE");
-                // var isFactory = false;
-                // var isStronglyTyped = false;
-
-                // Need implement identifier resolution first
-                // To parse the rest of this using clause correctly
-                dataLocal.UsageType = UsageType.ObjectReference;
-                if (CurrentEquals("Factory"))
-                {
-                    Expected("FACTORY");
-                    Optional("OF");
-                    // isFactory = true;
-                }
-
-                if (CurrentEquals("ACTIVE-CLASS"))
-                {
-                    Expected("ACTIVE-CLASS");
-                    break;
-                }
-
-                Continue();
-
-                if (CurrentEquals("ONLY"))
-                {
-                    Expected("ONLY");
-                    // isStronglyTyped = true
-                }
-
-                break;
-
-            case "PACKED-DECIMAL":
-                Expected("PACKED-DECIMAL");
-                if (CurrentEquals("WITH", "NO"))
-                {
-                    Optional("WITH");
-                    Expected("NO");
-                    Expected("SIGN");
-                }
-                break;
-
-            case "POINTER":
-                Expected("POINTER");
-                if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
-                {
-                    Optional("TO");
-                    dataLocal.UsageType = UsageType.DataPointer;
-                    dataLocal.UsageContext = Current().Value;
-                    Identifier();
-                }
-                else
-                {
-                    dataLocal.UsageType = UsageType.DataPointer;
-                }
-                break;
-
-            case "FUNCTION-POINTER":
-                Expected("FUNCTION-POINTER");
-                Optional("TO");
-                dataLocal.UsageType = UsageType.FunctionPointer;
-                dataLocal.UsageContext = Current().Value;
-                Identifier();
-                break;
-
-            case "PROGRAM-POINTER":
-                Expected("PROGRAM-POINTER");
-                if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
-                {
-                    Optional("TO");
-                    dataLocal.UsageType = UsageType.ProgramPointer;
-                    dataLocal.UsageContext = Current().Value;
-                    Identifier();
-                }
-                else
-                {
-                    dataLocal.UsageType = UsageType.ProgramPointer;
-                }
-                break;
-
-            default:
-                Error
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 50,"""
-                    Unrecognized USAGE clause.
-                    """)
-                .WithSourceLine(Lookahead(-1))
-                .WithNote("""
-                    This could be due to an unsupported third-party extension.
-                    """)
-                .CloseError();
-
-                AnchorPoint(TokenContext.IsClause);
-                break;
+            sourceUnit.Definitions.AddLocal(dataName, dataLocal);
         }
     }
 }

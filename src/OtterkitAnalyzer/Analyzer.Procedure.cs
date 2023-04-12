@@ -173,46 +173,6 @@ public static partial class Analyzer
             return;
         }
 
-        var sourceUnit = CurrentCallable;
-
-        var (exists, isUnique) = sourceUnit.Definitions.LocalExistsAndIsUnique(Current().Value);
-
-        if (!exists)
-        {
-            Error
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
-                Reference to undefined identifier.
-                """)
-            .WithSourceLine(Current(), $"""
-                Identifier name does not exist in the current context.
-                """)
-            .CloseError();
-
-            Continue();
-            return;
-        }
-
-        if (exists && !isUnique)
-        {
-            Error
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
-                Reference to non-unique identifier.
-                """)
-            .WithSourceLine(Current(), $"""
-                Identifier name requires a qualifier.
-                """)
-            .CloseError();
-
-            Continue();
-            return;
-        }
-
-        var returning = sourceUnit.Definitions.GetUniqueLocalByName(Current().Value);
-
-        sourceUnit.Returning = returning;
-
-        // TODO: Handle name qualifiers.
-
         Identifier();
     }
 

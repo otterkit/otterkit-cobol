@@ -7,6 +7,96 @@ namespace Otterkit;
 /// </summary>
 public static partial class Analyzer
 {
+
+    private static void AlphabetNameClause()
+    {
+        Expected("ALPHABET");
+        Identifier();
+
+        if (CurrentEquals("NATIONAL") || LookaheadEquals(1, "NATIONAL"))
+        {
+            Optional("FOR");
+            Expected("NATIONAL");
+            Optional("IS");
+
+            if (CurrentEquals("LOCALE"))
+            {
+                Expected("LOCALE");
+                Identifier();
+
+                return;
+            }
+
+            if (CurrentEquals("NATIVE", "UCS-4", "UTF-8", "UTF-16", "UTF-32"))
+            {
+                Expected(Current().Value);
+
+                return;
+            }
+
+            while (CurrentEquals(TokenType.National))
+            {
+                NationalLiteralPhrase();
+            }
+
+            return;
+        }
+
+        if (CurrentEquals("ALPHANUMERIC") || LookaheadEquals(1, "ALPHANUMERIC"))
+        {
+            Optional("FOR");
+            Expected("ALPHANUMERIC");
+        }
+
+        Optional("IS");
+        if (CurrentEquals("NATIVE", "STANDARD-1", "STANDARD-2", "UTF-8"))
+        {
+            Expected(Current().Value);
+
+            return;
+        }
+        while (CurrentEquals(TokenType.String))
+        {
+            AlphanumericLiteralPhrase();
+        }
+    }
+
+    private static void AlphanumericLiteralPhrase()
+    {
+        StringLiteral();
+
+        if (CurrentEquals("THROUGH", "THRU"))
+        {
+            Choice("THROUGH", "THRU");
+            StringLiteral();
+            return;
+        }
+
+        while (CurrentEquals("ALSO"))
+        {
+            Expected("ALSO");
+            StringLiteral();
+        }
+    }
+
+    private static void NationalLiteralPhrase()
+    {
+        NationalLiteral();
+
+        if (CurrentEquals("THROUGH", "THRU"))
+        {
+            Choice("THROUGH", "THRU");
+            NationalLiteral();
+            return;
+        }
+
+        while (CurrentEquals("ALSO"))
+        {
+            Expected("ALSO");
+            NationalLiteral();
+        }
+    }
+
     private static void CharacterClassificationClause()
     {
         Optional("CHARACTER");
@@ -24,7 +114,7 @@ public static partial class Analyzer
         if (CurrentEquals(TokenType.Identifier) || CurrentEquals("LOCALE", "SYSTEM-DEFAULT", "USER-DEFAULT"))
         {
             LocalePhrase();
-        } 
+        }
     }
 
     private static void ForAlphaForNationalLocale(bool forAlphanumericExists = false, bool forNationalExists = false)
@@ -114,7 +204,7 @@ public static partial class Analyzer
         if (CurrentEquals(TokenType.Identifier))
         {
             Identifier();
-        } 
+        }
     }
 
     private static void SameClause()
@@ -157,11 +247,11 @@ public static partial class Analyzer
         {
             Optional("TO");
             fileControl = new(fileToken, EntryType.FileControl, false);
-            
+
             fileControl.Assign.Add(Current());
             IdentifierOrLiteral(TokenType.String);
 
-            while(CurrentEquals(TokenType.Identifier, TokenType.String))
+            while (CurrentEquals(TokenType.Identifier, TokenType.String))
             {
                 fileControl.Assign.Add(Current());
                 IdentifierOrLiteral(TokenType.String);
@@ -290,7 +380,7 @@ public static partial class Analyzer
                 Expected("SUPPRESS");
                 Optional("WHEN");
 
-                String();
+                StringLiteral();
             }
 
             return;
@@ -319,7 +409,7 @@ public static partial class Analyzer
             Expected("SUPPRESS");
             Optional("WHEN");
 
-            String();
+            StringLiteral();
         }
     }
 
@@ -366,7 +456,7 @@ public static partial class Analyzer
 
             Identifier();
 
-            while(CurrentEquals(TokenType.Identifier))
+            while (CurrentEquals(TokenType.Identifier))
             {
                 Identifier();
             }
@@ -388,7 +478,7 @@ public static partial class Analyzer
         if (CurrentEquals(TokenType.Identifier))
         {
             Identifier();
-        } 
+        }
     }
 
     private static void OrganizationClause(FileControlEntry fileControl)
@@ -406,7 +496,7 @@ public static partial class Analyzer
 
             return;
         }
-        
+
         if (CurrentEquals("RECORD", "SEQUENTIAL"))
         {
             Optional("RECORD");

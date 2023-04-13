@@ -411,6 +411,18 @@ public static partial class Analyzer
         if (CurrentEquals(optional)) Continue();
     }
 
+    private static void OptionalChoice(params string[] choices)
+    {
+        foreach (string choice in choices)
+        {
+            if (CurrentEquals(choice))
+            {
+                Continue();
+                return;
+            }
+        }
+    }
+
     /// <summary>
     /// Void <c>Expected</c>: This method checks if the current token is equal to it's first parameter.
     /// <para>If the current token matches the value, it moves to the next token,

@@ -52,6 +52,9 @@ public static partial class Analyzer
         if (CurrentEquals("LINKAGE"))
             LinkageSection();
 
+        if (CurrentEquals("REPORT"))
+            ReportSection();
+
         if (CurrentEquals("SCREEN"))
             ScreenSection();
     }
@@ -72,7 +75,20 @@ public static partial class Analyzer
             FileEntry();
         }
     }
-    
+
+    private static void ReportSection()
+    {
+        Expected("REPORT");
+        Expected("SECTION");
+        CurrentScope = CurrentScope.ReportSection;
+
+        Expected(".");
+        while (CurrentEquals("RD"))
+        {
+            ReportEntry();
+        }
+    }
+
     private static void ScreenSection()
     {
         Expected("SCREEN");
@@ -144,7 +160,31 @@ public static partial class Analyzer
             ConstantEntry();
     }
 
-    private static void RecordEntries()
+    private static void ReportEntries()
+    {
+        if (!CurrentEquals("01", "1"))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
+                Unexpected token.
+                """)
+            .WithSourceLine(Current(), """
+                Expected a 01 level number.
+                """)
+            .WithNote("""
+                Root level records must have a 01 level number.
+                """)
+            .CloseError(); 
+        }
+
+        if (CurrentEquals("01", "1") && !LookaheadEquals(2, "CONSTANT"))
+            GroupEntry();
+
+        if (LookaheadEquals(2, "CONSTANT"))
+            ConstantEntry();
+    }
+
+    private static void RecordGroupEntries()
     {
         if (!CurrentEquals("01", "1"))
         {
@@ -190,6 +230,143 @@ public static partial class Analyzer
 
         if (LookaheadEquals(2, "CONSTANT"))
             ConstantEntry();
+    }
+
+    private static void ReportEntry()
+    {
+        Choice("RD");
+
+        Identifier();
+
+        if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
+                Unexpected token.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected report description clauses or a separator period after this token.
+                """)
+            .CloseError();
+        }
+
+        while (CurrentEquals(TokenContext.IsClause))
+        {
+            ReportEntryClauses();
+        }
+
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                Report description, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token.
+                """)
+            .WithNote("""
+                Every RD item must end with a separator period.
+                """)
+            .CloseError();
+        }
+
+        while(CurrentEquals(TokenType.Numeric))
+        {
+            ReportEntries();
+        }
+    }
+
+    private static void ReportGroupEntry()
+    {
+        int levelNumber = int.Parse(Current().Value);
+        Number();
+
+        Token itemToken = Current();
+        string dataName = itemToken.Value;
+
+        CheckLevelNumber(levelNumber);
+
+        if (CurrentEquals("FILLER"))
+        {
+            Expected("FILLER");
+        }
+        else if (CurrentEquals(TokenType.Identifier))
+        {
+            Identifier();
+        }
+
+        DataEntry dataLocal = new(itemToken, EntryType.ReportGroupDescription);
+
+        dataLocal.LevelNumber = levelNumber;
+        dataLocal.Section = CurrentScope;
+
+        if (GroupStack.Count is not 0)
+        {
+            dataLocal.Parent = GroupStack.Peek();
+        }
+
+        if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
+                Unexpected token.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected report item clauses or a separator period after this token
+                """)
+            .CloseError();
+        }
+
+        while (CurrentEquals(TokenContext.IsClause))
+        {
+            ReportGroupClauses(dataLocal);
+        }
+
+        HandleLevelStack(dataLocal);
+
+        if (dataLocal.IsGroup) GroupStack.Push(dataLocal);
+
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                Report item definition, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token
+                """)
+            .WithNote("""
+                Every item must end with a separator period
+                """)
+            .CloseError();
+        }
+
+        CheckConditionNames(dataLocal);
+
+        // We're returning during a resolution pass
+        if (IsResolutionPass) return;
+
+        if (dataName is "FILLER") return;
+
+        // Because we don't want to run this again during it
+        var sourceUnit = CurrentCallable;
+
+        if (sourceUnit.DataEntries.EntryExists(dataName) && levelNumber is 1 or 77)
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
+                Duplicate root level definition.
+                """)
+            .WithSourceLine(itemToken, """
+                A 01 or 77 level variable already exists with this name.
+                """)
+            .WithNote("""
+                Every root level item must have a unique name. 
+                """)
+            .CloseError();
+        }
+
+        sourceUnit.DataEntries.AddEntry(dataName, dataLocal);
     }
 
     private static void FileEntry()
@@ -239,7 +416,7 @@ public static partial class Analyzer
 
         while(CurrentEquals(TokenType.Numeric))
         {
-            RecordEntries();
+            RecordGroupEntries();
         }
 
         // We're returning during a resolution pass
@@ -266,13 +443,15 @@ public static partial class Analyzer
         sourceUnit.DataEntries.AddEntry(fileName, fileLocal);
     }
 
-
-
     private static void GroupEntry()
     {
         if (CurrentScope is CurrentScope.ScreenSection)
         {
             ScreenEntry();
+        }
+        else if (CurrentScope is CurrentScope.ReportSection)
+        {
+            ReportGroupEntry();
         }
         else
         {
@@ -287,6 +466,10 @@ public static partial class Analyzer
             {
                 ScreenEntry();
             }
+            else if (CurrentScope is CurrentScope.ReportSection)
+            {
+                ReportGroupEntry();
+            }
             else
             {
                 DataEntry();
@@ -298,7 +481,7 @@ public static partial class Analyzer
         LevelStack.Clear();
         GroupStack.Clear();
     }
-    
+
     private static void DataEntry()
     {
         int levelNumber = int.Parse(Current().Value);

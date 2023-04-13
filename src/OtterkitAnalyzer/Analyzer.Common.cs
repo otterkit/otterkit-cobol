@@ -1339,43 +1339,30 @@ public static partial class Analyzer
         }
     }
 
-    private static void Arithmetic(params string[] delimiter)
+    private static void RoundedPhrase()
     {
-        static bool IsArithmeticSymbol(Token current)
-        {
-            return ArithmeticPrecedence.ContainsKey(current.Value);
-        }
+        Expected("ROUNDED");
 
+        if (CurrentEquals("MODE"))
+        {
+            Expected("MODE");
+            Optional("IS");
+            Choice(
+                "AWAY-FROM-ZERO", "NEAREST-AWAY-FROM-ZERO",
+                "NEAREST-EVEN", "NEAREST-TOWARD-ZERO",
+                "PROHIBITED", "TOWARD-GREATER",
+                "TOWARD-LESSER", "TRUNCATION"
+            );
+        }
+    }
+
+    private static void Arithmetic(TokenContext delimiter)
+    {
         var expression = new List<Token>();
 
-        while (!CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(delimiter))
+        while (!CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(delimiter) && !CurrentEquals("."))
         {
-            if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
-            {
-                expression.Add(Current());
-                Continue();
-            }
-
-            if (IsArithmeticSymbol(Current()))
-            {
-                expression.Add(Current());
-                Continue();
-            }
-
-            if (CurrentEquals(TokenType.Symbol) && !CurrentEquals(".") && !IsArithmeticSymbol(Current()))
-            {
-                Error
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 315, """
-                    Invalid arithmetic expression symbol.
-                    """)
-                .WithSourceLine(Current(), $"""
-                    This symbol is invalid.
-                    """)
-                .WithNote("""
-                    Valid operators are: +, -, *, /, **, ( and ).
-                    """)
-                .CloseError();
-            }
+            BuildArithmeticExpression(expression);
         }
 
         if (!IsBalanced(expression))
@@ -1408,106 +1395,87 @@ public static partial class Analyzer
         }
     }
 
-    private static void Condition(params string[] delimiter)
+    private static void Arithmetic(params string[] delimiter)
     {
         var expression = new List<Token>();
 
-        while (!CurrentEquals(TokenContext.IsStatement) && !CurrentEquals(delimiter))
+        while (!CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(delimiter))
         {
-            if (CurrentEquals("IS") && (Lookahead(1).Value is "GREATER" or "LESS" or "EQUAL" or "NOT" || Lookahead(1).Type is TokenType.Symbol))
-            {
-                Continue();
-            }
-            else if (CurrentEquals("NOT") && (LookaheadEquals(1, ">") || LookaheadEquals(1, "<")))
-            {
-                var combined = new Token($"NOT {Lookahead(1).Value}", TokenType.Symbol, Current().Line, Current().Column);
-                expression.Add(combined);
-                Continue(2);
-            }
-            else if (CurrentEquals("NOT") && (LookaheadEquals(1, "GREATER") || LookaheadEquals(1, "LESS") || LookaheadEquals(1, "EQUAL")))
-            {
-                if (LookaheadEquals(1, "GREATER"))
-                {
-                    var combined = new Token($"NOT >", TokenType.Symbol, Current().Line, Current().Column);
-                    expression.Add(combined);
-                }
+            BuildArithmeticExpression(expression);
+        }
 
-                if (LookaheadEquals(1, "LESS"))
-                {
-                    var combined = new Token($"NOT <", TokenType.Symbol, Current().Line, Current().Column);
-                    expression.Add(combined);
-                }
+        if (!IsBalanced(expression))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 320, """
+                Unbalanced arithmetic expression.
+                """)
+            .WithSourceLine(expression[0], $"""
+                one or more parenthesis don't have their matching pair.
+                """)
+            .CloseError();
+        }
 
-                if (LookaheadEquals(1, "EQUAL"))
-                {
-                    var combined = new Token($"<>", TokenType.Symbol, Current().Line, Current().Column);
-                    expression.Add(combined);
-                }
+        var shuntingYard = ShuntingYard(expression, ArithmeticPrecedence);
 
-                Continue(2);
+        if (!EvaluatePostfix(shuntingYard, ArithmeticPrecedence, out Token error))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 325, """
+                Invalid arithmetic expression.
+                """)
+            .WithSourceLine(expression[0], $"""
+                This expression cannot be correctly evaluated.
+                """)
+            .WithNote("""
+                Make sure that all operators have their matching operands.
+                """)
+            .CloseError();
+        }
+    }
 
-                if (CurrentEquals("THAN", "TO")) Continue();
-            }
-            else if (CurrentEquals("GREATER") || CurrentEquals("LESS") || CurrentEquals("EQUAL"))
-            {
-                if (CurrentEquals("GREATER"))
-                {
-                    var converted = new Token($">", TokenType.Symbol, Current().Line, Current().Column);
-                    expression.Add(converted);
-                }
+    private static void BuildArithmeticExpression(List<Token> expression)
+    {
+        static bool IsArithmeticSymbol(Token current)
+        {
+            return ArithmeticPrecedence.ContainsKey(current.Value);
+        }
 
-                if (CurrentEquals("LESS"))
-                {
-                    var converted = new Token($"<", TokenType.Symbol, Current().Line, Current().Column);
-                    expression.Add(converted);
-                }
+        if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
+        {
+            expression.Add(Current());
+            Continue();
+        }
 
-                if (CurrentEquals("EQUAL"))
-                {
-                    var converted = new Token($"=", TokenType.Symbol, Current().Line, Current().Column);
-                    expression.Add(converted);
-                }
+        if (IsArithmeticSymbol(Current()))
+        {
+            expression.Add(Current());
+            Continue();
+        }
 
-                if (CurrentEquals("GREATER") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
-                {
-                    if (!LookaheadEquals(1, "THAN")) Continue(2);
+        if (CurrentEquals(TokenType.Symbol) && !CurrentEquals(".") && !IsArithmeticSymbol(Current()))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 315, """
+                Invalid arithmetic expression symbol.
+                """)
+            .WithSourceLine(Current(), $"""
+                This symbol is invalid.
+                """)
+            .WithNote("""
+                Valid operators are: +, -, *, /, **, ( and ).
+                """)
+            .CloseError();
+        }
+    }
 
-                    if (LookaheadEquals(1, "THAN")) Continue(3);
+    private static void Condition(TokenContext delimiter)
+    {
+        var expression = new List<Token>();
 
-                    var converted = new Token($">=", TokenType.Symbol, Current().Line, Current().Column);
-                    expression.Add(converted);
-                }
-
-                if (CurrentEquals("LESS") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
-                {
-                    if (LookaheadEquals(1, "THAN")) Continue(3);
-
-                    if (!LookaheadEquals(1, "THAN")) Continue(2);
-
-                    var converted = new Token($"<=", TokenType.Symbol, Current().Line, Current().Column);
-                    expression.Add(converted);
-                }
-
-                Continue();
-
-                if (CurrentEquals("THAN", "TO")) Continue();
-            }
-            else
-            {
-                if (CurrentEquals("FUNCTION") || CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "("))
-                {
-                    var current = Current();
-                    while (!CurrentEquals(")")) Continue();
-
-                    Continue();
-                    expression.Add(new Token("FUNCTION-CALL", TokenType.Identifier, current.Line, current.Column));
-                }
-                else
-                {
-                    expression.Add(Current());
-                    Continue();
-                }
-            }
+        while (!CurrentEquals(delimiter))
+        {
+            BuildConditionExpression(expression);
         }
 
         if (!IsBalanced(expression))
@@ -1537,6 +1505,143 @@ public static partial class Analyzer
                 Make sure that all operators have their matching operands.
                 """)
             .CloseError();
+        }
+    }
+
+    private static void Condition(params string[] delimiter)
+    {
+        var expression = new List<Token>();
+
+        while (!CurrentEquals(TokenContext.IsStatement) && !CurrentEquals(delimiter))
+        {
+            BuildConditionExpression(expression);
+        }
+
+        if (!IsBalanced(expression))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 320, """
+                Unbalanced conditional expression.
+                """)
+            .WithSourceLine(expression[0], $"""
+                one or more parenthesis don't have their matching pair.
+                """)
+            .CloseError();
+        }
+
+        var shuntingYard = ShuntingYard(expression, ConditionalPrecedence);
+
+        if (!EvaluatePostfix(shuntingYard, ConditionalPrecedence, out Token error))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 325, """
+                Invalid arithmetic expression.
+                """)
+            .WithSourceLine(expression[0], $"""
+                This expression cannot be correctly evaluated.
+                """)
+            .WithNote("""
+                Make sure that all operators have their matching operands.
+                """)
+            .CloseError();
+        }
+    }
+
+    private static void BuildConditionExpression(List<Token> expression)
+    {
+        if (CurrentEquals("IS") && (Lookahead(1).Value is "GREATER" or "LESS" or "EQUAL" or "NOT" || Lookahead(1).Type is TokenType.Symbol))
+        {
+            Continue();
+        }
+        else if (CurrentEquals("NOT") && (LookaheadEquals(1, ">") || LookaheadEquals(1, "<")))
+        {
+            var combined = new Token($"NOT {Lookahead(1).Value}", TokenType.Symbol, Current().Line, Current().Column);
+            expression.Add(combined);
+            Continue(2);
+        }
+        else if (CurrentEquals("NOT") && (LookaheadEquals(1, "GREATER") || LookaheadEquals(1, "LESS") || LookaheadEquals(1, "EQUAL")))
+        {
+            if (LookaheadEquals(1, "GREATER"))
+            {
+                var combined = new Token($"NOT >", TokenType.Symbol, Current().Line, Current().Column);
+                expression.Add(combined);
+            }
+
+            if (LookaheadEquals(1, "LESS"))
+            {
+                var combined = new Token($"NOT <", TokenType.Symbol, Current().Line, Current().Column);
+                expression.Add(combined);
+            }
+
+            if (LookaheadEquals(1, "EQUAL"))
+            {
+                var combined = new Token($"<>", TokenType.Symbol, Current().Line, Current().Column);
+                expression.Add(combined);
+            }
+
+            Continue(2);
+
+            if (CurrentEquals("THAN", "TO")) Continue();
+        }
+        else if (CurrentEquals("GREATER") || CurrentEquals("LESS") || CurrentEquals("EQUAL"))
+        {
+            if (CurrentEquals("GREATER"))
+            {
+                var converted = new Token($">", TokenType.Symbol, Current().Line, Current().Column);
+                expression.Add(converted);
+            }
+
+            if (CurrentEquals("LESS"))
+            {
+                var converted = new Token($"<", TokenType.Symbol, Current().Line, Current().Column);
+                expression.Add(converted);
+            }
+
+            if (CurrentEquals("EQUAL"))
+            {
+                var converted = new Token($"=", TokenType.Symbol, Current().Line, Current().Column);
+                expression.Add(converted);
+            }
+
+            if (CurrentEquals("GREATER") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
+            {
+                if (!LookaheadEquals(1, "THAN")) Continue(2);
+
+                if (LookaheadEquals(1, "THAN")) Continue(3);
+
+                var converted = new Token($">=", TokenType.Symbol, Current().Line, Current().Column);
+                expression.Add(converted);
+            }
+
+            if (CurrentEquals("LESS") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
+            {
+                if (LookaheadEquals(1, "THAN")) Continue(3);
+
+                if (!LookaheadEquals(1, "THAN")) Continue(2);
+
+                var converted = new Token($"<=", TokenType.Symbol, Current().Line, Current().Column);
+                expression.Add(converted);
+            }
+
+            Continue();
+
+            if (CurrentEquals("THAN", "TO")) Continue();
+        }
+        else
+        {
+            if (CurrentEquals("FUNCTION") || CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "("))
+            {
+                var current = Current();
+                while (!CurrentEquals(")")) Continue();
+
+                Continue();
+                expression.Add(new Token("FUNCTION-CALL", TokenType.Identifier, current.Line, current.Column));
+            }
+            else
+            {
+                expression.Add(Current());
+                Continue();
+            }
         }
     }
 

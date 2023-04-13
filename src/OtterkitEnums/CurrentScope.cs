@@ -12,6 +12,7 @@ public enum CurrentScope
     FileControl,
     DataDivision,
     FileSection,
+    ReportSection,
     ScreenSection,
     WorkingStorage,
     LocalStorage,

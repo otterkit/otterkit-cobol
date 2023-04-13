@@ -187,6 +187,444 @@ public static partial class Analyzer
         }
     }
 
+    private static void ReportEntryClauses()
+    {
+        if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
+        {
+            Optional("IS");
+            Expected("GLOBAL");
+        }
+
+        if (CurrentEquals("CODE"))
+        {
+            Expected("CODE");
+            Optional("IS");
+            IdentifierOrLiteral(TokenType.String);
+        }
+
+        if (CurrentEquals("CONTROL", "CONTROLS"))
+        {
+            if (CurrentEquals("CONTROL"))
+            {
+                Expected("CONTROL");
+                Optional("IS");
+            }
+            else
+            {
+                Expected("CRONTROLS");
+                Optional("ARE");
+            }
+
+            if (CurrentEquals("FINAL"))
+            {
+                Expected("FINAL");
+
+                while (CurrentEquals(TokenType.Identifier))
+                {
+                    Identifier();
+                }
+
+                return;
+            }
+
+            Identifier();
+            while (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+            }
+        }
+    
+        if (CurrentEquals("PAGE"))
+        {
+            Expected("PAGE");
+
+            if (CurrentEquals("LIMIT"))
+            {
+                Optional("LIMIT");
+                Optional("IS");
+            }
+            else
+            {
+                Optional("LIMITS");
+                Optional("ARE");
+            }
+
+            Number();
+
+            if (CurrentEquals("LINE", "LINES"))
+            {
+                Choice("LINE", "LINES");
+            }
+
+            if (LookaheadEquals(1, "COL", "COLUMNS") && !LookaheadEquals(-1, TokenType.Numeric))
+            {
+                Number();
+                Choice("COL", "COLUMNS");
+            }
+            else if (CurrentEquals("COL", "COLUMNS") && LookaheadEquals(-1, TokenType.Numeric))
+            {
+                Choice("COL", "COLUMNS");
+            }
+
+            if (CurrentEquals("HEADING"))
+            {
+                Expected("HEADING");
+                Optional("IS");
+                Number();
+            }
+
+            if (CurrentEquals("FIRST"))
+            {
+                Expected("FIRST");
+                Choice("DETAIL", "DE");
+                Optional("IS");
+                Number();
+            }
+
+            if (CurrentEquals("LAST") && LookaheadEquals(1, "CONTROL", "CH"))
+            {
+                Expected("LAST");
+                if (CurrentEquals("CONTROL"))
+                {
+                    Expected("CONTROL");
+                    Expected("HEADING");
+                }
+                else
+                {
+                    Expected("CH");
+                }
+
+                Optional("IS");
+                Number();
+            }
+
+            if (CurrentEquals("LAST") && LookaheadEquals(1, "DETAIL", "DE"))
+            {
+                Expected("LAST");
+                Choice("DETAIL", "DE");
+                Optional("IS");
+                Number();
+            }
+
+            if (CurrentEquals("FOOTING"))
+            {
+                Expected("FOOTING");
+                Optional("IS");
+                Number();
+            }
+        }
+    }
+
+    private static void ReportGroupClauses(DataEntry reportEntry)
+    {
+        if (CurrentEquals("TYPE"))
+        {
+            ReportTypeClause(reportEntry);
+        }
+
+        if (CurrentEquals("NEXT"))
+        {
+            Expected("NEXT");
+            Expected("GROUP");
+            Optional("IS");
+
+            if (CurrentEquals("NEXT"))
+            {
+                Expected("NEXT");
+                Expected("PAGE");
+
+                if (CurrentEquals("WITH", "RESET"))
+                {
+                    Optional("WITH");
+                    Expected("RESET");
+                }
+            }
+            else if (CurrentEquals("+", "PLUS"))
+            {
+                Choice("+", "PLUS");
+                Number();
+            }
+            else
+            {
+                Number();
+            }
+        }
+
+        if (CurrentEquals("LINE", "LINES"))
+        {
+            if (CurrentEquals("LINES"))
+            {
+                Expected("LINES");
+                Optional("ARE");
+            }
+            else
+            {
+                Expected("LINE");
+                if (CurrentEquals("NUMBER"))
+                {
+                    Optional("NUMBER");
+                    Optional("IS");
+                }
+                else
+                {
+                    Optional("NUMBERS");
+                    Optional("ARE");
+                }
+            }
+
+            while (CurrentEquals(TokenType.Numeric) || CurrentEquals("+", "PLUS", "ON", "NEXT"))
+            {
+                ReportLineClauseLoop();
+            }
+        }
+
+        if (CurrentEquals("COLUMN", "COLUMNS", "COL", "COLS"))
+        {
+            if (CurrentEquals("COLUMN"))
+            {
+                Expected("COLUMN");
+                OptionalChoice("NUMBER", "NUMBERS");
+            }
+            else if (CurrentEquals("COLUMNS"))
+            {
+                Expected("COLUMNS");
+            }
+            else if (CurrentEquals("COL"))
+            {
+                Expected("COL");
+                OptionalChoice("NUMBER", "NUMBERS");
+            }
+            else
+            {
+                Expected("COLS");
+            }
+
+            if (CurrentEquals("CENTER", "RIGHT"))
+            {
+                Choice("CENTER", "RIGHT");
+            }
+            else
+            {
+                Optional("LEFT");
+            }
+
+            OptionalChoice("IS", "ARE");
+
+            while(CurrentEquals(TokenType.Numeric) || CurrentEquals("+", "PLUS"))
+            {
+                if (CurrentEquals("+", "PLUS"))
+                {
+                    Choice("+", "PLUS");
+                    Number();
+                }
+                else
+                {
+                    Number();
+                }
+            }
+        }
+
+        if (CurrentEquals("PICTURE", "PIC"))
+        {
+            PictureClause(reportEntry);
+        }
+
+        if (CurrentEquals("SIGN"))
+        {
+            SignClause(reportEntry);
+        }
+
+        if (CurrentEquals("JUSTIFIED", "JUST"))
+        {
+            JustifiedClause(reportEntry);
+        }
+
+        if (CurrentEquals("BLANK"))
+        {
+            BlankWhenClause(reportEntry);
+        }
+
+        if (CurrentEquals("PRESENT"))
+        {
+            Expected("PRESENT");
+            Expected("WHEN");
+            Condition(TokenContext.IsClause);
+        }
+
+        if (CurrentEquals("GROUP"))
+        {
+            Expected("GROUP");
+            Optional("INDICATE");
+        }
+
+        if (CurrentEquals("OCCURS"))
+        {
+            Expected("OCCURS");
+            if (LookaheadEquals(1, "TO"))
+            {
+                Number();
+                Expected("TO");
+            }
+
+            Number();
+            Optional("TIMES");
+
+            if (CurrentEquals("DEPENDING"))
+            {
+                Expected("DEPENDING");
+                Optional("ON");
+                Identifier();
+            }
+
+            if (CurrentEquals("STEP"))
+            {
+                Expected("STEP");
+                Number();
+            }
+        }
+
+        if (CurrentEquals("USAGE"))
+        {
+            Expected("USAGE");
+            Optional("IS");
+
+            Choice("DISPLAY", "NATIONAL");
+        }
+        
+        if (CurrentEquals("SUM"))
+        {
+            while (CurrentEquals("SUM"))
+            {
+                Expected("SUM");
+                Optional("OF");
+
+                // TODO: 
+                // This clause has other formats
+                // that require identifier resolution
+                Arithmetic(TokenContext.IsClause);
+
+                if (CurrentEquals("UPON"))
+                {
+                    Expected("UPON");
+                    Identifier();
+
+                    while(CurrentEquals(TokenType.Identifier))
+                    {
+                        Identifier();
+                    }
+                }
+            }
+
+            if (CurrentEquals("RESET"))
+            {
+                Expected("RESET");
+                Optional("ON");
+                if (CurrentEquals("FINAL"))
+                {
+                    Expected("FINAL");
+                }
+                else
+                {
+                    Identifier();
+                }
+            }
+
+            if (CurrentEquals("ROUNDED"))
+            {
+                RoundedPhrase();
+            }
+        }
+
+        if (CurrentEquals("SOURCE", "SOURCES"))
+        {
+            if (CurrentEquals("SOURCES"))
+            {
+                Expected("SOURCES");
+                Optional("ARE");
+            }
+            else
+            {
+                Expected("SOURCE");
+                Optional("IS");
+            }
+
+            Arithmetic(TokenContext.IsClause);
+
+            if (CurrentEquals("ROUNDED"))
+            {
+                RoundedPhrase();
+            }
+        }
+
+        if (CurrentEquals("VALUE", "VALUES"))
+        {
+            if (CurrentEquals("VALUE"))
+            {
+                Expected("VALUE");
+                Optional("IS");
+            }
+            else
+            {
+                Expected("VALUE");
+                Optional("ARE");
+            }
+            
+            StringLiteral();
+
+            while (CurrentEquals(TokenType.String))
+            {
+                StringLiteral();
+            }
+        }
+
+        if (CurrentEquals("VARYING"))
+        {
+            Expected("VARYING");
+
+            while (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+
+                if (CurrentEquals("FROM"))
+                {
+                    Expected("FROM");
+                    Arithmetic();
+                }
+
+                if (CurrentEquals("BY"))
+                {
+                    Expected("BY");
+                    Arithmetic();
+                }
+            }
+        }
+    }
+
+    private static void ReportLineClauseLoop()
+    {
+        if (CurrentEquals("ON", "NEXT"))
+        {
+            Optional("ON");
+            Expected("NEXT");
+            Expected("PAGE");
+        }
+        else if (CurrentEquals("+", "PLUS"))
+        {
+            Choice("+", "PLUS");
+            Number();
+        }
+        else
+        {
+            Number();
+            if (CurrentEquals("ON", "NEXT"))
+            {
+                Optional("ON");
+                Expected("NEXT");
+                Expected("PAGE");
+            }
+        }
+    }
+
     private static void ScreenEntryClauses(DataEntry screenLocal)
     {
         if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
@@ -688,6 +1126,79 @@ public static partial class Analyzer
     {
         Expected("TYPE");
         Identifier();
+    }
+
+    private static void ReportTypeClause(DataEntry reportLocal)
+    {
+        Expected("TYPE");
+        Optional("IS");
+
+        if (CurrentEquals("REPORT"))
+        {
+            Expected("REPORT");
+            Choice("HEADING", "FOOTING");
+        }
+
+        if (CurrentEquals("PAGE"))
+        {
+            Expected("PAGE");
+            Choice("HEADING", "FOOTING");
+        }
+
+        if (CurrentEquals("DETAIL", "DE"))
+        {
+            Choice("DETAIL", "DE");
+        }
+
+        if (CurrentEquals("CONTROL", "CH", "CF"))
+        {
+            var isControlHeading = false;
+
+            if (CurrentEquals("CONTROL") && LookaheadEquals(1, "HEADING"))
+            {
+                Expected("CONTROL");
+                Expected("HEADING");
+                isControlHeading = true;
+            }
+            else if (CurrentEquals("CONTROL") && LookaheadEquals(1, "FOOTING"))
+            {
+                Expected("CONTROL");
+                Expected("FOOTING");
+            }
+            else if (CurrentEquals("CH"))
+            {
+                Expected("CH");
+                isControlHeading = true;
+            }
+            else if (CurrentEquals("CF"))
+            {
+                Expected("CF");
+            }
+
+            if (CurrentEquals("OR", "FOR", "FINAL") || CurrentEquals(TokenType.Identifier))
+            {
+                OptionalChoice("ON", "FOR");
+                if (CurrentEquals("FINAL"))
+                {
+                    Expected("FINAL");
+                }
+                else
+                {
+                    Identifier();
+                }
+
+                if (isControlHeading && CurrentEquals("OR"))
+                {
+                    Expected("OR");
+                    Expected("PAGE");
+                }
+            }
+        }
+
+        if (CurrentEquals("RH", "RF", "PH", "PF"))
+        {
+            Expected(Current().Value);
+        }
     }
 
     private static void OccursClause(DataEntry entryLocal)

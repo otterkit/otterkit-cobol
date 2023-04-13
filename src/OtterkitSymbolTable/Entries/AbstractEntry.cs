@@ -7,6 +7,7 @@ public enum EntryType
     FileDescription,
     ScreenDescription,
     DataDescription,
+    ReportGroupDescription,
     RepositoryEntry
 }
 

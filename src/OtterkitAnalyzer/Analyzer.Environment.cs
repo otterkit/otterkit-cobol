@@ -51,7 +51,20 @@ public static partial class Analyzer
                 .CloseError();
             }
 
-            if (CurrentEquals("REPOSITORY")) Repository();
+            if (CurrentEquals("SOURCE-COMPUTER"))
+            {
+                SourceComputer();
+            }
+
+            if (CurrentEquals("OBJECT-COMPUTER"))
+            {
+                ObjectComputer();
+            }
+
+            if (CurrentEquals("REPOSITORY"))
+            {
+                Repository();
+            }
         }
 
         if (CurrentEquals("INPUT-OUTPUT"))
@@ -83,6 +96,76 @@ public static partial class Analyzer
             {
                 IoControl();
             }
+        }
+    }
+
+    private static void SourceComputer()
+    {
+        Expected("SOURCE-COMPUTER");
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
+                Paragraph header, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token.
+                """)
+            .WithNote("""
+                Every paragraph header must end with a separator period.
+                """)
+            .CloseError();
+        }
+
+        if (CurrentEquals(TokenType.Identifier))
+        {
+            Identifier(Current());
+
+            Expected(".");
+        }
+    }
+
+    private static void ObjectComputer()
+    {
+        Expected("OBJECT-COMPUTER");
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
+                Paragraph header, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token.
+                """)
+            .WithNote("""
+                Every paragraph header must end with a separator period.
+                """)
+            .CloseError();
+        }
+
+        var shouldHaveSeparator = false;
+
+        if (CurrentEquals(TokenType.Identifier))
+        {
+            Identifier(Current());
+            shouldHaveSeparator = true;
+        }
+
+        if (CurrentEquals("CHARACTER", "CLASSIFICATION"))
+        {
+            CharacterClassificationClause();
+            shouldHaveSeparator = true;
+        }
+
+        if (CurrentEquals("PROGRAM", "COLLATING", "SEQUENCE"))
+        {
+            ProgramCollatingSequenceClause();
+            shouldHaveSeparator = true;
+        }
+
+        if (shouldHaveSeparator)
+        {
+            Expected(".");
         }
     }
 

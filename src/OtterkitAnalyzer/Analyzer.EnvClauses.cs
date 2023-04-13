@@ -7,6 +7,116 @@ namespace Otterkit;
 /// </summary>
 public static partial class Analyzer
 {
+    private static void CharacterClassificationClause()
+    {
+        Optional("CHARACTER");
+        Expected("CLASSIFICATION");
+
+        if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+        {
+            ForAlphanumericForNational();
+            return;
+        }
+
+        Optional("IS");
+        LocalePhrase();
+
+        if (CurrentEquals(TokenType.Identifier) || CurrentEquals("LOCALE", "SYSTEM-DEFAULT", "USER-DEFAULT"))
+        {
+            LocalePhrase();
+        } 
+    }
+
+    private static void ForAlphaForNationalLocale(bool forAlphanumericExists = false, bool forNationalExists = false)
+    {
+        if (CurrentEquals("FOR") && LookaheadEquals(1, "ALPHANUMERIC") || CurrentEquals("ALPHANUMERIC"))
+        {
+            if (forAlphanumericExists)
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    For alphanumeric phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    FOR ALPHANUMERIC can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to FOR NATIONAL.
+                    """)
+                .CloseError();
+            }
+            forAlphanumericExists = true;
+
+            Optional("FOR");
+            Expected("ALPHANUMERIC");
+            Optional("IS");
+
+            LocalePhrase();
+
+            ForAlphaForNationalLocale(forAlphanumericExists, forNationalExists);
+        }
+
+        if (CurrentEquals("FOR") && LookaheadEquals(1, "NATIONAL") || CurrentEquals("NATIONAL"))
+        {
+            if (forNationalExists)
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
+                    For national phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    FOR NATIONAL can only be specified once in this statement.
+                    """)
+                .WithNote("""
+                    The same applies to FOR ALPHANUMERIC.
+                    """)
+                .CloseError();
+            }
+            forNationalExists = true;
+
+            Optional("FOR");
+            Expected("NATIONAL");
+            Optional("IS");
+
+            LocalePhrase();
+
+            ForAlphaForNationalLocale(forAlphanumericExists, forNationalExists);
+        }
+    }
+
+    private static void LocalePhrase()
+    {
+        if (CurrentEquals("LOCALE", "SYSTEM-DEFAULT", "USER-DEFAULT"))
+        {
+            Expected(Current().Value);
+        }
+        else
+        {
+            Identifier();
+        }
+    }
+
+    private static void ProgramCollatingSequenceClause()
+    {
+        Optional("PROGRAM");
+        Optional("COLLATING");
+        Expected("SEQUENCE");
+
+        if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+        {
+            ForAlphanumericForNational();
+            return;
+        }
+
+        Optional("IS");
+        Identifier();
+
+        if (CurrentEquals(TokenType.Identifier))
+        {
+            Identifier();
+        } 
+    }
+
     private static void SameClause()
     {
         Expected("SAME");

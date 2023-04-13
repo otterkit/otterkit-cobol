@@ -78,6 +78,11 @@ public static partial class Analyzer
             {
                 FileControl();
             }
+
+            if (CurrentEquals("I-O-CONTROL"))
+            {
+                IoControl();
+            }
         }
     }
 
@@ -242,6 +247,74 @@ public static partial class Analyzer
                 Every paragraph body must end with a separator period.
                 """)
             .CloseError();
+        }
+    }
+
+    private static void IoControl()
+    {
+        Expected("I-O-CONTROL");
+        CurrentScope = CurrentScope.FileControl;
+
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
+                Paragraph header, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token.
+                """)
+            .WithNote("""
+                Every paragraph header must end with a separator period.
+                """)
+            .CloseError();
+        }
+
+        if (CurrentEquals("APPLY"))
+        {
+            Expected("APPLY");
+            Expected("COMMIT");
+            Optional("ON");
+
+            Identifier();
+
+            while (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+            }
+
+            Expected(".");
+        }
+
+        if (CurrentEquals("SAME"))
+        {
+            while (CurrentEquals("SAME"))
+            {
+                SameClause();
+            }
+
+            Expected(".");
+        }
+    }
+
+    private static void SameClause()
+    {
+        Expected("SAME");
+
+        if (CurrentEquals("RECORD", "SORT", "SORT-MERGE"))
+        {
+            Expected(Current().Value);
+        }
+
+        Optional("AREA");
+        Optional("FOR");
+
+        Identifier();
+        Identifier();
+
+        while (CurrentEquals(TokenType.Identifier))
+        {
+            Identifier();
         }
     }
 

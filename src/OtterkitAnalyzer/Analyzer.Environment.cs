@@ -61,6 +61,11 @@ public static partial class Analyzer
                 ObjectComputer();
             }
 
+            if (CurrentEquals("SPECIAL-NAMES"))
+            {
+                SpecialNames();
+            }
+
             if (CurrentEquals("REPOSITORY"))
             {
                 Repository();
@@ -169,6 +174,122 @@ public static partial class Analyzer
         }
     }
 
+    private static void SpecialNames()
+    {
+        Expected("SPECIAL-NAMES");
+        if (!Expected(".", false))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
+                Paragraph header, missing separator period.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected a separator period '. ' after this token.
+                """)
+            .WithNote("""
+                Every paragraph header must end with a separator period.
+                """)
+            .CloseError();
+        }
+
+        while (CurrentEquals("ALPHABET"))
+        {
+            AlphabetNameClause();
+        }
+
+        while (CurrentEquals("CLASS"))
+        {
+            ClassNameClause();
+        }
+
+        if (CurrentEquals("CRT"))
+        {
+            Expected("CRT");
+            Expected("STATUS");
+            Optional("IS");
+
+            Identifier();
+        }
+        
+        while (CurrentEquals("CURRENCY"))
+        {
+            Expected("CURRENCY");
+            Optional("SIGN");
+            Optional("IS");
+
+            StringLiteral();
+
+            if (CurrentEquals("WITH", "PICTURE"))
+            {
+                Optional("WITH");
+                Expected("PICTURE");
+                Expected("SYMBOL");
+
+                StringLiteral();
+            }
+        }
+
+        if (CurrentEquals("CURSOR"))
+        {
+            Expected("CURSOR");
+            Optional("IS");
+
+            Identifier();
+        }
+
+        if (CurrentEquals("DECIMAL-POINT"))
+        {
+            Expected("DECIMAL-POINT");
+            Optional("IS");
+            Expected("COMMA");
+        }
+
+        while (CurrentEquals("DYNAMIC"))
+        {
+            DynamicLengthStructureClause();
+        }
+
+        while (CurrentEquals("LOCALE"))
+        {
+            Expected("LOCALE");
+            Optional("IS");
+
+            // TODO: Define allowed locale names
+            StringLiteral();
+        }
+
+        while (CurrentEquals(TokenType.Identifier))
+        {
+            // TODO: Define allowed device, feature and switch names
+            // and replace TokenType.Identifier with the allowed names
+            Identifier();
+            Optional("IS");
+
+            // Mnemonic name
+            Identifier();
+        }
+
+        while (CurrentEquals("SYMBOLIC"))
+        {
+            SymbolicCharactersClause();
+        }
+
+        if (CurrentEquals("ORDER"))
+        {
+            Expected("ORDER");
+            Expected("TABLE");
+            Identifier();
+
+            Optional("IS");
+            StringLiteral();
+        }
+
+        if (!LookaheadEquals(-2, "SPECIAL-NAMES") && !LookaheadEquals(-1, "SPECIAL-NAMES"))
+        {
+            Expected(".");
+        }
+    }
+    
     private static void Repository()
     {
         Expected("REPOSITORY");

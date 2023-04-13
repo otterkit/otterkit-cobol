@@ -97,6 +97,139 @@ public static partial class Analyzer
         }
     }
 
+    private static void ClassNameClause()
+    {
+        Expected("CLASS");
+        Identifier();
+
+        if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+        {
+            Optional("FOR");
+            Choice("ALPHANUMERIC", "NATIONAL");
+        }
+
+        Optional("IS");
+
+        // Lookbehind:
+        var national = LookaheadEquals(-2, "NATIONAL");
+
+        var chosenType = national ? TokenType.National : TokenType.String;
+
+        while(CurrentEquals(TokenType.String, TokenType.National))
+        {
+            ClassLiteralPhrase(chosenType);
+        }
+
+        if (CurrentEquals("IN"))
+        {
+            Expected("IN");
+            Identifier();
+        }
+    }
+
+    private static void ClassLiteralPhrase(TokenType literalType)
+    {
+        if (literalType is TokenType.National)
+        {
+            NationalLiteral();
+            if (CurrentEquals("THROUGH", "THRU"))
+            {
+                Choice("THROUGH", "THRU");
+                NationalLiteral();
+            }
+
+            return;
+        }
+
+        StringLiteral();
+        if (CurrentEquals("THROUGH", "THRU"))
+        {
+            Choice("THROUGH", "THRU");
+            StringLiteral();
+        }
+    }
+    
+    private static void DynamicLengthStructureClause()
+    {
+        Expected("DYNAMIC");
+        Expected("LENGTH");
+        Optional("STRUCTURE");
+
+        Identifier();
+        Optional("IS");
+
+        if (CurrentEquals(TokenType.Identifier))
+        {
+            // TODO: Specify which physical structure names are allowed
+            Identifier();
+            return;
+        }
+
+        if (CurrentEquals("SIGNED", "SHORT", "DELIMITED"))
+        {
+            Optional("SIGNED");
+            Optional("SHORT");
+
+            Expected("PREFIXED");
+        }
+
+        if (CurrentEquals("DELIMITED"))
+        {
+            Expected("DELIMITED");
+        }
+
+        if (!LookaheadEquals(-1, "PREFIXED", "DELIMITED"))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
+                Missing clause.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Expected PREFIXED and/or DELIMITED.
+                """)
+            .WithNote("""
+                At least of the two must be present.
+                """)
+            .CloseError();
+        }
+    }
+
+    private static void SymbolicCharactersClause()
+    {
+        Expected("SYMBOLIC");
+        Optional("CHARACTERS");
+
+        if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+        {
+            Optional("FOR");
+            Choice("ALPHANUMERIC", "NATIONAL");
+        }
+
+        while (CurrentEquals(TokenType.Identifier))
+        {
+            while (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+            }
+
+            if (CurrentEquals("IS", "ARE"))
+            {
+                Choice("IS", "ARE");
+            }
+
+            while (CurrentEquals(TokenType.Numeric))
+            {
+                Number();
+            }
+        }
+
+        if (CurrentEquals("IN"))
+        {
+            Expected("IS");
+            Identifier();
+        }
+    }
+
     private static void CharacterClassificationClause()
     {
         Optional("CHARACTER");

@@ -556,7 +556,7 @@ public static partial class Analyzer
             entryLocal.IsExternal = true;
             entryLocal.ExternalizedName = Current().Value;
 
-            String();
+            StringLiteral();
         }
 
         if (!CurrentEquals("AS"))
@@ -815,7 +815,7 @@ public static partial class Analyzer
         if (CurrentEquals(TokenType.String))
         {
             entryLocal.DefaultValue = Current().Value;
-            String();
+            StringLiteral();
         }
 
         if (CurrentEquals(TokenType.Numeric))

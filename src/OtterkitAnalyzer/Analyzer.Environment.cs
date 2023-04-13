@@ -199,7 +199,7 @@ public static partial class Analyzer
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
-                    String();
+                    StringLiteral();
                 }
 
                 if (CurrentEquals("EXPANDS"))
@@ -236,7 +236,7 @@ public static partial class Analyzer
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
-                    String();
+                    StringLiteral();
                 }
 
                 if (CurrentEquals("EXPANDS"))
@@ -289,7 +289,7 @@ public static partial class Analyzer
                     if (CurrentEquals("AS"))
                     {
                         Expected("AS");
-                        String();
+                        StringLiteral();
                     }
                 }
             }
@@ -301,7 +301,7 @@ public static partial class Analyzer
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
-                    String();
+                    StringLiteral();
                 }
             }
 
@@ -312,7 +312,7 @@ public static partial class Analyzer
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
-                    String();
+                    StringLiteral();
                 }
             }
         }

@@ -162,7 +162,7 @@ public static partial class Analyzer
         {
             Expected("AS");
             CurrentId.Pop();
-            String();
+            StringLiteral();
             CurrentId.Push(Lookahead(-1));
         }
 
@@ -276,7 +276,7 @@ public static partial class Analyzer
         if (CurrentEquals("AS"))
         {
             Expected("AS");
-            String();
+            StringLiteral();
         }
 
         if (CurrentEquals("IS", "PROTOTYPE"))
@@ -334,7 +334,7 @@ public static partial class Analyzer
         if (CurrentEquals("AS"))
         {
             Expected("AS");
-            String();
+            StringLiteral();
         }
 
         if (CurrentEquals("IS", "FINAL"))
@@ -422,7 +422,7 @@ public static partial class Analyzer
         if (CurrentEquals("AS"))
         {
             Expected("AS");
-            String();
+            StringLiteral();
         }
 
         if (CurrentEquals("INHERITS"))
@@ -542,7 +542,7 @@ public static partial class Analyzer
             if (CurrentEquals("AS"))
             {
                 Expected("AS");
-                String();
+                StringLiteral();
             }
 
             if (currentSource == SourceUnit.Interface)

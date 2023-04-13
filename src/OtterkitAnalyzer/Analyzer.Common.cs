@@ -213,7 +213,7 @@ public static partial class Analyzer
                     }
                     else
                     {
-                        String();
+                        StringLiteral();
                     }
 
                     if (CurrentEquals("AFTER", "BEFORE"))
@@ -229,7 +229,7 @@ public static partial class Analyzer
                         }
                         else
                         {
-                            String();
+                            StringLiteral();
                         }
 
                         if (CurrentEquals("AFTER", "BEFORE"))
@@ -247,7 +247,7 @@ public static partial class Analyzer
                     }
                     else
                     {
-                        String();
+                        StringLiteral();
                     }
 
                     if (CurrentEquals("AFTER", "BEFORE"))
@@ -263,7 +263,7 @@ public static partial class Analyzer
                         }
                         else
                         {
-                            String();
+                            StringLiteral();
                         }
 
                         if (CurrentEquals("AFTER", "BEFORE"))
@@ -306,7 +306,7 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    String();
+                    StringLiteral();
                 }
 
                 if (CurrentEquals("AFTER", "BEFORE"))
@@ -323,7 +323,7 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    String();
+                    StringLiteral();
                 }
 
                 Expected("BY");
@@ -333,7 +333,7 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    String();
+                    StringLiteral();
                 }
 
                 if (CurrentEquals("AFTER", "BEFORE"))
@@ -349,7 +349,7 @@ public static partial class Analyzer
                     }
                     else
                     {
-                        String();
+                        StringLiteral();
                     }
 
                     Expected("BY");
@@ -359,7 +359,7 @@ public static partial class Analyzer
                     }
                     else
                     {
-                        String();
+                        StringLiteral();
                     }
 
                     if (CurrentEquals("AFTER", "BEFORE"))
@@ -382,7 +382,7 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    String();
+                    StringLiteral();
                 }
 
                 Expected("BY");
@@ -392,7 +392,7 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    String();
+                    StringLiteral();
                 }
 
                 if (CurrentEquals("AFTER", "BEFORE"))
@@ -413,7 +413,7 @@ public static partial class Analyzer
                     }
                     else
                     {
-                        String();
+                        StringLiteral();
                     }
 
                     Expected("BY");
@@ -423,7 +423,7 @@ public static partial class Analyzer
                     }
                     else
                     {
-                        String();
+                        StringLiteral();
                     }
 
                     if (CurrentEquals("AFTER", "BEFORE"))
@@ -446,7 +446,7 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    String();
+                    StringLiteral();
                 }
 
                 Expected("BY");
@@ -456,7 +456,7 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    String();
+                    StringLiteral();
                 }
 
                 if (CurrentEquals("AFTER", "BEFORE"))
@@ -477,7 +477,7 @@ public static partial class Analyzer
                     }
                     else
                     {
-                        String();
+                        StringLiteral();
                     }
 
                     Expected("BY");
@@ -487,7 +487,7 @@ public static partial class Analyzer
                     }
                     else
                     {
-                        String();
+                        StringLiteral();
                     }
 
                     if (CurrentEquals("AFTER", "BEFORE"))
@@ -533,7 +533,7 @@ public static partial class Analyzer
             }
             else
             {
-                String();
+                StringLiteral();
             }
 
             AfterBeforePhrase(beforeExists, afterExists);
@@ -567,7 +567,7 @@ public static partial class Analyzer
             }
             else
             {
-                String();
+                StringLiteral();
             }
 
             AfterBeforePhrase(beforeExists, afterExists);
@@ -757,7 +757,7 @@ public static partial class Analyzer
                     Number();
                     break;
                 case TokenType.String:
-                    String();
+                    StringLiteral();
                     break;
             }
 
@@ -1811,7 +1811,7 @@ public static partial class Analyzer
         }
         else if (@string && CurrentEquals(TokenType.String))
         {
-            String();
+            StringLiteral();
         }
     }
 

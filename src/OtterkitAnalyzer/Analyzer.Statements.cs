@@ -392,7 +392,7 @@ public static partial class Analyzer
             case TokenType.HexBoolean:
             case TokenType.National:
             case TokenType.HexNational:
-                String(); break;
+                StringLiteral(); break;
         }
 
         while (IdentifierOrLiteral())
@@ -408,7 +408,7 @@ public static partial class Analyzer
                 case TokenType.HexBoolean:
                 case TokenType.National:
                 case TokenType.HexNational:
-                    String(); break;
+                    StringLiteral(); break;
             }
         }
 
@@ -565,7 +565,7 @@ public static partial class Analyzer
             }
             else
             {
-                String();
+                StringLiteral();
             }
 
             if (CurrentEquals("AS"))
@@ -968,7 +968,7 @@ public static partial class Analyzer
                 }
                 else if (CurrentEquals(TokenType.String))
                 {
-                    String();
+                    StringLiteral();
                 }
                 else if (CurrentEquals(TokenType.Numeric))
                 {
@@ -1001,7 +1001,7 @@ public static partial class Analyzer
                     }
                     else if (CurrentEquals(TokenType.String))
                     {
-                        String();
+                        StringLiteral();
                     }
                     else if (CurrentEquals(TokenType.Numeric))
                     {
@@ -1068,7 +1068,7 @@ public static partial class Analyzer
             }
             else
             {
-                String();
+                StringLiteral();
             }
 
             Expected("TO");
@@ -1078,7 +1078,7 @@ public static partial class Analyzer
             }
             else
             {
-                String();
+                StringLiteral();
             }
 
             AfterBeforePhrase();
@@ -1110,7 +1110,7 @@ public static partial class Analyzer
         }
         else
         {
-            String();
+            StringLiteral();
         }
 
         if (CurrentEquals("USING"))
@@ -1386,7 +1386,7 @@ public static partial class Analyzer
             Number();
 
         else if (Current().Type == TokenType.String)
-            String();
+            StringLiteral();
 
         Expected("TO");
         if (Current().Type != TokenType.Identifier)
@@ -1921,7 +1921,7 @@ public static partial class Analyzer
             Identifier();
 
         else if (Current().Type == TokenType.String)
-            String();
+            StringLiteral();
 
         else
         {
@@ -1943,7 +1943,7 @@ public static partial class Analyzer
                 Identifier();
 
             if (Current().Type == TokenType.String)
-                String();
+                StringLiteral();
         }
 
         if (!CurrentEquals("."))
@@ -2261,7 +2261,7 @@ public static partial class Analyzer
         {
             Expected("FROM");
             if (Current().Type == TokenType.String)
-                String();
+                StringLiteral();
 
             else if (Current().Type == TokenType.Numeric)
                 Number();
@@ -2317,7 +2317,7 @@ public static partial class Analyzer
                 Number();
 
             else
-                String();
+                StringLiteral();
         }
 
         RetryPhrase();
@@ -2456,7 +2456,7 @@ public static partial class Analyzer
         }
         else
         {
-            String();
+            StringLiteral();
         }
 
         while (CurrentEquals("AND"))
@@ -2491,7 +2491,7 @@ public static partial class Analyzer
             }
             else
             {
-                String();
+                StringLiteral();
             }
 
         }
@@ -2524,7 +2524,7 @@ public static partial class Analyzer
         {
             if (CurrentEquals(TokenType.String))
             {
-                String();
+                StringLiteral();
             }
             else
             {
@@ -2943,7 +2943,7 @@ public static partial class Analyzer
                     Number();
                     break;
                 case TokenType.String:
-                    String();
+                    StringLiteral();
                     break;
             }
         }
@@ -2956,13 +2956,13 @@ public static partial class Analyzer
         Expected("STRING");
         if (CurrentEquals(TokenType.Identifier)) Identifier();
 
-        else String();
+        else StringLiteral();
 
         while (CurrentEquals(TokenType.Identifier, TokenType.String))
         {
             if (CurrentEquals(TokenType.Identifier)) Identifier();
 
-            else String();
+            else StringLiteral();
         }
 
         Expected("DELIMITED");
@@ -2971,19 +2971,19 @@ public static partial class Analyzer
 
         else if (CurrentEquals("SIZE")) Expected("SIZE");
 
-        else String();
+        else StringLiteral();
 
         while (CurrentEquals(TokenType.Identifier, TokenType.String))
         {
             if (CurrentEquals(TokenType.Identifier)) Identifier();
 
-            else String();
+            else StringLiteral();
 
             while (CurrentEquals(TokenType.Identifier, TokenType.String))
             {
                 if (CurrentEquals(TokenType.Identifier)) Identifier();
 
-                else String();
+                else StringLiteral();
             }
 
             Expected("DELIMITED");
@@ -2992,7 +2992,7 @@ public static partial class Analyzer
 
             else if (CurrentEquals("SIZE")) Expected("SIZE");
 
-            else String();
+            else StringLiteral();
         }
 
         Expected("INTO");
@@ -3073,7 +3073,7 @@ public static partial class Analyzer
             }
             else
             {
-                String();
+                StringLiteral();
             }
 
             while (CurrentEquals("OR"))
@@ -3087,7 +3087,7 @@ public static partial class Analyzer
                 }
                 else
                 {
-                    String();
+                    StringLiteral();
                 }
             }
         }
@@ -3200,7 +3200,7 @@ public static partial class Analyzer
             }
             else
             {
-                String();
+                StringLiteral();
             }
         }
 

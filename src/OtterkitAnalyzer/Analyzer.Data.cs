@@ -441,7 +441,7 @@ public static partial class Analyzer
             switch (Current().Type)
             {
                 case TokenType.String:
-                    String();
+                    StringLiteral();
                     break;
 
                 case TokenType.Numeric:
@@ -806,7 +806,7 @@ public static partial class Analyzer
                 case TokenType.HexBoolean:
                 case TokenType.National:
                 case TokenType.HexNational:
-                    String(); break;
+                    StringLiteral(); break;
             }
 
             if (CurrentEquals("THROUGH", "THRU"))
@@ -823,7 +823,7 @@ public static partial class Analyzer
                     case TokenType.HexBoolean:
                     case TokenType.National:
                     case TokenType.HexNational:
-                        String(); break;
+                        StringLiteral(); break;
                 }
             }
 

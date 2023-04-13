@@ -692,7 +692,7 @@ public static partial class Analyzer
             }
             else
             {
-                String();
+                StringLiteral();
             }
 
             return;
@@ -724,7 +724,7 @@ public static partial class Analyzer
             }
             else
             {
-                String();
+                StringLiteral();
             }
 
             return;
@@ -852,7 +852,7 @@ public static partial class Analyzer
             // TODO: Replace Continue with an identifier check for the method name
             Continue();
             Expected("::");
-            String();
+            StringLiteral();
 
             if (CurrentEquals("("))
             {
@@ -974,7 +974,7 @@ public static partial class Analyzer
     /// <para>If the current token's type is TokenType.String, it moves to the next token,
     /// if the current token's type is TokenType.String it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    private static void String()
+    private static void StringLiteral()
     {
         if (!CurrentEquals(
             TokenType.String, 
@@ -991,6 +991,52 @@ public static partial class Analyzer
                 """)
             .WithSourceLine(Current(), $"""
                 Expected a string type literal.
+                """)
+            .CloseError();
+
+            Continue();
+            return;
+        }
+
+        Continue();
+    }
+
+    private static void BooleanLiteral()
+    {
+        if (!CurrentEquals(
+            TokenType.Boolean, 
+            TokenType.HexBoolean
+        ))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a boolean literal.
+                """)
+            .CloseError();
+
+            Continue();
+            return;
+        }
+
+        Continue();
+    }
+
+    private static void NationalLiteral()
+    {
+        if (!CurrentEquals(
+            TokenType.National, 
+            TokenType.HexNational
+        ))
+        {
+            Error
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a national literal.
                 """)
             .CloseError();
 

@@ -444,7 +444,7 @@ public static partial class Analyzer
         {
             IDENTIFICATION();
 
-            if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
+            if (CurrentEquals("ENVIRONMENT")) Environment();
 
             if (CurrentEquals("DATA")) DATA();
             Expected("PROCEDURE");
@@ -454,7 +454,7 @@ public static partial class Analyzer
             while (CurrentEquals("METHOD-ID") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "METHOD-ID"))
             {
                 IDENTIFICATION();
-                if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
+                if (CurrentEquals("ENVIRONMENT")) Environment();
 
                 if (CurrentEquals("DATA")) DATA();
 
@@ -470,7 +470,7 @@ public static partial class Analyzer
         {
             IDENTIFICATION();
 
-            if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
+            if (CurrentEquals("ENVIRONMENT")) Environment();
 
             if (CurrentEquals("DATA")) DATA();
 
@@ -481,7 +481,7 @@ public static partial class Analyzer
             while (CurrentEquals("METHOD-ID") || (CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "METHOD-ID")))
             {
                 IDENTIFICATION();
-                if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
+                if (CurrentEquals("ENVIRONMENT")) Environment();
 
                 if (CurrentEquals("DATA")) DATA();
 
@@ -521,7 +521,7 @@ public static partial class Analyzer
             {
                 IDENTIFICATION();
 
-                if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
+                if (CurrentEquals("ENVIRONMENT")) Environment();
 
                 if (CurrentEquals("DATA")) DATA();
 

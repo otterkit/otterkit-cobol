@@ -9,6 +9,7 @@ public enum CurrentScope
     MethodId,
     EnvironmentDivision,
     Repository,
+    FileControl,
     DataDivision,
     FileSection,
     ScreenSection,

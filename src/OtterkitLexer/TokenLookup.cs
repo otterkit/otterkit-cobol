@@ -436,6 +436,7 @@ public static class TokenLookup
     };
     internal static Dictionary<string, int> ReservedClauses = new(StringComparer.OrdinalIgnoreCase)
     {
+        // DATA DIVISION CLAUSES
         {"ALIGNED", 0},
         {"ANY", 0},
         {"LENGTH", 0},
@@ -504,7 +505,21 @@ public static class TokenLookup
         {"USING", 0},
         {"VALIDATE-STATUS", 0},
         {"VALUE", 0},
-        {"VARYING", 0}
+        {"VARYING", 0},
+
+        // FILE-CONTROL CLAUSES
+        {"ACCESS", 0},
+        {"ALTERNATE", 0},
+        {"FILE", 0},
+        {"STATUS", 0},
+        {"LOCK", 0},
+        {"ORGANIZATION", 0},
+        {"RELATIVE", 0},
+        {"RESERVE", 0},
+        {"SHARING", 0},
+        {"COLLATING", 0},
+        {"SEQUENCE", 0},
+
     };
     internal static Dictionary<string, int> ReservedStatements = new(StringComparer.OrdinalIgnoreCase)
     {

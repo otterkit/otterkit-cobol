@@ -69,7 +69,7 @@ public static partial class Analyzer
     {
         IDENTIFICATION();
 
-        if (CurrentEquals("ENVIRONMENT")) ENVIRONMENT();
+        if (CurrentEquals("ENVIRONMENT")) Environment();
 
         if (CurrentEquals("DATA")) DATA();
 

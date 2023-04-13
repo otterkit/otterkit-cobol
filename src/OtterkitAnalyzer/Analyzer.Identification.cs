@@ -82,8 +82,136 @@ public static partial class Analyzer
             shouldHavePeriod = true;
         }
 
+        if (CurrentEquals("FLOAT-BINARY"))
+        {
+            Expected("FLOAT-BINARY");
+            Optional("DEFAULT");
+            Optional("IS");
+
+            Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+        }
+
+        if (CurrentEquals("FLOAT-DECIMAL"))
+        {
+            Expected("FLOAT-DECIMAL");
+            Optional("DEFAULT");
+            Optional("IS");
+
+            EncodingEndianness();
+        }
+
+        if (CurrentEquals("INITIALIZE"))
+        {
+            Expected("INITIALIZE");
+
+            InitializeChoices();
+            Optional("SECTION");
+            Optional("TO");
+
+            if (CurrentEquals(TokenType.String))
+            {
+                StringLiteral();
+            }
+            else if (CurrentEquals("BINARY"))
+            {
+                Expected("BINARY");
+                Expected("ZEROS");
+            }
+            else
+            {
+                Choice("SPACES","LOW-VALUES", "HIGH-VALUES");
+            }
+        }
+
+        if (CurrentEquals("INTERMEDIATE"))
+        {
+            Expected("INTERMEDIATE");
+            Expected("ROUNDING");
+            Choice(
+                "NEAREST-AWAY-FROM-ZERO",
+                "NEAREST-EVEN",
+                "PROHIBITED",
+                "TRUNCATION"
+            );
+        }
+
         if (shouldHavePeriod) Expected(".");
     }
+
+    private static void InitializeChoices(bool localExists = false, bool screenExists = false, bool workingExists = false)
+    {        
+        if (CurrentEquals("LOCAL-STORAGE"))
+        {
+            if (localExists)
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 134, """
+                    Initialize phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    A section can only be specified once in this phrase.
+                    """)
+                .CloseError();
+            }
+            localExists = true;
+
+            Expected("LOCAL-STORAGE");
+
+            InitializeChoices(localExists, screenExists, workingExists);
+
+            return;
+        }
+
+        if (CurrentEquals("SCREEN"))
+        {
+            if (screenExists)
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 134, """
+                    Initialize phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    A section can only be specified once in this phrase.
+                    """)
+                .CloseError();
+            }
+            screenExists = true;
+
+            Expected("SCREEN");
+
+            InitializeChoices(localExists, screenExists, workingExists);
+
+            return;
+        }
+
+        if (CurrentEquals("WORKING-STORAGE"))
+        {
+            if (workingExists)
+            {
+                Error
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 134, """
+                    Initialize phrase, duplicate definition.
+                    """)
+                .WithSourceLine(Current(), """
+                    A section can only be specified once in this phrase.
+                    """)
+                .CloseError();
+            }
+            workingExists = true;
+
+            Expected("WORKING-STORAGE");
+
+            InitializeChoices(localExists, screenExists, workingExists);
+
+            return;
+        }
+
+        if (CurrentEquals("ALL"))
+        {
+            Expected("ALL");
+        }
+    }
+
 
     // The following methods are responsible for parsing the -ID paragraph.
     // That includes the program, user-defined function, method, class, interface, factory or object identifier that should be specified right after.

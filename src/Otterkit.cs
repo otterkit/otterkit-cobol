@@ -110,7 +110,7 @@ public static class Otterkit
 
             var preprocessedLines = Preprocessor.Preprocess(CompilerOptions.EntryPoint);
 
-            var classified = Token.FromValue(preprocessedLines);
+            var classified = Token.ClassifyFromValue(preprocessedLines);
 
             var analized = Analyzer.Analyze(classified);
 

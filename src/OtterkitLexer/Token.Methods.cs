@@ -8,6 +8,26 @@ public sealed partial record Token
 {
     public string FetchFile => CompilerContext.FileNames[FileIndex];
 
+    public static List<Token> ClassifyFromValue(List<Token> tokens)
+    {
+        Token previousToken = tokens[0];
+        foreach (Token token in tokens)
+        {
+            token.Type = FindType(token);
+            token.Scope = FindScope(token, previousToken);
+            token.Context = FindContext(token);
+
+            previousToken = token;
+        }
+
+        // If a lexing error has occured, terminate the compilation process.
+        // We do not want the compiler to continue when the source code
+        // potentially contains invalid Unicode.
+        if (Error.HasOccurred) Error.StopCompilation("lexing");
+
+        return tokens;
+    }
+
     private static bool TryValidateIdentifier(Token token)
     {
         // The Unicode standard requires us to document how this works:
@@ -196,15 +216,18 @@ public sealed partial record Token
             return TokenType.ReservedKeyword;
 
         // check if the value is a figurative literal
-        if (TokenLookup.IsReservedFigurativeLiteral(value))
+        if (TokenLookup.IsFigurativeLiteral(value))
             return TokenType.FigurativeLiteral;
 
+        if (TokenLookup.IsOtterkitDevice(token.Value))
+            return TokenType.Device;
+
         // check if the value is an intrinsic function
-        if (TokenLookup.IsIntrinsicFunctionName(value))
+        if (TokenLookup.IsStandardIntrinsic(value))
             return TokenType.IntrinsicFunction;
 
         // check if the value is a symbol
-        if (TokenLookup.IsReservedSymbol(value))
+        if (TokenLookup.IsStandardSymbol(value))
             return TokenType.Symbol;
 
         // check if the value is a numeric
@@ -227,18 +250,22 @@ public sealed partial record Token
     private static TokenContext FindContext(Token token)
     {
         // check if the token belongs to a data division clause
-        if (TokenLookup.IsReservedClause(token.Value))
+        if (TokenLookup.IsStandardClause(token.Value))
             return TokenContext.IsClause;
 
         // check if the token is a statement
-        if (TokenLookup.IsReservedStatement(token.Value))
+        if (TokenLookup.IsStandardStatement(token.Value))
             return TokenContext.IsStatement;
+
+        // check if the token is a system device
+        if (TokenLookup.IsOtterkitDevice(token.Value))
+            return TokenContext.IsDevice;
 
         // check if the token represents a file separator   
         if (token.Line is -5)
             return TokenContext.IsEOF;
 
-        // if none of the above, return null
+        // if none of the above, return none
             return TokenContext.None;
     }
 
@@ -275,26 +302,6 @@ public sealed partial record Token
             return TokenScope.Object;
 
         return previousToken.Scope;
-    }
-
-    public static List<Token> FromValue(List<Token> tokens)
-    {
-        Token previousToken = tokens[0];
-        foreach (Token token in tokens)
-        {
-            token.Type = FindType(token);
-            token.Scope = FindScope(token, previousToken);
-            token.Context = FindContext(token);
-
-            previousToken = token;
-        }
-
-        // If a lexing error has occured, terminate the compilation process.
-        // We do not want the compiler to continue when the source code
-        // potentially contains invalid Unicode.
-        if (Error.HasOccurred) Error.StopCompilation("lexing");
-
-        return tokens;
     }
 
     private static bool IsNumeric(ReadOnlySpan<char> value)

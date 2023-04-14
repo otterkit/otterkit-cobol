@@ -16,7 +16,7 @@ Otterkit is available to install on the [Nuget package manager](https://www.nuge
 ```
 dotnet new install Otterkit.Templates::1.0.45-alpha
 
-dotnet tool install --global Otterkit --version 1.0.45-alpha
+dotnet tool install --global Otterkit --version 1.0.50-alpha
 ```
 
 ### Build from Source

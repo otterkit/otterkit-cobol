@@ -1,3 +1,5 @@
+using Otterkit.SourceAnalyzer;
+
 namespace Otterkit;
 
 public class ProgramBuilder
@@ -622,14 +624,14 @@ public class StatementBuilder
             Continue(1);
         }
 
-        expression = Analyzer.ShuntingYard(expression, Analyzer.ConditionalPrecedence);
+        expression = Expressions.ShuntingYard(expression, Expressions.ConditionalPrecedence);
 
         foreach (var item in expression)
         {
             Console.WriteLine(item);
         }
 
-        var compiledExpression = Analyzer.PostfixToCSharpInfix(expression, Analyzer.ConditionalPrecedence);
+        var compiledExpression = Expressions.PostfixToCSharpInfix(expression, Expressions.ConditionalPrecedence);
 
         CompiledStatement += $"if ({compiledExpression}) {{";
 

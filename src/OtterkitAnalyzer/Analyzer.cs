@@ -1,45 +1,14 @@
-namespace Otterkit;
+using static Otterkit.SourceAnalyzer.TokenHandling;
+
+namespace Otterkit.SourceAnalyzer;
 
 /// <summary>
 /// Otterkit COBOL Syntax and Semantic Analyzer
 /// <para>This analyzer was built to be easily extensible, with some reusable COBOL parts.</para>
 /// <para>It requires a <see cref="CompilerContext.SourceTokens">list of tokens</see> generated from the Lexer and the Token Classifier.</para>
 /// </summary>
-public static partial class Analyzer
+public static class Analyzer
 {
-    private static bool IsResolutionPass;
-
-    /// <summary>
-    /// Used for keeping track of the current scope 
-    /// (scope meaning the current division, section or paragragh).
-    /// </summary>
-    private static CurrentScope CurrentScope;
-
-    /// <summary>
-    /// Used for keeping track of where the source unit was defined, including its containing parent.
-    /// </summary>
-    private static readonly Stack<Token> CurrentId = new();
-
-    /// <summary>
-    /// Used for keeping track of the source unit types, including the type of its containing parent.
-    /// </summary>    
-    private static readonly Stack<SourceUnit> SourceType = new();
-
-    /// <summary>
-    /// Used for keeping track of the current source unit signature.
-    /// </summary>    
-    private static CallableSignature CurrentCallable
-    {
-        get => CompilerContext.CurrentCallable[0];
-
-        set => CompilerContext.CurrentCallable[0] = value;
-    }
-
-    /// <summary>
-    /// Otterkit COBOL Syntax and Semantic Analyzer
-    /// <para>This analyzer was built to be easily extensible, with some reusable COBOL parts.</para>
-    /// <para>It requires a <see cref="CompilerContext.SourceTokens">list of tokens</see> generated from the Lexer and the Token Classifier.</para>
-    /// </summary>
     public static List<Token> Analyze(List<Token> tokenList)
     {
         // Call the analyzer's main recursive method
@@ -67,41 +36,51 @@ public static partial class Analyzer
     // the analyzer has not finished reading through the list of tokens correctly.
     private static void Source()
     {
-        IDENTIFICATION();
+        IdentificationDivision.Parse();
 
-        if (CurrentEquals("ENVIRONMENT")) Environment();
+        var sourceTypes = CompilerContext.SourceTypes;
 
-        if (CurrentEquals("DATA")) DATA();
-
-        bool notClassOrInterface = SourceType.Peek() switch
+        if (CurrentEquals("ENVIRONMENT"))
         {
-            SourceUnit.Class => false,
-            SourceUnit.Interface => false,
-            _ => true
+            EnvironmentDivision.Parse();
+        }
+
+        if (CurrentEquals("DATA"))
+        {
+            DataDivision.Parse();
+        }
+
+        var isClassOrInterface = sourceTypes.Peek() switch
+        {
+            SourceUnit.Class => true,
+            SourceUnit.Interface => true,
+            _ => false
         };
 
-        if (notClassOrInterface)
+        if (!isClassOrInterface)
         {
             if (CurrentEquals("PROCEDURE")) 
-                PROCEDURE();
+            {
+                ProcedureDivision.ParseProcedural();
+            }
         }
-        else if (SourceType.Peek() == SourceUnit.Class)
+        else if (sourceTypes.Peek() == SourceUnit.Class)
         {
-            ClassObjects();
+            ProcedureDivision.ParseObjects();
         }
-        else if (SourceType.Peek() == SourceUnit.Interface)
+        else if (sourceTypes.Peek() == SourceUnit.Interface)
         {
-            InterfaceProcedure();
+            ProcedureDivision.ParseInterface();
         }
 
-        EndMarker();
+        ProcedureDivision.EndMarker();
 
         if (CurrentEquals("IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID"))
         {
             Source();
         }
 
-        if (CurrentEquals("EOF") && CurrentIndex() < CompilerContext.SourceTokens.Count - 1)
+        if (CurrentEquals("EOF") && TokenHandling.Index < CompilerContext.SourceTokens.Count - 1)
         {
             Continue();
             Source();
@@ -111,10 +90,10 @@ public static partial class Analyzer
     private static void SetupResolutionPass()
     {
         // Set the index back to 0 to restart the analyzer
-        Index = 0;
+        TokenHandling.Index = 0;
 
         // Enable name resolution checks
-        IsResolutionPass = true;
+        CompilerContext.IsResolutionPass = true;
 
         // Suppress analyzer error messages to avoid duplicates
         // Note: Resolution errors should use 'ErrorType.Resolution'

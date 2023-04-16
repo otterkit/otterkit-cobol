@@ -1,4 +1,4 @@
-namespace Otterkit.SourceAnalyzer;
+namespace Otterkit.Analyzers;
 
 public static class Expressions
 {

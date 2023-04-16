@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Otterkit.SourceAnalyzer;
+namespace Otterkit.Analyzers;
 
 public static class TokenHandling
 {

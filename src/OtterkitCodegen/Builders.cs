@@ -1,4 +1,4 @@
-using Otterkit.SourceAnalyzer;
+using Otterkit.Analyzers;
 
 namespace Otterkit;
 

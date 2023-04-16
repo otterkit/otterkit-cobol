@@ -1,8 +1,8 @@
-using static Otterkit.SourceAnalyzer.TokenHandling;
+using static Otterkit.Analyzers.TokenHandling;
 
 using System.Diagnostics;
 
-namespace Otterkit.SourceAnalyzer;
+namespace Otterkit.Analyzers;
 
 /// <summary>
 /// Otterkit COBOL Syntax and Semantic Analyzer

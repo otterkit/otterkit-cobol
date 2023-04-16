@@ -1,6 +1,6 @@
-using static Otterkit.SourceAnalyzer.TokenHandling;
+using static Otterkit.Analyzers.TokenHandling;
 
-namespace Otterkit.SourceAnalyzer;
+namespace Otterkit.Analyzers;
 
 public static partial class DataDivision
 {

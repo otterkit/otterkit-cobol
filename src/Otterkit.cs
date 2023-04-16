@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using Otterkit.Analyzers;
+using Otterkit.CodeGenerators;
+using Otterkit.Tokenizers;
+using Otterkit.Types;
 
 namespace Otterkit;
 
@@ -109,15 +112,15 @@ public static class Otterkit
                 }
             }
 
-            var preprocessedLines = Preprocessor.Preprocess(CompilerOptions.EntryPoint);
+            var tokenizedLines = Tokenizer.Tokenize(CompilerOptions.EntryPoint);
 
-            var classified = Token.ClassifyFromValue(preprocessedLines);
+            var classified = Token.ClassifyTokens(tokenizedLines);
 
             var analized = Analyzer.Analyze(classified);
 
             if (CompilerOptions.BuildMode is BuildType.ParseOnly)
             {
-                if (!Error.HasOccurred) Error.SuccessfulParse();
+                if (!ErrorHandler.HasOccurred) ErrorHandler.SuccessfulParse();
             }
 
             if (CompilerOptions.BuildMode is BuildType.PrintTokens)
@@ -139,12 +142,12 @@ public static class Otterkit
                     Console.WriteLine(token);
                 }
 
-                if (!Error.HasOccurred) Error.SuccessfulParse();
+                if (!ErrorHandler.HasOccurred) ErrorHandler.SuccessfulParse();
             }
 
             if (CompilerOptions.BuildMode is BuildType.BuildOnly)
             {
-                Codegen.Generate(CompilerContext.SourceTokens, CompilerOptions.EntryPoint);
+                CodeGenerator.Generate(CompilerContext.SourceTokens, CompilerOptions.EntryPoint);
 
                 Directory.CreateDirectory(".otterkit/Build");
                 CallDotnetCompiler("build");
@@ -152,7 +155,7 @@ public static class Otterkit
             
             if (CompilerOptions.BuildMode is BuildType.BuildAndRun)
             {
-                Codegen.Generate(CompilerContext.SourceTokens, CompilerOptions.EntryPoint);
+                CodeGenerator.Generate(CompilerContext.SourceTokens, CompilerOptions.EntryPoint);
 
                 Directory.CreateDirectory(".otterkit/Build");
                 CallDotnetCompiler("run");

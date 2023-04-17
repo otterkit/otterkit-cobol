@@ -762,6 +762,8 @@ public static partial class DataDivision
         Expected("LINAGE");
         Optional("IS");
 
+        fileLocal[DataClause.Linage] = true;
+
         Common.IdentifierOrLiteral(TokenType.Numeric);
         Optional("LINES");
 
@@ -792,6 +794,8 @@ public static partial class DataDivision
     private static void RecordClause(DataEntry fileLocal)
     {
         Expected("RECORD");
+
+        fileLocal[DataClause.Record] = true;
 
         if (CurrentEquals("IS", "VARYING"))
         {
@@ -859,6 +863,8 @@ public static partial class DataDivision
     {
         Choice("REPORT", "REPORTS");
 
+        fileLocal[DataClause.Report] = true;
+
         if (LookaheadEquals(-1, "REPORT"))
         {
             Optional("IS");
@@ -879,6 +885,8 @@ public static partial class DataDivision
     private static void CodeSetClause(DataEntry fileLocal)
     {
         Expected("CODE-SET");
+
+        fileLocal[DataClause.CodeSet] = true;
 
         if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
         {
@@ -902,6 +910,8 @@ public static partial class DataDivision
             Expected("FROM");
             Common.IdentifierOrLiteral();
 
+            screenLocal[DataClause.From] = true;
+
             return;
         }
 
@@ -909,6 +919,8 @@ public static partial class DataDivision
         {
             Expected("TO");
             Identifier();
+
+            screenLocal[DataClause.To] = true;
 
             return;
         }
@@ -918,6 +930,8 @@ public static partial class DataDivision
             Expected("USING");
             Identifier();
 
+            screenLocal[DataClause.Using] = true;
+
             return;
         }
 
@@ -925,6 +939,8 @@ public static partial class DataDivision
         {
             Expected("VALUE");
             Optional("IS");
+
+            screenLocal[DataClause.Value] = true;
 
             Common.ParseLiteral(true, true);
         }
@@ -935,6 +951,8 @@ public static partial class DataDivision
         Expected("LINE");
         Optional("NUMBER");
         Optional("IS");
+
+        screenLocal[DataClause.Line] = true;
 
         if (CurrentEquals("PLUS", "+", "MINUS", "-"))
         {
@@ -957,6 +975,8 @@ public static partial class DataDivision
         Optional("NUMBER");
         Optional("IS");
 
+        screenLocal[DataClause.Column] = true;
+
         if (CurrentEquals("PLUS", "+", "MINUS", "-"))
         {
             Expected(Current().Value);
@@ -977,6 +997,8 @@ public static partial class DataDivision
         Expected("SIGN");
         Optional("IS");
 
+        entryLocal[DataClause.Sign] = true;
+
         Choice("LEADING", "TRAILING");
 
         if (CurrentEquals("SEPARATE"))
@@ -993,7 +1015,9 @@ public static partial class DataDivision
         if (CurrentEquals("AS"))
         {
             Expected("AS");
-            entryLocal.IsExternal = true;
+
+            entryLocal[DataClause.External] = true;
+
             entryLocal.ExternalizedName = Current().Value;
 
             StringLiteral();
@@ -1001,7 +1025,8 @@ public static partial class DataDivision
 
         if (!CurrentEquals("AS"))
         {
-            entryLocal.IsExternal = true;
+            entryLocal[DataClause.External] = true;
+
             entryLocal.ExternalizedName = Current().Value;
         }
     }
@@ -1010,14 +1035,16 @@ public static partial class DataDivision
     {
         Optional("IS");
         Expected("GLOBAL");
-        entryLocal.IsGlobal = true;
+
+        entryLocal[DataClause.Global] = true;
     }
 
     private static void TypedefClause(DataEntry entryLocal)
     {
         Optional("IS");
         Expected("TYPEDEF");
-        entryLocal.IsTypedef = true;
+        
+        entryLocal[DataClause.Typedef] = true;
 
         if (CurrentEquals("STRONG")) Expected("STRONG");
     }
@@ -1026,25 +1053,30 @@ public static partial class DataDivision
     {
         Expected("REDEFINES");
         Identifier();
-        entryLocal.IsRedefines = true;
+
+        entryLocal[DataClause.Redefines] = true;
     }
 
     private static void AlignedClause(DataEntry entryLocal)
     {
         Expected("ALIGNED");
+
+        entryLocal[DataClause.Aligned] = true;
     }
 
     private static void AnyLengthClause(DataEntry entryLocal)
     {
         Expected("ANY");
         Expected("LENGTH");
-        entryLocal.IsAnyLength = true;
+
+        entryLocal[DataClause.AnyLength] = true;
     }
 
     private static void BasedClause(DataEntry entryLocal)
     {
         Expected("BASED");
-        entryLocal.IsBased = true;
+
+        entryLocal[DataClause.Based] = true;
     }
 
     private static void BlankWhenClause(DataEntry entryLocal)
@@ -1052,21 +1084,24 @@ public static partial class DataDivision
         Expected("BLANK");
         Optional("WHEN");
         Expected("ZERO");
-        entryLocal.IsBlank = true;
+
+        entryLocal[DataClause.BlankWhenZero] = true;
     }
 
     private static void ConstantRecordClause(DataEntry entryLocal)
     {
         Expected("CONSTANT");
         Expected("RECORD");
-        entryLocal.IsConstantRecord = true;
+
+        entryLocal[DataClause.ConstantRecord] = true;
     }
 
     private static void DynamicClause(DataEntry entryLocal)
     {
         Expected("DYNAMIC");
         Optional("LENGTH");
-        entryLocal.IsDynamicLength = true;
+        
+        entryLocal[DataClause.DynamicLength] = true;
 
         if (CurrentEquals(TokenType.Identifier)) Identifier();
 
@@ -1083,26 +1118,40 @@ public static partial class DataDivision
         Expected("GROUP-USAGE");
         Optional("IS");
         Choice("BIT", "NATIONAL");
+
+        entryLocal[DataClause.GroupUsage] = true;
     }
 
     private static void JustifiedClause(DataEntry entryLocal)
     {
         Choice("JUSTIFIED", "JUST");
         Optional("RIGHT");
+
+        entryLocal[DataClause.Justified] = true;
     }
 
     private static void SynchronizedClause(DataEntry entryLocal)
     {
         Choice("SYNCHRONIZED", "SYNC");
-        if (CurrentEquals("LEFT")) Expected("LEFT");
 
-        else if (CurrentEquals("RIGHT")) Expected("RIGHT");
+        entryLocal[DataClause.Synchronized] = true;
+
+        if (CurrentEquals("LEFT"))
+        {
+            Expected("LEFT");
+        } 
+        else if (CurrentEquals("RIGHT")) 
+        {
+            Expected("RIGHT");
+        }
     }
 
     private static void PropertyClause(DataEntry entryLocal)
     {
         Expected("PROPERTY");
-        entryLocal.IsProperty = true;
+
+        entryLocal[DataClause.Property] = true;
+
         if (CurrentEquals("WITH", "NO"))
         {
             Optional("WITH");
@@ -1122,18 +1171,24 @@ public static partial class DataDivision
         Expected("SAME");
         Expected("AS");
         Identifier();
+
+        entryLocal[DataClause.SameAs] = true;
     }
 
     private static void TypeClause(DataEntry entryLocal)
     {
         Expected("TYPE");
         Identifier();
+
+        entryLocal[DataClause.Type] = true;
     }
 
     private static void ReportTypeClause(DataEntry reportLocal)
     {
         Expected("TYPE");
         Optional("IS");
+
+        reportLocal[DataClause.Type] = true;
 
         if (CurrentEquals("REPORT"))
         {
@@ -1206,6 +1261,8 @@ public static partial class DataDivision
     private static void OccursClause(DataEntry entryLocal)
     {
         Expected("OCCURS");
+
+        entryLocal[DataClause.Occurs] = true;
 
         if (CurrentEquals("DYNAMIC"))
         {
@@ -1300,11 +1357,11 @@ public static partial class DataDivision
 
         var isValidPicture = PictureString(picture.Value, out var size);
 
+        entryLocal[DataClause.Picture] = true;
+
         entryLocal.PictureString = picture.Value;
 
         entryLocal.PictureLength = size;
-
-        entryLocal.HasPicture = true;
 
         Continue();
     }
@@ -1312,6 +1369,8 @@ public static partial class DataDivision
     private static void ValueClause(DataEntry entryLocal)
     {
         Expected("VALUE");
+
+        entryLocal[DataClause.Value] = true;
 
         if (!CurrentEquals(TokenType.String, TokenType.Numeric))
         {
@@ -1342,6 +1401,9 @@ public static partial class DataDivision
     {
         Expected("USAGE");
         Optional("IS");
+
+        entryLocal[DataClause.Usage] = true;
+
         switch (Current().Value)
         {
             case "BINARY":

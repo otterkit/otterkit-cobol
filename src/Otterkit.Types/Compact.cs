@@ -3,6 +3,7 @@ using System.Collections;
 namespace Otterkit.Types;
 
 public sealed class Compact<TValue> : IEnumerable<TValue>
+    where TValue : notnull
 {
     private readonly TValue[] CompactArray;
     public int Count => CompactArray.Length;

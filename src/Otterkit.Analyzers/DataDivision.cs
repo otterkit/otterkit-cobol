@@ -612,7 +612,7 @@ public static partial class DataDivision
         {
             Optional("IS");
             Expected("GLOBAL");
-                dataLocal.IsGlobal = true;
+            dataLocal[DataClause.Global] = true;
         }
 
         if (CurrentEquals("FROM"))
@@ -877,7 +877,7 @@ public static partial class DataDivision
             _ => false
         };
 
-        if (usageCannotHavePicture && dataItem.HasPicture)
+        if (usageCannotHavePicture && dataItem[DataClause.Picture])
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
@@ -889,7 +889,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        if (!usageCannotHavePicture && dataItem.IsElementary && !dataItem.HasPicture && !dataItem.HasUsage && !dataItem.HasValue)
+        if (!usageCannotHavePicture && dataItem.IsElementary && !dataItem[DataClause.Picture] && !dataItem[DataClause.Usage] && !dataItem[DataClause.Value])
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
@@ -901,7 +901,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        if (dataItem.IsGroup && dataItem.HasPicture)
+        if (dataItem.IsGroup && dataItem[DataClause.Picture])
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
@@ -913,7 +913,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        if (dataItem.IsRenames && dataItem.HasPicture)
+        if (dataItem[DataClause.Renames] && dataItem[DataClause.Picture])
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
@@ -936,7 +936,7 @@ public static partial class DataDivision
             _ => false
         };
 
-        if (usageCannotHaveValue && dataItem.HasValue)
+        if (usageCannotHaveValue && dataItem[DataClause.Value])
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""

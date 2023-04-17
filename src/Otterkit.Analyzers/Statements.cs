@@ -2601,7 +2601,7 @@ public static class Statements
                     Identifier();
                 }
             }
-            else if (dataItem.IsDynamicLength || CurrentEquals("SIZE"))
+            else if (dataItem[DataClause.DynamicLength] || CurrentEquals("SIZE"))
             {
                 if (CurrentEquals("SIZE"))
                 {

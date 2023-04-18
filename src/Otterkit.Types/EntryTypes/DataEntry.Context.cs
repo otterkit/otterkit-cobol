@@ -18,5 +18,4 @@ public partial class DataEntry : AbstractEntry
     // USAGE CLAUSE CONTEXT
     public UsageType UsageType;
     public Option<Token> UsageContext;
-
 }

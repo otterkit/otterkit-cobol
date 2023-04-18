@@ -1359,7 +1359,7 @@ public static partial class DataDivision
 
         entryLocal[DataClause.Picture] = true;
 
-        entryLocal.PictureString = picture.Value;
+        entryLocal.PictureString = picture;
 
         entryLocal.PictureLength = size;
 
@@ -1386,13 +1386,13 @@ public static partial class DataDivision
 
         if (CurrentEquals(TokenType.String))
         {
-            entryLocal.DefaultValue = Current().Value;
+            entryLocal.DefaultValue = Current();
             StringLiteral();
         }
 
         if (CurrentEquals(TokenType.Numeric))
         {
-            entryLocal.DefaultValue = Current().Value;
+            entryLocal.DefaultValue = Current();
             Number();
         }
     }
@@ -1542,7 +1542,7 @@ public static partial class DataDivision
                 {
                     Optional("TO");
                     entryLocal.UsageType = UsageType.DataPointer;
-                    entryLocal.UsageContext = Current().Value;
+                    entryLocal.UsageContext = Current();
                     Identifier();
                 }
                 else
@@ -1555,7 +1555,7 @@ public static partial class DataDivision
                 Expected("FUNCTION-POINTER");
                 Optional("TO");
                 entryLocal.UsageType = UsageType.FunctionPointer;
-                entryLocal.UsageContext = Current().Value;
+                entryLocal.UsageContext = Current();
                 Identifier();
                 break;
 
@@ -1565,7 +1565,7 @@ public static partial class DataDivision
                 {
                     Optional("TO");
                     entryLocal.UsageType = UsageType.ProgramPointer;
-                    entryLocal.UsageContext = Current().Value;
+                    entryLocal.UsageContext = Current();
                     Identifier();
                 }
                 else

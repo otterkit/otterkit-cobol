@@ -1,17 +1,12 @@
 namespace Otterkit.Types;
 
-public class DataEntry : AbstractEntry
+public partial class DataEntry : AbstractEntry
 {
+    public int LevelNumber;
     public DataEntry? Parent;
     public CurrentScope Section;
-    public Compact<bool> HasClause;
-    public int LevelNumber;
-    public string PictureString = "";
-    public int PictureLength;
-    public string Type = "";
-    public string DefaultValue = "";
-    public UsageType UsageType;
-    public string UsageContext = "";
+    private Compact<bool> HasClause;
+
     public bool IsElementary;
     public bool IsGroup;
     public bool IsConstant;

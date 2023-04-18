@@ -2,11 +2,12 @@ using System.Collections;
 
 namespace Otterkit.Types;
 
-public sealed class Compact<TValue> : IEnumerable<TValue>
+public sealed class Compact<TValue> : 
+    IEnumerable<TValue>
     where TValue : notnull
 {
     private readonly TValue[] CompactArray;
-    public int Count => CompactArray.Length;
+    public int Length => CompactArray.Length;
 
     public Compact()
     {
@@ -25,9 +26,14 @@ public sealed class Compact<TValue> : IEnumerable<TValue>
         set => CompactArray[index] = value;
     }
 
+    public IEnumerable<TValue> GetEnumerable()
+    {
+        return CompactArray;
+    }
+
     public IEnumerator<TValue> GetEnumerator()
     {
-        return ((IEnumerable<TValue>)CompactArray).GetEnumerator();
+        return GetEnumerable().GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()

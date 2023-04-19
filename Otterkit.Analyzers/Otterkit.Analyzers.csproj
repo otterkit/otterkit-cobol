@@ -26,7 +26,7 @@
     <RepositoryUrl>https://github.com/otterkit/otterkit</RepositoryUrl> 
     <RepositoryType>git</RepositoryType>
     <Description>
-      This package contains the Standard COBOL Analyzers for the Otterkit compiler.
+      This package contains the Standard COBOL analyzer for the Otterkit compiler.
     </Description>
   </PropertyGroup>
 

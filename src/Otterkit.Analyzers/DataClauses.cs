@@ -1359,10 +1359,6 @@ public static partial class DataDivision
 
         entryLocal[DataClause.Picture] = true;
 
-        entryLocal.PictureString = picture;
-
-        entryLocal.PictureLength = size;
-
         Continue();
     }
 
@@ -1386,13 +1382,11 @@ public static partial class DataDivision
 
         if (CurrentEquals(TokenType.String))
         {
-            entryLocal.DefaultValue = Current();
             StringLiteral();
         }
 
         if (CurrentEquals(TokenType.Numeric))
         {
-            entryLocal.DefaultValue = Current();
             Number();
         }
     }
@@ -1408,7 +1402,7 @@ public static partial class DataDivision
         {
             case "BINARY":
                 Expected("BINARY");
-                entryLocal.UsageType = UsageType.Binary;
+                entryLocal.Usage = UsageType.Binary;
                 break;
 
             case "BINARY-CHAR":
@@ -1428,18 +1422,18 @@ public static partial class DataDivision
 
             case "BIT":
                 Expected("BIT");
-                entryLocal.UsageType = UsageType.Bit;
+                entryLocal.Usage = UsageType.Bit;
                 break;
 
             case "COMP":
             case "COMPUTATIONAL":
                 Expected(Current().Value);
-                entryLocal.UsageType = UsageType.Computational;
+                entryLocal.Usage = UsageType.Computational;
                 break;
 
             case "DISPLAY":
                 Expected("DISPLAY");
-                entryLocal.UsageType = UsageType.Display;
+                entryLocal.Usage = UsageType.Display;
                 break;
 
             case "FLOAT-BINARY-32":
@@ -1481,17 +1475,17 @@ public static partial class DataDivision
 
             case "INDEX":
                 Expected("INDEX");
-                entryLocal.UsageType = UsageType.Index;
+                entryLocal.Usage = UsageType.Index;
                 break;
 
             case "MESSAGE-TAG":
                 Expected("MESSAGE-TAG");
-                entryLocal.UsageType = UsageType.MessageTag;
+                entryLocal.Usage = UsageType.MessageTag;
                 break;
 
             case "NATIONAL":
                 Expected("NATIONAL");
-                entryLocal.UsageType = UsageType.National;
+                entryLocal.Usage = UsageType.National;
                 break;
 
             case "OBJECT":
@@ -1502,7 +1496,7 @@ public static partial class DataDivision
 
                 // Need implement identifier resolution first
                 // To parse the rest of this using clause correctly
-                entryLocal.UsageType = UsageType.ObjectReference;
+                entryLocal.Usage = UsageType.ObjectReference;
                 if (CurrentEquals("Factory"))
                 {
                     Expected("FACTORY");
@@ -1541,21 +1535,21 @@ public static partial class DataDivision
                 if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
                 {
                     Optional("TO");
-                    entryLocal.UsageType = UsageType.DataPointer;
-                    entryLocal.UsageContext = Current();
+                    entryLocal.Usage = UsageType.DataPointer;
+                    
                     Identifier();
                 }
                 else
                 {
-                    entryLocal.UsageType = UsageType.DataPointer;
+                    entryLocal.Usage = UsageType.DataPointer;
                 }
                 break;
 
             case "FUNCTION-POINTER":
                 Expected("FUNCTION-POINTER");
                 Optional("TO");
-                entryLocal.UsageType = UsageType.FunctionPointer;
-                entryLocal.UsageContext = Current();
+                entryLocal.Usage = UsageType.FunctionPointer;
+                
                 Identifier();
                 break;
 
@@ -1564,13 +1558,13 @@ public static partial class DataDivision
                 if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
                 {
                     Optional("TO");
-                    entryLocal.UsageType = UsageType.ProgramPointer;
-                    entryLocal.UsageContext = Current();
+                    entryLocal.Usage = UsageType.ProgramPointer;
+                    
                     Identifier();
                 }
                 else
                 {
-                    entryLocal.UsageType = UsageType.ProgramPointer;
+                    entryLocal.Usage = UsageType.ProgramPointer;
                 }
                 break;
 

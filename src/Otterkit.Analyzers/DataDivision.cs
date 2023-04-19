@@ -859,7 +859,7 @@ public static partial class DataDivision
     {
         var dataItem = localReference;
 
-        bool usageCannotHavePicture = dataItem.UsageType switch
+        bool usageCannotHavePicture = dataItem.Usage switch
         {
             UsageType.BinaryChar => true,
             UsageType.BinaryDouble => true,
@@ -884,7 +884,7 @@ public static partial class DataDivision
                 Invalid clause combination.
                 """)
             .WithSourceLine(Current(), $"""
-                Items with USAGE {dataItem.UsageType.Display()} must not contain a PICTURE clause.
+                Items with USAGE {dataItem.Usage.Display()} must not contain a PICTURE clause.
                 """)
             .CloseError();
         }
@@ -925,7 +925,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        bool usageCannotHaveValue = dataItem.UsageType switch
+        bool usageCannotHaveValue = dataItem.Usage switch
         {
             UsageType.Index => true,
             UsageType.MessageTag => true,
@@ -943,7 +943,7 @@ public static partial class DataDivision
                 Invalid clause combination.
                 """)
             .WithSourceLine(Current(), $"""
-                Items with USAGE {dataItem.UsageType.Display()} must not contain a VALUE clause.
+                Items with USAGE {dataItem.Usage.Display()} must not contain a VALUE clause.
                 """)
             .CloseError();
         }

@@ -40,7 +40,6 @@
   <ItemGroup>
     <!-- <PackageReference Include="Otterkit.Numerics" Version="1.7.10" /> -->
     <ProjectReference Include="../libotterkit/src/OtterkitLibrary.csproj" />
-    <PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>

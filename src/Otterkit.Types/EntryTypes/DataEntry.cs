@@ -1,33 +1,54 @@
 namespace Otterkit.Types;
 
-public partial class DataEntry : AbstractEntry
+public partial class DataEntry
 {
-    public int LevelNumber;
-    public DataEntry? Parent;
+    public Option<DataEntry> Parent;
+    public Option<Token> Identifier;
+    public string ExternalizedName = "";
+    public EntryType EntryType;
+
     public CurrentScope Section;
-    private Compact<bool> HasClause;
+    public UsageType Usage;
+    public int LevelNumber;
 
     public bool IsElementary;
-    public bool IsGroup;
     public bool IsConstant;
+    public bool IsGroup;
+
+    private ulong ClauseBitField;
 
     public DataEntry(Token identifier, EntryType entryType) 
-        : base(identifier, entryType)
     {
-        HasClause = new Compact<bool>(65);
+        Identifier = identifier;
+        EntryType = entryType;
     }
 
     public bool this[DataClause clauseName]
     {
-        get => HasClause[(int)clauseName];
+        get => GetClauseBit(clauseName);
 
-        set => HasClause[(int)clauseName] = value;
+        set => SetClauseBit(clauseName, value);
     }
 
-    public bool this[int clauseIndex]
+    private void SetClauseBit(DataClause clause, bool bit)
     {
-        get => HasClause[clauseIndex];
+        var mask = 1UL << (int)clause - 1;
 
-        set => HasClause[clauseIndex] = value;
+        if (bit)
+        {
+            ClauseBitField |= mask;
+            return;
+        }
+
+        ClauseBitField &= ~mask;
+    }
+
+    private bool GetClauseBit(DataClause clause)
+    {
+        var position = (int)clause - 1;
+
+        var bit = (ClauseBitField >> position) & 1;
+
+        return bit == 1UL;
     }
 }

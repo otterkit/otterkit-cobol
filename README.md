@@ -21,7 +21,13 @@ dotnet tool install --global Otterkit --version 1.0.50-alpha
 
 ### Build from Source
 
-First, clone the git repo from [https://github.com/otterkit/otterkit.git](https://github.com/otterkit/otterkit.git) to get the source code. To access the libotterkit submodule inside, use the `--recurse-submodules --remote-submodules` flag on the clone command. To run, navigate into the `src` folder (for the compiler, not libotterkit) and then type `dotnet run` into the command line.
+First, run the git clone command, with the relevant arguments: 
+```
+git clone https://github.com/otterkit/otterkit.git --recurse-submodules --remote-submodules
+```
+The *recurse-submodules* and *remote-submodules* flags are needed to access the [libotterkit](https://github.com/otterkit/libotterkit) submodule inside.
+
+Then, navigate into the `otterkit/src` folder (for the compiler, not libotterkit) and then type `dotnet run` into the command line to run and test if everything is working.
 
 ### Build from Source on MacOS (For Intel and Apple Silicon processors)
 

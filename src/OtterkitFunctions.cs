@@ -45,10 +45,62 @@ public static class Functions
         // TODO BASE-CONVERT
     }
 
-    public static void BOOLEAN_OF_INTEGER(Numeric argument)
+    public static Bit BOOLEAN_OF_INTEGER(Numeric argument, Numeric? length = null)
     {
         // TODO BOOLEAN-OF-INTEGER
-        // Need to implement usage bit first
+
+        Decimal128 input = argument;
+        // TODO: Return runtime error if input is not an integer
+        Decimal128 two = 2;
+
+        Stack<Decimal128> digits = new Stack<Decimal128>();
+        
+        Decimal128 current = Decimal128.Abs(input);
+
+        while(current/two != 0){
+            Decimal128 remainder = Decimal128.Remainder(current, 2); //Decimal128.RemainderNear outputs negative numbers, which breaks the calculation.
+            digits.Push(remainder);
+            current = Decimal128.Divide(current-remainder, 2);
+        }
+
+        var text = new System.Text.StringBuilder();
+
+
+        foreach(Decimal128 bit in digits){
+            text.Append(bit.ToString());
+        }
+
+        //string trueText = text.ToString();
+
+        string trueText;
+        if (!(length is null)){
+            var len = int.Parse(length.Display);
+            if(len < text.Length){
+                int difference = text.Length - len;
+                trueText = text.ToString(difference, len);
+            } else if (len > text.Length){
+                int difference = len - text.Length;
+                for(int i = 0; i < difference; i++){
+                    text.Insert(0 , "0");
+                }
+                trueText = text.ToString();
+
+            } else {
+                trueText = text.ToString();
+            }
+
+        } else {
+            trueText = text.ToString();
+        }
+        if(input < 0){
+            trueText = "-"+trueText;
+        }
+
+        Bit result = new(Encoding.UTF8.GetBytes(trueText), 0, trueText.Length, new byte[trueText.Length]);
+
+        return result;
+       
+
     }
 
     public static Numeric BYTE_LENGTH(Numeric argument)

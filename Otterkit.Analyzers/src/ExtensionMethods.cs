@@ -1,6 +1,6 @@
 using Otterkit.Types;
 
-namespace Otterkit;
+namespace Otterkit.Analyzers;
 
 public static class ExtensionMethods
 {

@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -12,9 +11,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackAsTool>true</PackAsTool>
-    <PackRelease>true</PackRelease> 
-    <ToolCommandName>otterkit</ToolCommandName>
+    <PackRelease>true</PackRelease>
+    <PackageId>Otterkit.CodeGenerators</PackageId>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Version>1.0.70</Version>
@@ -23,31 +21,23 @@
     <Company>Otterkit Project</Company>
     <PackageIcon>OtterkitIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>Otterkit;Standard;COBOL;Compiler</PackageTags>
+    <PackageTags>Otterkit;COBOL;Compiler;Generators</PackageTags>
     <PackageProjectUrl>https://github.com/otterkit</PackageProjectUrl>
     <RepositoryUrl>https://github.com/otterkit/otterkit</RepositoryUrl> 
     <RepositoryType>git</RepositoryType>
     <Description>
-      Main package for the Otterkit COBOL compiler. This package installs the compiler as a dotnet global tool.
+      This package contains the Standard COBOL code generators for the Otterkit compiler.
     </Description>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="../Assets/OtterkitIcon.png" Pack="true" PackagePath="/" />
-    <None Include="../README.md" Pack="true" PackagePath="/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- <PackageReference Include="Otterkit.Numerics" Version="1.7.10" /> -->
-    <ProjectReference Include="../libotterkit/src/OtterkitLibrary.csproj" />
-    <PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="../Otterkit.Analyzers/Otterkit.Analyzers.csproj" />
-    <ProjectReference Include="../Otterkit.CodeGenerators/Otterkit.CodeGenerators.csproj" />
-    <ProjectReference Include="../Otterkit.Tokenizers/Otterkit.Tokenizers.csproj" />
     <ProjectReference Include="../Otterkit.Types/Otterkit.Types.csproj" />
+    <ProjectReference Include="../Otterkit.Analyzers/Otterkit.Analyzers.csproj" />
   </ItemGroup>
 
 </Project>

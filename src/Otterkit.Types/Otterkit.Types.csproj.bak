@@ -12,6 +12,7 @@
 
   <PropertyGroup>
     <PackRelease>true</PackRelease>
+    <PackageId>Otterkit.Types</PackageId>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Version>1.0.50-alpha</Version>

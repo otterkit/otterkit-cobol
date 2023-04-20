@@ -258,9 +258,7 @@ public static class TokenHandling
     /// </summary>
     public static bool LookaheadEquals(int lookahead, string value)
     {
-        if (Lookahead(lookahead).Value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
-
-        return false;
+        return Lookahead(lookahead).Value.Equals(value, StringComparison.OrdinalIgnoreCase);
     }
 
     public static bool LookaheadEquals(int lookahead, params string[] valuesToCompare)
@@ -301,9 +299,7 @@ public static class TokenHandling
 
     public static bool CurrentEquals(string value)
     {
-        if (Current().Value.Equals(value, StringComparison.OrdinalIgnoreCase)) return true;
-        
-        return false;
+        return Current().Value.Equals(value, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -322,9 +318,7 @@ public static class TokenHandling
 
     public static bool CurrentEquals(TokenType tokenType)
     {
-        if (Current().Type == tokenType) return true;
-        
-        return false;
+        return Current().Type == tokenType;
     }
 
     /// <summary>

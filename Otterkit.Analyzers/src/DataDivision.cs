@@ -536,12 +536,6 @@ public static partial class DataDivision
 
         dataLocal.ClauseRange = (start, end);
 
-        HandleLevelStack(dataLocal);
-
-        CheckClauseCompatibility(dataLocal, itemToken);
-
-        if (dataLocal.IsGroup) GroupStack.Push(dataLocal);
-
         if (!Expected(".", false))
         {
             ErrorHandler
@@ -556,6 +550,12 @@ public static partial class DataDivision
                 """)
             .CloseError();
         }
+
+        HandleLevelStack(dataLocal);
+
+        if (dataLocal.IsGroup) GroupStack.Push(dataLocal);
+
+        CheckClauseCompatibility(dataLocal, itemToken);
 
         CheckConditionNames(dataLocal);
 

@@ -1,4 +1,4 @@
-using static Otterkit.Analyzers.TokenHandling;
+using static Otterkit.Types.TokenHandling;
 
 using System.Diagnostics;
 using Otterkit.Types;

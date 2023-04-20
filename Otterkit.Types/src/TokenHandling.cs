@@ -1,6 +1,4 @@
-using Otterkit.Types;
-
-namespace Otterkit.Analyzers;
+namespace Otterkit.Types;
 
 public static class TokenHandling
 {

@@ -525,10 +525,16 @@ public static partial class DataDivision
             .CloseError();
         }
 
+        var start = TokenHandling.Index;
+
         while (CurrentEquals(TokenContext.IsClause))
         {
             DataEntryClauses(dataLocal);
         }
+
+        var end = TokenHandling.Index;
+
+        dataLocal.ClauseRange = (start, end);
 
         HandleLevelStack(dataLocal);
 
@@ -739,10 +745,6 @@ public static partial class DataDivision
             ScreenEntryClauses(screenLocal);
         }
 
-        HandleLevelStack(screenLocal);
-
-        if (screenLocal.IsGroup) GroupStack.Push(screenLocal);
-
         if (!Expected(".", false))
         {
             ErrorHandler
@@ -757,6 +759,10 @@ public static partial class DataDivision
                 """)
             .CloseError();
         }
+
+        HandleLevelStack(screenLocal);
+
+        if (screenLocal.IsGroup) GroupStack.Push(screenLocal);
 
         CheckConditionNames(screenLocal);
 
@@ -786,25 +792,14 @@ public static partial class DataDivision
 
     private static void HandleLevelStack(DataEntry entryLocal)
     {
-        if (CurrentEquals(".") && LookaheadEquals(1, TokenType.Numeric))
+        if (CurrentEquals(TokenType.Numeric) && LevelStack.Count > 0)
         {
-            if (LevelStack.Count == 0)
-            {
-                entryLocal.IsElementary = true;
-            }
-            else
-            {
-                _ = int.TryParse(Lookahead(1).Value, out int outInt);
-                var currentLevel = LevelStack.Peek();
+            _ = int.TryParse(Current().Value, out int level);
+            var currentLevel = LevelStack.Peek();
 
-                if (currentLevel == 1 && outInt >= 2 && outInt <= 49 || outInt >= 2 && outInt <= 49 && outInt > currentLevel)
-                {
-                    entryLocal.IsGroup = true;
-                }
-                else
-                {
-                    entryLocal.IsElementary = true;
-                }
+            if (currentLevel == 1 && level >= 2 && level <= 49 || level >= 2 && level <= 49 && level > currentLevel)
+            {
+                entryLocal.IsGroup = true;
             }
         }
     }
@@ -889,7 +884,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        if (!usageCannotHavePicture && dataItem.IsElementary && !dataItem[DataClause.Picture] && !dataItem[DataClause.Usage] && !dataItem[DataClause.Value])
+        if (!usageCannotHavePicture && !dataItem.IsGroup && !dataItem[DataClause.Picture] && !dataItem[DataClause.Usage] && !dataItem[DataClause.Value])
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""

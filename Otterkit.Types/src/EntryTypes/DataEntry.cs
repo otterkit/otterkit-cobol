@@ -4,18 +4,18 @@ public partial class DataEntry
 {
     public Option<DataEntry> Parent;
     public Option<Token> Identifier;
-    public string ExternalizedName = "";
+    public Option<string> ExternalizedName;
     public EntryType EntryType;
 
     public CurrentScope Section;
     public UsageType Usage;
     public int LevelNumber;
 
-    public bool IsElementary;
-    public bool IsConstant;
     public bool IsGroup;
+    public bool IsConstant;
 
     private ulong ClauseBitField;
+    public (int, int) ClauseRange;
 
     public DataEntry(Token identifier, EntryType entryType) 
     {

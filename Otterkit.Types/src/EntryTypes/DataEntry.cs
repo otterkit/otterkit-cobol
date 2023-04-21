@@ -167,6 +167,29 @@ public partial class DataEntry
         return (objectType, isFactory, isOnly);
     }
 
+    public Token FetchPicture()
+    {
+        var storedIndex = SetupClauseFetch(DataClause.Picture);
+
+        while (CurrentEquals(TokenContext.IsClause))
+        {
+            if (CurrentEquals("PICTURE", "PIC"))
+            {
+                Continue();
+                Optional("IS");
+                break;
+            }
+
+            Continue();
+        }
+
+        var picture = Current();
+
+        TokenHandling.Index = storedIndex;
+
+        return picture;
+    }
+
     private int SetupClauseFetch(DataClause clauseType)
     {
         if (!this[clauseType])

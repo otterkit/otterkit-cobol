@@ -121,6 +121,52 @@ public partial class DataEntry
         return groupUsage;
     }
 
+    public (Option<Token>, bool, bool) FetchObjectReference()
+    {
+        var storedIndex = SetupClauseFetch(DataClause.Usage);
+
+        Option<Token> objectType = new();
+        var isFactory = false;
+        var isOnly = false;
+
+        while (CurrentEquals(TokenContext.IsClause))
+        {
+            if (CurrentEquals("USAGE"))
+            {
+                Continue();
+                Optional("IS");
+                Continue();
+                Continue();
+
+                if (CurrentEquals("FACTORY"))
+                {
+                    Continue();
+                    Optional("OF");
+                    isFactory = true;
+                }
+
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    objectType = Current();
+                    Continue();
+                }
+
+                if (CurrentEquals("ONLY"))
+                {
+                    isOnly = true;
+                }
+
+                break;
+            }
+
+            Continue();
+        }
+
+        TokenHandling.Index = storedIndex;
+
+        return (objectType, isFactory, isOnly);
+    }
+
     private int SetupClauseFetch(DataClause clauseType)
     {
         if (!this[clauseType])

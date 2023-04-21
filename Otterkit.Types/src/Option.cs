@@ -62,26 +62,6 @@ public readonly struct Option<TValue> :
         return !left.Equals(right);
     }
 
-    public TReturn Switch<TReturn>(Func<TValue, TReturn> WhenValue, Func<TReturn> WhenNull)
-    {
-        return Exists switch
-        {
-            true => WhenValue(Value),
-            _ => WhenNull(),
-        };
-    }
-
-    public void Switch(Action<TValue> WhenValue, Action WhenNull)
-    {
-        if (Exists)
-        {
-            WhenValue(Value);
-            return;
-        }
-
-        WhenNull();
-    }
-
     public override bool Equals([NotNullWhen(true)] object? obj)
     {
         return obj is Option<TValue> value && Equals(value);

@@ -525,16 +525,12 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        var start = TokenHandling.Index;
+        dataLocal.ClauseDeclaration = TokenHandling.Index;
 
         while (CurrentEquals(TokenContext.IsClause))
         {
             DataEntryClauses(dataLocal);
         }
-
-        var end = TokenHandling.Index;
-
-        dataLocal.ClauseRange = (start, end);
 
         if (!Expected(".", false))
         {

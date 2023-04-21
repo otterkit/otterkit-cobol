@@ -56,14 +56,7 @@ public partial class DataEntry
 
     public bool FetchTypedef()
     {
-        if (!this[DataClause.Typedef])
-        {
-            throw new NullReferenceException("NOTE: Always check if clause is present before running this method.");
-        }
-
-        var currentIndex = TokenHandling.Index;
-
-        TokenHandling.Index = ClauseDeclaration;
+        var storedIndex = SetupClauseFetch(DataClause.Type);
 
         var isStrong = false;
 
@@ -78,21 +71,14 @@ public partial class DataEntry
             Continue();
         }
 
-        TokenHandling.Index = currentIndex;
+        TokenHandling.Index = storedIndex;
 
         return isStrong;
     }
 
     public Token FetchType()
     {
-        if (!this[DataClause.Type])
-        {
-            throw new NullReferenceException("NOTE: Always check if clause is present before running this method.");
-        }
-
-        var currentIndex = TokenHandling.Index;
-
-        TokenHandling.Index = ClauseDeclaration;
+        var storedIndex = SetupClauseFetch(DataClause.Type);
 
         while (CurrentEquals(TokenContext.IsClause))
         {
@@ -107,8 +93,22 @@ public partial class DataEntry
 
         var type = Current();
 
-        TokenHandling.Index = currentIndex;
+        TokenHandling.Index = storedIndex;
 
         return type;
+    }
+
+    private int SetupClauseFetch(DataClause clauseType)
+    {
+        if (!this[clauseType])
+        {
+            throw new NullReferenceException("NOTE: Always check if clause is present before running this method.");
+        }
+
+        var currentIndex = TokenHandling.Index;
+
+        TokenHandling.Index = ClauseDeclaration;
+
+        return currentIndex;
     }
 }

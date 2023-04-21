@@ -54,7 +54,7 @@ public partial class DataEntry
         return bit == 1UL;
     }
 
-    public bool IsTypedefStrong()
+    public bool FetchTypedef()
     {
         var currentIndex = TokenHandling.Index;
 
@@ -76,5 +76,27 @@ public partial class DataEntry
         TokenHandling.Index = currentIndex;
 
         return isStrong;
+    }
+
+    public Token FetchType()
+    {
+        var currentIndex = TokenHandling.Index;
+
+        TokenHandling.Index = ClauseDeclaration;
+
+        while (CurrentEquals(TokenContext.IsClause))
+        {
+            if (CurrentEquals("TYPE") && LookaheadEquals(1, TokenType.Identifier))
+            {
+                Continue();
+                break;
+            }
+
+            Continue();
+        }
+
+        TokenHandling.Index = currentIndex;
+
+        return Current();
     }
 }

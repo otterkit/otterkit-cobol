@@ -98,6 +98,29 @@ public partial class DataEntry
         return type;
     }
 
+    public Token FetchGroupUsage()
+    {
+        var storedIndex = SetupClauseFetch(DataClause.GroupUsage);
+
+        while (CurrentEquals(TokenContext.IsClause))
+        {
+            if (CurrentEquals("GROUP-USAGE"))
+            {
+                Continue();
+                Optional("IS");
+                break;
+            }
+
+            Continue();
+        }
+
+        var groupUsage = Current();
+
+        TokenHandling.Index = storedIndex;
+
+        return groupUsage;
+    }
+
     private int SetupClauseFetch(DataClause clauseType)
     {
         if (!this[clauseType])

@@ -7,7 +7,7 @@ public readonly struct Option<TValue> :
     where TValue : notnull
 {
     internal readonly TValue Value;
-    internal readonly bool Exists;
+    public readonly bool Exists;
 
     public static Option<TValue> Null
     {

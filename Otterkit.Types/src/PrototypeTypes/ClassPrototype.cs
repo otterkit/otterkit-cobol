@@ -4,7 +4,7 @@ public class ClassPrototype : AbstractPrototype
 {
     public bool IsFinal;
     public List<string> Using = new();
-    public ClassPrototype? Inherits;
+    public Option<ClassPrototype> Inherits;
 
     public List<InterfacePrototype> FactoryImplements = new();
     public List<InterfacePrototype> ObjectImplements = new();

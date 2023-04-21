@@ -33,18 +33,17 @@ public static class CompilerContext
 
     /// <summary>
     /// Used for storing the current source unit signature.
-    /// The Compact type is initialized with a capacity of 1.
     /// </summary>
-    private static readonly Compact<CallablePrototype> StoredSignature = new();
+    private static Option<CallablePrototype> StoredSignature;
 
     /// <summary>
     /// Used for getting and setting the signature of the source unit currently being parsed.
     /// </summary>
     public static CallablePrototype ActiveSignature
     {
-        get => StoredSignature[0];
+        get => (CallablePrototype)StoredSignature;
 
-        set => StoredSignature[0] = value;
+        set => StoredSignature = value;
     }
 
     public static bool IsResolutionPass { get; set; }

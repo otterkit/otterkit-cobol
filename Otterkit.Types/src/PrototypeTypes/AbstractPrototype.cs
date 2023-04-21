@@ -4,7 +4,7 @@ public abstract class AbstractPrototype
 {
     public Token Identifier;
     public SourceUnit SourceType;
-    public string ExternalizedName = "";
+    public Option<string> ExternalizedName;
 
     protected AbstractPrototype(Token identifier, SourceUnit sourcetype)
     {

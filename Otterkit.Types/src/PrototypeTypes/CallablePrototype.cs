@@ -8,7 +8,7 @@ public class CallablePrototype : AbstractPrototype
     public List<DataEntry> Parameters = new();
     public List<bool> IsOptional = new();
     public List<bool> IsByRef = new();
-    public DataEntry? Returning;
+    public Option<DataEntry> Returning;
     public bool Override;
     public bool IsFinal;
 

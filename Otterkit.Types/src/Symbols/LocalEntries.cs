@@ -34,7 +34,7 @@ public sealed class LocalEntries<TValue> where TValue: notnull
         return false;
     }
 
-    public (bool, bool) EntryExistsAndIsUnique(string entryName)
+    public (bool, bool) HasUniqueEntry(string entryName)
     {
         ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(EntryLookup, entryName);
 
@@ -46,7 +46,7 @@ public sealed class LocalEntries<TValue> where TValue: notnull
         return (false, false);
     }
 
-    public List<TValue> GetEntriesByName(string entryName)
+    public List<TValue> GetEntriesList(string entryName)
     {
         ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(EntryLookup, entryName);
 
@@ -58,7 +58,7 @@ public sealed class LocalEntries<TValue> where TValue: notnull
         throw new ArgumentOutOfRangeException(nameof(entryName), "Local entry does not exist in the EntryLookup dictionary");
     }
 
-    public TValue GetUniqueEntryByName(string entryName)
+    public TValue GetUniqueEntry(string entryName)
     {
         ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(EntryLookup, entryName);
 

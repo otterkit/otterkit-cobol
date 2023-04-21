@@ -46,5 +46,10 @@ public static class CompilerContext
         set => StoredSignature = value;
     }
 
+    public static LocalEntries<DataEntry> ActiveEntries
+    {
+        get => ((CallablePrototype)StoredSignature).DataEntries;
+    }
+
     public static bool IsResolutionPass { get; set; }
 }

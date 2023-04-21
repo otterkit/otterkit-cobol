@@ -1398,189 +1398,233 @@ public static partial class DataDivision
 
         entryLocal[DataClause.Usage] = true;
 
-        switch (Current().Value)
+        if (CurrentEquals("BINARY"))
         {
-            case "BINARY":
-                Expected("BINARY");
-                entryLocal.Usage = UsageType.Binary;
-                break;
+            Expected("BINARY");
 
-            case "BINARY-CHAR":
-            case "BINARY-SHORT":
-            case "BINARY-LONG":
-            case "BINARY-DOUBLE":
-                Expected(Current().Value);
-                if (CurrentEquals("SIGNED"))
-                {
-                    Expected("SIGNED");
-                }
-                else if (CurrentEquals("UNSIGNED"))
-                {
-                    Expected("UNSIGNED");
-                }
-                break;
+            entryLocal.Usage = UsageType.Binary;
+            return;
+        }
 
-            case "BIT":
-                Expected("BIT");
-                entryLocal.Usage = UsageType.Bit;
-                break;
+        if (CurrentEquals("BINARY-CHAR", "BINARY-SHORT", "BINARY-LONG", "BINARY-DOUBLE"))
+        {
+            Expected(Current().Value);
+            if (CurrentEquals("SIGNED"))
+            {
+                Expected("SIGNED");
+            }
+            else if (CurrentEquals("UNSIGNED"))
+            {
+                Expected("UNSIGNED");
+            }
+            
+            return;  
+        }
 
-            case "COMP":
-            case "COMPUTATIONAL":
-                Expected(Current().Value);
-                entryLocal.Usage = UsageType.Computational;
-                break;
+        if (CurrentEquals("BIT"))
+        {
+            Expected("BIT");
 
-            case "DISPLAY":
-                Expected("DISPLAY");
-                entryLocal.Usage = UsageType.Display;
-                break;
+            entryLocal.Usage = UsageType.Bit;
+            return; 
+        }
 
-            case "FLOAT-BINARY-32":
-                Expected("FLOAT-BINARY-32");
-                Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
-                break;
+        if (CurrentEquals("COMP", "COMPUTATIONAL"))
+        {
+            Expected(Current().Value);
 
-            case "FLOAT-BINARY-64":
-                Expected("FLOAT-BINARY-64");
-                Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
-                break;
+            entryLocal.Usage = UsageType.Computational;
+            return;
+        }
 
-            case "FLOAT-BINARY-128":
-                Expected("FLOAT-BINARY-128");
-                Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
-                break;
+        if (CurrentEquals("DISPLAY"))
+        {
+            Expected("DISPLAY");
 
-            case "FLOAT-DECIMAL-16":
-                Expected("FLOAT-DECIMAL-16");
-                Common.EncodingEndianness();
-                break;
+            entryLocal.Usage = UsageType.Display;
+            return; 
+        }
 
-            case "FLOAT-DECIMAL-32":
-                Expected("FLOAT-DECIMAL-32");
-                Common.EncodingEndianness();
-                break;
+        if (CurrentEquals("FLOAT-BINARY-32"))
+        {
+            Expected("FLOAT-BINARY-32");
+            Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+            
+            entryLocal.Usage = UsageType.FloatBinary32;
+            return; 
+        }
 
-            case "FLOAT-EXTENDED":
-                Expected("FLOAT-EXTENDED");
-                break;
+        if (CurrentEquals("FLOAT-BINARY-64"))
+        {
+            Expected("FLOAT-BINARY-64");
+            Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+            
+            entryLocal.Usage = UsageType.FloatBinary64;
+            return; 
+        }
 
-            case "FLOAT-LONG":
-                Expected("FLOAT-LONG");
-                break;
+        if (CurrentEquals("FLOAT-BINARY-128"))
+        {
+            Expected("FLOAT-BINARY-128");
+            Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+            
+            entryLocal.Usage = UsageType.FloatBinary128;
+            return; 
+        }
 
-            case "FLOAT-SHORT":
-                Expected("FLOAT-SHORT");
-                break;
+        if (CurrentEquals("FLOAT-DECIMAL-16"))
+        {
+            Expected("FLOAT-DECIMAL-16");
+            Common.EncodingEndianness();
+            
+            entryLocal.Usage = UsageType.FloatDecimal16;
+            return; 
+        }
 
-            case "INDEX":
-                Expected("INDEX");
-                entryLocal.Usage = UsageType.Index;
-                break;
+        if (CurrentEquals("FLOAT-DECIMAL-32"))
+        {
+            Expected("FLOAT-DECIMAL-32");
+            Common.EncodingEndianness();
+            
+            entryLocal.Usage = UsageType.FloatDecimal32;
+            return; 
+        }
 
-            case "MESSAGE-TAG":
-                Expected("MESSAGE-TAG");
-                entryLocal.Usage = UsageType.MessageTag;
-                break;
+        if (CurrentEquals("FLOAT-EXTENDED"))
+        {
+            Expected("FLOAT-EXTENDED");
+            
+            entryLocal.Usage = UsageType.FloatExtended;
+            return; 
+        }
 
-            case "NATIONAL":
-                Expected("NATIONAL");
-                entryLocal.Usage = UsageType.National;
-                break;
+        if (CurrentEquals("FLOAT-LONG"))
+        {
+            Expected("FLOAT-LONG");
+            
+            entryLocal.Usage = UsageType.FloatLong;
+            return; 
+        }
 
-            case "OBJECT":
-                Expected("OBJECT");
-                Expected("REFERENCE");
-                // var isFactory = false;
-                // var isStronglyTyped = false;
+        if (CurrentEquals("FLOAT-SHORT"))
+        {
+            Expected("FLOAT-SHORT");
+            
+            entryLocal.Usage = UsageType.FloatShort;
+            return; 
+        }
 
-                // Need implement identifier resolution first
-                // To parse the rest of this using clause correctly
-                entryLocal.Usage = UsageType.ObjectReference;
-                if (CurrentEquals("Factory"))
-                {
-                    Expected("FACTORY");
-                    Optional("OF");
-                    // isFactory = true;
-                }
+        if (CurrentEquals("INDEX"))
+        {
+            Expected("INDEX");
+            
+            entryLocal.Usage = UsageType.Index;
+            return; 
+        }
 
-                if (CurrentEquals("ACTIVE-CLASS"))
-                {
-                    Expected("ACTIVE-CLASS");
-                    break;
-                }
+        if (CurrentEquals("MESSAGE-TAG"))
+        {
+            Expected("MESSAGE-TAG");
+            
+            entryLocal.Usage = UsageType.MessageTag;
+            return; 
+        }
 
-                Continue();
+        if (CurrentEquals("NATIONAL"))
+        {
+            Expected("NATIONAL");
+            
+            entryLocal.Usage = UsageType.National;
+            return; 
+        }
 
-                if (CurrentEquals("ONLY"))
-                {
-                    Expected("ONLY");
-                    // isStronglyTyped = true
-                }
+        if (CurrentEquals("OBJECT"))
+        {
+            Expected("OBJECT");
+            Expected("REFERENCE");
+            // var isFactory = false;
+            // var isStronglyTyped = false;
 
-                break;
+            // Need implement identifier resolution first
+            // To parse the rest of this using clause correctly
+            if (CurrentEquals("Factory"))
+            {
+                Expected("FACTORY");
+                Optional("OF");
+                // isFactory = true;
+            }
 
-            case "PACKED-DECIMAL":
-                Expected("PACKED-DECIMAL");
-                if (CurrentEquals("WITH", "NO"))
-                {
-                    Optional("WITH");
-                    Expected("NO");
-                    Expected("SIGN");
-                }
-                break;
+            if (CurrentEquals("ACTIVE-CLASS"))
+            {
+                Expected("ACTIVE-CLASS");
+                return;
+            }
 
-            case "POINTER":
-                Expected("POINTER");
-                if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
-                {
-                    Optional("TO");
-                    entryLocal.Usage = UsageType.DataPointer;
-                    
-                    Identifier();
-                }
-                else
-                {
-                    entryLocal.Usage = UsageType.DataPointer;
-                }
-                break;
+            if (CurrentEquals(TokenType.Identifier))
+            {
+                Identifier();
+            }
 
-            case "FUNCTION-POINTER":
-                Expected("FUNCTION-POINTER");
+            if (CurrentEquals("ONLY"))
+            {
+                Expected("ONLY");
+                // isStronglyTyped = true
+            }
+
+            entryLocal.Usage = UsageType.ObjectReference;
+            return; 
+        }
+
+        if (CurrentEquals("POINTER"))
+        {
+            Expected("POINTER");
+
+            if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
+            {
                 Optional("TO");
-                entryLocal.Usage = UsageType.FunctionPointer;
+                Identifier();
+            }
+
+            entryLocal.Usage = UsageType.DataPointer;
+            return; 
+        }
+
+        if (CurrentEquals("FUNCTION-POINTER"))
+        {
+            Expected("FUNCTION-POINTER");
+            Optional("TO");
+            
+            Identifier();
+
+            entryLocal.Usage = UsageType.FunctionPointer;
+            return; 
+        }
+
+        if (CurrentEquals("PROGRAM-POINTER"))
+        {
+            Expected("PROGRAM-POINTER");
+
+            if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
+            {
+                Optional("TO");
                 
                 Identifier();
-                break;
-
-            case "PROGRAM-POINTER":
-                Expected("PROGRAM-POINTER");
-                if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
-                {
-                    Optional("TO");
-                    entryLocal.Usage = UsageType.ProgramPointer;
-                    
-                    Identifier();
-                }
-                else
-                {
-                    entryLocal.Usage = UsageType.ProgramPointer;
-                }
-                break;
-
-            default:
-                ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 50, """
-                    Unrecognized USAGE clause.
-                    """)
-                .WithSourceLine(Lookahead(-1))
-                .WithNote("""
-                    This could be due to an unsupported third-party extension.
-                    """)
-                .CloseError();
-
-                AnchorPoint(TokenContext.IsClause);
-                break;
+            }
+            
+            entryLocal.Usage = UsageType.ProgramPointer;
+            return; 
         }
+
+        ErrorHandler
+        .Build(ErrorType.Analyzer, ConsoleColor.Red, 50, """
+            Unrecognized USAGE clause.
+            """)
+        .WithSourceLine(Lookahead(-1))
+        .WithNote("""
+            This could be due to an unsupported third-party extension.
+            """)
+        .CloseError();
+
+        AnchorPoint(TokenContext.IsClause);
     }
 }

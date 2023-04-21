@@ -880,13 +880,13 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        if (!usageCannotHavePicture && !dataItem.IsGroup && !dataItem[DataClause.Picture] && !dataItem[DataClause.Usage] && !dataItem[DataClause.Value])
+        if (!usageCannotHavePicture && !dataItem.IsGroup && !dataItem[DataClause.Type] && !dataItem[DataClause.Picture] && !dataItem[DataClause.Usage] && !dataItem[DataClause.Value])
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
                 Invalid clause combination.
                 """)
-            .WithSourceLine(Current(), $"""
+            .WithSourceLine(itemToken, $"""
                 Elementary items must contain a PICTURE clause.
                 """)
             .CloseError();
@@ -898,7 +898,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
                 Invalid clause combination.
                 """)
-            .WithSourceLine(Current(), $"""
+            .WithSourceLine(itemToken, $"""
                 Group items must not contain a PICTURE clause.
                 """)
             .CloseError();
@@ -910,7 +910,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
                 Invalid clause combination.
                 """)
-            .WithSourceLine(Current(), $"""
+            .WithSourceLine(itemToken, $"""
                 Items with a RENAMES clause must not contain a PICTURE clause.
                 """)
             .CloseError();
@@ -933,7 +933,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
                 Invalid clause combination.
                 """)
-            .WithSourceLine(Current(), $"""
+            .WithSourceLine(itemToken, $"""
                 Items with USAGE {dataItem.Usage.Display()} must not contain a VALUE clause.
                 """)
             .CloseError();

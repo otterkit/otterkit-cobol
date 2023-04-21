@@ -56,6 +56,11 @@ public partial class DataEntry
 
     public bool FetchTypedef()
     {
+        if (!this[DataClause.Typedef])
+        {
+            throw new NullReferenceException("NOTE: Always check if clause is present before running this method.");
+        }
+
         var currentIndex = TokenHandling.Index;
 
         TokenHandling.Index = ClauseDeclaration;
@@ -80,6 +85,11 @@ public partial class DataEntry
 
     public Token FetchType()
     {
+        if (!this[DataClause.Type])
+        {
+            throw new NullReferenceException("NOTE: Always check if clause is present before running this method.");
+        }
+
         var currentIndex = TokenHandling.Index;
 
         TokenHandling.Index = ClauseDeclaration;
@@ -95,8 +105,10 @@ public partial class DataEntry
             Continue();
         }
 
+        var type = Current();
+
         TokenHandling.Index = currentIndex;
 
-        return Current();
+        return type;
     }
 }

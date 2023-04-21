@@ -1,3 +1,5 @@
+using static Otterkit.Types.TokenHandling;
+
 namespace Otterkit.Types;
 
 public partial class DataEntry
@@ -15,7 +17,7 @@ public partial class DataEntry
     public bool IsConstant;
 
     private ulong ClauseBitField;
-    public (int, int) ClauseRange;
+    public int ClauseDeclaration;
 
     public DataEntry(Token identifier, EntryType entryType) 
     {
@@ -50,5 +52,29 @@ public partial class DataEntry
         var bit = (ClauseBitField >> position) & 1;
 
         return bit == 1UL;
+    }
+
+    public bool IsTypedefStrong()
+    {
+        var currentIndex = TokenHandling.Index;
+
+        TokenHandling.Index = ClauseDeclaration;
+
+        var isStrong = false;
+
+        while (CurrentEquals(TokenContext.IsClause))
+        {
+            if (CurrentEquals("TYPEDEF") && LookaheadEquals(1, "STRONG"))
+            {
+                isStrong = true;
+                break;
+            }
+
+            Continue();
+        }
+
+        TokenHandling.Index = currentIndex;
+
+        return isStrong;
     }
 }

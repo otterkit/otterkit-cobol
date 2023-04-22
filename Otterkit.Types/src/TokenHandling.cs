@@ -275,14 +275,9 @@ public static class TokenHandling
     /// <para>Technically this method allows for infinite lookahead and lookbehind comparisons, as long as the Index + amount is not bigger than the
     /// number of items on the list of Tokens or smaller than 0.</para>
     /// </summary>
-    public static bool LookaheadEquals(int lookahead, params TokenType[] tokenTypesToCompare)
+    public static bool LookaheadEquals(int lookahead, TokenType tokenType)
     {
-        foreach (var type in tokenTypesToCompare)
-        {
-            if (Lookahead(lookahead).Type.Equals(type)) return true;
-        }
-
-        return false;
+        return Lookahead(lookahead).Type == tokenType;
     }
 
     /// <summary>
@@ -337,14 +332,9 @@ public static class TokenHandling
     /// Boolean <c>CurrentEquals</c> TokenContext[]: This method returns true or false depending on if the current token from the current Index has the same context as the parameter.
     /// <para>This helper method is an alternative to the <c>"Current().value.Equals()"</c> syntax, which could become verbose and harder to read when it's used frequently</para>
     /// </summary>
-    public static bool CurrentEquals(params TokenContext[] tokenContextsToCompare)
+    public static bool CurrentEquals(TokenContext tokenContext)
     {
-        foreach (var context in tokenContextsToCompare)
-        {
-            if (Current().Context.Equals(context)) return true;
-        }
-
-        return false;
+        return Current().Context == tokenContext;
     }
 
     /// <summary>
@@ -364,6 +354,26 @@ public static class TokenHandling
     /// <para>If the current token matches one the values, it moves to the next token,
     /// if the current token doesn't match any of the values it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
+    public static void Choice(string firstChoice, string secondChoice)
+    {
+        if (CurrentEquals(firstChoice) || CurrentEquals(secondChoice))
+        {
+            Continue();
+            return;
+        }
+        
+        ErrorHandler
+        .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, """
+            Unexpected token.
+            """)
+        .WithSourceLine(Current(), $"""
+            Expected one of the following: {firstChoice}, {secondChoice}.
+            """)
+        .CloseError();
+
+        Continue();
+    }
+
     public static void Choice(params string[] choices)
     {
         foreach (string choice in choices)
@@ -410,49 +420,10 @@ public static class TokenHandling
     }
 
     /// <summary>
-    /// Void <c>Expected</c>: This method checks if the current token is equal to it's first parameter.
+    /// Bool <c>Expected</c>: This method checks if the current token is equal to it's first parameter.
     /// <para>If the current token matches the value, it moves to the next token,
     /// if the current token doesn't match the value it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    public static void Expected(string expected, string? custom = null, int position = 0, params string[] wordAnchors)
-    {
-        if (CurrentEquals(TokenType.EOF))
-        {
-            ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
-                Unexpected end of file.
-                """)
-            .WithSourceLine(Lookahead(-1), $"""
-                Expected {expected} after this token.
-                """)
-            .CloseError();
-
-            return;
-        }
-
-        if (!CurrentEquals(expected))
-        {
-            var lookahead = Lookahead(position);
-
-            ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, """
-                Unexpected token.
-                """)
-            .WithSourceLine(lookahead, $"""
-                {custom ?? $"Expected {expected}, instead of {Current().Value}"}
-                """)
-            .CloseError();
-
-            if (wordAnchors.Length != 0) AnchorPoint(wordAnchors);
-
-            if (wordAnchors.Length == 0) Continue();
-        }
-        else
-        {
-            Continue();
-        }
-    }
-
     public static bool Expected(string expected, bool useDefaultError = true)
     {
         if (CurrentEquals(TokenType.EOF))
@@ -500,7 +471,6 @@ public static class TokenHandling
 
         return true;
     }
-
 
     /// <summary>
     /// Void <c>Identifier</c>: This method checks if the current token is an identifier.
@@ -866,6 +836,7 @@ public static class TokenHandling
         }        
 
         Continue();
+
         if (CurrentEquals("("))
         {
             // TODO:

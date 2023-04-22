@@ -918,7 +918,7 @@ public static class TokenHandling
     /// <para>If the current token's type is TokenType.Numeric, it moves to the next token,
     /// if the current token's type is TokenType.Numeric it calls the ErrorHandler to report a parsing error</para>
     /// </summary>
-    public static void Number()
+    public static void Numeric()
     {
         if (!CurrentEquals(TokenType.Numeric))
         {

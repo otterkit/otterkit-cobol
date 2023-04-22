@@ -366,7 +366,7 @@ public static class Statements
         switch (Current().Type)
         {
             case TokenType.Identifier: Identifier(); break;
-            case TokenType.Numeric: Number(); break;
+            case TokenType.Numeric: Numeric(); break;
             
             case TokenType.String:
             case TokenType.HexString:
@@ -382,7 +382,7 @@ public static class Statements
             switch (Current().Type)
             {
                 case TokenType.Identifier: Identifier(); break;
-                case TokenType.Numeric: Number(); break;
+                case TokenType.Numeric: Numeric(); break;
                 
                 case TokenType.String:
                 case TokenType.HexString:
@@ -641,7 +641,7 @@ public static class Statements
                 Identifier();
 
             if (CurrentEquals(TokenType.Numeric))
-                Number();
+                Numeric();
         }
 
         if (CurrentEquals("TO") && LookaheadEquals(2, "GIVING"))
@@ -654,7 +654,7 @@ public static class Statements
                     break;
 
                 case TokenType.Numeric:
-                    Number();
+                    Numeric();
                     break;
 
                 default:
@@ -763,7 +763,7 @@ public static class Statements
                 Identifier();
 
             if (Current().Type == TokenType.Numeric)
-                Number();
+                Numeric();
         }
 
         if (CurrentEquals("FROM") && LookaheadEquals(2, "GIVING"))
@@ -776,7 +776,7 @@ public static class Statements
                     break;
 
                 case TokenType.Numeric:
-                    Number();
+                    Numeric();
                     break;
 
                 default:
@@ -954,7 +954,7 @@ public static class Statements
                 }
                 else if (CurrentEquals(TokenType.Numeric))
                 {
-                    Number();
+                    Numeric();
                 }
 
                 while (IsCategoryName())
@@ -987,7 +987,7 @@ public static class Statements
                     }
                     else if (CurrentEquals(TokenType.Numeric))
                     {
-                        Number();
+                        Numeric();
                     }
 
                 }
@@ -1245,7 +1245,7 @@ public static class Statements
                 break;
 
             case TokenType.Numeric:
-                Number();
+                Numeric();
                 break;
 
             default:
@@ -1270,7 +1270,7 @@ public static class Statements
                     break;
 
                 case TokenType.Numeric:
-                    Number();
+                    Numeric();
                     break;
 
                 default:
@@ -1365,7 +1365,7 @@ public static class Statements
             Identifier();
 
         else if (Current().Type == TokenType.Numeric)
-            Number();
+            Numeric();
 
         else if (Current().Type == TokenType.String)
             StringLiteral();
@@ -1529,7 +1529,7 @@ public static class Statements
                 break;
 
             case TokenType.Numeric:
-                Number();
+                Numeric();
                 break;
 
             default:
@@ -1554,7 +1554,7 @@ public static class Statements
                     break;
 
                 case TokenType.Numeric:
-                    Number();
+                    Numeric();
                     break;
 
                 default:
@@ -1595,7 +1595,7 @@ public static class Statements
                     break;
 
                 case TokenType.Numeric:
-                    Number();
+                    Numeric();
                     break;
 
                 default:
@@ -2246,7 +2246,7 @@ public static class Statements
                 StringLiteral();
 
             else if (Current().Type == TokenType.Numeric)
-                Number();
+                Numeric();
 
             else
                 Identifier();
@@ -2296,7 +2296,7 @@ public static class Statements
                 Identifier();
 
             else if (Current().Type == TokenType.Numeric)
-                Number();
+                Numeric();
 
             else
                 StringLiteral();
@@ -2434,7 +2434,7 @@ public static class Statements
         }
         else if (CurrentEquals(TokenType.Numeric))
         {
-            Number();
+            Numeric();
         }
         else
         {
@@ -2469,7 +2469,7 @@ public static class Statements
             }
             else if (CurrentEquals(TokenType.Numeric))
             {
-                Number();
+                Numeric();
             }
             else
             {
@@ -2613,7 +2613,7 @@ public static class Statements
                 Expected("TO");
                 if (CurrentEquals(TokenType.Numeric))
                 {
-                    Number();
+                    Numeric();
                 }
                 else
                 {
@@ -2922,7 +2922,7 @@ public static class Statements
                     Identifier();
                     break;
                 case TokenType.Numeric:
-                    Number();
+                    Numeric();
                     break;
                 case TokenType.String:
                     StringLiteral();
@@ -3201,7 +3201,7 @@ public static class Statements
             {
                 if (CurrentEquals(TokenType.Identifier)) Identifier();
 
-                else Number();
+                else Numeric();
 
                 if (CurrentEquals("LINE", "LINES"))
                 {

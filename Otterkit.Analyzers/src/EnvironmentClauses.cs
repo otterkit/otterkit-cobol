@@ -221,7 +221,7 @@ public static partial class EnvironmentDivision
 
             while (CurrentEquals(TokenType.Numeric))
             {
-                Number();
+                Numeric();
             }
         }
 
@@ -672,7 +672,7 @@ public static partial class EnvironmentDivision
     private static void Reserve(FileControlEntry fileControl)
     {
         Expected("RESERVE");
-        Number();
+        Numeric();
 
         if (CurrentEquals("AREA", "AREAS"))
         {

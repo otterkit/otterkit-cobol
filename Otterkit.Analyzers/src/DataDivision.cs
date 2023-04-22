@@ -281,7 +281,7 @@ public static partial class DataDivision
     private static void ReportGroupEntry()
     {
         int levelNumber = int.Parse(Current().Value);
-        Number();
+        Numeric();
 
         Token itemToken = Current();
         string dataName = itemToken.Value;
@@ -487,7 +487,7 @@ public static partial class DataDivision
     private static void DataEntry()
     {
         int levelNumber = int.Parse(Current().Value);
-        Number();
+        Numeric();
 
         Token itemToken = Current();
         string dataName = itemToken.Value;
@@ -596,7 +596,7 @@ public static partial class DataDivision
         }
 
         var levelNumber = int.Parse(Current().Value);
-        Number();
+        Numeric();
 
         Token itemToken = Current();
         string dataName = itemToken.Value;
@@ -632,7 +632,7 @@ public static partial class DataDivision
                     break;
 
                 case TokenType.Numeric:
-                    Number();
+                    Numeric();
                     break;
 
                 case TokenType.FigurativeLiteral:
@@ -698,7 +698,7 @@ public static partial class DataDivision
     private static void ScreenEntry()
     {
         int levelNumber = int.Parse(Current().Value);
-        Number();
+        Numeric();
 
         Token itemToken = Current();
         string screenName = itemToken.Value;
@@ -974,7 +974,7 @@ public static partial class DataDivision
 
             switch (Current().Type)
             {
-                case TokenType.Numeric: Number(); break;
+                case TokenType.Numeric: Numeric(); break;
                 
                 case TokenType.String:
                 case TokenType.HexString:
@@ -991,7 +991,7 @@ public static partial class DataDivision
 
                 switch (firstConditionType)
                 {
-                    case TokenType.Numeric: Number(); break;
+                    case TokenType.Numeric: Numeric(); break;
                     
                     case TokenType.String:
                     case TokenType.HexString:

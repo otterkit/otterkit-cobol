@@ -44,7 +44,7 @@ public static partial class Common
         }
         else
         {
-            Number();
+            Numeric();
         }
 
         Expected("TIMES");
@@ -70,7 +70,7 @@ public static partial class Common
         Expected("FROM");
         if (CurrentEquals(TokenType.Numeric))
         {
-            Number();
+            Numeric();
         }
         else
         {
@@ -82,7 +82,7 @@ public static partial class Common
             Expected("BY");
             if (CurrentEquals(TokenType.Numeric))
             {
-                Number();
+                Numeric();
             }
             else
             {
@@ -100,7 +100,7 @@ public static partial class Common
             Expected("FROM");
             if (CurrentEquals(TokenType.Numeric))
             {
-                Number();
+                Numeric();
             }
             else
             {
@@ -112,7 +112,7 @@ public static partial class Common
                 Expected("BY");
                 if (CurrentEquals(TokenType.Numeric))
                 {
-                    Number();
+                    Numeric();
                 }
                 else
                 {
@@ -757,7 +757,7 @@ public static partial class Common
                     Identifier();
                     break;
                 case TokenType.Numeric:
-                    Number();
+                    Numeric();
                     break;
                 case TokenType.String:
                     StringLiteral();
@@ -1302,7 +1302,7 @@ public static partial class Common
             }
             else
             {
-                Number();
+                Numeric();
             }
 
             LineColumn(lineExists, columnExists);
@@ -1335,7 +1335,7 @@ public static partial class Common
             }
             else
             {
-                Number();
+                Numeric();
             }
 
             LineColumn(lineExists, columnExists);
@@ -1915,7 +1915,7 @@ public static partial class Common
 
         if (numeric && CurrentEquals(TokenType.Numeric))
         {
-            Number();
+            Numeric();
         }
         else if (@string && CurrentEquals(TokenType.String))
         {

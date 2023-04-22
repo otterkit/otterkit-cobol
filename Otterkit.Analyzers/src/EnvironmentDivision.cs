@@ -127,7 +127,7 @@ public static partial class EnvironmentDivision
 
         if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier(Current());
+            References.Identifier(Current());
 
             Expected(".");
         }
@@ -155,7 +155,7 @@ public static partial class EnvironmentDivision
 
         if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier(Current());
+            References.Identifier(Current());
             shouldHaveSeparator = true;
         }
 
@@ -211,7 +211,7 @@ public static partial class EnvironmentDivision
             Expected("STATUS");
             Optional("IS");
 
-            Identifier();
+            References.Identifier();
         }
         
         while (CurrentEquals("CURRENCY"))
@@ -220,7 +220,7 @@ public static partial class EnvironmentDivision
             Optional("SIGN");
             Optional("IS");
 
-            StringLiteral();
+            Literals.String();
 
             if (CurrentEquals("WITH", "PICTURE"))
             {
@@ -228,7 +228,7 @@ public static partial class EnvironmentDivision
                 Expected("PICTURE");
                 Expected("SYMBOL");
 
-                StringLiteral();
+                Literals.String();
             }
         }
 
@@ -237,7 +237,7 @@ public static partial class EnvironmentDivision
             Expected("CURSOR");
             Optional("IS");
 
-            Identifier();
+            References.Identifier();
         }
 
         if (CurrentEquals("DECIMAL-POINT"))
@@ -258,18 +258,18 @@ public static partial class EnvironmentDivision
             Optional("IS");
 
             // TODO: Define allowed locale names
-            StringLiteral();
+            Literals.String();
         }
 
         while (CurrentEquals(TokenType.Identifier))
         {
             // TODO: Define allowed device, feature and switch names
             // and replace TokenType.Identifier with the allowed names
-            Identifier();
+            References.Identifier();
             Optional("IS");
 
             // Mnemonic name
-            Identifier();
+            References.Identifier();
         }
 
         while (CurrentEquals("SYMBOLIC"))
@@ -281,10 +281,10 @@ public static partial class EnvironmentDivision
         {
             Expected("ORDER");
             Expected("TABLE");
-            Identifier();
+            References.Identifier();
 
             Optional("IS");
-            StringLiteral();
+            Literals.String();
         }
 
         if (!LookaheadEquals(-2, "SPECIAL-NAMES") && !LookaheadEquals(-1, "SPECIAL-NAMES"))
@@ -318,18 +318,18 @@ public static partial class EnvironmentDivision
             if (CurrentEquals("CLASS"))
             {
                 Expected("CLASS");
-                Identifier();
+                References.Identifier();
 
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
-                    StringLiteral();
+                    Literals.String();
                 }
 
                 if (CurrentEquals("EXPANDS"))
                 {
                     Expected("EXPANDS");
-                    Identifier();
+                    References.Identifier();
 
                     Expected("USING");
                     if (!CurrentEquals(TokenType.Identifier))
@@ -346,27 +346,27 @@ public static partial class EnvironmentDivision
                         AnchorPoint("CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY", "DATA", "PROCEDURE");
                     }
 
-                    Identifier();
+                    References.Identifier();
 
-                    while (CurrentEquals(TokenType.Identifier)) Identifier();
+                    while (CurrentEquals(TokenType.Identifier)) References.Identifier();
                 }
             }
 
             if (CurrentEquals("INTERFACE"))
             {
                 Expected("INTERFACE");
-                Identifier();
+                References.Identifier();
 
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
-                    StringLiteral();
+                    Literals.String();
                 }
 
                 if (CurrentEquals("EXPANDS"))
                 {
                     Expected("EXPANDS");
-                    Identifier();
+                    References.Identifier();
 
                     Expected("USING");
                     if (!CurrentEquals(TokenType.Identifier))
@@ -383,9 +383,9 @@ public static partial class EnvironmentDivision
                         AnchorPoint("CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY", "DATA", "PROCEDURE");
                     }
 
-                    Identifier();
+                    References.Identifier();
 
-                    while (CurrentEquals(TokenType.Identifier)) Identifier();
+                    while (CurrentEquals(TokenType.Identifier)) References.Identifier();
                 }
             }
 
@@ -409,11 +409,11 @@ public static partial class EnvironmentDivision
                 }
                 else
                 {
-                    Identifier();
+                    References.Identifier();
                     if (CurrentEquals("AS"))
                     {
                         Expected("AS");
-                        StringLiteral();
+                        Literals.String();
                     }
                 }
             }
@@ -421,22 +421,22 @@ public static partial class EnvironmentDivision
             if (CurrentEquals("PROGRAM"))
             {
                 Expected("PROGRAM");
-                Identifier();
+                References.Identifier();
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
-                    StringLiteral();
+                    Literals.String();
                 }
             }
 
             if (CurrentEquals("PROPERTY"))
             {
                 Expected("PROPERTY");
-                Identifier();
+                References.Identifier();
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
-                    StringLiteral();
+                    Literals.String();
                 }
             }
         }
@@ -483,11 +483,11 @@ public static partial class EnvironmentDivision
             Expected("COMMIT");
             Optional("ON");
 
-            Identifier();
+            References.Identifier();
 
             while (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
 
             Expected(".");
@@ -542,7 +542,7 @@ public static partial class EnvironmentDivision
         Token fileToken = Current();
         string fileName = fileToken.Value;
 
-        Identifier();
+        References.Identifier();
 
         var fileControl = Assign(fileToken);
 

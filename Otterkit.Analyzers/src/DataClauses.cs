@@ -52,11 +52,11 @@ public static partial class DataDivision
             
             if (LookaheadEquals(1, "TO"))
             {
-                Numeric();
+                Literals.Numeric();
                 Expected("TO");
             }
 
-            Numeric();
+            Literals.Numeric();
             Choice("CHARACTERS", "RECORDS");
         }
 
@@ -223,16 +223,16 @@ public static partial class DataDivision
 
                 while (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier();
+                    References.Identifier();
                 }
 
                 return;
             }
 
-            Identifier();
+            References.Identifier();
             while (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
         }
     
@@ -251,7 +251,7 @@ public static partial class DataDivision
                 Optional("ARE");
             }
 
-            Numeric();
+            Literals.Numeric();
 
             if (CurrentEquals("LINE", "LINES"))
             {
@@ -260,7 +260,7 @@ public static partial class DataDivision
 
             if (LookaheadEquals(1, "COL", "COLUMNS") && !LookaheadEquals(-1, TokenType.Numeric))
             {
-                Numeric();
+                Literals.Numeric();
                 Choice("COL", "COLUMNS");
             }
             else if (CurrentEquals("COL", "COLUMNS") && LookaheadEquals(-1, TokenType.Numeric))
@@ -272,7 +272,7 @@ public static partial class DataDivision
             {
                 Expected("HEADING");
                 Optional("IS");
-                Numeric();
+                Literals.Numeric();
             }
 
             if (CurrentEquals("FIRST"))
@@ -280,7 +280,7 @@ public static partial class DataDivision
                 Expected("FIRST");
                 Choice("DETAIL", "DE");
                 Optional("IS");
-                Numeric();
+                Literals.Numeric();
             }
 
             if (CurrentEquals("LAST") && LookaheadEquals(1, "CONTROL", "CH"))
@@ -297,7 +297,7 @@ public static partial class DataDivision
                 }
 
                 Optional("IS");
-                Numeric();
+                Literals.Numeric();
             }
 
             if (CurrentEquals("LAST") && LookaheadEquals(1, "DETAIL", "DE"))
@@ -305,14 +305,14 @@ public static partial class DataDivision
                 Expected("LAST");
                 Choice("DETAIL", "DE");
                 Optional("IS");
-                Numeric();
+                Literals.Numeric();
             }
 
             if (CurrentEquals("FOOTING"))
             {
                 Expected("FOOTING");
                 Optional("IS");
-                Numeric();
+                Literals.Numeric();
             }
         }
     }
@@ -344,11 +344,11 @@ public static partial class DataDivision
             else if (CurrentEquals("+", "PLUS"))
             {
                 Choice("+", "PLUS");
-                Numeric();
+                Literals.Numeric();
             }
             else
             {
-                Numeric();
+                Literals.Numeric();
             }
         }
 
@@ -417,11 +417,11 @@ public static partial class DataDivision
                 if (CurrentEquals("+", "PLUS"))
                 {
                     Choice("+", "PLUS");
-                    Numeric();
+                    Literals.Numeric();
                 }
                 else
                 {
-                    Numeric();
+                    Literals.Numeric();
                 }
             }
         }
@@ -464,24 +464,24 @@ public static partial class DataDivision
             Expected("OCCURS");
             if (LookaheadEquals(1, "TO"))
             {
-                Numeric();
+                Literals.Numeric();
                 Expected("TO");
             }
 
-            Numeric();
+            Literals.Numeric();
             Optional("TIMES");
 
             if (CurrentEquals("DEPENDING"))
             {
                 Expected("DEPENDING");
                 Optional("ON");
-                Identifier();
+                References.Identifier();
             }
 
             if (CurrentEquals("STEP"))
             {
                 Expected("STEP");
-                Numeric();
+                Literals.Numeric();
             }
         }
 
@@ -508,11 +508,11 @@ public static partial class DataDivision
                 if (CurrentEquals("UPON"))
                 {
                     Expected("UPON");
-                    Identifier();
+                    References.Identifier();
 
                     while(CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                 }
             }
@@ -527,7 +527,7 @@ public static partial class DataDivision
                 }
                 else
                 {
-                    Identifier();
+                    References.Identifier();
                 }
             }
 
@@ -571,11 +571,11 @@ public static partial class DataDivision
                 Optional("ARE");
             }
             
-            StringLiteral();
+            Literals.String();
 
             while (CurrentEquals(TokenType.String))
             {
-                StringLiteral();
+                Literals.String();
             }
         }
 
@@ -585,7 +585,7 @@ public static partial class DataDivision
 
             while (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
 
                 if (CurrentEquals("FROM"))
                 {
@@ -613,11 +613,11 @@ public static partial class DataDivision
         else if (CurrentEquals("+", "PLUS"))
         {
             Choice("+", "PLUS");
-            Numeric();
+            Literals.Numeric();
         }
         else
         {
-            Numeric();
+            Literals.Numeric();
             if (CurrentEquals("ON", "NEXT"))
             {
                 Optional("ON");
@@ -716,11 +716,11 @@ public static partial class DataDivision
             Optional("IS");
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
-                Numeric();
+                Literals.Numeric();
             }
         }
 
@@ -730,18 +730,18 @@ public static partial class DataDivision
             Optional("IS");
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
-                Numeric();
+                Literals.Numeric();
             }
         }
 
         if (CurrentEquals("OCCURS"))
         {
             Expected("OCCURS");
-            Numeric();
+            Literals.Numeric();
 
             Optional("TIMES");
         }
@@ -807,13 +807,13 @@ public static partial class DataDivision
             if (CurrentEquals("FROM") || CurrentEquals(TokenType.Numeric))
             {
                 Optional("FROM");
-                Numeric();
+                Literals.Numeric();
             }
 
             if (CurrentEquals("TO"))
             {
                 Optional("TO");
-                Numeric();
+                Literals.Numeric();
             }
             
             if (CurrentEquals("BYTES", "CHARACTERS"))
@@ -825,7 +825,7 @@ public static partial class DataDivision
             {
                 Expected("DEPENDING");
                 Optional("ON");
-                Identifier();
+                References.Identifier();
             }
 
             return;
@@ -836,7 +836,7 @@ public static partial class DataDivision
         
         if (!LookaheadEquals(1, "TO"))
         {
-            Numeric();
+            Literals.Numeric();
 
             if (CurrentEquals("BYTES", "CHARACTERS"))
             {
@@ -847,11 +847,11 @@ public static partial class DataDivision
         }
 
         // If the record is fixed-or-variable
-        Numeric();
+        Literals.Numeric();
 
         Expected("TO");
 
-        Numeric();
+        Literals.Numeric();
 
         if (CurrentEquals("BYTES", "CHARACTERS"))
         {
@@ -874,11 +874,11 @@ public static partial class DataDivision
             Optional("ARE");
         }
 
-        Identifier();
+        References.Identifier();
 
         while (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -895,11 +895,11 @@ public static partial class DataDivision
         }
 
         Optional("IS");
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         } 
     }
 
@@ -918,7 +918,7 @@ public static partial class DataDivision
         if (CurrentEquals("TO"))
         {
             Expected("TO");
-            Identifier();
+            References.Identifier();
 
             screenLocal[DataClause.To] = true;
 
@@ -928,7 +928,7 @@ public static partial class DataDivision
         if (CurrentEquals("USING"))
         {
             Expected("USING");
-            Identifier();
+            References.Identifier();
 
             screenLocal[DataClause.Using] = true;
 
@@ -961,11 +961,11 @@ public static partial class DataDivision
 
         if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
         else
         {
-            Numeric();
+            Literals.Numeric();
         }
     }
 
@@ -984,11 +984,11 @@ public static partial class DataDivision
 
         if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
         else
         {
-            Numeric();
+            Literals.Numeric();
         }
     }
 
@@ -1020,7 +1020,7 @@ public static partial class DataDivision
 
             entryLocal.ExternalizedName = Current().Value;
 
-            StringLiteral();
+            Literals.String();
         }
 
         if (!CurrentEquals("AS"))
@@ -1052,7 +1052,7 @@ public static partial class DataDivision
     private static void RedefinesClause(DataEntry entryLocal)
     {
         Expected("REDEFINES");
-        Identifier();
+        References.Identifier();
 
         entryLocal[DataClause.Redefines] = true;
     }
@@ -1103,13 +1103,13 @@ public static partial class DataDivision
         
         entryLocal[DataClause.DynamicLength] = true;
 
-        if (CurrentEquals(TokenType.Identifier)) Identifier();
+        if (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
         if (CurrentEquals("LIMIT"))
         {
             Expected("LIMIT");
             Optional("IS");
-            Numeric();
+            Literals.Numeric();
         }
     }
 
@@ -1170,7 +1170,7 @@ public static partial class DataDivision
     {
         Expected("SAME");
         Expected("AS");
-        Identifier();
+        References.Identifier();
 
         entryLocal[DataClause.SameAs] = true;
     }
@@ -1178,7 +1178,7 @@ public static partial class DataDivision
     private static void TypeClause(DataEntry entryLocal)
     {
         Expected("TYPE");
-        Identifier();
+        References.Identifier();
 
         entryLocal[DataClause.Type] = true;
     }
@@ -1241,7 +1241,7 @@ public static partial class DataDivision
                 }
                 else
                 {
-                    Identifier();
+                    References.Identifier();
                 }
 
                 if (isControlHeading && CurrentEquals("OR"))
@@ -1272,19 +1272,19 @@ public static partial class DataDivision
             {
                 Expected("CAPACITY");
                 Optional("IN");
-                Identifier();
+                References.Identifier();
             }
 
             if (CurrentEquals("FROM"))
             {
                 Expected("FROM");
-                Numeric();
+                Literals.Numeric();
             }
 
             if (CurrentEquals("TO"))
             {
                 Expected("TO");
-                Numeric();
+                Literals.Numeric();
             }
 
             if (CurrentEquals("INITIALIZED"))
@@ -1304,16 +1304,16 @@ public static partial class DataDivision
 
         if (LookaheadEquals(1, "TO"))
         {
-            Numeric();
+            Literals.Numeric();
             Expected("TO");
 
-            Numeric();
+            Literals.Numeric();
             Optional("TIMES");
 
             Expected("DEPENDING");
             Optional("ON");
 
-            Identifier();
+            References.Identifier();
 
             Common.AscendingDescendingKey();
 
@@ -1325,7 +1325,7 @@ public static partial class DataDivision
             return;
         }
 
-        Numeric();
+        Literals.Numeric();
         Optional("TIMES");
 
         Common.AscendingDescendingKey();
@@ -1340,10 +1340,10 @@ public static partial class DataDivision
             Expected("INDEXED");
             Optional("BY");
 
-            Identifier();
+            References.Identifier();
             while (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
         }
     }
@@ -1382,12 +1382,12 @@ public static partial class DataDivision
 
         if (CurrentEquals(TokenType.String))
         {
-            StringLiteral();
+            Literals.String();
         }
 
         if (CurrentEquals(TokenType.Numeric))
         {
-            Numeric();
+            Literals.Numeric();
         }
     }
 
@@ -1562,7 +1562,7 @@ public static partial class DataDivision
 
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
 
             if (CurrentEquals("ONLY"))
@@ -1582,7 +1582,7 @@ public static partial class DataDivision
             if (CurrentEquals("TO") || CurrentEquals(TokenType.Identifier))
             {
                 Optional("TO");
-                Identifier();
+                References.Identifier();
             }
 
             entryLocal.Usage = UsageType.DataPointer;
@@ -1594,7 +1594,7 @@ public static partial class DataDivision
             Expected("FUNCTION-POINTER");
             Optional("TO");
             
-            Identifier();
+            References.Identifier();
 
             entryLocal.Usage = UsageType.FunctionPointer;
             return; 
@@ -1608,7 +1608,7 @@ public static partial class DataDivision
             {
                 Optional("TO");
                 
-                Identifier();
+                References.Identifier();
             }
             
             entryLocal.Usage = UsageType.ProgramPointer;

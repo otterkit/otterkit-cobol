@@ -71,7 +71,7 @@ public static class ProcedureDivision
         {   
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
                 while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
                 {
                     if (CurrentEquals("OPTIONAL"))
@@ -79,7 +79,7 @@ public static class ProcedureDivision
                         Expected("OPTIONAL");
                     }
                     // TODO: Reimplement parameter item resolution
-                    Identifier();
+                    References.Identifier();
                 }  
             }
 
@@ -121,7 +121,7 @@ public static class ProcedureDivision
                 
                 // TODO: Reimplement parameter item resolution
 
-                Identifier();
+                References.Identifier();
                 while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
                 {
                     if (CurrentEquals("OPTIONAL"))
@@ -129,7 +129,7 @@ public static class ProcedureDivision
                         Expected("OPTIONAL");
                     }
                     // TODO: Reimplement parameter item resolution
-                    Identifier();
+                    References.Identifier();
                 }
             }
 
@@ -150,11 +150,11 @@ public static class ProcedureDivision
                 }
                 
                 // TODO: Reimplement parameter item resolution
-                Identifier();
+                References.Identifier();
                 while (CurrentEquals(TokenType.Identifier))
                 {
                     // TODO: Reimplement parameter item resolution
-                    Identifier();
+                    References.Identifier();
                 }
             }
         }
@@ -174,8 +174,6 @@ public static class ProcedureDivision
             .CloseError();
             return;
         }
-
-        Identifier();
     }
 
     private static void ProcedureBody()
@@ -304,7 +302,7 @@ public static class ProcedureDivision
 
                 if (currentType is SourceUnit.Method or SourceUnit.MethodPrototype)
                 {
-                    Identifier(endMarkerToken);
+                    References.Identifier(endMarkerToken);
                 }
 
                 if (!Expected(".", false))
@@ -390,7 +388,7 @@ public static class ProcedureDivision
 
     private static void EndMarkerErrorHandling(Token token)
     {
-        if (!Identifier(token, false))
+        if (!References.Identifier(token, false))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """

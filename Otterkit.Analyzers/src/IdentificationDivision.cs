@@ -113,7 +113,7 @@ public static class IdentificationDivision
 
             if (CurrentEquals(TokenType.String))
             {
-                StringLiteral();
+                Literals.String();
             }
             else if (CurrentEquals("BINARY"))
             {
@@ -288,12 +288,12 @@ public static class IdentificationDivision
         CompilerContext.SourceTypes.Push(SourceUnit.Program);
         CompilerContext.ActiveScope = CurrentScope.ProgramId;
 
-        Identifier();
+        References.Identifier();
         if (CurrentEquals("AS"))
         {
             Expected("AS");
             CompilerContext.ActiveUnits.Pop();
-            StringLiteral();
+            Literals.String();
             CompilerContext.ActiveUnits.Push(Lookahead(-1));
         }
 
@@ -402,12 +402,12 @@ public static class IdentificationDivision
         CompilerContext.SourceTypes.Push(SourceUnit.Function);
         CompilerContext.ActiveScope = CurrentScope.FunctionId;
 
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals("AS"))
         {
             Expected("AS");
-            StringLiteral();
+            Literals.String();
         }
 
         if (CurrentEquals("IS", "PROTOTYPE"))
@@ -460,12 +460,12 @@ public static class IdentificationDivision
         CompilerContext.SourceTypes.Push(SourceUnit.Class);
         CompilerContext.ActiveScope = CurrentScope.ClassId;
 
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals("AS"))
         {
             Expected("AS");
-            StringLiteral();
+            Literals.String();
         }
 
         if (CurrentEquals("IS", "FINAL"))
@@ -491,7 +491,7 @@ public static class IdentificationDivision
                 .CloseError();
             }
 
-            Identifier();
+            References.Identifier();
         }
 
         if (CurrentEquals("USING"))
@@ -509,8 +509,8 @@ public static class IdentificationDivision
                 .CloseError();
             }
 
-            Identifier();
-            while (CurrentEquals(TokenType.Identifier)) Identifier();
+            References.Identifier();
+            while (CurrentEquals(TokenType.Identifier)) References.Identifier();
         }
 
         if (!CompilerContext.IsResolutionPass)
@@ -548,12 +548,12 @@ public static class IdentificationDivision
         CompilerContext.SourceTypes.Push(SourceUnit.Interface);
         CompilerContext.ActiveScope = CurrentScope.InterfaceId;
 
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals("AS"))
         {
             Expected("AS");
-            StringLiteral();
+            Literals.String();
         }
 
         if (CurrentEquals("INHERITS"))
@@ -573,8 +573,8 @@ public static class IdentificationDivision
                 .CloseError();
             }
 
-            Identifier();
-            while (CurrentEquals(TokenType.Identifier)) Identifier();
+            References.Identifier();
+            while (CurrentEquals(TokenType.Identifier)) References.Identifier();
         }
 
         if (CurrentEquals("USING"))
@@ -592,8 +592,8 @@ public static class IdentificationDivision
                 .CloseError();
             }
 
-            Identifier();
-            while (CurrentEquals(TokenType.Identifier)) Identifier();
+            References.Identifier();
+            while (CurrentEquals(TokenType.Identifier)) References.Identifier();
         }
 
         if (!CompilerContext.IsResolutionPass)
@@ -651,7 +651,7 @@ public static class IdentificationDivision
             activeUnits.Push(Current());
             sourceTypes.Push(SourceUnit.MethodGetter);
 
-            Identifier();
+            References.Identifier();
 
         }
         else if (sourceTypes.Peek() != SourceUnit.Interface && CurrentEquals("SET"))
@@ -662,18 +662,18 @@ public static class IdentificationDivision
             CompilerContext.ActiveUnits.Push(Current());
             CompilerContext.SourceTypes.Push(SourceUnit.MethodSetter);
 
-            Identifier();
+            References.Identifier();
         }
         else // If not a getter or a setter
         {
             CompilerContext.ActiveUnits.Push(Current());
 
-            Identifier();
+            References.Identifier();
 
             if (CurrentEquals("AS"))
             {
                 Expected("AS");
-                StringLiteral();
+                Literals.String();
             }
 
             if (sourceTypes.Peek() == SourceUnit.Interface)
@@ -780,9 +780,9 @@ public static class IdentificationDivision
                 .CloseError();
             }
 
-            Identifier();
+            References.Identifier();
 
-            while (CurrentEquals(TokenType.Identifier)) Identifier();
+            while (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
             Expected(".");
         }
@@ -822,9 +822,9 @@ public static class IdentificationDivision
                 .CloseError();
             }
 
-            Identifier();
+            References.Identifier();
 
-            while (CurrentEquals(TokenType.Identifier)) Identifier();
+            while (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
             Expected(".");
         }

@@ -48,7 +48,7 @@ public static class Statements
             Expected("DECLARATIVES");
             Expected(".");
 
-            Identifier();
+            References.Identifier();
             Expected("SECTION");
             Expected(".");
             UseStatement();
@@ -56,7 +56,7 @@ public static class Statements
 
             while (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION"))
             {
-                Identifier();
+                References.Identifier();
                 Expected("SECTION");
                 Expected(".");
                 UseStatement();
@@ -70,7 +70,7 @@ public static class Statements
 
         while (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION"))
         {
-            Identifier();
+            References.Identifier();
             Expected("SECTION");
             Expected(".");
             Statements.WithoutSections();
@@ -269,7 +269,7 @@ public static class Statements
                 Expected("OBJECT");
             }
 
-            Identifier();
+            References.Identifier();
         }
         else if (exceptionCondition)
         {
@@ -284,7 +284,7 @@ public static class Statements
                 Expected("OBJECT");
             }
 
-            Identifier();
+            References.Identifier();
         }
         else if (reporting)
         {
@@ -292,7 +292,7 @@ public static class Statements
 
             Expected("BEFORE");
             Expected("REPORTING");
-            Identifier();
+            References.Identifier();
         }
         else if (fileException)
         {
@@ -310,9 +310,9 @@ public static class Statements
             }
             else
             {
-                Identifier();
+                References.Identifier();
                 while (CurrentEquals(TokenType.Identifier))
-                    Identifier();
+                    References.Identifier();
             }
         }
         else
@@ -340,7 +340,7 @@ public static class Statements
         {
             bool isConditional = false;
 
-            Identifier();
+            References.Identifier();
             Optional("AT");
             Common.LineColumn();
             Common.OnException(ref isConditional);
@@ -365,8 +365,8 @@ public static class Statements
 
         switch (Current().Type)
         {
-            case TokenType.Identifier: Identifier(); break;
-            case TokenType.Numeric: Numeric(); break;
+            case TokenType.Identifier: References.Identifier(); break;
+            case TokenType.Numeric: Literals.Numeric(); break;
             
             case TokenType.String:
             case TokenType.HexString:
@@ -374,15 +374,15 @@ public static class Statements
             case TokenType.HexBoolean:
             case TokenType.National:
             case TokenType.HexNational:
-                StringLiteral(); break;
+                Literals.String(); break;
         }
 
         while (Common.IdentifierOrLiteral())
         {
             switch (Current().Type)
             {
-                case TokenType.Identifier: Identifier(); break;
-                case TokenType.Numeric: Numeric(); break;
+                case TokenType.Identifier: References.Identifier(); break;
+                case TokenType.Numeric: Literals.Numeric(); break;
                 
                 case TokenType.String:
                 case TokenType.HexString:
@@ -390,7 +390,7 @@ public static class Statements
                 case TokenType.HexBoolean:
                 case TokenType.National:
                 case TokenType.HexNational:
-                    StringLiteral(); break;
+                    Literals.String(); break;
             }
         }
 
@@ -415,7 +415,7 @@ public static class Statements
         bool isConditional = false;
 
         Expected("ACCEPT");
-        Identifier();
+        References.Identifier();
         if (CurrentEquals("FROM"))
         {
             Expected("FROM");
@@ -471,7 +471,7 @@ public static class Statements
     {
         Expected("ALLOCATE");
         if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "CHARACTERS") && !LookaheadEquals(1, TokenType.Symbol))
-            Identifier();
+            References.Identifier();
 
         if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
         {
@@ -485,7 +485,7 @@ public static class Statements
         if (CurrentEquals("RETURNING"))
         {
             Expected("RETURNING");
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -508,7 +508,7 @@ public static class Statements
 
         while (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
 
         Expected("=");
@@ -543,11 +543,11 @@ public static class Statements
         {
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
-                StringLiteral();
+                Literals.String();
             }
 
             if (CurrentEquals("AS"))
@@ -567,7 +567,7 @@ public static class Statements
         }
         else if (isPrototype && !CurrentEquals("NESTED"))
         {
-            Identifier();
+            References.Identifier();
         }
 
         if (!isPrototype && CurrentEquals("USING"))
@@ -586,7 +586,7 @@ public static class Statements
         if (CurrentEquals("RETURNING"))
         {
             Expected("RETURNING");
-            Identifier();
+            References.Identifier();
         }
 
         Common.OnException(ref isConditional);
@@ -614,9 +614,9 @@ public static class Statements
         if (CurrentEquals("CORRESPONDING", "CORR"))
         {
             Continue();
-            Identifier();
+            References.Identifier();
             Expected("TO");
-            Identifier();
+            References.Identifier();
             Common.SizeError(ref isConditional);
 
             if (isConditional) Expected("END-ADD");
@@ -638,10 +638,10 @@ public static class Statements
         while (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
         {
             if (CurrentEquals(TokenType.Identifier))
-                Identifier();
+                References.Identifier();
 
             if (CurrentEquals(TokenType.Numeric))
-                Numeric();
+                Literals.Numeric();
         }
 
         if (CurrentEquals("TO") && LookaheadEquals(2, "GIVING"))
@@ -650,11 +650,11 @@ public static class Statements
             switch (Current().Type)
             {
                 case TokenType.Identifier:
-                    Identifier();
+                    References.Identifier();
                     break;
 
                 case TokenType.Numeric:
-                    Numeric();
+                    Literals.Numeric();
                     break;
 
                 default:
@@ -683,7 +683,7 @@ public static class Statements
             }
 
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
         else if (CurrentEquals("GIVING"))
         {
@@ -701,7 +701,7 @@ public static class Statements
             }
 
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
         else if (CurrentEquals("TO"))
         {
@@ -719,7 +719,7 @@ public static class Statements
             }
 
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
         else
         {
@@ -760,10 +760,10 @@ public static class Statements
         )
         {
             if (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
 
             if (Current().Type == TokenType.Numeric)
-                Numeric();
+                Literals.Numeric();
         }
 
         if (CurrentEquals("FROM") && LookaheadEquals(2, "GIVING"))
@@ -772,11 +772,11 @@ public static class Statements
             switch (Current().Type)
             {
                 case TokenType.Identifier:
-                    Identifier();
+                    References.Identifier();
                     break;
 
                 case TokenType.Numeric:
-                    Numeric();
+                    Literals.Numeric();
                     break;
 
                 default:
@@ -805,7 +805,7 @@ public static class Statements
             }
 
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
         else if (CurrentEquals("FROM"))
         {
@@ -823,7 +823,7 @@ public static class Statements
             }
 
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
         else
         {
@@ -874,10 +874,10 @@ public static class Statements
     private static void InitializeStatement()
     {
         Expected("INITIALIZE");
-        Identifier();
+        References.Identifier();
         while (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
 
         if (CurrentEquals("WITH", "FILLER"))
@@ -946,15 +946,15 @@ public static class Statements
 
                 if (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier();
+                    References.Identifier();
                 }
                 else if (CurrentEquals(TokenType.String))
                 {
-                    StringLiteral();
+                    Literals.String();
                 }
                 else if (CurrentEquals(TokenType.Numeric))
                 {
-                    Numeric();
+                    Literals.Numeric();
                 }
 
                 while (IsCategoryName())
@@ -979,15 +979,15 @@ public static class Statements
 
                     if (CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                     else if (CurrentEquals(TokenType.String))
                     {
-                        StringLiteral();
+                        Literals.String();
                     }
                     else if (CurrentEquals(TokenType.Numeric))
                     {
-                        Numeric();
+                        Literals.Numeric();
                     }
 
                 }
@@ -1017,9 +1017,9 @@ public static class Statements
                 """)
             .CloseError();
         }
-        Identifier();
+        References.Identifier();
         while (Current().Type == TokenType.Identifier)
-            Identifier();
+            References.Identifier();
 
         if (!CurrentEquals("."))
         {
@@ -1039,28 +1039,28 @@ public static class Statements
         Expected("INSPECT");
         if (CurrentEquals("BACKWARD")) Expected("BACKWARD");
 
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals("CONVERTING"))
         {
             Expected("CONVERTING");
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
-                StringLiteral();
+                Literals.String();
             }
 
             Expected("TO");
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
-                StringLiteral();
+                Literals.String();
             }
 
             Common.AfterBeforePhrase();
@@ -1085,14 +1085,14 @@ public static class Statements
     private static void InvokeStatement()
     {
         Expected("INVOKE");
-        Identifier();
+        References.Identifier();
         if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
         else
         {
-            StringLiteral();
+            Literals.String();
         }
 
         if (CurrentEquals("USING"))
@@ -1105,14 +1105,14 @@ public static class Statements
         if (CurrentEquals("RETURNING"))
         {
             Expected("RETURNING");
-            Identifier();
+            References.Identifier();
         }
     }
 
     private static void MergeStatement()
     {
         Expected("MERGE");
-        Identifier();
+        References.Identifier();
 
         Optional("ON");
         if (CurrentEquals("ASCENDING"))
@@ -1138,9 +1138,9 @@ public static class Statements
             .CloseError();
         }
 
-        Identifier();
+        References.Identifier();
         while (Current().Type == TokenType.Identifier)
-            Identifier();
+            References.Identifier();
 
 
         while (CurrentEquals("ON", "ASCENDING", "DESCENDING"))
@@ -1169,9 +1169,9 @@ public static class Statements
                 .CloseError();
             }
 
-            Identifier();
+            References.Identifier();
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
 
         if (CurrentEquals("COLLATING", "SEQUENCE"))
@@ -1181,9 +1181,9 @@ public static class Statements
             if (CurrentEquals("IS") && LookaheadEquals(1, TokenType.Identifier) || CurrentEquals(TokenType.Identifier))
             {
                 Optional("IS");
-                Identifier();
+                References.Identifier();
 
-                if (CurrentEquals(TokenType.Identifier)) Identifier();
+                if (CurrentEquals(TokenType.Identifier)) References.Identifier();
             }
             else
             {
@@ -1206,30 +1206,30 @@ public static class Statements
         }
 
         Expected("USING");
-        Identifier();
-        Identifier();
+        References.Identifier();
+        References.Identifier();
         while (Current().Type == TokenType.Identifier)
-            Identifier();
+            References.Identifier();
 
         if (CurrentEquals("OUTPUT"))
         {
             Expected("OUTPUT");
             Expected("PROCEDURE");
             Optional("IS");
-            Identifier();
+            References.Identifier();
 
             if (CurrentEquals("THROUGH", "THRU"))
             {
                 Choice("THROUGH", "THRU");
-                Identifier();
+                References.Identifier();
             }
         }
         else
         {
             Expected("GIVING");
-            Identifier();
+            References.Identifier();
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
     }
 
@@ -1241,11 +1241,11 @@ public static class Statements
         switch (Current().Type)
         {
             case TokenType.Identifier:
-                Identifier();
+                References.Identifier();
                 break;
 
             case TokenType.Numeric:
-                Numeric();
+                Literals.Numeric();
                 break;
 
             default:
@@ -1266,11 +1266,11 @@ public static class Statements
             switch (Current().Type)
             {
                 case TokenType.Identifier:
-                    Identifier();
+                    References.Identifier();
                     break;
 
                 case TokenType.Numeric:
-                    Numeric();
+                    Literals.Numeric();
                     break;
 
                 default:
@@ -1299,7 +1299,7 @@ public static class Statements
             }
 
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
         else if (CurrentEquals("BY"))
         {
@@ -1317,7 +1317,7 @@ public static class Statements
             }
 
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
         else
         {
@@ -1343,9 +1343,9 @@ public static class Statements
         if (CurrentEquals("CORRESPONDING") || CurrentEquals("CORR"))
         {
             Expected(Current().Value);
-            Identifier();
+            References.Identifier();
             Expected("TO");
-            Identifier();
+            References.Identifier();
             return;
         }
 
@@ -1362,13 +1362,13 @@ public static class Statements
         }
 
         if (Current().Type == TokenType.Identifier)
-            Identifier();
+            References.Identifier();
 
         else if (Current().Type == TokenType.Numeric)
-            Numeric();
+            Literals.Numeric();
 
         else if (Current().Type == TokenType.String)
-            StringLiteral();
+            Literals.String();
 
         Expected("TO");
         if (Current().Type != TokenType.Identifier)
@@ -1384,7 +1384,7 @@ public static class Statements
         }
 
         while (Current().Type == TokenType.Identifier)
-            Identifier();
+            References.Identifier();
     }
 
     private static void OpenStatement()
@@ -1432,7 +1432,7 @@ public static class Statements
             Common.RetryPhrase();
         }
 
-        Identifier();
+        References.Identifier();
         if (CurrentEquals("WITH", "NO"))
         {
             Optional("WITH");
@@ -1442,7 +1442,7 @@ public static class Statements
 
         while (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
             if (CurrentEquals("WITH", "NO"))
             {
                 Optional("WITH");
@@ -1495,7 +1495,7 @@ public static class Statements
                 Common.RetryPhrase();
             }
 
-            Identifier();
+            References.Identifier();
             if (CurrentEquals("WITH", "NO"))
             {
                 Optional("WITH");
@@ -1505,7 +1505,7 @@ public static class Statements
 
             while (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
                 if (CurrentEquals("WITH", "NO"))
                 {
                     Optional("WITH");
@@ -1525,11 +1525,11 @@ public static class Statements
         switch (Current().Type)
         {
             case TokenType.Identifier:
-                Identifier();
+                References.Identifier();
                 break;
 
             case TokenType.Numeric:
-                Numeric();
+                Literals.Numeric();
                 break;
 
             default:
@@ -1550,11 +1550,11 @@ public static class Statements
             switch (Current().Type)
             {
                 case TokenType.Identifier:
-                    Identifier();
+                    References.Identifier();
                     break;
 
                 case TokenType.Numeric:
-                    Numeric();
+                    Literals.Numeric();
                     break;
 
                 default:
@@ -1583,7 +1583,7 @@ public static class Statements
             }
 
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
         else if ((CurrentEquals("BY") || CurrentEquals("INTO")) && LookaheadEquals(2, "GIVING") && LookaheadEquals(4, "REMAINDER"))
         {
@@ -1591,11 +1591,11 @@ public static class Statements
             switch (Current().Type)
             {
                 case TokenType.Identifier:
-                    Identifier();
+                    References.Identifier();
                     break;
 
                 case TokenType.Numeric:
-                    Numeric();
+                    Literals.Numeric();
                     break;
 
                 default:
@@ -1611,9 +1611,9 @@ public static class Statements
             }
 
             Expected("GIVING");
-            Identifier();
+            References.Identifier();
             Expected("REMAINDER");
-            Identifier();
+            References.Identifier();
         }
         else if (CurrentEquals("INTO"))
         {
@@ -1631,7 +1631,7 @@ public static class Statements
             }
 
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
         else
         {
@@ -1662,13 +1662,13 @@ public static class Statements
             isFile = true;
             Expected("FILE");
             Optional("OVERRIDE");
-            Identifier();
+            References.Identifier();
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
         else if (Current().Type == TokenType.Identifier)
         {
-            Identifier();
+            References.Identifier();
             Expected("RECORD");
         }
 
@@ -1762,7 +1762,7 @@ public static class Statements
                 if (CurrentEquals("EXCEPTION"))
                 {
                     Expected("EXCEPTION");
-                    Identifier();
+                    References.Identifier();
                 }
                 else if (CurrentEquals("LAST"))
                 {
@@ -1770,7 +1770,7 @@ public static class Statements
                     Optional("EXCEPTION");
                 }
                 else
-                    Identifier();
+                    References.Identifier();
             }
         }
     }
@@ -1778,8 +1778,8 @@ public static class Statements
     private static void FreeStatement()
     {
         Expected("FREE");
-        Identifier();
-        while (CurrentEquals(TokenType.Identifier)) Identifier();
+        References.Identifier();
+        while (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
         if (!CurrentEquals("."))
         {
@@ -1798,21 +1798,21 @@ public static class Statements
     private static void GenerateStatement()
     {
         Expected("GENERATE");
-        Identifier();
+        References.Identifier();
     }
 
     private static void GoStatement()
     {
         Expected("GO");
         Optional("TO");
-        Identifier();
+        References.Identifier();
         if (CurrentEquals("DEPENDING") || Current().Type == TokenType.Identifier)
         {
-            while (CurrentEquals(TokenType.Identifier)) Identifier();
+            while (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
             Expected("DEPENDING");
             Optional("ON");
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -1832,7 +1832,7 @@ public static class Statements
         Expected("CLOSE");
         if (Current().Type == TokenType.Identifier)
         {
-            Identifier();
+            References.Identifier();
             if (CurrentEquals("REEL") || CurrentEquals("UNIT"))
             {
                 Expected(Current().Value);
@@ -1864,7 +1864,7 @@ public static class Statements
 
         while (Current().Type == TokenType.Identifier)
         {
-            Identifier();
+            References.Identifier();
             if (CurrentEquals("REEL", "UNIT"))
             {
                 Expected(Current().Value);
@@ -1900,10 +1900,10 @@ public static class Statements
     {
         Expected("CANCEL");
         if (Current().Type == TokenType.Identifier)
-            Identifier();
+            References.Identifier();
 
         else if (Current().Type == TokenType.String)
-            StringLiteral();
+            Literals.String();
 
         else
         {
@@ -1922,10 +1922,10 @@ public static class Statements
         while (Current().Type == TokenType.Identifier || Current().Type == TokenType.String)
         {
             if (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
 
             if (Current().Type == TokenType.String)
-                StringLiteral();
+                Literals.String();
         }
 
         if (!CurrentEquals("."))
@@ -1949,11 +1949,11 @@ public static class Statements
         Expected("PERFORM");
         if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
             if (CurrentEquals("THROUGH", "THRU"))
             {
                 Choice("THROUGH", "THRU");
-                Identifier();
+                References.Identifier();
             }
 
             if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
@@ -2027,9 +2027,9 @@ public static class Statements
                 {
                     Expected("EXCEPTION");
 
-                    Identifier();
+                    References.Identifier();
                     while (CurrentEquals(TokenType.Identifier))
-                        Identifier();
+                        References.Identifier();
 
                     Statements.WithoutSections(true);
                 }
@@ -2041,18 +2041,18 @@ public static class Statements
                 }
                 else if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "FILE"))
                 {
-                    Identifier();
+                    References.Identifier();
                     Expected("FILE");
-                    Identifier();
+                    References.Identifier();
 
                     while (CurrentEquals(TokenType.Identifier))
-                        Identifier();
+                        References.Identifier();
                 }
                 else if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "FILE"))
                 {
-                    Identifier();
+                    References.Identifier();
                     while (CurrentEquals(TokenType.Identifier))
-                        Identifier();
+                        References.Identifier();
                 }
 
                 while (CurrentEquals("WHEN"))
@@ -2062,9 +2062,9 @@ public static class Statements
                     {
                         Expected("EXCEPTION");
 
-                        Identifier();
+                        References.Identifier();
                         while (CurrentEquals(TokenType.Identifier))
-                            Identifier();
+                            References.Identifier();
 
                         Statements.WithoutSections(true);
                     }
@@ -2076,18 +2076,18 @@ public static class Statements
                     }
                     else if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "FILE"))
                     {
-                        Identifier();
+                        References.Identifier();
                         Expected("FILE");
-                        Identifier();
+                        References.Identifier();
 
                         while (CurrentEquals(TokenType.Identifier))
-                            Identifier();
+                            References.Identifier();
                     }
                     else if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "FILE"))
                     {
-                        Identifier();
+                        References.Identifier();
                         while (CurrentEquals(TokenType.Identifier))
-                            Identifier();
+                            References.Identifier();
                     }
                 }
             }
@@ -2127,10 +2127,10 @@ public static class Statements
         if (CurrentEquals("EXCEPTION"))
         {
             Expected("EXCEPTION");
-            Identifier();
+            References.Identifier();
         }
         else
-            Identifier();
+            References.Identifier();
     }
 
     private static void ReadStatement()
@@ -2139,7 +2139,7 @@ public static class Statements
         bool isConditional = false;
 
         Expected("READ");
-        Identifier();
+        References.Identifier();
         if (CurrentEquals("NEXT", "PREVIOUS"))
         {
             Expected(Current().Value);
@@ -2150,7 +2150,7 @@ public static class Statements
         if (CurrentEquals("INTO"))
         {
             Expected("INTO");
-            Identifier();
+            References.Identifier();
         }
 
         if (CurrentEquals("ADVANCING"))
@@ -2186,7 +2186,7 @@ public static class Statements
         {
             Expected("KEY");
             Optional("IS");
-            Identifier();
+            References.Identifier();
         }
 
         if (!isSequential && CurrentEquals("INVALID", "NOT"))
@@ -2207,10 +2207,10 @@ public static class Statements
 
         Expected("RECEIVE");
         Optional("FROM");
-        Identifier();
+        References.Identifier();
         Expected("GIVING");
-        Identifier();
-        Identifier();
+        References.Identifier();
+        References.Identifier();
 
         if (CurrentEquals("CONTINUE"))
         {
@@ -2237,19 +2237,19 @@ public static class Statements
     private static void ReleaseStatement()
     {
         Expected("RELEASE");
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals("FROM"))
         {
             Expected("FROM");
             if (Current().Type == TokenType.String)
-                StringLiteral();
+                Literals.String();
 
             else if (Current().Type == TokenType.Numeric)
-                Numeric();
+                Literals.Numeric();
 
             else
-                Identifier();
+                References.Identifier();
         }
     }
 
@@ -2258,12 +2258,12 @@ public static class Statements
         bool isConditional = false;
 
         Expected("RETURN");
-        Identifier();
+        References.Identifier();
         Expected("RECORD");
         if (CurrentEquals("INTO"))
         {
             Expected("INTO");
-            Identifier();
+            References.Identifier();
         }
 
         Common.AtEnd(ref isConditional);
@@ -2282,10 +2282,10 @@ public static class Statements
         {
             isFile = true;
             Expected("FILE");
-            Identifier();
+            References.Identifier();
         }
         else
-            Identifier();
+            References.Identifier();
 
         Expected("RECORD");
         if (CurrentEquals("FROM") || isFile)
@@ -2293,13 +2293,13 @@ public static class Statements
             Expected("FROM");
 
             if (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
 
             else if (Current().Type == TokenType.Numeric)
-                Numeric();
+                Literals.Numeric();
 
             else
-                StringLiteral();
+                Literals.String();
         }
 
         Common.RetryPhrase();
@@ -2334,7 +2334,7 @@ public static class Statements
         }
         else
         {
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -2348,11 +2348,11 @@ public static class Statements
         Expected("SEARCH");
         if (!CurrentEquals("ALL"))
         {
-            Identifier();
+            References.Identifier();
             if (CurrentEquals("VARYING"))
             {
                 Expected("VARYING");
-                Identifier();
+                References.Identifier();
             }
 
             if (CurrentEquals("AT", "END"))
@@ -2400,7 +2400,7 @@ public static class Statements
         }
 
         Expected("ALL");
-        Identifier();
+        References.Identifier();
         if (CurrentEquals("AT", "END"))
         {
             Optional("AT");
@@ -2409,7 +2409,7 @@ public static class Statements
         }
 
         Expected("WHEN");
-        Identifier();
+        References.Identifier();
         if (CurrentEquals("IS", "EQUAL", "="))
         {
             Optional("IS");
@@ -2430,21 +2430,21 @@ public static class Statements
         }
         else if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Symbol))
         {
-            Identifier();
+            References.Identifier();
         }
         else if (CurrentEquals(TokenType.Numeric))
         {
-            Numeric();
+            Literals.Numeric();
         }
         else
         {
-            StringLiteral();
+            Literals.String();
         }
 
         while (CurrentEquals("AND"))
         {
             Expected("AND");
-            Identifier();
+            References.Identifier();
             if (CurrentEquals("IS", "EQUAL", "="))
             {
                 Optional("IS");
@@ -2465,15 +2465,15 @@ public static class Statements
             }
             else if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Symbol))
             {
-                Identifier();
+                References.Identifier();
             }
             else if (CurrentEquals(TokenType.Numeric))
             {
-                Numeric();
+                Literals.Numeric();
             }
             else
             {
-                StringLiteral();
+                Literals.String();
             }
 
         }
@@ -2506,23 +2506,23 @@ public static class Statements
         {
             if (CurrentEquals(TokenType.String))
             {
-                StringLiteral();
+                Literals.String();
             }
             else
             {
-                Identifier();
+                References.Identifier();
             }
 
             Expected("FROM");
-            Identifier();
+            References.Identifier();
             Expected("RETURNING");
-            Identifier();
+            References.Identifier();
         }
         else
         {
-            Identifier();
+            References.Identifier();
             Expected("FROM");
-            Identifier();
+            References.Identifier();
 
             if (CurrentEquals("RAISING"))
             {
@@ -2535,7 +2535,7 @@ public static class Statements
                 else
                 {
                     Expected("EXCEPTION");
-                    Identifier();
+                    References.Identifier();
                 }
             }
         }
@@ -2556,7 +2556,7 @@ public static class Statements
 
             if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "UP", "DOWN", "TO"))
             {
-                Identifier();
+                References.Identifier();
                 if (CurrentEquals("UP"))
                 {
                     Expected("UP");
@@ -2574,7 +2574,7 @@ public static class Statements
 
                 if (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier();
+                    References.Identifier();
                 }
                 else
                 {
@@ -2583,14 +2583,14 @@ public static class Statements
             }
             else if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "TO") && LookaheadEquals(2, "LOCALE"))
             {
-                Identifier();
+                References.Identifier();
                 Expected("TO");
                 Expected("LOCALE");
                 Choice("LC_ALL", "LOCALE");
             }
             else if (dataItem.Usage == UsageType.MessageTag)
             {
-                Identifier();
+                References.Identifier();
                 Expected("TO");
                 if (CurrentEquals("NULL"))
                 {
@@ -2598,7 +2598,7 @@ public static class Statements
                 }
                 else
                 {
-                    Identifier();
+                    References.Identifier();
                 }
             }
             else if (dataItem[DataClause.DynamicLength] || CurrentEquals("SIZE"))
@@ -2609,11 +2609,11 @@ public static class Statements
                     Optional("OF");
                 }
 
-                Identifier();
+                References.Identifier();
                 Expected("TO");
                 if (CurrentEquals(TokenType.Numeric))
                 {
-                    Numeric();
+                    Literals.Numeric();
                 }
                 else
                 {
@@ -2629,11 +2629,11 @@ public static class Statements
                     hasAddress = true;
                     Expected("ADDRESS");
                     Optional("OF");
-                    Identifier();
+                    References.Identifier();
                 }
                 else
                 {
-                    Identifier();
+                    References.Identifier();
                 }
 
                 while (CurrentEquals(TokenType.Identifier) || CurrentEquals("ADDRESS"))
@@ -2643,18 +2643,18 @@ public static class Statements
                         hasAddress = true;
                         Expected("ADDRESS");
                         Optional("OF");
-                        Identifier();
+                        References.Identifier();
                     }
                     else
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                 }
 
                 if (hasAddress || CurrentEquals("TO"))
                 {
                     Expected("TO");
-                    Identifier();
+                    References.Identifier();
                 }
                 else if (!hasAddress && CurrentEquals("UP", "DOWN"))
                 {
@@ -2666,18 +2666,18 @@ public static class Statements
             else if (dataItem.Usage is UsageType.Index)
             {
 
-                Identifier();
+                References.Identifier();
                 bool checkUsage = true;
 
                 while (CurrentEquals(TokenType.Identifier))
-                    Identifier();
+                    References.Identifier();
 
                 if (CurrentEquals("TO"))
                 {
                     Expected("TO");
                     if (CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                     else
                     {
@@ -2715,7 +2715,7 @@ public static class Statements
             Expected("TO");
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
@@ -2728,7 +2728,7 @@ public static class Statements
     private static void SortStatement()
     {
         Expected("SORT");
-        Identifier();
+        References.Identifier();
 
         Optional("ON");
         if (CurrentEquals("ASCENDING"))
@@ -2754,9 +2754,9 @@ public static class Statements
             .CloseError();
         }
 
-        Identifier();
+        References.Identifier();
         while (Current().Type == TokenType.Identifier)
-            Identifier();
+            References.Identifier();
 
 
         while (CurrentEquals("ON", "ASCENDING", "DESCENDING"))
@@ -2785,9 +2785,9 @@ public static class Statements
                 .CloseError();
             }
 
-            Identifier();
+            References.Identifier();
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
 
         if (CurrentEquals("WITH", "DUPLICATES"))
@@ -2805,9 +2805,9 @@ public static class Statements
             if (CurrentEquals("IS") && LookaheadEquals(1, TokenType.Identifier) || CurrentEquals(TokenType.Identifier))
             {
                 Optional("IS");
-                Identifier();
+                References.Identifier();
 
-                if (CurrentEquals(TokenType.Identifier)) Identifier();
+                if (CurrentEquals(TokenType.Identifier)) References.Identifier();
             }
             else
             {
@@ -2834,20 +2834,20 @@ public static class Statements
             Expected("INPUT");
             Expected("PROCEDURE");
             Optional("IS");
-            Identifier();
+            References.Identifier();
 
             if (CurrentEquals("THROUGH", "THRU"))
             {
                 Choice("THROUGH", "THRU");
-                Identifier();
+                References.Identifier();
             }
         }
         else
         {
             Expected("USING");
-            Identifier();
+            References.Identifier();
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
 
         if (CurrentEquals("OUTPUT"))
@@ -2855,20 +2855,20 @@ public static class Statements
             Expected("OUTPUT");
             Expected("PROCEDURE");
             Optional("IS");
-            Identifier();
+            References.Identifier();
 
             if (CurrentEquals("THROUGH", "THRU"))
             {
                 Choice("THROUGH", "THRU");
-                Identifier();
+                References.Identifier();
             }
         }
         else
         {
             Expected("GIVING");
-            Identifier();
+            References.Identifier();
             while (Current().Type == TokenType.Identifier)
-                Identifier();
+                References.Identifier();
         }
     }
 
@@ -2877,7 +2877,7 @@ public static class Statements
         bool isConditional = false;
 
         Expected("START");
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals("FIRST"))
         {
@@ -2891,7 +2891,7 @@ public static class Statements
         {
             Expected("KEY");
             Common.StartRelationalOperator();
-            Identifier();
+            References.Identifier();
 
             if (CurrentEquals("WITH", "LENGTH"))
             {
@@ -2919,13 +2919,13 @@ public static class Statements
             switch (Current().Type)
             {
                 case TokenType.Identifier:
-                    Identifier();
+                    References.Identifier();
                     break;
                 case TokenType.Numeric:
-                    Numeric();
+                    Literals.Numeric();
                     break;
                 case TokenType.String:
-                    StringLiteral();
+                    Literals.String();
                     break;
             }
         }
@@ -2936,55 +2936,55 @@ public static class Statements
         bool isConditional = false;
 
         Expected("STRING");
-        if (CurrentEquals(TokenType.Identifier)) Identifier();
+        if (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
-        else StringLiteral();
+        else Literals.String();
 
         while (CurrentEquals(TokenType.Identifier, TokenType.String))
         {
-            if (CurrentEquals(TokenType.Identifier)) Identifier();
+            if (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
-            else StringLiteral();
+            else Literals.String();
         }
 
         Expected("DELIMITED");
         Optional("BY");
-        if (CurrentEquals(TokenType.Identifier)) Identifier();
+        if (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
         else if (CurrentEquals("SIZE")) Expected("SIZE");
 
-        else StringLiteral();
+        else Literals.String();
 
         while (CurrentEquals(TokenType.Identifier, TokenType.String))
         {
-            if (CurrentEquals(TokenType.Identifier)) Identifier();
+            if (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
-            else StringLiteral();
+            else Literals.String();
 
             while (CurrentEquals(TokenType.Identifier, TokenType.String))
             {
-                if (CurrentEquals(TokenType.Identifier)) Identifier();
+                if (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
-                else StringLiteral();
+                else Literals.String();
             }
 
             Expected("DELIMITED");
             Optional("BY");
-            if (CurrentEquals(TokenType.Identifier)) Identifier();
+            if (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
             else if (CurrentEquals("SIZE")) Expected("SIZE");
 
-            else StringLiteral();
+            else Literals.String();
         }
 
         Expected("INTO");
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals("WITH", "POINTER"))
         {
             Optional("WITH");
             Expected("POINTER");
-            Identifier();
+            References.Identifier();
         }
 
         Common.OnOverflow(ref isConditional);
@@ -3012,9 +3012,9 @@ public static class Statements
                 """)
             .CloseError();
         }
-        Identifier();
+        References.Identifier();
         while (Current().Type == TokenType.Identifier)
-            Identifier();
+            References.Identifier();
 
         if (!CurrentEquals("."))
         {
@@ -3032,7 +3032,7 @@ public static class Statements
     private static void UnlockStatement()
     {
         Expected("UNLOCK");
-        Identifier();
+        References.Identifier();
         Choice("RECORD", "RECORDS");
     }
 
@@ -3041,7 +3041,7 @@ public static class Statements
         bool isConditional = false;
 
         Expected("UNSTRING");
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals("DELIMITED"))
         {
@@ -3051,11 +3051,11 @@ public static class Statements
 
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
-                StringLiteral();
+                Literals.String();
             }
 
             while (CurrentEquals("OR"))
@@ -3065,46 +3065,46 @@ public static class Statements
 
                 if (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier();
+                    References.Identifier();
                 }
                 else
                 {
-                    StringLiteral();
+                    Literals.String();
                 }
             }
         }
 
         Expected("INTO");
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals("DELIMITER"))
         {
             Expected("DELIMITER");
             Optional("IN");
-            Identifier();
+            References.Identifier();
         }
         if (CurrentEquals("COUNT"))
         {
             Expected("COUNT");
             Optional("IN");
-            Identifier();
+            References.Identifier();
         }
 
         while (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
 
             if (CurrentEquals("DELIMITER"))
             {
                 Expected("DELIMITER");
                 Optional("IN");
-                Identifier();
+                References.Identifier();
             }
             if (CurrentEquals("COUNT"))
             {
                 Expected("COUNT");
                 Optional("IN");
-                Identifier();
+                References.Identifier();
             }
         }
 
@@ -3112,14 +3112,14 @@ public static class Statements
         {
             Optional("WITH");
             Expected("POINTER");
-            Identifier();
+            References.Identifier();
         }
 
         if (CurrentEquals("TALLYING"))
         {
             Expected("TALLYING");
             Optional("IN");
-            Identifier();
+            References.Identifier();
         }
 
         Common.OnOverflow(ref isConditional);
@@ -3141,9 +3141,9 @@ public static class Statements
                 """)
             .CloseError();
         }
-        Identifier();
+        References.Identifier();
         while (Current().Type == TokenType.Identifier)
-            Identifier();
+            References.Identifier();
 
         if (!CurrentEquals("."))
         {
@@ -3167,22 +3167,22 @@ public static class Statements
         if (CurrentEquals("FILE"))
         {
             Expected("FILE");
-            Identifier();
+            References.Identifier();
         }
         else
         {
-            Identifier();
+            References.Identifier();
         }
 
         if (CurrentEquals("FROM"))
         {
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
-                StringLiteral();
+                Literals.String();
             }
         }
 
@@ -3199,9 +3199,9 @@ public static class Statements
             }
             else if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
             {
-                if (CurrentEquals(TokenType.Identifier)) Identifier();
+                if (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
-                else Numeric();
+                else Literals.Numeric();
 
                 if (CurrentEquals("LINE", "LINES"))
                 {
@@ -3238,7 +3238,7 @@ public static class Statements
 
     private static void ParseParagraph()
     {
-        Identifier(Current());
+        References.Identifier(Current());
     }
 
     // Different from Using(), this one is for the CALL and INVOKE only.
@@ -3248,7 +3248,7 @@ public static class Statements
         {   
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
                 while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
                 {
                     if (CurrentEquals("OPTIONAL"))
@@ -3256,7 +3256,7 @@ public static class Statements
                         Expected("OPTIONAL");
                     }
                     // TODO: Reimplement parameter item resolution
-                    Identifier();
+                    References.Identifier();
                 }  
             }
 
@@ -3298,7 +3298,7 @@ public static class Statements
                 
                 // TODO: Reimplement parameter item resolution
 
-                Identifier();
+                References.Identifier();
                 while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
                 {
                     if (CurrentEquals("OPTIONAL"))
@@ -3306,7 +3306,7 @@ public static class Statements
                         Expected("OPTIONAL");
                     }
                     // TODO: Reimplement parameter item resolution
-                    Identifier();
+                    References.Identifier();
                 }
             }
 
@@ -3327,11 +3327,11 @@ public static class Statements
                 }
                 
                 // TODO: Reimplement parameter item resolution
-                Identifier();
+                References.Identifier();
                 while (CurrentEquals(TokenType.Identifier))
                 {
                     // TODO: Reimplement parameter item resolution
-                    Identifier();
+                    References.Identifier();
                 }
             }
 
@@ -3352,11 +3352,11 @@ public static class Statements
                 }
                 
                 // TODO: Reimplement parameter item resolution
-                Identifier();
+                References.Identifier();
                 while (CurrentEquals(TokenType.Identifier))
                 {
                     // TODO: Reimplement parameter item resolution
-                    Identifier();
+                    References.Identifier();
                 }
             }
         }

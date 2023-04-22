@@ -238,7 +238,7 @@ public static partial class DataDivision
     {
         Choice("RD");
 
-        Identifier();
+        References.Identifier();
 
         if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
         {
@@ -281,7 +281,7 @@ public static partial class DataDivision
     private static void ReportGroupEntry()
     {
         int levelNumber = int.Parse(Current().Value);
-        Numeric();
+        Literals.Numeric();
 
         Token itemToken = Current();
         string dataName = itemToken.Value;
@@ -294,7 +294,7 @@ public static partial class DataDivision
         }
         else if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
 
         DataEntry dataLocal = new(itemToken, EntryType.ReportGroupDescription);
@@ -378,7 +378,7 @@ public static partial class DataDivision
         Token itemToken = Current();
         string fileName = itemToken.Value;
 
-        Identifier();
+        References.Identifier();
 
         DataEntry fileLocal = new(itemToken, EntryType.FileDescription);
 
@@ -487,7 +487,7 @@ public static partial class DataDivision
     private static void DataEntry()
     {
         int levelNumber = int.Parse(Current().Value);
-        Numeric();
+        Literals.Numeric();
 
         Token itemToken = Current();
         string dataName = itemToken.Value;
@@ -500,7 +500,7 @@ public static partial class DataDivision
         }
         else if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
 
         DataEntry dataLocal = new(itemToken, EntryType.DataDescription);
@@ -596,12 +596,12 @@ public static partial class DataDivision
         }
 
         var levelNumber = int.Parse(Current().Value);
-        Numeric();
+        Literals.Numeric();
 
         Token itemToken = Current();
         string dataName = itemToken.Value;
 
-        Identifier();
+        References.Identifier();
 
         DataEntry dataLocal = new(itemToken, EntryType.DataDescription);
 
@@ -620,7 +620,7 @@ public static partial class DataDivision
         if (CurrentEquals("FROM"))
         {
             Expected("FROM");
-            Identifier();
+            References.Identifier();
         }
         else
         {
@@ -628,15 +628,15 @@ public static partial class DataDivision
             switch (Current().Type)
             {
                 case TokenType.String:
-                    StringLiteral();
+                    Literals.String();
                     break;
 
                 case TokenType.Numeric:
-                    Numeric();
+                    Literals.Numeric();
                     break;
 
                 case TokenType.FigurativeLiteral:
-                    FigurativeLiteral();
+                    Literals.Figurative();
                     break;
             }
 
@@ -644,14 +644,14 @@ public static partial class DataDivision
             {
                 Expected("LENGTH");
                 Optional("OF");
-                Identifier();
+                References.Identifier();
             }
 
             if (CurrentEquals("BYTE-LENGTH"))
             {
                 Expected("BYTE-LENGTH");
                 Optional("OF");
-                Identifier();
+                References.Identifier();
             }
 
         }
@@ -698,7 +698,7 @@ public static partial class DataDivision
     private static void ScreenEntry()
     {
         int levelNumber = int.Parse(Current().Value);
-        Numeric();
+        Literals.Numeric();
 
         Token itemToken = Current();
         string screenName = itemToken.Value;
@@ -711,7 +711,7 @@ public static partial class DataDivision
         }
         else if (CurrentEquals(TokenType.Identifier) && !CurrentEquals(TokenContext.IsClause))
         {
-            Identifier();
+            References.Identifier();
         }
 
         DataEntry screenLocal = new(itemToken, EntryType.ScreenDescription);
@@ -951,7 +951,7 @@ public static partial class DataDivision
             Token itemToken = Current();
             string dataName = itemToken.Value;
 
-            Identifier();
+            References.Identifier();
 
             DataEntry dataLocal = new(itemToken, EntryType.DataDescription);
 
@@ -974,7 +974,7 @@ public static partial class DataDivision
 
             switch (Current().Type)
             {
-                case TokenType.Numeric: Numeric(); break;
+                case TokenType.Numeric: Literals.Numeric(); break;
                 
                 case TokenType.String:
                 case TokenType.HexString:
@@ -982,7 +982,7 @@ public static partial class DataDivision
                 case TokenType.HexBoolean:
                 case TokenType.National:
                 case TokenType.HexNational:
-                    StringLiteral(); break;
+                    Literals.String(); break;
             }
 
             if (CurrentEquals("THROUGH", "THRU"))
@@ -991,7 +991,7 @@ public static partial class DataDivision
 
                 switch (firstConditionType)
                 {
-                    case TokenType.Numeric: Numeric(); break;
+                    case TokenType.Numeric: Literals.Numeric(); break;
                     
                     case TokenType.String:
                     case TokenType.HexString:
@@ -999,7 +999,7 @@ public static partial class DataDivision
                     case TokenType.HexBoolean:
                     case TokenType.National:
                     case TokenType.HexNational:
-                        StringLiteral(); break;
+                        Literals.String(); break;
                 }
             }
 

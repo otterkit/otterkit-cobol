@@ -13,7 +13,7 @@ public static partial class EnvironmentDivision
     private static void AlphabetName()
     {
         Expected("ALPHABET");
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals("NATIONAL") || LookaheadEquals(1, "NATIONAL"))
         {
@@ -24,7 +24,7 @@ public static partial class EnvironmentDivision
             if (CurrentEquals("LOCALE"))
             {
                 Expected("LOCALE");
-                Identifier();
+                References.Identifier();
 
                 return;
             }
@@ -65,44 +65,44 @@ public static partial class EnvironmentDivision
 
     private static void AlphanumericLiteralPhrase()
     {
-        StringLiteral();
+        Literals.String();
 
         if (CurrentEquals("THROUGH", "THRU"))
         {
             Choice("THROUGH", "THRU");
-            StringLiteral();
+            Literals.String();
             return;
         }
 
         while (CurrentEquals("ALSO"))
         {
             Expected("ALSO");
-            StringLiteral();
+            Literals.String();
         }
     }
 
     private static void NationalLiteralPhrase()
     {
-        NationalLiteral();
+        Literals.National();
 
         if (CurrentEquals("THROUGH", "THRU"))
         {
             Choice("THROUGH", "THRU");
-            NationalLiteral();
+            Literals.National();
             return;
         }
 
         while (CurrentEquals("ALSO"))
         {
             Expected("ALSO");
-            NationalLiteral();
+            Literals.National();
         }
     }
 
     private static void ClassName()
     {
         Expected("CLASS");
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
         {
@@ -125,7 +125,7 @@ public static partial class EnvironmentDivision
         if (CurrentEquals("IN"))
         {
             Expected("IN");
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -133,21 +133,21 @@ public static partial class EnvironmentDivision
     {
         if (literalType is TokenType.National)
         {
-            NationalLiteral();
+            Literals.National();
             if (CurrentEquals("THROUGH", "THRU"))
             {
                 Choice("THROUGH", "THRU");
-                NationalLiteral();
+                Literals.National();
             }
 
             return;
         }
 
-        StringLiteral();
+        Literals.String();
         if (CurrentEquals("THROUGH", "THRU"))
         {
             Choice("THROUGH", "THRU");
-            StringLiteral();
+            Literals.String();
         }
     }
     
@@ -157,13 +157,13 @@ public static partial class EnvironmentDivision
         Expected("LENGTH");
         Optional("STRUCTURE");
 
-        Identifier();
+        References.Identifier();
         Optional("IS");
 
         if (CurrentEquals(TokenType.Identifier))
         {
             // TODO: Specify which physical structure names are allowed
-            Identifier();
+            References.Identifier();
             return;
         }
 
@@ -211,7 +211,7 @@ public static partial class EnvironmentDivision
         {
             while (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
 
             if (CurrentEquals("IS", "ARE"))
@@ -221,14 +221,14 @@ public static partial class EnvironmentDivision
 
             while (CurrentEquals(TokenType.Numeric))
             {
-                Numeric();
+                Literals.Numeric();
             }
         }
 
         if (CurrentEquals("IN"))
         {
             Expected("IS");
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -317,7 +317,7 @@ public static partial class EnvironmentDivision
         }
         else
         {
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -334,11 +334,11 @@ public static partial class EnvironmentDivision
         }
 
         Optional("IS");
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -354,12 +354,12 @@ public static partial class EnvironmentDivision
         Optional("AREA");
         Optional("FOR");
 
-        Identifier();
-        Identifier();
+        References.Identifier();
+        References.Identifier();
 
         while (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -376,7 +376,7 @@ public static partial class EnvironmentDivision
             fileControl = new(fileToken, EntryType.FileControl, true);
 
             fileControl.Assign.Add(Current());
-            Identifier();
+            References.Identifier();
         }
         else
         {
@@ -474,21 +474,21 @@ public static partial class EnvironmentDivision
 
         if (!LookaheadEquals(1, "SOURCE"))
         {
-            Identifier();
+            References.Identifier();
 
             return;
         }
 
         // If Lookahead(1) does equal SOURCE:
-        Identifier();
+        References.Identifier();
         Expected("SOURCE");
 
         Optional("IS");
-        Identifier();
+        References.Identifier();
 
         while (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -502,7 +502,7 @@ public static partial class EnvironmentDivision
 
         if (!LookaheadEquals(1, "SOURCE"))
         {
-            Identifier();
+            References.Identifier();
 
             if (CurrentEquals("WITH", "DUPLICATES"))
             {
@@ -515,22 +515,22 @@ public static partial class EnvironmentDivision
                 Expected("SUPPRESS");
                 Optional("WHEN");
 
-                StringLiteral();
+                Literals.String();
             }
 
             return;
         }
 
         // If Lookahead(1) does equal SOURCE:
-        Identifier();
+        References.Identifier();
         Expected("SOURCE");
 
         Optional("IS");
-        Identifier();
+        References.Identifier();
 
         while (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
 
         if (CurrentEquals("WITH", "DUPLICATES"))
@@ -544,7 +544,7 @@ public static partial class EnvironmentDivision
             Expected("SUPPRESS");
             Optional("WHEN");
 
-            StringLiteral();
+            Literals.String();
         }
     }
 
@@ -577,7 +577,7 @@ public static partial class EnvironmentDivision
         Expected("STATUS");
         Optional("IS");
 
-        Identifier();
+        References.Identifier();
     }
 
     private static void CollatingSequence(FileControlEntry fileControl)
@@ -589,15 +589,15 @@ public static partial class EnvironmentDivision
         {
             Expected("OF");
 
-            Identifier();
+            References.Identifier();
 
             while (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
 
             Optional("IS");
-            Identifier();
+            References.Identifier();
             return;
         }
 
@@ -608,11 +608,11 @@ public static partial class EnvironmentDivision
         }
 
         Optional("IS");
-        Identifier();
+        References.Identifier();
 
         if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -649,7 +649,7 @@ public static partial class EnvironmentDivision
         Optional("KEY");
         Optional("IS");
 
-        Identifier();
+        References.Identifier();
     }
 
     private static void RecordDelimiter(FileControlEntry fileControl)
@@ -665,14 +665,14 @@ public static partial class EnvironmentDivision
         else
         {
             // We have to define the names for these later:
-            Identifier();
+            References.Identifier();
         }
     }
 
     private static void Reserve(FileControlEntry fileControl)
     {
         Expected("RESERVE");
-        Numeric();
+        Literals.Numeric();
 
         if (CurrentEquals("AREA", "AREAS"))
         {

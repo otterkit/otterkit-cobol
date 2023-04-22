@@ -32,7 +32,7 @@ public static partial class Common
             Optional("KEY");
             Optional("IS");
 
-            Identifier();
+            References.Identifier();
         }
     }
 
@@ -40,11 +40,11 @@ public static partial class Common
     {
         if (CurrentEquals(TokenType.Identifier))
         {
-            Identifier();
+            References.Identifier();
         }
         else
         {
-            Numeric();
+            Literals.Numeric();
         }
 
         Expected("TIMES");
@@ -66,15 +66,15 @@ public static partial class Common
     public static void VaryingPhrase()
     {
         Expected("VARYING");
-        Identifier();
+        References.Identifier();
         Expected("FROM");
         if (CurrentEquals(TokenType.Numeric))
         {
-            Numeric();
+            Literals.Numeric();
         }
         else
         {
-            Identifier();
+            References.Identifier();
         }
 
         if (CurrentEquals("BY"))
@@ -82,11 +82,11 @@ public static partial class Common
             Expected("BY");
             if (CurrentEquals(TokenType.Numeric))
             {
-                Numeric();
+                Literals.Numeric();
             }
             else
             {
-                Identifier();
+                References.Identifier();
             }
         }
 
@@ -96,15 +96,15 @@ public static partial class Common
         while (CurrentEquals("AFTER"))
         {
             Expected("AFTER");
-            Identifier();
+            References.Identifier();
             Expected("FROM");
             if (CurrentEquals(TokenType.Numeric))
             {
-                Numeric();
+                Literals.Numeric();
             }
             else
             {
-                Identifier();
+                References.Identifier();
             }
 
             if (CurrentEquals("BY"))
@@ -112,11 +112,11 @@ public static partial class Common
                 Expected("BY");
                 if (CurrentEquals(TokenType.Numeric))
                 {
-                    Numeric();
+                    Literals.Numeric();
                 }
                 else
                 {
-                    Identifier();
+                    References.Identifier();
                 }
             }
 
@@ -179,7 +179,7 @@ public static partial class Common
 
         while (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "FOR"))
         {
-            Identifier();
+            References.Identifier();
             Expected("FOR");
 
             if (!CurrentEquals("CHARACTERS", "ALL", "LEADING"))
@@ -212,11 +212,11 @@ public static partial class Common
                     Expected("ALL");
                     if (CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                     else
                     {
-                        StringLiteral();
+                        Literals.String();
                     }
 
                     if (CurrentEquals("AFTER", "BEFORE"))
@@ -228,11 +228,11 @@ public static partial class Common
                     {
                         if (CurrentEquals(TokenType.Identifier))
                         {
-                            Identifier();
+                            References.Identifier();
                         }
                         else
                         {
-                            StringLiteral();
+                            Literals.String();
                         }
 
                         if (CurrentEquals("AFTER", "BEFORE"))
@@ -246,11 +246,11 @@ public static partial class Common
                     Expected("LEADING");
                     if (CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                     else
                     {
-                        StringLiteral();
+                        Literals.String();
                     }
 
                     if (CurrentEquals("AFTER", "BEFORE"))
@@ -262,11 +262,11 @@ public static partial class Common
                     {
                         if (CurrentEquals(TokenType.Identifier))
                         {
-                            Identifier();
+                            References.Identifier();
                         }
                         else
                         {
-                            StringLiteral();
+                            Literals.String();
                         }
 
                         if (CurrentEquals("AFTER", "BEFORE"))
@@ -305,11 +305,11 @@ public static partial class Common
 
                 if (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier();
+                    References.Identifier();
                 }
                 else
                 {
-                    StringLiteral();
+                    Literals.String();
                 }
 
                 if (CurrentEquals("AFTER", "BEFORE"))
@@ -322,21 +322,21 @@ public static partial class Common
                 Expected("ALL");
                 if (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier();
+                    References.Identifier();
                 }
                 else
                 {
-                    StringLiteral();
+                    Literals.String();
                 }
 
                 Expected("BY");
                 if (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier();
+                    References.Identifier();
                 }
                 else
                 {
-                    StringLiteral();
+                    Literals.String();
                 }
 
                 if (CurrentEquals("AFTER", "BEFORE"))
@@ -348,21 +348,21 @@ public static partial class Common
                 {
                     if (CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                     else
                     {
-                        StringLiteral();
+                        Literals.String();
                     }
 
                     Expected("BY");
                     if (CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                     else
                     {
-                        StringLiteral();
+                        Literals.String();
                     }
 
                     if (CurrentEquals("AFTER", "BEFORE"))
@@ -381,21 +381,21 @@ public static partial class Common
                 Expected("LEADING");
                 if (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier();
+                    References.Identifier();
                 }
                 else
                 {
-                    StringLiteral();
+                    Literals.String();
                 }
 
                 Expected("BY");
                 if (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier();
+                    References.Identifier();
                 }
                 else
                 {
-                    StringLiteral();
+                    Literals.String();
                 }
 
                 if (CurrentEquals("AFTER", "BEFORE"))
@@ -412,21 +412,21 @@ public static partial class Common
                 {
                     if (CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                     else
                     {
-                        StringLiteral();
+                        Literals.String();
                     }
 
                     Expected("BY");
                     if (CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                     else
                     {
-                        StringLiteral();
+                        Literals.String();
                     }
 
                     if (CurrentEquals("AFTER", "BEFORE"))
@@ -445,21 +445,21 @@ public static partial class Common
                 Expected("FIRST");
                 if (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier();
+                    References.Identifier();
                 }
                 else
                 {
-                    StringLiteral();
+                    Literals.String();
                 }
 
                 Expected("BY");
                 if (CurrentEquals(TokenType.Identifier))
                 {
-                    Identifier();
+                    References.Identifier();
                 }
                 else
                 {
-                    StringLiteral();
+                    Literals.String();
                 }
 
                 if (CurrentEquals("AFTER", "BEFORE"))
@@ -476,21 +476,21 @@ public static partial class Common
                 {
                     if (CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                     else
                     {
-                        StringLiteral();
+                        Literals.String();
                     }
 
                     Expected("BY");
                     if (CurrentEquals(TokenType.Identifier))
                     {
-                        Identifier();
+                        References.Identifier();
                     }
                     else
                     {
-                        StringLiteral();
+                        Literals.String();
                     }
 
                     if (CurrentEquals("AFTER", "BEFORE"))
@@ -532,11 +532,11 @@ public static partial class Common
 
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
-                StringLiteral();
+                Literals.String();
             }
 
             AfterBeforePhrase(beforeExists, afterExists);
@@ -566,11 +566,11 @@ public static partial class Common
 
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
-                StringLiteral();
+                Literals.String();
             }
 
             AfterBeforePhrase(beforeExists, afterExists);
@@ -716,7 +716,7 @@ public static partial class Common
             if (CurrentEquals("EXCEPTION"))
             {
                 Expected("EXCEPTION");
-                Identifier();
+                References.Identifier();
             }
             else if (CurrentEquals("LAST"))
             {
@@ -724,7 +724,7 @@ public static partial class Common
                 Optional("EXCEPTION");
             }
             else
-                Identifier();
+                References.Identifier();
 
             raisingExists = true;
             RaisingStatus(raisingExists, statusExists);
@@ -754,13 +754,13 @@ public static partial class Common
             switch (Current().Type)
             {
                 case TokenType.Identifier:
-                    Identifier();
+                    References.Identifier();
                     break;
                 case TokenType.Numeric:
-                    Numeric();
+                    Literals.Numeric();
                     break;
                 case TokenType.String:
-                    StringLiteral();
+                    Literals.String();
                     break;
             }
 
@@ -1240,7 +1240,7 @@ public static partial class Common
             Expected("ALPHANUMERIC");
             Optional("IS");
 
-            Identifier();
+            References.Identifier();
 
             ForAlphanumericForNational(forAlphanumericExists, forNationalExists);
         }
@@ -1267,7 +1267,7 @@ public static partial class Common
             Expected("NATIONAL");
             Optional("IS");
 
-            Identifier();
+            References.Identifier();
 
             ForAlphanumericForNational(forAlphanumericExists, forNationalExists);
         }
@@ -1298,11 +1298,11 @@ public static partial class Common
 
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
-                Numeric();
+                Literals.Numeric();
             }
 
             LineColumn(lineExists, columnExists);
@@ -1331,11 +1331,11 @@ public static partial class Common
 
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
             }
             else
             {
-                Numeric();
+                Literals.Numeric();
             }
 
             LineColumn(lineExists, columnExists);
@@ -1772,7 +1772,7 @@ public static partial class Common
         {
             if (CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
                 return EvaluateOperand.Identifier;
             }
 
@@ -1833,7 +1833,7 @@ public static partial class Common
         {
             if (identifier && CurrentEquals(TokenType.Identifier))
             {
-                Identifier();
+                References.Identifier();
                 RangeExpression(range, EvaluateOperand.Identifier);
             }
             else if (CurrentEquals("ANY"))
@@ -1879,7 +1879,7 @@ public static partial class Common
             Choice("THROUGH", "THRU");
             if (rangeType is EvaluateOperand.Identifier)
             {
-                Identifier();
+                References.Identifier();
             }
             else if (rangeType is EvaluateOperand.Literal)
             {
@@ -1915,11 +1915,11 @@ public static partial class Common
 
         if (numeric && CurrentEquals(TokenType.Numeric))
         {
-            Numeric();
+            Literals.Numeric();
         }
         else if (@string && CurrentEquals(TokenType.String))
         {
-            StringLiteral();
+            Literals.String();
         }
     }
 

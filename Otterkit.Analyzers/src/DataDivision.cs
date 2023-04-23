@@ -353,7 +353,7 @@ public static partial class DataDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataEntries.EntryExists(dataName) && levelNumber is 1 or 77)
+        if (sourceUnit.DataEntries.EntryExists(itemToken) && levelNumber is 1 or 77)
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -368,7 +368,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataEntries.AddEntry(dataName, dataLocal);
+        sourceUnit.DataEntries.AddEntry(itemToken, dataLocal);
     }
 
     private static void FileEntry()
@@ -427,7 +427,7 @@ public static partial class DataDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataEntries.EntryExists(fileName))
+        if (sourceUnit.DataEntries.EntryExists(itemToken))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -442,7 +442,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataEntries.AddEntry(fileName, fileLocal);
+        sourceUnit.DataEntries.AddEntry(itemToken, fileLocal);
     }
 
     private static void GroupEntry()
@@ -500,7 +500,7 @@ public static partial class DataDivision
         }
         else if (CurrentEquals(TokenType.Identifier))
         {
-            References.Identifier();
+            References.Name(NameTypes.DataName, false);
         }
 
         DataEntry dataLocal = new(itemToken, EntryType.DataDescription);
@@ -563,7 +563,7 @@ public static partial class DataDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataEntries.EntryExists(dataName) && levelNumber is 1 or 77)
+        if (sourceUnit.DataEntries.EntryExists(itemToken) && levelNumber is 1 or 77)
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -578,7 +578,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataEntries.AddEntry(dataName, dataLocal);
+        sourceUnit.DataEntries.AddEntry(itemToken, dataLocal);
     }
 
     private static void ConstantEntry()
@@ -677,7 +677,7 @@ public static partial class DataDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataEntries.EntryExists(dataName) && levelNumber is 1 or 77)
+        if (sourceUnit.DataEntries.EntryExists(itemToken) && levelNumber is 1 or 77)
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -692,7 +692,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataEntries.AddEntry(dataName, dataLocal);
+        sourceUnit.DataEntries.AddEntry(itemToken, dataLocal);
     }
 
     private static void ScreenEntry()
@@ -768,7 +768,7 @@ public static partial class DataDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataEntries.EntryExists(screenName) && levelNumber is 1 or 77)
+        if (sourceUnit.DataEntries.EntryExists(itemToken) && levelNumber is 1 or 77)
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -783,7 +783,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataEntries.AddEntry(screenName, screenLocal);
+        sourceUnit.DataEntries.AddEntry(itemToken, screenLocal);
     }
 
     private static void HandleLevelStack(DataEntry entryLocal)
@@ -1024,7 +1024,7 @@ public static partial class DataDivision
             // Because we don't want to run this again during it
             var sourceUnit = CompilerContext.ActiveCallable;
 
-            if (sourceUnit.DataEntries.EntryExists(dataName))
+            if (sourceUnit.DataEntries.EntryExists(itemToken))
             {
                 // TODO: This is incorrect, but was done to replace the old error message system
                 ErrorHandler
@@ -1040,7 +1040,7 @@ public static partial class DataDivision
                 .CloseError();
             }
 
-            sourceUnit.DataEntries.AddEntry(dataName, dataLocal);
+            sourceUnit.DataEntries.AddEntry(itemToken, dataLocal);
         }
     }
 }

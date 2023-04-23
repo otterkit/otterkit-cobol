@@ -584,7 +584,7 @@ public static partial class EnvironmentDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.FileEntries.EntryExists(fileName))
+        if (sourceUnit.FileEntries.EntryExists(fileToken))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -599,6 +599,6 @@ public static partial class EnvironmentDivision
             .CloseError();
         }
 
-        sourceUnit.FileEntries.AddEntry(fileName, fileControl);
+        sourceUnit.FileEntries.AddEntry(fileToken, fileControl);
     }
 }

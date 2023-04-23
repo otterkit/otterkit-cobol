@@ -7,9 +7,9 @@ public sealed class LocalNames<TValue> where TValue: notnull
 {
     private readonly Dictionary<string, List<TValue>> NameLookup = new(StringComparer.OrdinalIgnoreCase);
 
-    public void AddEntry(string entryName, TValue localEntry)
+    public void AddEntry(Token entry, TValue localEntry)
     {
-        ref var entries = ref CollectionsMarshal.GetValueRefOrAddDefault(NameLookup, entryName, out var exists);
+        ref var entries = ref CollectionsMarshal.GetValueRefOrAddDefault(NameLookup, entry.Value, out var exists);
 
         if (!exists)
         {
@@ -21,22 +21,22 @@ public sealed class LocalNames<TValue> where TValue: notnull
 
         if (exists && entries is null)
         {
-            throw new ArgumentException("Local entry exists but value was null in the EntryLookup dictionary", nameof(entryName));
+            throw new ArgumentException("Local entry exists but value was null in the NameLookup dictionary", nameof(entry));
         }
     }
 
-    public bool EntryExists(string entryName)
+    public bool EntryExists(Token entry)
     {
-        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entryName);
+        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entry.Value);
 
         if (!Unsafe.IsNullRef(ref entries)) return true;
 
         return false;
     }
 
-    public (bool, bool) HasUniqueEntry(string entryName)
+    public (bool, bool) HasUniqueEntry(Token entry)
     {
-        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entryName);
+        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entry.Value);
 
         if (!Unsafe.IsNullRef(ref entries) && entries is not null)
         {
@@ -46,27 +46,27 @@ public sealed class LocalNames<TValue> where TValue: notnull
         return (false, false);
     }
 
-    public List<TValue> GetEntriesList(string entryName)
+    public List<TValue> GetEntriesList(Token entry)
     {
-        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entryName);
+        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entry.Value);
 
         if (!Unsafe.IsNullRef(ref entries) && entries is not null)
         {
             return entries;
         }
 
-        throw new ArgumentOutOfRangeException(nameof(entryName), "Local entry does not exist in the EntryLookup dictionary");
+        throw new ArgumentOutOfRangeException(nameof(entry), "Local entry does not exist in the NameLookup dictionary");
     }
 
-    public TValue GetUniqueEntry(string entryName)
+    public TValue GetUniqueEntry(Token entry)
     {
-        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entryName);
+        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entry.Value);
 
         if (!Unsafe.IsNullRef(ref entries) && entries is not null)
         {
             return entries[0];
         }
 
-        throw new ArgumentOutOfRangeException(nameof(entryName), "Local entry does not exist in the EntryLookup dictionary");
+        throw new ArgumentOutOfRangeException(nameof(entry), "Local entry does not exist in the NameLookup dictionary");
     }
 }

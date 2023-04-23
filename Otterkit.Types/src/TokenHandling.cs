@@ -201,7 +201,7 @@ public static class TokenHandling
     {
         while (!CurrentEquals(TokenType.EOF))
         {
-            if (CurrentEquals("."))
+            if (CurrentEquals(".", ". "))
             {
                 Continue();
                 return;

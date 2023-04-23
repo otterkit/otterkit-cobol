@@ -34,21 +34,21 @@ public static class CompilerContext
     /// <summary>
     /// Used for storing the current source unit signature.
     /// </summary>
-    private static Option<CallablePrototype> StoredSignature;
+    private static Option<CallablePrototype> StoredCallable;
 
     /// <summary>
     /// Used for getting and setting the signature of the source unit currently being parsed.
     /// </summary>
-    public static CallablePrototype ActiveSignature
+    public static CallablePrototype ActiveCallable
     {
-        get => (CallablePrototype)StoredSignature;
+        get => (CallablePrototype)StoredCallable;
 
-        set => StoredSignature = value;
+        set => StoredCallable = value;
     }
 
-    public static LocalNames<DataEntry> ActiveEntries
+    public static LocalNames<DataEntry> ActiveData
     {
-        get => ((CallablePrototype)StoredSignature).DataEntries;
+        get => ActiveCallable.DataEntries;
     }
 
     public static bool IsResolutionPass { get; set; }

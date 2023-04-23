@@ -368,12 +368,12 @@ public static class IdentificationDivision
 
             Symbols.TryAddName(CompilerContext.ActiveUnits.Peek().Value, signature);
 
-            CompilerContext.ActiveSignature = signature;
+            CompilerContext.ActiveCallable = signature;
         }
 
         if (CompilerContext.IsResolutionPass)
         {
-            CompilerContext.ActiveSignature = Symbols.GetPrototype<CallablePrototype>(CompilerContext.ActiveUnits.Peek().Value);
+            CompilerContext.ActiveCallable = Symbols.GetPrototype<CallablePrototype>(CompilerContext.ActiveUnits.Peek().Value);
         }
 
         if (!Expected(".", false))
@@ -424,12 +424,12 @@ public static class IdentificationDivision
 
             Symbols.TryAddName(CompilerContext.ActiveUnits.Peek().Value, signature);
 
-            CompilerContext.ActiveSignature = signature;
+            CompilerContext.ActiveCallable = signature;
         }
 
         if (CompilerContext.IsResolutionPass)
         {
-            CompilerContext.ActiveSignature = Symbols.GetPrototype<CallablePrototype>(CompilerContext.ActiveUnits.Peek().Value);
+            CompilerContext.ActiveCallable = Symbols.GetPrototype<CallablePrototype>(CompilerContext.ActiveUnits.Peek().Value);
         }
 
         if (!Expected(".", false))
@@ -726,7 +726,7 @@ public static class IdentificationDivision
 
             parentInterface.Methods.Add(methodPrototype);
 
-            CompilerContext.ActiveSignature = methodPrototype;
+            CompilerContext.ActiveCallable = methodPrototype;
         }
 
         var parentClass = Symbols.GetPrototype<ClassPrototype>(activeUnits.Peek().Value);
@@ -743,7 +743,7 @@ public static class IdentificationDivision
             parentClass.FactoryMethods.Add(method);
         }
         
-        CompilerContext.ActiveSignature = method;
+        CompilerContext.ActiveCallable = method;
     }
 
     private static void Factory()

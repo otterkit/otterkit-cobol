@@ -351,7 +351,7 @@ public static partial class DataDivision
         if (dataName is "FILLER") return;
 
         // Because we don't want to run this again during it
-        var sourceUnit = CompilerContext.ActiveSignature;
+        var sourceUnit = CompilerContext.ActiveCallable;
 
         if (sourceUnit.DataEntries.EntryExists(dataName) && levelNumber is 1 or 77)
         {
@@ -425,7 +425,7 @@ public static partial class DataDivision
         if (CompilerContext.IsResolutionPass) return;
 
         // Because we don't want to run this again during it
-        var sourceUnit = CompilerContext.ActiveSignature;
+        var sourceUnit = CompilerContext.ActiveCallable;
 
         if (sourceUnit.DataEntries.EntryExists(fileName))
         {
@@ -561,7 +561,7 @@ public static partial class DataDivision
         if (dataName is "FILLER") return;
 
         // Because we don't want to run this again during it
-        var sourceUnit = CompilerContext.ActiveSignature;
+        var sourceUnit = CompilerContext.ActiveCallable;
 
         if (sourceUnit.DataEntries.EntryExists(dataName) && levelNumber is 1 or 77)
         {
@@ -675,7 +675,7 @@ public static partial class DataDivision
         if (CompilerContext.IsResolutionPass) return;
 
         // Because we don't want to run this again during it
-        var sourceUnit = CompilerContext.ActiveSignature;
+        var sourceUnit = CompilerContext.ActiveCallable;
 
         if (sourceUnit.DataEntries.EntryExists(dataName) && levelNumber is 1 or 77)
         {
@@ -766,7 +766,7 @@ public static partial class DataDivision
         if (CompilerContext.IsResolutionPass) return;
 
         // Because we don't want to run this again during it
-        var sourceUnit = CompilerContext.ActiveSignature;
+        var sourceUnit = CompilerContext.ActiveCallable;
 
         if (sourceUnit.DataEntries.EntryExists(screenName) && levelNumber is 1 or 77)
         {
@@ -1022,7 +1022,7 @@ public static partial class DataDivision
             if (CompilerContext.IsResolutionPass) continue;
 
             // Because we don't want to run this again during it
-            var sourceUnit = CompilerContext.ActiveSignature;
+            var sourceUnit = CompilerContext.ActiveCallable;
 
             if (sourceUnit.DataEntries.EntryExists(dataName))
             {

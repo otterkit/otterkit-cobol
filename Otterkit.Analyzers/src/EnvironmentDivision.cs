@@ -582,7 +582,7 @@ public static partial class EnvironmentDivision
         if (CompilerContext.IsResolutionPass) return;
 
         // Because we don't want to run this again during it
-        var sourceUnit = CompilerContext.ActiveSignature;
+        var sourceUnit = CompilerContext.ActiveCallable;
 
         if (sourceUnit.FileEntries.EntryExists(fileName))
         {

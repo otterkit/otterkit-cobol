@@ -1,5 +1,6 @@
 using static Otterkit.Types.TokenHandling;
 using Otterkit.Types;
+using System.Diagnostics;
 
 namespace Otterkit.Analyzers;
 
@@ -42,19 +43,243 @@ public enum NameTypes
 
 public static class References
 {
+    private static Stack<Token> Qualification = new(); 
+
     private static bool HasFlag(Enum type, Enum flag)
     {
         return type.HasFlag(flag);
     }
 
-    public static void Name(NameTypes types)
+    private static bool IsResolutionPass()
     {
-
+        return CompilerContext.IsResolutionPass;
     }
 
-    public static void Qualified(NameTypes types)
+    private static CallablePrototype ActiveCallable()
     {
+        return CompilerContext.ActiveCallable;
+    }
 
+    private static LocalNames<DataEntry> ActiveData()
+    {
+        return CompilerContext.ActiveData;
+    }
+
+    private static bool IsParent(Token entry, Token parent)
+    {
+        var entries = ActiveData().EntriesList((Token)entry);
+
+        foreach (var item in entries)
+        {
+            if (!item.Parent.Exists)
+            {
+                continue;
+            }
+
+            if (!((DataEntry)item.Parent).Identifier.Exists)
+            {
+                continue;
+            }
+
+            var parentEntry = (DataEntry)item.Parent;
+            var parentToken = (Token)parentEntry.Identifier;
+
+            if (parentToken.Value == parent.Value) 
+            {
+                Qualification.Push(parentToken);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static Token FromQualified(Token qualified, Token subordinate)
+    {
+        var entries = ActiveData().EntriesList(subordinate);
+
+        foreach (var item in entries)
+        {
+            if (!item.Parent.Exists)
+            {
+                continue;
+            }
+
+            if (!((DataEntry)item.Parent).Identifier.Exists)
+            {
+                continue;
+            }
+
+            var parentEntry = (DataEntry)item.Parent;
+            var parentToken = (Token)parentEntry.Identifier;
+
+            if (parentToken.Line == qualified.Line && parentToken.Column == qualified.Column) 
+            {
+                return (Token)item.Identifier;
+            }
+        }
+
+        throw new UnreachableException("NOTE: Always check if token is qualified before running this method.");
+    }
+
+    private static Token QualifiedToken()
+    {
+        var qualified = Qualification.Pop();
+
+        foreach (var token in Qualification)
+        {
+            qualified = FromQualified(qualified, token);
+        }
+
+        return qualified;
+    }
+
+    public static Unique<Token> Name(NameTypes types, bool shouldResolve = true)
+    {
+        if (CurrentEquals(TokenType.EOF))
+        {
+            ErrorHandler
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
+                Unexpected end of file.
+                """)
+            .WithSourceLine(Lookahead(-1), $"""
+                Expected an identifier after this token.
+                """)
+            .CloseError();
+
+            return null;
+        }
+
+        if (!CurrentEquals(TokenType.Identifier))
+        {
+            ErrorHandler
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a user-defined word (an identifier).
+                """)
+            .CloseError();
+
+            Continue();
+
+            return null;
+        }
+
+        var nameToken = Current();
+
+        if (!IsResolutionPass() || !shouldResolve)
+        {
+            Continue();
+            return null;
+        }
+
+        var (exists, isUnique) = ActiveData().HasUniqueEntry(nameToken);
+
+        if (!exists)
+        {
+            ErrorHandler
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
+                Reference to undefined identifier.
+                """)
+            .WithSourceLine(Current(), $"""
+                Name does not exist in the current context.
+                """)
+            .CloseError();
+
+            Continue();
+
+            return null;
+        }
+
+        Continue();
+
+        return (nameToken, isUnique);
+    }
+
+    public static Unique<Token> Qualified(NameTypes types, TokenContext anchorPoint = TokenContext.IsStatement)
+    {
+        if (!IsResolutionPass())
+        {
+            Name(types, false);
+
+            while (CurrentEquals("IN", "OF"))
+            {
+                Choice("IN", "OF");
+
+                Name(types, false);
+            }
+
+            return null;
+        }
+
+        var name = Name(types);
+
+        if (!name.Exists)
+        {
+            AnchorPoint(anchorPoint);
+
+            return null;
+        }
+
+        if (!name.IsUnique && !CurrentEquals("IN", "OF"))
+        {
+            ErrorHandler
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
+                Reference to non-unique identifier.
+                """)
+            .WithSourceLine((Token)name, $"""
+                Name requires qualification.
+                """)
+            .CloseError();
+
+            return null;
+        }
+
+        var nameToken = ((Token)name);
+
+        Qualification.Push(nameToken);
+
+        while (CurrentEquals("IN", "OF"))
+        {
+            Choice("IN", "OF");
+
+            var parent = Name(types);
+
+            if (!parent.Exists) continue;
+
+            var isParent = IsParent(nameToken, (Token)parent);
+
+            if (!isParent)
+            {
+                ErrorHandler
+                .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
+                    Reference to incorrect superordinate.
+                    """)
+                .WithSourceLine((Token)parent, $"""
+                    Name does not have a {nameToken.Value} field.
+                    """)
+                .CloseError();
+            }
+
+            if (!parent.IsUnique && !CurrentEquals("IN", "OF"))
+            {
+                ErrorHandler
+                .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
+                    Reference to non-unique identifier.
+                    """)
+                .WithSourceLine((Token)parent, $"""
+                    Name requires qualification.
+                    """)
+                .CloseError();
+
+                return null;
+            }
+
+            nameToken = (Token)parent;
+        }
+
+        return QualifiedToken();
     }
 
     public static void Identifier(IdentifierType allowedTypes = IdentifierType.None)
@@ -143,7 +368,7 @@ public static class References
 
             return;
         }
-        
+
         if (CurrentEquals("SELF"))
         {
             Expected("SELF");
@@ -164,7 +389,7 @@ public static class References
 
             return;
         }
-        
+
         if (CurrentEquals("NULL"))
         {
             Expected("NULL");
@@ -185,7 +410,7 @@ public static class References
 
             return;
         }
-        
+
         if (CurrentEquals("ADDRESS") && !LookaheadEquals(1, "PROGRAM", "FUNCTION") && !LookaheadEquals(2, "PROGRAM", "FUNCTION"))
         {
             Expected("ADDRESS");
@@ -208,7 +433,7 @@ public static class References
             Continue();
             return;
         }
-        
+
         if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "FUNCTION") || LookaheadEquals(2, "FUNCTION"))
         {
             Expected("ADDRESS");
@@ -240,7 +465,7 @@ public static class References
 
             return;
         }
-        
+
         if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "PROGRAM") || LookaheadEquals(2, "PROGRAM"))
         {
             Expected("ADDRESS");
@@ -272,7 +497,7 @@ public static class References
 
             return;
         }
-        
+
         if (CurrentEquals("LINAGE-COUNTER"))
         {
             Expected("LINAGE-COUNTER");
@@ -295,7 +520,7 @@ public static class References
             Continue();
             return;
         }
-        
+
         if (CurrentEquals("PAGE-COUNTER", "LINE-COUNTER"))
         {
             var token = Current();
@@ -330,7 +555,7 @@ public static class References
             // Need to implement identifier resolution first
             // To parse the rest of this identifier correctly
             // and to add extra compile time checks
-        
+
             Continue();
             Expected("AS");
 
@@ -408,7 +633,7 @@ public static class References
             }
 
             return;
-        }        
+        }
 
         Continue();
 
@@ -482,7 +707,7 @@ public static class References
             // of this method using an if statement
             return false;
         }
-        
+
         Continue();
 
         return true;

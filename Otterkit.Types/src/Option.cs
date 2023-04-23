@@ -38,6 +38,13 @@ public readonly struct Option<TValue> :
         return false;
     }
 
+    public TValue Unwrap()
+    {
+        if (Exists) return Value;
+
+        throw new NullReferenceException("Instance of Option did not have a value");
+    }
+
     public static implicit operator Option<TValue>(TValue? value)
     {
         if (value is null) return Null;

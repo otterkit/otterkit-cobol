@@ -65,9 +65,9 @@ public static class References
         return CompilerContext.ActiveData;
     }
 
-    private static bool IsParent(Token entry, Token parent)
+    private static bool CheckParent(Token entry, Token parent)
     {
-        var entries = ActiveData().EntriesList((Token)entry);
+        var entries = ActiveData().EntriesList(entry);
 
         foreach (var item in entries)
         {
@@ -76,17 +76,19 @@ public static class References
                 continue;
             }
 
-            if (!((DataEntry)item.Parent).Identifier.Exists)
+            var parentEntry = item.Parent.Unwrap();
+
+            if (!parentEntry.Identifier.Exists)
             {
                 continue;
             }
 
-            var parentEntry = (DataEntry)item.Parent;
-            var parentToken = (Token)parentEntry.Identifier;
+            var parentToken = parentEntry.Identifier.Unwrap();
 
             if (parentToken.Value == parent.Value) 
             {
                 Qualification.Push(parentToken);
+
                 return true;
             }
         }
@@ -94,7 +96,7 @@ public static class References
         return false;
     }
 
-    private static Token FromQualified(Token qualified, Token subordinate)
+    private static Token FindSubordinate(Token qualified, Token subordinate)
     {
         var entries = ActiveData().EntriesList(subordinate);
 
@@ -105,30 +107,31 @@ public static class References
                 continue;
             }
 
-            if (!((DataEntry)item.Parent).Identifier.Exists)
+            var parentEntry = item.Parent.Unwrap();
+
+            if (!parentEntry.Identifier.Exists)
             {
                 continue;
             }
 
-            var parentEntry = (DataEntry)item.Parent;
-            var parentToken = (Token)parentEntry.Identifier;
+            var parentToken = parentEntry.Identifier.Unwrap();
 
             if (parentToken.Line == qualified.Line && parentToken.Column == qualified.Column) 
             {
-                return (Token)item.Identifier;
+                return item.Identifier.Unwrap();
             }
         }
 
-        throw new UnreachableException("NOTE: Always check if token is qualified before running this method.");
+        throw new UnreachableException($"Unable to find the subordinate token qualified by {qualified}.");
     }
 
-    private static Token QualifiedToken()
+    private static Token FindFullyQualified()
     {
         var qualified = Qualification.Pop();
 
-        foreach (var token in Qualification)
+        foreach (var subordinate in Qualification)
         {
-            qualified = FromQualified(qualified, token);
+            qualified = FindSubordinate(qualified, subordinate);
         }
 
         return qualified;
@@ -222,21 +225,21 @@ public static class References
             return null;
         }
 
+        var nameToken = name.Unwrap();
+
         if (!name.IsUnique && !CurrentEquals("IN", "OF"))
         {
             ErrorHandler
             .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
                 Reference to non-unique identifier.
                 """)
-            .WithSourceLine((Token)name, $"""
+            .WithSourceLine(nameToken, $"""
                 Name requires qualification.
                 """)
             .CloseError();
 
             return null;
         }
-
-        var nameToken = ((Token)name);
 
         Qualification.Push(nameToken);
 
@@ -248,7 +251,9 @@ public static class References
 
             if (!parent.Exists) continue;
 
-            var isParent = IsParent(nameToken, (Token)parent);
+            var parentToken = parent.Unwrap();
+
+            var isParent = CheckParent(nameToken, parentToken);
 
             if (!isParent)
             {
@@ -256,7 +261,7 @@ public static class References
                 .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
                     Reference to incorrect superordinate.
                     """)
-                .WithSourceLine((Token)parent, $"""
+                .WithSourceLine(parentToken, $"""
                     Name does not have a {nameToken.Value} field.
                     """)
                 .CloseError();
@@ -268,7 +273,7 @@ public static class References
                 .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
                     Reference to non-unique identifier.
                     """)
-                .WithSourceLine((Token)parent, $"""
+                .WithSourceLine(parentToken, $"""
                     Name requires qualification.
                     """)
                 .CloseError();
@@ -276,10 +281,10 @@ public static class References
                 return null;
             }
 
-            nameToken = (Token)parent;
+            nameToken = parentToken;
         }
 
-        return QualifiedToken();
+        return FindFullyQualified();
     }
 
     public static void Identifier(IdentifierType allowedTypes = IdentifierType.None)

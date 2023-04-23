@@ -3,13 +3,13 @@ using System.Runtime.CompilerServices;
 
 namespace Otterkit.Types;
 
-public sealed class LocalEntries<TValue> where TValue: notnull
+public sealed class LocalNames<TValue> where TValue: notnull
 {
-    private readonly Dictionary<string, List<TValue>> EntryLookup = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, List<TValue>> NameLookup = new(StringComparer.OrdinalIgnoreCase);
 
     public void AddEntry(string entryName, TValue localEntry)
     {
-        ref var entries = ref CollectionsMarshal.GetValueRefOrAddDefault(EntryLookup, entryName, out var exists);
+        ref var entries = ref CollectionsMarshal.GetValueRefOrAddDefault(NameLookup, entryName, out var exists);
 
         if (!exists)
         {
@@ -27,7 +27,7 @@ public sealed class LocalEntries<TValue> where TValue: notnull
 
     public bool EntryExists(string entryName)
     {
-        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(EntryLookup, entryName);
+        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entryName);
 
         if (!Unsafe.IsNullRef(ref entries)) return true;
 
@@ -36,7 +36,7 @@ public sealed class LocalEntries<TValue> where TValue: notnull
 
     public (bool, bool) HasUniqueEntry(string entryName)
     {
-        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(EntryLookup, entryName);
+        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entryName);
 
         if (!Unsafe.IsNullRef(ref entries) && entries is not null)
         {
@@ -48,7 +48,7 @@ public sealed class LocalEntries<TValue> where TValue: notnull
 
     public List<TValue> GetEntriesList(string entryName)
     {
-        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(EntryLookup, entryName);
+        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entryName);
 
         if (!Unsafe.IsNullRef(ref entries) && entries is not null)
         {
@@ -60,7 +60,7 @@ public sealed class LocalEntries<TValue> where TValue: notnull
 
     public TValue GetUniqueEntry(string entryName)
     {
-        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(EntryLookup, entryName);
+        ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entryName);
 
         if (!Unsafe.IsNullRef(ref entries) && entries is not null)
         {

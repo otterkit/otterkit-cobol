@@ -3,13 +3,13 @@ using System.Runtime.CompilerServices;
 
 namespace Otterkit.Types;
 
-public sealed class GlobalPrototypes
+public sealed class GlobalNames
 {
-    private readonly Dictionary<string, AbstractPrototype> PrototypeLookup = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, AbstractPrototype> NameLookup = new(StringComparer.OrdinalIgnoreCase);
 
-    public bool TryAddPrototype(string prototypeName, AbstractPrototype prototype)
+    public bool TryAddName(string prototypeName, AbstractPrototype prototype)
     {
-        ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrAddDefault(PrototypeLookup, prototypeName, out var exists);
+        ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrAddDefault(NameLookup, prototypeName, out var exists);
 
         if (!exists)
         {
@@ -22,7 +22,7 @@ public sealed class GlobalPrototypes
 
     public bool NameExists(string prototypeName)
     {
-        ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrNullRef(PrototypeLookup, prototypeName);
+        ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, prototypeName);
 
         if (!Unsafe.IsNullRef(ref prototypeRef)) return true;
 
@@ -32,7 +32,7 @@ public sealed class GlobalPrototypes
     public bool NameExists<TPrototype>(string prototypeName)
         where TPrototype : AbstractPrototype
     {
-        ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrNullRef(PrototypeLookup, prototypeName);
+        ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, prototypeName);
 
         if (!Unsafe.IsNullRef(ref prototypeRef)) return prototypeRef is TPrototype;
 
@@ -42,7 +42,7 @@ public sealed class GlobalPrototypes
     public TPrototype GetPrototype<TPrototype>(string prototypeName)
         where TPrototype : AbstractPrototype
     {
-        ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrNullRef(PrototypeLookup, prototypeName);
+        ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, prototypeName);
 
         if (!Unsafe.IsNullRef(ref prototypeRef))
         {

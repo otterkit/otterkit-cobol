@@ -2,9 +2,9 @@ namespace Otterkit.Types;
 
 public class CallablePrototype : AbstractPrototype
 {
-    public LocalEntries<RepositoryEntry> RepositoryEntries = new();
-    public LocalEntries<FileControlEntry> FileEntries = new();
-    public LocalEntries<DataEntry> DataEntries = new();
+    public LocalNames<RepositoryEntry> RepositoryEntries = new();
+    public LocalNames<FileControlEntry> FileEntries = new();
+    public LocalNames<DataEntry> DataEntries = new();
     public List<DataEntry> Parameters = new();
     public List<bool> IsOptional = new();
     public List<bool> IsByRef = new();

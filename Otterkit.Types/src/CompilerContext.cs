@@ -46,7 +46,7 @@ public static class CompilerContext
         set => StoredSignature = value;
     }
 
-    public static LocalEntries<DataEntry> ActiveEntries
+    public static LocalNames<DataEntry> ActiveEntries
     {
         get => ((CallablePrototype)StoredSignature).DataEntries;
     }

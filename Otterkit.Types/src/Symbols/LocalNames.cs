@@ -46,7 +46,7 @@ public sealed class LocalNames<TValue> where TValue: notnull
         return (false, false);
     }
 
-    public List<TValue> GetEntriesList(Token entry)
+    public List<TValue> EntriesList(Token entry)
     {
         ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entry.Value);
 
@@ -58,7 +58,7 @@ public sealed class LocalNames<TValue> where TValue: notnull
         throw new ArgumentOutOfRangeException(nameof(entry), "Local entry does not exist in the NameLookup dictionary");
     }
 
-    public TValue GetUniqueEntry(Token entry)
+    public TValue UniqueEntry(Token entry)
     {
         ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entry.Value);
 

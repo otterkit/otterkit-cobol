@@ -365,7 +365,7 @@ public static class Statements
 
         switch (Current().Type)
         {
-            case TokenType.Identifier: References.Qualified(NameTypes.DataName); break;
+            case TokenType.Identifier: References.Qualified(Names.Data); break;
             case TokenType.Numeric: Literals.Numeric(); break;
             
             case TokenType.String:
@@ -381,7 +381,7 @@ public static class Statements
         {
             switch (Current().Type)
             {
-                case TokenType.Identifier: References.Qualified(NameTypes.DataName); break;
+                case TokenType.Identifier: References.Qualified(Names.Data); break;
                 case TokenType.Numeric: Literals.Numeric(); break;
                 
                 case TokenType.String:

@@ -28,14 +28,14 @@ public static class CodeGenerator
             Continue();
         }
 
-        CurrentScope scope = CurrentScope.WorkingStorage;
+        ActiveScope scope = ActiveScope.WorkingStorage;
         while (Current().Scope is not TokenScope.ProcedureDivision)
         {
             if (CurrentEquals("WORKING-STORAGE"))
-                scope = CurrentScope.WorkingStorage;
+                scope = ActiveScope.WorkingStorage;
 
             if (CurrentEquals("LOCAL-STORAGE"))
-                scope = CurrentScope.LocalStorage;
+                scope = ActiveScope.LocalStorage;
 
             if (Current().Type == TokenType.Numeric && (CurrentEquals("01") || CurrentEquals("1")) && !LookaheadEquals(2, "CONSTANT"))
             {

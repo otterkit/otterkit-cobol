@@ -115,7 +115,7 @@ public class DataItemBuilder
     private int Length = 0;
     private int FractionalLength = 0;
     private string DataValue = string.Empty;
-    private CurrentScope Section;
+    private ActiveScope Section;
     private readonly ProgramBuilder ProgramBuilder;
     private readonly Action<int> Continue;
     private readonly Func<Token> Current;
@@ -131,14 +131,14 @@ public class DataItemBuilder
 
     public void ExportDataItem()
     {
-        if (Section == CurrentScope.WorkingStorage)
+        if (Section == ActiveScope.WorkingStorage)
             ProgramBuilder.AppendWorkingStorage(CompiledDataItem);
 
-        if (Section == CurrentScope.LocalStorage)
+        if (Section == ActiveScope.LocalStorage)
             ProgramBuilder.AppendLocalStorage(CompiledDataItem);
     }
 
-    public void BuildDataItem(CurrentScope section = CurrentScope.WorkingStorage)
+    public void BuildDataItem(ActiveScope section = ActiveScope.WorkingStorage)
     {
         Section = section;
         if (Current().Type != TokenType.Numeric)
@@ -238,10 +238,10 @@ public class DataItemBuilder
             };
         }
 
-        if (Section == CurrentScope.WorkingStorage && isElementary)
+        if (Section == ActiveScope.WorkingStorage && isElementary)
             CompiledDataItem = $"\n    private static {ConvertType(DataType)} {FormatIdentifier(Identifier)} = ";
 
-        if (Section == CurrentScope.LocalStorage && isElementary)
+        if (Section == ActiveScope.LocalStorage && isElementary)
             CompiledDataItem = $"\n    private {ConvertType(DataType)} {FormatIdentifier(Identifier)} = ";
 
         string value;
@@ -289,22 +289,22 @@ public class DataItemBuilder
         }
 
 
-        if (Section == CurrentScope.WorkingStorage && isLevelOne && isExternal)
+        if (Section == ActiveScope.WorkingStorage && isLevelOne && isExternal)
             CompiledDataItem = $"""
             private static DataItem _{FormatIdentifier(Identifier)} = new(External.Resolver("{Identifier}", {TotalLength}));{CompiledDataItem}
             """;
 
-        if (Section == CurrentScope.LocalStorage && isLevelOne && isExternal)
+        if (Section == ActiveScope.LocalStorage && isLevelOne && isExternal)
             CompiledDataItem = $"""
             private DataItem _{FormatIdentifier(Identifier)} = new(External.Resolver("{Identifier}", {TotalLength}));{CompiledDataItem}
             """;
 
-        if (Section == CurrentScope.WorkingStorage && isLevelOne && !isExternal)
+        if (Section == ActiveScope.WorkingStorage && isLevelOne && !isExternal)
             CompiledDataItem = $"""
             private static DataItem _{FormatIdentifier(Identifier)} = new({TotalLength});{CompiledDataItem}
             """;
 
-        if (Section == CurrentScope.LocalStorage && isLevelOne && !isExternal)
+        if (Section == ActiveScope.LocalStorage && isLevelOne && !isExternal)
             CompiledDataItem = $"""
             private DataItem _{FormatIdentifier(Identifier)} = new({TotalLength});{CompiledDataItem}
             """;
@@ -315,10 +315,10 @@ public class DataItemBuilder
     {
         string sectionAccessModifier = string.Empty;
 
-        if (Section == CurrentScope.WorkingStorage)
+        if (Section == ActiveScope.WorkingStorage)
             CompiledDataItem = $"private static readonly Constant {FormatIdentifier(Identifier)} = ";
 
-        if (Section == CurrentScope.LocalStorage)
+        if (Section == ActiveScope.LocalStorage)
             CompiledDataItem = $"private readonly Constant {FormatIdentifier(Identifier)} = ";
 
         while (!CurrentEquals("AS")) Continue(1);
@@ -401,10 +401,10 @@ public class DataItemBuilder
             Continue(1);
         }
 
-        if (Section == CurrentScope.WorkingStorage)
+        if (Section == ActiveScope.WorkingStorage)
             CompiledDataItem = $"private static {DataType} {FormatIdentifier(Identifier)} = ";
 
-        if (Section == CurrentScope.LocalStorage)
+        if (Section == ActiveScope.LocalStorage)
             CompiledDataItem = $"private {DataType} {FormatIdentifier(Identifier)} = ";
 
         string value;

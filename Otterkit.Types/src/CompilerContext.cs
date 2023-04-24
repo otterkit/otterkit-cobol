@@ -18,7 +18,7 @@ public static class CompilerContext
     /// Used for keeping track of which scope is being parsed.
     /// Scope meaning the current division, section or paragragh.
     /// </summary>
-    public static CurrentScope ActiveScope { get; set; }
+    public static ActiveScope ActiveScope { get; set; }
 
     /// <summary>
     /// Used for keeping track of where the current source unit was defined, including its containing parent.

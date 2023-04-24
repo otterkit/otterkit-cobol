@@ -286,7 +286,7 @@ public static class IdentificationDivision
 
         CompilerContext.ActiveUnits.Push(Current());
         CompilerContext.SourceTypes.Push(SourceUnit.Program);
-        CompilerContext.ActiveScope = CurrentScope.ProgramId;
+        CompilerContext.ActiveScope = ActiveScope.ProgramId;
 
         References.Identifier();
         if (CurrentEquals("AS"))
@@ -400,7 +400,7 @@ public static class IdentificationDivision
         Expected(".");
 
         CompilerContext.SourceTypes.Push(SourceUnit.Function);
-        CompilerContext.ActiveScope = CurrentScope.FunctionId;
+        CompilerContext.ActiveScope = ActiveScope.FunctionId;
 
         References.Identifier();
 
@@ -458,7 +458,7 @@ public static class IdentificationDivision
         CompilerContext.ActiveUnits.Push(Current());
 
         CompilerContext.SourceTypes.Push(SourceUnit.Class);
-        CompilerContext.ActiveScope = CurrentScope.ClassId;
+        CompilerContext.ActiveScope = ActiveScope.ClassId;
 
         References.Identifier();
 
@@ -546,7 +546,7 @@ public static class IdentificationDivision
         CompilerContext.ActiveUnits.Push(Current());
 
         CompilerContext.SourceTypes.Push(SourceUnit.Interface);
-        CompilerContext.ActiveScope = CurrentScope.InterfaceId;
+        CompilerContext.ActiveScope = ActiveScope.InterfaceId;
 
         References.Identifier();
 
@@ -641,7 +641,7 @@ public static class IdentificationDivision
         Expected("METHOD-ID");
         Expected(".");
 
-        CompilerContext.ActiveScope = CurrentScope.MethodId;
+        CompilerContext.ActiveScope = ActiveScope.MethodId;
 
         if (sourceTypes.Peek() != SourceUnit.Interface && CurrentEquals("GET"))
         {

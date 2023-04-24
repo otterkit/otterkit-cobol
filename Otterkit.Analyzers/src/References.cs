@@ -4,43 +4,6 @@ using System.Diagnostics;
 
 namespace Otterkit.Analyzers;
 
-[Flags]
-public enum NameTypes
-{
-    None,
-    AlphabetName,
-    ClassName = 1 << 1,
-    CompilationVariableName = 1 << 2,
-    ConditionName = 1 << 3,
-    ConstantName = 1 << 4,
-    DataName = 1 << 5,
-    DirectiveName = 1 << 6,
-    DynamicLengthStructureName = 1 << 7,
-    FileName = 1 << 8,
-    FunctionPrototypeName = 1 << 9,
-    IndexName = 1 << 10,
-    InterfaceName = 1 << 11,
-    LevelNumber = 1 << 12,
-    LocaleName = 1 << 13,
-    MethodName = 1 << 14,
-    MnemonicName = 1 << 15,
-    ObjectClassName = 1 << 16,
-    OrderingName = 1 << 17,
-    ParagraphName = 1 << 18,
-    ParameterName = 1 << 19,
-    ProgramName = 1 << 20,
-    ProgramPrototypeName = 1 << 21,
-    PropertyName = 1 << 22,
-    RecordKeyName = 1 << 23,
-    RecordName = 1 << 24,
-    ReportName = 1 << 25,
-    ScreenName = 1 << 26,
-    SectionName = 1 << 27,
-    SymbolicCharacter = 1 << 28,
-    TypeName = 1 << 29,
-    UserFunctionName = 1 << 30,
-}
-
 public static class References
 {
     private static Stack<Token> Qualification = new(); 
@@ -137,7 +100,7 @@ public static class References
         return qualified;
     }
 
-    public static Unique<Token> Name(NameTypes types, bool shouldResolve = true)
+    public static Unique<Token> Name(Names types, bool shouldResolve = true)
     {
         if (CurrentEquals(TokenType.EOF))
         {
@@ -200,7 +163,7 @@ public static class References
         return (nameToken, isUnique);
     }
 
-    public static Unique<Token> Qualified(NameTypes types, TokenContext anchorPoint = TokenContext.IsStatement)
+    public static Unique<Token> Qualified(Names types, TokenContext anchorPoint = TokenContext.IsStatement)
     {
         if (!IsResolutionPass())
         {
@@ -291,7 +254,7 @@ public static class References
         return fullyQualified;
     }
 
-    public static void Identifier(IdentifierType allowedTypes = IdentifierType.None)
+    public static void Identifier(Identifiers allowedTypes = Identifiers.None)
     {
         // TODO:
         // All Identifiers here need a check from the symbol table.
@@ -310,25 +273,10 @@ public static class References
             return;
         }
 
-        if (!CurrentEquals(TokenType.Identifier))
-        {
-            ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
-                Unexpected token.
-                """)
-            .WithSourceLine(Current(), $"""
-                Expected a user-defined word (an identifier).
-                """)
-            .CloseError();
-
-            Continue();
-            return;
-        }
-
         if (CurrentEquals("FUNCTION"))
         {
             Expected("FUNCTION");
-            if (!HasFlag(allowedTypes, IdentifierType.Function))
+            if (!HasFlag(allowedTypes, Identifiers.Function))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -360,7 +308,7 @@ public static class References
         if (CurrentEquals("EXCEPTION-OBJECT"))
         {
             Expected("EXCEPTION-OBJECT");
-            if (!HasFlag(allowedTypes, IdentifierType.ExceptionObject))
+            if (!HasFlag(allowedTypes, Identifiers.ExceptionObject))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -381,7 +329,7 @@ public static class References
         if (CurrentEquals("SELF"))
         {
             Expected("SELF");
-            if (!HasFlag(allowedTypes, IdentifierType.Self))
+            if (!HasFlag(allowedTypes, Identifiers.Self))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -402,7 +350,7 @@ public static class References
         if (CurrentEquals("NULL"))
         {
             Expected("NULL");
-            if (!HasFlag(allowedTypes, IdentifierType.NullAddress) && !HasFlag(allowedTypes, IdentifierType.NullObject))
+            if (!HasFlag(allowedTypes, Identifiers.NullAddress) && !HasFlag(allowedTypes, Identifiers.NullObject))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -424,7 +372,7 @@ public static class References
         {
             Expected("ADDRESS");
             Optional("OF");
-            if (!HasFlag(allowedTypes, IdentifierType.DataAddress))
+            if (!HasFlag(allowedTypes, Identifiers.DataAddress))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -448,7 +396,7 @@ public static class References
             Expected("ADDRESS");
             Optional("OF");
             Expected("FUNCTION");
-            if (!HasFlag(allowedTypes, IdentifierType.FunctionAddress))
+            if (!HasFlag(allowedTypes, Identifiers.FunctionAddress))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -480,7 +428,7 @@ public static class References
             Expected("ADDRESS");
             Optional("OF");
             Expected("PROGRAM");
-            if (!HasFlag(allowedTypes, IdentifierType.ProgramAddress))
+            if (!HasFlag(allowedTypes, Identifiers.ProgramAddress))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -511,7 +459,7 @@ public static class References
         {
             Expected("LINAGE-COUNTER");
             Choice("IN", "OF");
-            if (!HasFlag(allowedTypes, IdentifierType.LinageCounter))
+            if (!HasFlag(allowedTypes, Identifiers.LinageCounter))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -537,7 +485,7 @@ public static class References
             Choice("PAGE-COUNTER", "LINE-COUNTER");
             Choice("IN", "OF");
 
-            if (!HasFlag(allowedTypes, IdentifierType.ReportCounter))
+            if (!HasFlag(allowedTypes, Identifiers.ReportCounter))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, $"""
@@ -568,7 +516,7 @@ public static class References
             Continue();
             Expected("AS");
 
-            if (!HasFlag(allowedTypes, IdentifierType.ObjectView))
+            if (!HasFlag(allowedTypes, Identifiers.ObjectView))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -611,7 +559,7 @@ public static class References
         {
 
 
-            if (!HasFlag(allowedTypes, IdentifierType.MethodInvocation))
+            if (!HasFlag(allowedTypes, Identifiers.MethodInvocation))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """

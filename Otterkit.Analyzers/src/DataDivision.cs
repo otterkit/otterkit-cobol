@@ -24,7 +24,7 @@ public static partial class DataDivision
     {
         Expected("DATA");
         Expected("DIVISION");
-        CompilerContext.ActiveScope = CurrentScope.DataDivision;
+        CompilerContext.ActiveScope = ActiveScope.DataDivision;
 
         if (!Expected(".", false))
         {
@@ -69,7 +69,7 @@ public static partial class DataDivision
     {
         Expected("FILE");
         Expected("SECTION");
-        CompilerContext.ActiveScope = CurrentScope.FileSection;
+        CompilerContext.ActiveScope = ActiveScope.FileSection;
 
         Expected(".");
         while (CurrentEquals("FD", "SD"))
@@ -82,7 +82,7 @@ public static partial class DataDivision
     {
         Expected("REPORT");
         Expected("SECTION");
-        CompilerContext.ActiveScope = CurrentScope.ReportSection;
+        CompilerContext.ActiveScope = ActiveScope.ReportSection;
 
         Expected(".");
         while (CurrentEquals("RD"))
@@ -95,7 +95,7 @@ public static partial class DataDivision
     {
         Expected("SCREEN");
         Expected("SECTION");
-        CompilerContext.ActiveScope = CurrentScope.ScreenSection;
+        CompilerContext.ActiveScope = ActiveScope.ScreenSection;
 
         Expected(".");
         while (CurrentEquals(TokenType.Numeric))
@@ -108,7 +108,7 @@ public static partial class DataDivision
     {
         Expected("WORKING-STORAGE");
         Expected("SECTION");
-        CompilerContext.ActiveScope = CurrentScope.WorkingStorage;
+        CompilerContext.ActiveScope = ActiveScope.WorkingStorage;
 
         Expected(".");
         while (CurrentEquals(TokenType.Numeric))
@@ -121,7 +121,7 @@ public static partial class DataDivision
     {
         Expected("LOCAL-STORAGE");
         Expected("SECTION");
-        CompilerContext.ActiveScope = CurrentScope.LocalStorage;
+        CompilerContext.ActiveScope = ActiveScope.LocalStorage;
 
         Expected(".");
         while (Current().Type is TokenType.Numeric)
@@ -134,7 +134,7 @@ public static partial class DataDivision
     {
         Expected("LINKAGE");
         Expected("SECTION");
-        CompilerContext.ActiveScope = CurrentScope.LinkageSection;
+        CompilerContext.ActiveScope = ActiveScope.LinkageSection;
 
         Expected(".");
         while (Current().Type is TokenType.Numeric)
@@ -447,11 +447,11 @@ public static partial class DataDivision
 
     private static void GroupEntry()
     {
-        if (CompilerContext.ActiveScope is CurrentScope.ScreenSection)
+        if (CompilerContext.ActiveScope is ActiveScope.ScreenSection)
         {
             ScreenEntry();
         }
-        else if (CompilerContext.ActiveScope is CurrentScope.ReportSection)
+        else if (CompilerContext.ActiveScope is ActiveScope.ReportSection)
         {
             ReportGroupEntry();
         }
@@ -464,11 +464,11 @@ public static partial class DataDivision
         
         while (outInt > 1 && outInt < 50)
         {
-            if (CompilerContext.ActiveScope is CurrentScope.ScreenSection)
+            if (CompilerContext.ActiveScope is ActiveScope.ScreenSection)
             {
                 ScreenEntry();
             }
-            else if (CompilerContext.ActiveScope is CurrentScope.ReportSection)
+            else if (CompilerContext.ActiveScope is ActiveScope.ReportSection)
             {
                 ReportGroupEntry();
             }
@@ -500,7 +500,7 @@ public static partial class DataDivision
         }
         else if (CurrentEquals(TokenType.Identifier))
         {
-            References.Name(NameTypes.DataName, false);
+            References.Name(Names.Data, false);
         }
 
         DataEntry dataLocal = new(itemToken, EntryType.DataDescription);

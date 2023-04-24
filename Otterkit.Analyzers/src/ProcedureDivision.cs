@@ -21,7 +21,7 @@ public static class ProcedureDivision
         Expected("PROCEDURE");
         Expected("DIVISION");
 
-        CompilerContext.ActiveScope = CurrentScope.ProcedureDivision;
+        CompilerContext.ActiveScope = ActiveScope.ProcedureDivision;
 
         var currentSource = CompilerContext.SourceTypes.Peek();
 

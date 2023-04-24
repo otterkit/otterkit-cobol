@@ -284,7 +284,11 @@ public static class References
             nameToken = parentToken;
         }
 
-        return FindFullyQualified();
+        var fullyQualified = FindFullyQualified();
+
+        Qualification.Clear();
+
+        return fullyQualified;
     }
 
     public static void Identifier(IdentifierType allowedTypes = IdentifierType.None)

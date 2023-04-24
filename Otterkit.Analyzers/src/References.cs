@@ -6,31 +6,23 @@ namespace Otterkit.Analyzers;
 
 public static class References
 {
+    private static bool IsResolutionPass 
+        => CompilerContext.IsResolutionPass;
+
+    private static CallablePrototype ActiveCallable 
+        => CompilerContext.ActiveCallable;
+        
+    private static LocalNames<DataEntry> ActiveData 
+        => CompilerContext.ActiveData;
+
     private static Stack<Token> Qualification = new(); 
-
+    
     private static bool HasFlag(Enum type, Enum flag)
-    {
-        return type.HasFlag(flag);
-    }
-
-    private static bool IsResolutionPass()
-    {
-        return CompilerContext.IsResolutionPass;
-    }
-
-    private static CallablePrototype ActiveCallable()
-    {
-        return CompilerContext.ActiveCallable;
-    }
-
-    private static LocalNames<DataEntry> ActiveData()
-    {
-        return CompilerContext.ActiveData;
-    }
-
+        => type.HasFlag(flag);
+    
     private static bool CheckParent(Token entry, Token parent)
     {
-        var entries = ActiveData().EntriesList(entry);
+        var entries = ActiveData.EntriesList(entry);
 
         foreach (var item in entries)
         {
@@ -61,7 +53,7 @@ public static class References
 
     private static Token FindSubordinate(Token qualified, Token subordinate)
     {
-        var entries = ActiveData().EntriesList(subordinate);
+        var entries = ActiveData.EntriesList(subordinate);
 
         foreach (var item in entries)
         {
@@ -134,13 +126,13 @@ public static class References
 
         var nameToken = Current();
 
-        if (!IsResolutionPass() || !shouldResolve)
+        if (!IsResolutionPass || !shouldResolve)
         {
             Continue();
             return null;
         }
 
-        var (exists, isUnique) = ActiveData().HasUniqueEntry(nameToken);
+        var (exists, isUnique) = ActiveData.HasUniqueEntry(nameToken);
 
         if (!exists)
         {
@@ -165,7 +157,7 @@ public static class References
 
     public static Unique<Token> Qualified(Names types, TokenContext anchorPoint = TokenContext.IsStatement)
     {
-        if (!IsResolutionPass())
+        if (!IsResolutionPass)
         {
             Name(types, false);
 

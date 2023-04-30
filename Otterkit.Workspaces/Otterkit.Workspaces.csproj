@@ -21,18 +21,22 @@
     <Company>Otterkit Project</Company>
     <PackageIcon>OtterkitIcon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>Otterkit;COBOL;Compiler;Types</PackageTags>
+    <PackageTags>Otterkit;COBOL;Workspace;Projects</PackageTags>
     <PackageProjectUrl>https://github.com/otterkit</PackageProjectUrl>
     <RepositoryUrl>https://github.com/otterkit/otterkit</RepositoryUrl> 
     <RepositoryType>git</RepositoryType>
     <Description>
-      This package contains internal types for the Otterkit compiler.
+      This package contains classes and methods for Otterkit COBOL project file handling.
     </Description>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="../Assets/OtterkitIcon.png" Pack="true" PackagePath="/" />
     <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Otterkit.Types/Otterkit.Types.csproj" />
   </ItemGroup>
 
 </Project>

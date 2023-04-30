@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace Otterkit.Types;
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum SourceFormat
 {
     Auto,
@@ -7,6 +10,7 @@ public enum SourceFormat
     Free,
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum BuildType
 {
     ParseOnly,
@@ -16,6 +20,7 @@ public enum BuildType
     BuildAndRun,
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum OutputType
 {
     Application,

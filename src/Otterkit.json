@@ -1,0 +1,11 @@
+{
+  "name": "OtterkitExport",
+  "standard": "2023",
+  "buildOptions": {
+    "output": "Application",
+    "main": "main.cob",
+    "columns": 80,
+    "format": "Auto",
+    "build": "BuildOnly"
+  }
+}

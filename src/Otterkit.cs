@@ -2,7 +2,9 @@ using System.Diagnostics;
 using Otterkit.Analyzers;
 using Otterkit.CodeGenerators;
 using Otterkit.Tokenizers;
+using Otterkit.Workspaces;
 using Otterkit.Types;
+using System.Text.Json;
 
 namespace Otterkit;
 
@@ -10,6 +12,12 @@ public static class Otterkit
 {
     public static void Main(string[] args)
     {
+        var project = new CobolProject();
+
+        var projectText = JsonSerializer.Serialize<CobolProject>(project, CobolProjectJsonContext.Default.CobolProject);
+
+        File.WriteAllText("Otterkit.json", projectText);
+
         if (args.Length <= 1 || args[0].Equals("-h") || args[0].Equals("--help"))
         {
             DisplayHelpMessage();

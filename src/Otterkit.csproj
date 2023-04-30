@@ -46,6 +46,7 @@
     <ProjectReference Include="../Otterkit.Analyzers/Otterkit.Analyzers.csproj" />
     <ProjectReference Include="../Otterkit.CodeGenerators/Otterkit.CodeGenerators.csproj" />
     <ProjectReference Include="../Otterkit.Tokenizers/Otterkit.Tokenizers.csproj" />
+    <ProjectReference Include="../Otterkit.Workspaces/Otterkit.Workspaces.csproj" />
     <ProjectReference Include="../Otterkit.Types/Otterkit.Types.csproj" />
   </ItemGroup>
 

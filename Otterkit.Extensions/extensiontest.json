@@ -1,0 +1,59 @@
+[
+    {
+        "name": "COMP3-PARSING",
+        "use": "USAGE-CLAUSE",
+        "during": "PARSING",
+        "steps": [
+            "IF CURRENT VALUE",
+            "COMP-3",
+            "REPLACE BY",
+            "PACKED-DECIMAL",
+            "CONTINUE BY",
+            "1",
+            "END-IF"
+        ]
+    },
+    {
+        "name": "COMP6-PARSING",
+        "use": "USAGE-CLAUSE",
+        "during": "PARSING",
+        "steps": [
+            "IF CURRENT VALUE",
+            "COMP-6",
+            "REPLACE BY",
+            "PACKED-DECIMAL",
+            "INSERT TOKEN",
+            "NO",
+            "INSERT TOKEN",
+            "SIGN",
+            "CONTINUE BY",
+            "3",
+            "END-IF"
+        ]
+    },
+    {
+        "name": "AUTHOR-PARSING",
+        "use": "IDENTIFICATION",
+        "during": "PARSING",
+        "steps": [
+            "IF CURRENT VALUE",
+            "AUTHOR",
+            "CONTINUE BY",
+            "1",
+            "EXPECTED",
+            "SEPARATOR-PERIOD",
+            "REMOVE PREVIOUS",
+            "2",
+            "IF CURRENT TYPE",
+            "IDENTIFIER",
+            "CONTINUE BY",
+            "1",
+            "EXPECTED",
+            "SEPARATOR-PERIOD",
+            "REMOVE PREVIOUS",
+            "2",
+            "END-IF",
+            "END-IF"
+        ]
+    }
+]

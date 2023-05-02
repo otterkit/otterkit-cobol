@@ -1,20 +1,20 @@
 namespace Otterkit.Workspaces;
 
-public class CobolProject
+public class Otterproj
 {
     public string Name { get; set; }
-    public string Standard { get; set; }
     public string? PackageId { get; set; }
     public string? Description { get; set; }
     public string? Authors { get; set; }
-    public BuildOptions BuildOptions { get; set; }
     public string? License { get; set; }
+    public Project Project { get; set; }
+    public Build Build { get; set; }
 
-    public CobolProject()
+    public Otterproj()
     {
         // Setup project defaults
         Name = "Program";
-        Standard = "2023";
-        BuildOptions = new();
+        Project = new();
+        Build = new();
     }
 }

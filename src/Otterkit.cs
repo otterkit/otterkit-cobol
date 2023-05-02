@@ -4,7 +4,6 @@ using Otterkit.CodeGenerators;
 using Otterkit.Tokenizers;
 using Otterkit.Workspaces;
 using Otterkit.Types;
-using System.Text.Json;
 
 namespace Otterkit;
 
@@ -12,31 +11,21 @@ public static class Otterkit
 {
     public static void Main(string[] args)
     {
-        var project = new CobolProject();
-
-        var projectText = JsonSerializer.Serialize<CobolProject>(project, CobolProjectJsonContext.Default.CobolProject);
-
-        File.WriteAllText("Otterkit.json", projectText);
-
-        if (args.Length <= 1 || args[0].Equals("-h") || args[0].Equals("--help"))
+        if (args.Length < 1 || args[0].Equals("-h") || args[0].Equals("--help"))
         {
             DisplayHelpMessage();
             return;
         }
 
-        if (args[0].Equals("new"))
+        if (args[0] is "new" or "build")
         {
+            TryLoadProject();
+            
             CommandLineArguments(args);
             return;
         }
 
-        if (args[0].Equals("build"))
-        {
-            CommandLineArguments(args);
-            return;
-        }
-
-        CommandLineArguments(args);
+        DisplayHelpMessage();
     }
 
     private static void CommandLineArguments(string[] args)
@@ -86,88 +75,105 @@ public static class Otterkit
 
                     case "-e":
                     case "--entry":
-                        CompilerOptions.EntryPoint = args[index];
+                        CompilerOptions.Main = args[index];
                         break;
 
                     case "-cl":
                     case "--columns":
-                        CompilerOptions.ColumnLength = int.Parse(args[index]);
+                        CompilerOptions.Columns = int.Parse(args[index]);
                         break;
 
                     case "-p":
                     case "--parse":
-                        CompilerOptions.BuildMode = BuildType.ParseOnly;
+                        CompilerOptions.Mode = BuildType.ParseOnly;
                         break;
 
                     case "-p:tokens":
                     case "--parse:tokens":
-                        CompilerOptions.BuildMode = BuildType.PrintTokens;
+                        CompilerOptions.Mode = BuildType.PrintTokens;
                         break;
 
                     case "-r":
                     case "--run":
-                        CompilerOptions.BuildMode = BuildType.BuildAndRun;
+                        CompilerOptions.Mode = BuildType.BuildAndRun;
                         break;
 
                     // --Fixed meaning Fixed Format
                     case "--fixed":
-                        CompilerOptions.SourceFormat = SourceFormat.Fixed;
+                        CompilerOptions.Format = SourceFormat.Fixed;
                         break;
                     // --Free meaning Free Format
                     case "--free":
-                        CompilerOptions.SourceFormat = SourceFormat.Free;
+                        CompilerOptions.Format = SourceFormat.Free;
                         break;
                 }
             }
 
-            var tokenizedLines = Tokenizer.Tokenize(CompilerOptions.EntryPoint);
+            OtterkitMain();
+        }
+    }
 
-            var classified = Token.ClassifyTokens(tokenizedLines);
+    private static void TryLoadProject()
+    {
+        if (!File.Exists("package.otterproj")) return;
 
-            var analized = Analyzer.Analyze(classified);
+        var otterproj = ProjectLoader.ReadOtterproj("package.otterproj").AwaitResult();
 
-            if (CompilerOptions.BuildMode is BuildType.ParseOnly)
+        if (!ProjectLoader.TryLoadProject(otterproj))
+        {
+            ErrorHandler.StopCompilation("project");
+        }
+    }
+
+    private static void OtterkitMain()
+    {
+        var tokenizedLines = Tokenizer.Tokenize(CompilerOptions.Main);
+
+        var classified = Token.ClassifyTokens(tokenizedLines);
+
+        var analized = Analyzer.Analyze(classified);
+
+        if (CompilerOptions.Mode is BuildType.ParseOnly)
+        {
+            if (!ErrorHandler.HasOccurred) ErrorHandler.SuccessfulParse();
+        }
+
+        if (CompilerOptions.Mode is BuildType.PrintTokens)
+        {
+            var colorToggle = true;
+
+            foreach (var token in analized)
             {
-                if (!ErrorHandler.HasOccurred) ErrorHandler.SuccessfulParse();
-            }
-
-            if (CompilerOptions.BuildMode is BuildType.PrintTokens)
-            {
-                var colorToggle = true;
-
-                foreach (var token in analized)
+                if (colorToggle)
                 {
-                    if (colorToggle)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Gray;
-                    }
-                    else
-                    {
-                        Console.ForegroundColor = ConsoleColor.DarkGray;
-                    }
-
-                    colorToggle = !colorToggle;
-                    Console.WriteLine(token);
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
                 }
 
-                if (!ErrorHandler.HasOccurred) ErrorHandler.SuccessfulParse();
+                colorToggle = !colorToggle;
+                Console.WriteLine(token);
             }
 
-            if (CompilerOptions.BuildMode is BuildType.BuildOnly)
-            {
-                CodeGenerator.Generate(CompilerContext.SourceTokens, CompilerOptions.EntryPoint);
+            if (!ErrorHandler.HasOccurred) ErrorHandler.SuccessfulParse();
+        }
 
-                Directory.CreateDirectory(".otterkit/Build");
-                CallDotnetCompiler("build");
-            }
-            
-            if (CompilerOptions.BuildMode is BuildType.BuildAndRun)
-            {
-                CodeGenerator.Generate(CompilerContext.SourceTokens, CompilerOptions.EntryPoint);
+        if (CompilerOptions.Mode is BuildType.BuildOnly)
+        {
+            CodeGenerator.Generate(CompilerContext.SourceTokens, CompilerOptions.Main);
 
-                Directory.CreateDirectory(".otterkit/Build");
-                CallDotnetCompiler("run");
-            }
+            Directory.CreateDirectory(".otterkit/Build");
+            CallDotnetCompiler("build");
+        }
+        
+        if (CompilerOptions.Mode is BuildType.BuildAndRun)
+        {
+            CodeGenerator.Generate(CompilerContext.SourceTokens, CompilerOptions.Main);
+
+            Directory.CreateDirectory(".otterkit/Build");
+            CallDotnetCompiler("run");
         }
     }
 
@@ -283,7 +289,9 @@ public static class Otterkit
             -r --run            : Use the "Build & Run" build mode
             --fixed             : Use fixed source format
             --free              : Use free source format 
-                                    (-cl has no effect on free format)
+            
+            Notes:
+                --columns has no effect on free format
 
         """;
 

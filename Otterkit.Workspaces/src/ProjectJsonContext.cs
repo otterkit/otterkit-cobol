@@ -2,11 +2,11 @@ using System.Text.Json.Serialization;
 
 namespace Otterkit.Workspaces;
 
-[JsonSerializable(typeof(CobolProject))]
+[JsonSerializable(typeof(Otterproj))]
 [JsonSourceGenerationOptions(
     GenerationMode = JsonSourceGenerationMode.Default,
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, 
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     WriteIndented = true
 )]
-public partial class CobolProjectJsonContext : JsonSerializerContext { }
+public partial class ProjectJsonContext : JsonSerializerContext { }

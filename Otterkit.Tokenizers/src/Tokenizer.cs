@@ -26,7 +26,7 @@ public static partial class Tokenizer
 
         var relativeEntryPoint = Path.GetRelativePath(Workspace, entryPoint);
 
-        CompilerOptions.EntryPoint = relativeEntryPoint;
+        CompilerOptions.Main = relativeEntryPoint;
 
         var allSourceFiles = Directory.EnumerateFiles(Workspace, "*.cob", SearchOption.AllDirectories)
             .Select(static path => Path.GetRelativePath(Workspace, path));

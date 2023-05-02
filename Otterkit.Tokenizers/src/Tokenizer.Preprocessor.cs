@@ -17,50 +17,50 @@ public static partial class Tokenizer
 
         Encoding.UTF8.GetChars(bytes, sourceChars);
 
-        if (!HasDetectedSourceFormat && CompilerOptions.SourceFormat == SourceFormat.Auto)
+        if (!HasDetectedSourceFormat && CompilerOptions.Format == SourceFormat.Auto)
         {
             if (sourceChars.Length >= 15 && sourceChars.Slice(7, 8).StartsWith(">>SOURCE"))
             {
-                CompilerOptions.SourceFormat = SourceFormat.Fixed;
+                CompilerOptions.Format = SourceFormat.Fixed;
                 HasDetectedSourceFormat = true;
             }
 
             if (sourceChars.Length >= 7 && sourceChars[6] is '*' or '-' or '/' or ' ')
             {
-                CompilerOptions.SourceFormat = SourceFormat.Fixed;
+                CompilerOptions.Format = SourceFormat.Fixed;
                 HasDetectedSourceFormat = true;
             }
             else
             {
-                CompilerOptions.SourceFormat = SourceFormat.Free;
+                CompilerOptions.Format = SourceFormat.Free;
                 HasDetectedSourceFormat = true;
             }
 
             if (sourceChars.Slice(0, 7).Trim().StartsWith("*>"))
             {
-                CompilerOptions.SourceFormat = SourceFormat.Free;
+                CompilerOptions.Format = SourceFormat.Free;
                 HasDetectedSourceFormat = true;
             }
 
             if (sourceChars.Slice(0, 7).Trim().StartsWith(">>"))
             {
-                CompilerOptions.SourceFormat = SourceFormat.Free;
+                CompilerOptions.Format = SourceFormat.Free;
                 HasDetectedSourceFormat = true;
             }
 
             if (sourceChars.Trim().Length == 0)
             {
-                CompilerOptions.SourceFormat = SourceFormat.Auto;
+                CompilerOptions.Format = SourceFormat.Auto;
                 HasDetectedSourceFormat = false;
             }
         }
 
-        if (CompilerOptions.SourceFormat == SourceFormat.Fixed || !HasDetectedSourceFormat)
+        if (CompilerOptions.Format == SourceFormat.Fixed || !HasDetectedSourceFormat)
         {
-            if (sourceChars.Length >= CompilerOptions.ColumnLength)
+            if (sourceChars.Length >= CompilerOptions.Columns)
             {
                 // Removes everything after the max column length
-                sourceChars.Slice(CompilerOptions.ColumnLength).Fill(' ');
+                sourceChars.Slice(CompilerOptions.Columns).Fill(' ');
             }
 
             // Removes the sequence number area
@@ -92,7 +92,7 @@ public static partial class Tokenizer
             }
         }
 
-        if (CompilerOptions.SourceFormat == SourceFormat.Free)
+        if (CompilerOptions.Format == SourceFormat.Free)
         {
             int commentIndex = sourceChars.IndexOf("*>");
             if (commentIndex > -1)
@@ -130,12 +130,12 @@ public static partial class Tokenizer
 
             if (CurrentEquals("FREE"))
             {
-                CompilerOptions.SourceFormat = SourceFormat.Free;
+                CompilerOptions.Format = SourceFormat.Free;
             }
 
             if (CurrentEquals("FIXED"))
             {
-                CompilerOptions.SourceFormat = SourceFormat.Fixed;
+                CompilerOptions.Format = SourceFormat.Fixed;
             }
         }
 

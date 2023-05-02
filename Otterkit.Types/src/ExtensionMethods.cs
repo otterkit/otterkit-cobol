@@ -2,6 +2,11 @@ namespace Otterkit.Types;
 
 public static class ExtensionMethods
 {
+    public static T AwaitResult<T>(this ValueTask<T> valueTask)
+    {
+        return valueTask.GetAwaiter().GetResult();
+    }
+
     public static bool IsEmpty<T>(this HashSet<T> hashSet)
     {
         return hashSet.Count == 0;

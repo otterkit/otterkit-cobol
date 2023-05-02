@@ -37,6 +37,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Otterkit.Types/Otterkit.Types.csproj" />
+    <PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
   </ItemGroup>
 
 </Project>

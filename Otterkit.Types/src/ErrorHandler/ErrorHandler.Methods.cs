@@ -131,6 +131,26 @@ public readonly ref partial struct ErrorHandler
         return this;
     }
 
+    public ErrorHandler WithStartingException(string exceptionError)
+    {
+        // Return early, don't display any further messages:
+        if (SuppressedError == ErrorType) return this;
+
+        //   ╭─/> 
+        StartingSeparator('╭', '\n');
+
+        //   │
+        Separator();
+
+        //   │  Exception: {exceptionMessage} 
+        ShowException(ConsoleColor.Red, exceptionError);
+
+        //   │
+        Separator();
+
+        return this;
+    }
+
     public void CloseError()
     {
         // Return early, don't display the closing message:

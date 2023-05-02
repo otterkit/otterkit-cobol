@@ -26,14 +26,14 @@ public readonly ref partial struct ErrorHandler
     private static void StartingSeparator(char joiningChar, char extraChar)
     {
         // ╭
-        ColoredWrite(DarkGray     , $"     {joiningChar}─/> {extraChar}");
+        ColoredWrite(DarkGray, $"     {joiningChar}─/> {extraChar}");
     }
 
     private static void ShowFileInformation(char joiningChar, Token token)
     {
         StartingSeparator(joiningChar, '[');
-        ColoredWrite(ResetColor() , $"{token.FetchFile}:{token.Line}:{token.Column}");
-        ColoredWrite(DarkGray     , "]\n");
+        ColoredWrite(ResetColor()    , $"{token.FetchFile}:{token.Line}:{token.Column}");
+        ColoredWrite(DarkGray        , "]\n");
     }
 
     private static void ShowSourceLine(int lineNumber, string sourceLine)
@@ -45,13 +45,13 @@ public readonly ref partial struct ErrorHandler
     private static void ShowErrorPosition(ConsoleColor errorColor, string errorLine)
     {
         ColoredWrite(DarkGray     , "     │");
-        ColoredWrite(errorColor   ,$"  {errorLine.TrimEnd()}");
+        ColoredWrite(errorColor   , $"  {errorLine.TrimEnd()}");
     }
 
     private static void ShowNotePosition(ConsoleColor errorColor, string errorLine)
     {
         ColoredWrite(DarkGray     , "     │");
-        ColoredWrite(errorColor   ,$"  {errorLine.TrimEnd()}\n");
+        ColoredWrite(errorColor   , $"  {errorLine.TrimEnd()}\n");
     }
 
     private static void ShowErrorHelp(ConsoleColor errorColor, string errorHelp)
@@ -62,9 +62,16 @@ public readonly ref partial struct ErrorHandler
 
     private static void ShowNote(ConsoleColor noteColor, string noteMessage)
     {
-        ColoredWrite(DarkGray     ,  "     │  ");
+        ColoredWrite(DarkGray     , "     │  ");
         ColoredWrite(noteColor    , "Note");
         ColoredWrite(ResetColor() , $": {noteMessage}\n");
+    }
+
+    private static void ShowException(ConsoleColor exceptionColor, string exceptionMessage)
+    {
+        ColoredWrite(DarkGray      , "     │  ");
+        ColoredWrite(exceptionColor, "Exception");
+        ColoredWrite(ResetColor()  , $": {exceptionMessage}\n");
     }
 
     private static (string, string) FetchSourceLine(Token token)

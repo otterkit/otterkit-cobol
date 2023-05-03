@@ -246,7 +246,7 @@ public static class References
         return fullyQualified;
     }
 
-    public static void Identifier(Identifiers allowedTypes = Identifiers.None)
+    public static void Identifier(Identifiers allowed = Identifiers.None)
     {
         // TODO:
         // All Identifiers here need a check from the symbol table.
@@ -268,7 +268,7 @@ public static class References
         if (CurrentEquals("FUNCTION"))
         {
             Expected("FUNCTION");
-            if (!HasFlag(allowedTypes, Identifiers.Function))
+            if (!HasFlag(allowed, Identifiers.Function))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -300,7 +300,7 @@ public static class References
         if (CurrentEquals("EXCEPTION-OBJECT"))
         {
             Expected("EXCEPTION-OBJECT");
-            if (!HasFlag(allowedTypes, Identifiers.ExceptionObject))
+            if (!HasFlag(allowed, Identifiers.ExceptionObject))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -321,7 +321,7 @@ public static class References
         if (CurrentEquals("SELF"))
         {
             Expected("SELF");
-            if (!HasFlag(allowedTypes, Identifiers.Self))
+            if (!HasFlag(allowed, Identifiers.Self))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -342,7 +342,7 @@ public static class References
         if (CurrentEquals("NULL"))
         {
             Expected("NULL");
-            if (!HasFlag(allowedTypes, Identifiers.NullAddress) && !HasFlag(allowedTypes, Identifiers.NullObject))
+            if (!HasFlag(allowed, Identifiers.NullAddress) && !HasFlag(allowed, Identifiers.NullObject))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -364,7 +364,7 @@ public static class References
         {
             Expected("ADDRESS");
             Optional("OF");
-            if (!HasFlag(allowedTypes, Identifiers.DataAddress))
+            if (!HasFlag(allowed, Identifiers.DataAddress))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -388,7 +388,7 @@ public static class References
             Expected("ADDRESS");
             Optional("OF");
             Expected("FUNCTION");
-            if (!HasFlag(allowedTypes, Identifiers.FunctionAddress))
+            if (!HasFlag(allowed, Identifiers.FunctionAddress))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -420,7 +420,7 @@ public static class References
             Expected("ADDRESS");
             Optional("OF");
             Expected("PROGRAM");
-            if (!HasFlag(allowedTypes, Identifiers.ProgramAddress))
+            if (!HasFlag(allowed, Identifiers.ProgramAddress))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -451,7 +451,7 @@ public static class References
         {
             Expected("LINAGE-COUNTER");
             Choice("IN", "OF");
-            if (!HasFlag(allowedTypes, Identifiers.LinageCounter))
+            if (!HasFlag(allowed, Identifiers.LinageCounter))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -477,7 +477,7 @@ public static class References
             Choice("PAGE-COUNTER", "LINE-COUNTER");
             Choice("IN", "OF");
 
-            if (!HasFlag(allowedTypes, Identifiers.ReportCounter))
+            if (!HasFlag(allowed, Identifiers.ReportCounter))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, $"""
@@ -508,7 +508,7 @@ public static class References
             Continue();
             Expected("AS");
 
-            if (!HasFlag(allowedTypes, Identifiers.ObjectView))
+            if (!HasFlag(allowed, Identifiers.ObjectView))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """
@@ -551,7 +551,7 @@ public static class References
         {
 
 
-            if (!HasFlag(allowedTypes, Identifiers.MethodInvocation))
+            if (!HasFlag(allowed, Identifiers.MethodInvocation))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 15, """

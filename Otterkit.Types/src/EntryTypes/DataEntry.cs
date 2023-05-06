@@ -10,8 +10,11 @@ public partial class DataEntry
     public EntryKind EntryKind;
 
     public ActiveScope Section;
-    public Usages Usage;
     public int LevelNumber;
+
+    public Classes Class;
+    public Categories Category;
+    public Usages Usage;
 
     public bool IsGroup;
     public bool IsConstant;

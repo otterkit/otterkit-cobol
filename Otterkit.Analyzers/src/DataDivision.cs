@@ -297,7 +297,7 @@ public static partial class DataDivision
             References.Identifier();
         }
 
-        DataEntry dataLocal = new(itemToken, EntryType.ReportGroupDescription);
+        DataEntry dataLocal = new(itemToken, EntryKind.ReportGroupDescription);
 
         dataLocal.LevelNumber = levelNumber;
         dataLocal.Section = CompilerContext.ActiveScope;
@@ -380,7 +380,7 @@ public static partial class DataDivision
 
         References.Identifier();
 
-        DataEntry fileLocal = new(itemToken, EntryType.FileDescription);
+        DataEntry fileLocal = new(itemToken, EntryKind.FileDescription);
 
         fileLocal.Section = CompilerContext.ActiveScope;
 
@@ -503,7 +503,7 @@ public static partial class DataDivision
             References.Name(Names.Data, false);
         }
 
-        DataEntry dataLocal = new(itemToken, EntryType.DataDescription);
+        DataEntry dataLocal = new(itemToken, EntryKind.DataDescription);
 
         dataLocal.LevelNumber = levelNumber;
         dataLocal.Section = CompilerContext.ActiveScope;
@@ -603,7 +603,7 @@ public static partial class DataDivision
 
         References.Identifier();
 
-        DataEntry dataLocal = new(itemToken, EntryType.DataDescription);
+        DataEntry dataLocal = new(itemToken, EntryKind.DataDescription);
 
         dataLocal.LevelNumber = levelNumber;
         dataLocal.Section = CompilerContext.ActiveScope;
@@ -714,7 +714,7 @@ public static partial class DataDivision
             References.Identifier();
         }
 
-        DataEntry screenLocal = new(itemToken, EntryType.ScreenDescription);
+        DataEntry screenLocal = new(itemToken, EntryKind.ScreenDescription);
 
         screenLocal.LevelNumber = levelNumber;
         screenLocal.Section = CompilerContext.ActiveScope;
@@ -953,7 +953,7 @@ public static partial class DataDivision
 
             References.Identifier();
 
-            DataEntry dataLocal = new(itemToken, EntryType.DataDescription);
+            DataEntry dataLocal = new(itemToken, EntryKind.DataDescription);
 
             dataLocal.Parent = parent;
             dataLocal.LevelNumber = 88;

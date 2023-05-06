@@ -7,7 +7,7 @@ public partial class DataEntry
     public Option<DataEntry> Parent;
     public Option<Token> Identifier;
     public Option<string> ExternalizedName;
-    public EntryType EntryType;
+    public EntryKind EntryKind;
 
     public ActiveScope Section;
     public UsageType Usage;
@@ -19,10 +19,10 @@ public partial class DataEntry
     private ulong ClauseBitField;
     public int ClauseDeclaration;
 
-    public DataEntry(Token identifier, EntryType entryType) 
+    public DataEntry(Token identifier, EntryKind entryType) 
     {
         Identifier = identifier;
-        EntryType = entryType;
+        EntryKind = entryType;
     }
 
     public bool this[DataClause clauseName]

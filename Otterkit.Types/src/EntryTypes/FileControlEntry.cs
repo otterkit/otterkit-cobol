@@ -5,7 +5,7 @@ namespace Otterkit;
 public class FileControlEntry
 {
     public Option<Token> Identifier;
-    public EntryType EntryType;
+    public EntryKind EntryType;
     public Option<string> ExternalizedName;
 
     public ActiveScope Section;
@@ -13,7 +13,7 @@ public class FileControlEntry
     public bool HasUsing;
     public Option<string> Organization;
 
-    public FileControlEntry(Token identifier, EntryType entryType, bool hasUsing) 
+    public FileControlEntry(Token identifier, EntryKind entryType, bool hasUsing) 
     {
         Identifier = identifier;
         EntryType = entryType;

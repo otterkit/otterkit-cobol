@@ -2552,7 +2552,7 @@ public static class Statements
         if (CurrentEquals(TokenType.Identifier) || CurrentEquals("SIZE", "ADDRESS"))
         {
             // TODO: This needs to be fixed to lookup a qualified reference
-            DataEntry dataItem = new(Current(), EntryType.DataDescription);
+            DataEntry dataItem = new(Current(), EntryKind.DataDescription);
 
             if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "UP", "DOWN", "TO"))
             {

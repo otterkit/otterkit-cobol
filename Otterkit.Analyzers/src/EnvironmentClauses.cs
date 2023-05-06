@@ -373,7 +373,7 @@ public static partial class EnvironmentDivision
         {
             Expected("USING");
 
-            fileControl = new(fileToken, EntryType.FileControl, true);
+            fileControl = new(fileToken, EntryKind.FileControl, true);
 
             fileControl.Assign.Add(Current());
             References.Identifier();
@@ -381,7 +381,7 @@ public static partial class EnvironmentDivision
         else
         {
             Optional("TO");
-            fileControl = new(fileToken, EntryType.FileControl, false);
+            fileControl = new(fileToken, EntryKind.FileControl, false);
 
             fileControl.Assign.Add(Current());
             Common.IdentifierOrLiteral(TokenType.String);

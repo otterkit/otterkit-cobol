@@ -1,6 +1,6 @@
 namespace Otterkit.Types;
 
-public enum EntryType
+public enum EntryKind
 {
     None,
     FileControl,

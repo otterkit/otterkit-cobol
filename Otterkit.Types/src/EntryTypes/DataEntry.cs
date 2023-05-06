@@ -10,7 +10,7 @@ public partial class DataEntry
     public EntryKind EntryKind;
 
     public ActiveScope Section;
-    public UsageType Usage;
+    public Usages Usage;
     public int LevelNumber;
 
     public bool IsGroup;

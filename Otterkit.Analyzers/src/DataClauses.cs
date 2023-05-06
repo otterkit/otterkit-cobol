@@ -1402,7 +1402,7 @@ public static partial class DataDivision
         {
             Expected("BINARY");
 
-            entryLocal.Usage = UsageType.Binary;
+            entryLocal.Usage = Usages.Binary;
             return;
         }
 
@@ -1425,7 +1425,7 @@ public static partial class DataDivision
         {
             Expected("BIT");
 
-            entryLocal.Usage = UsageType.Bit;
+            entryLocal.Usage = Usages.Bit;
             return; 
         }
 
@@ -1433,7 +1433,7 @@ public static partial class DataDivision
         {
             Expected(Current().Value);
 
-            entryLocal.Usage = UsageType.Computational;
+            entryLocal.Usage = Usages.Computational;
             return;
         }
 
@@ -1441,7 +1441,7 @@ public static partial class DataDivision
         {
             Expected("DISPLAY");
 
-            entryLocal.Usage = UsageType.Display;
+            entryLocal.Usage = Usages.Display;
             return; 
         }
 
@@ -1450,7 +1450,7 @@ public static partial class DataDivision
             Expected("FLOAT-BINARY-32");
             Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
             
-            entryLocal.Usage = UsageType.FloatBinary32;
+            entryLocal.Usage = Usages.FloatBinary32;
             return; 
         }
 
@@ -1459,7 +1459,7 @@ public static partial class DataDivision
             Expected("FLOAT-BINARY-64");
             Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
             
-            entryLocal.Usage = UsageType.FloatBinary64;
+            entryLocal.Usage = Usages.FloatBinary64;
             return; 
         }
 
@@ -1468,7 +1468,7 @@ public static partial class DataDivision
             Expected("FLOAT-BINARY-128");
             Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
             
-            entryLocal.Usage = UsageType.FloatBinary128;
+            entryLocal.Usage = Usages.FloatBinary128;
             return; 
         }
 
@@ -1477,7 +1477,7 @@ public static partial class DataDivision
             Expected("FLOAT-DECIMAL-16");
             Common.EncodingEndianness();
             
-            entryLocal.Usage = UsageType.FloatDecimal16;
+            entryLocal.Usage = Usages.FloatDecimal16;
             return; 
         }
 
@@ -1486,7 +1486,7 @@ public static partial class DataDivision
             Expected("FLOAT-DECIMAL-32");
             Common.EncodingEndianness();
             
-            entryLocal.Usage = UsageType.FloatDecimal32;
+            entryLocal.Usage = Usages.FloatDecimal32;
             return; 
         }
 
@@ -1494,7 +1494,7 @@ public static partial class DataDivision
         {
             Expected("FLOAT-EXTENDED");
             
-            entryLocal.Usage = UsageType.FloatExtended;
+            entryLocal.Usage = Usages.FloatExtended;
             return; 
         }
 
@@ -1502,7 +1502,7 @@ public static partial class DataDivision
         {
             Expected("FLOAT-LONG");
             
-            entryLocal.Usage = UsageType.FloatLong;
+            entryLocal.Usage = Usages.FloatLong;
             return; 
         }
 
@@ -1510,7 +1510,7 @@ public static partial class DataDivision
         {
             Expected("FLOAT-SHORT");
             
-            entryLocal.Usage = UsageType.FloatShort;
+            entryLocal.Usage = Usages.FloatShort;
             return; 
         }
 
@@ -1518,7 +1518,7 @@ public static partial class DataDivision
         {
             Expected("INDEX");
             
-            entryLocal.Usage = UsageType.Index;
+            entryLocal.Usage = Usages.Index;
             return; 
         }
 
@@ -1526,7 +1526,7 @@ public static partial class DataDivision
         {
             Expected("MESSAGE-TAG");
             
-            entryLocal.Usage = UsageType.MessageTag;
+            entryLocal.Usage = Usages.MessageTag;
             return; 
         }
 
@@ -1534,7 +1534,7 @@ public static partial class DataDivision
         {
             Expected("NATIONAL");
             
-            entryLocal.Usage = UsageType.National;
+            entryLocal.Usage = Usages.National;
             return; 
         }
 
@@ -1571,7 +1571,7 @@ public static partial class DataDivision
                 // isStronglyTyped = true
             }
 
-            entryLocal.Usage = UsageType.ObjectReference;
+            entryLocal.Usage = Usages.ObjectReference;
             return; 
         }
 
@@ -1585,7 +1585,7 @@ public static partial class DataDivision
                 References.Identifier();
             }
 
-            entryLocal.Usage = UsageType.DataPointer;
+            entryLocal.Usage = Usages.DataPointer;
             return; 
         }
 
@@ -1596,7 +1596,7 @@ public static partial class DataDivision
             
             References.Identifier();
 
-            entryLocal.Usage = UsageType.FunctionPointer;
+            entryLocal.Usage = Usages.FunctionPointer;
             return; 
         }
 
@@ -1611,7 +1611,7 @@ public static partial class DataDivision
                 References.Identifier();
             }
             
-            entryLocal.Usage = UsageType.ProgramPointer;
+            entryLocal.Usage = Usages.ProgramPointer;
             return; 
         }
 

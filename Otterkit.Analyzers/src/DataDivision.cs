@@ -852,19 +852,19 @@ public static partial class DataDivision
 
         bool usageCannotHavePicture = dataItem.Usage switch
         {
-            UsageType.BinaryChar => true,
-            UsageType.BinaryDouble => true,
-            UsageType.BinaryLong => true,
-            UsageType.BinaryShort => true,
-            UsageType.FloatShort => true,
-            UsageType.FloatLong => true,
-            UsageType.FloatExtended => true,
-            UsageType.Index => true,
-            UsageType.MessageTag => true,
-            UsageType.ObjectReference => true,
-            UsageType.DataPointer => true,
-            UsageType.FunctionPointer => true,
-            UsageType.ProgramPointer => true,
+            Usages.BinaryChar => true,
+            Usages.BinaryDouble => true,
+            Usages.BinaryLong => true,
+            Usages.BinaryShort => true,
+            Usages.FloatShort => true,
+            Usages.FloatLong => true,
+            Usages.FloatExtended => true,
+            Usages.Index => true,
+            Usages.MessageTag => true,
+            Usages.ObjectReference => true,
+            Usages.DataPointer => true,
+            Usages.FunctionPointer => true,
+            Usages.ProgramPointer => true,
             _ => false
         };
 
@@ -918,12 +918,12 @@ public static partial class DataDivision
 
         bool usageCannotHaveValue = dataItem.Usage switch
         {
-            UsageType.Index => true,
-            UsageType.MessageTag => true,
-            UsageType.ObjectReference => true,
-            UsageType.DataPointer => true,
-            UsageType.FunctionPointer => true,
-            UsageType.ProgramPointer => true,
+            Usages.Index => true,
+            Usages.MessageTag => true,
+            Usages.ObjectReference => true,
+            Usages.DataPointer => true,
+            Usages.FunctionPointer => true,
+            Usages.ProgramPointer => true,
             _ => false
         };
 

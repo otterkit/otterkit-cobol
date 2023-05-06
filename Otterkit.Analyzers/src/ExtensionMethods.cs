@@ -4,34 +4,34 @@ namespace Otterkit.Analyzers;
 
 public static class ExtensionMethods
 {
-    public static string Display(this UsageType usage)
+    public static string Display(this Usages usage)
     {
         return usage switch
         {
-            UsageType.Binary => "BINARY",
-            UsageType.BinaryChar => "BINARY-CHAR",
-            UsageType.BinaryShort => "BINARY-SHORT",
-            UsageType.BinaryLong => "BINARY-LONG",
-            UsageType.BinaryDouble => "BINARY-DOUBLE",
-            UsageType.Bit => "BIT",
-            UsageType.Computational => "COMPUTATIONAL",
-            UsageType.Display => "DISPLAY",
-            UsageType.FloatBinary32 => "FLOAT-BINARY-32",
-            UsageType.FloatBinary64 => "FLOAT-BINARY-64",
-            UsageType.FloatBinary128 => "FLOAT-BINARY-128",
-            UsageType.FloatDecimal16 => "FLOAT-DECIMAL-16",
-            UsageType.FloatDecimal32 => "FLOAT-DECIMAL-32",
-            UsageType.FloatExtended => "FLOAT-EXTENDED",
-            UsageType.FloatLong => "FLOAT-LONG",
-            UsageType.FloatShort => "FLOAT-SHORT",
-            UsageType.Index => "INDEX",
-            UsageType.MessageTag => "MESSAGE-TAG",
-            UsageType.National => "NATIONAL",
-            UsageType.ObjectReference => "OBJECT REFERENCE",
-            UsageType.PackedDecimal => "PACKED-DECIMAL",
-            UsageType.DataPointer => "POINTER",
-            UsageType.FunctionPointer => "FUNCTION-POINTER",
-            UsageType.ProgramPointer => "PROGRAM-POINTER",
+            Usages.Binary => "BINARY",
+            Usages.BinaryChar => "BINARY-CHAR",
+            Usages.BinaryShort => "BINARY-SHORT",
+            Usages.BinaryLong => "BINARY-LONG",
+            Usages.BinaryDouble => "BINARY-DOUBLE",
+            Usages.Bit => "BIT",
+            Usages.Computational => "COMPUTATIONAL",
+            Usages.Display => "DISPLAY",
+            Usages.FloatBinary32 => "FLOAT-BINARY-32",
+            Usages.FloatBinary64 => "FLOAT-BINARY-64",
+            Usages.FloatBinary128 => "FLOAT-BINARY-128",
+            Usages.FloatDecimal16 => "FLOAT-DECIMAL-16",
+            Usages.FloatDecimal32 => "FLOAT-DECIMAL-32",
+            Usages.FloatExtended => "FLOAT-EXTENDED",
+            Usages.FloatLong => "FLOAT-LONG",
+            Usages.FloatShort => "FLOAT-SHORT",
+            Usages.Index => "INDEX",
+            Usages.MessageTag => "MESSAGE-TAG",
+            Usages.National => "NATIONAL",
+            Usages.ObjectReference => "OBJECT REFERENCE",
+            Usages.PackedDecimal => "PACKED-DECIMAL",
+            Usages.DataPointer => "POINTER",
+            Usages.FunctionPointer => "FUNCTION-POINTER",
+            Usages.ProgramPointer => "PROGRAM-POINTER",
             _ => "NONE"
         };
     }

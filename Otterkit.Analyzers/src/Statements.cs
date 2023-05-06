@@ -2588,7 +2588,7 @@ public static class Statements
                 Expected("LOCALE");
                 Choice("LC_ALL", "LOCALE");
             }
-            else if (dataItem.Usage == UsageType.MessageTag)
+            else if (dataItem.Usage == Usages.MessageTag)
             {
                 References.Identifier();
                 Expected("TO");
@@ -2620,7 +2620,7 @@ public static class Statements
                     Common.Arithmetic();
                 }
             }
-            else if (dataItem.Usage == UsageType.DataPointer || CurrentEquals("ADDRESS"))
+            else if (dataItem.Usage == Usages.DataPointer || CurrentEquals("ADDRESS"))
             {
                 bool hasAddress = false;
 
@@ -2663,7 +2663,7 @@ public static class Statements
                     Common.Arithmetic();
                 }
             }
-            else if (dataItem.Usage is UsageType.Index)
+            else if (dataItem.Usage is Usages.Index)
             {
 
                 References.Identifier();

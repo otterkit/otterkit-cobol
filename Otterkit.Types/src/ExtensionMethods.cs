@@ -12,11 +12,21 @@ public static class ExtensionMethods
         return hashSet.Count == 0;
     }
 
-    public static bool ContainsAny<T>(this HashSet<T> hashSet, params T[] TArray)
+    public static bool IsOneOf(this char value, ReadOnlySpan<char> span)
     {
-        foreach (var TItem in TArray)
+        foreach (var item in span)
         {
-            if (hashSet.Contains(TItem)) return true;
+            if (value == item) return true;
+        }
+
+        return false;
+    }
+
+    public static bool ContainsAny<T>(this HashSet<T> hashSet, ReadOnlySpan<T> span)
+    {
+        foreach (var item in span)
+        {
+            if (hashSet.Contains(item)) return true;
         }
 
         return false;

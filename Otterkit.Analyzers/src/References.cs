@@ -92,7 +92,7 @@ public static class References
         return qualified;
     }
 
-    public static Unique<Token> Name(Names types, bool shouldResolve = true)
+    public static Unique<Token> Name()
     {
         if (CurrentEquals(TokenType.EOF))
         {
@@ -126,7 +126,7 @@ public static class References
 
         var nameToken = Current();
 
-        if (!IsResolutionPass || !shouldResolve)
+        if (!IsResolutionPass)
         {
             Continue();
             return null;
@@ -155,23 +155,23 @@ public static class References
         return (nameToken, isUnique);
     }
 
-    public static Unique<Token> Qualified(Names types, TokenContext anchorPoint = TokenContext.IsStatement)
+    public static Unique<Token> Qualified(TokenContext anchorPoint = TokenContext.IsStatement)
     {
         if (!IsResolutionPass)
         {
-            Name(types, false);
+            Name();
 
             while (CurrentEquals("IN", "OF"))
             {
                 Choice("IN", "OF");
 
-                Name(types, false);
+                Name();
             }
 
             return null;
         }
 
-        var name = Name(types);
+        var name = Name();
 
         if (!name.Exists)
         {
@@ -202,7 +202,7 @@ public static class References
         {
             Choice("IN", "OF");
 
-            var parent = Name(types);
+            var parent = Name();
 
             if (!parent.Exists) continue;
 
@@ -244,6 +244,21 @@ public static class References
         Qualification.Clear();
 
         return fullyQualified;
+    }
+
+    public static DataEntry FetchDataEntry(Token qualifiedToken)
+    {
+        var entries = ActiveData.EntriesList(qualifiedToken);
+
+        foreach (var entry in entries)
+        {
+            if (entry.Identifier == qualifiedToken)
+            {
+                return entry;
+            }
+        }
+
+        throw new ArgumentException("Token was not qualified. Could not resolve data item", nameof(qualifiedToken));
     }
 
     public static void Identifier(Identifiers allowed = Identifiers.None)

@@ -65,6 +65,9 @@ public static class ProcedureDivision
     // This method is part of the PROCEDURE DIVISION parsing. It's used to parse the "RETURNING" data item specified in
     // the PROCEDURE DIVISION header. It's separate from the previous method because its code is needed more than once.
     // COBOL user-defined functions should always return a data item.
+
+    private static HashSet<string> usedDataNames = new();
+
     private static void Using()
     {
         while (CurrentEquals("BY", "REFERENCE", "VALUE") || CurrentEquals(TokenType.Identifier))
@@ -174,6 +177,123 @@ public static class ProcedureDivision
             .CloseError();
             return;
         }
+
+        HandleReturningItem();
+    }
+
+    private static void HandleReturningItem()
+    {
+        var dataName = References.Name();
+
+        // Don't resolve if it's not a resolution pass.
+        if (!CompilerContext.IsResolutionPass) return;
+
+        // Error has been handled in the above Name() call.
+        if (!dataName.Exists) return;
+
+        var dataToken = dataName.Unwrap();
+
+        // Uniqueness has not been handled above, 
+        // so we handle it here.
+        if (!dataName.IsUnique && !CurrentEquals("IN", "OF"))
+        {
+            ErrorHandler
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
+                Reference to non-unique identifier.
+                """)
+            .WithSourceLine(dataToken, $"""
+                Must have a unique name.
+                """)
+            .WithNote("""
+                It must be a unique 77 or 01 level item.
+                """)
+            .CloseError();
+            return;
+        }
+
+        // COBOL standard requirement, data-name doesn't have
+        // a name qualification syntax. Only identifiers do.
+        if (CurrentEquals("IN", "OF"))
+        {
+            ErrorHandler
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 1200, """
+                Name qualification prohibited.
+                """)
+            .WithSourceLine(dataToken, $"""
+                Must not require qualification.
+                """)
+            .WithNote("""
+                It must be a unique 77 or 01 level item.
+                """)
+            .CloseError();
+
+            AnchorPoint(TokenContext.IsStatement, "RAISING");
+            return;
+        }
+
+        // COBOL standard requirement, data-name used for
+        // the returning item must not be the same of a parameter.
+        if (usedDataNames.Contains(dataToken.Value))
+        {
+            ErrorHandler
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 1210, """
+                Name conflict with a formal parameter.
+                """)
+            .WithSourceLine(dataToken, $"""
+                Must not be the same as a parameter name.
+                """)
+            .CloseError();
+            return;
+        }
+
+        var dataItem = References.FetchDataEntry(dataToken);
+
+        // COBOL standard requirement, all parameters and returning items
+        // must be defined in the linkage section only.
+        if (dataItem.Section is not ActiveScope.LinkageSection)
+        {
+            ErrorHandler
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 2050, """
+                Invalid returning item definition.
+                """)
+            .WithSourceLine(dataToken, $"""
+                Must be defined in the linkage section.
+                """)
+            .WithNote("""
+                Parameters must also be defined in the linkage section.
+                """)
+            .CloseError();
+        }
+
+        // COBOL standard requirement, must be 01 or 77.
+        if (dataItem.LevelNumber is not (1 or 77))
+        {
+            ErrorHandler
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 2050, """
+                Invalid returning item level number.
+                """)
+            .WithSourceLine(dataToken, $"""
+                Must be a 77 or 01 level item.
+                """)
+            .CloseError();
+        }
+        
+        // COBOL standard requirement, must not contain a BASED or REDEFINES clause.
+        if (dataItem[DataClause.Based] || dataItem[DataClause.Redefines])
+        {
+            ErrorHandler
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 2050, """
+                Invalid returning item clauses.
+                """)
+            .WithSourceLine(dataToken, $"""
+                Must not contain a BASED or REDEFINES clause.
+                """)
+            .CloseError();
+        }
+
+        var activeCallable = CompilerContext.ActiveCallable;
+
+        activeCallable.Returning = dataItem;
     }
 
     private static void ProcedureBody()

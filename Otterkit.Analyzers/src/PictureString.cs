@@ -214,4 +214,9 @@ public static partial class DataDivision
 
         return (Classes.Invalid, Categories.Invalid);
     }
+
+    private static void ResetSymbols()
+    {
+        SymbolsUsed.Clear();
+    }
 }

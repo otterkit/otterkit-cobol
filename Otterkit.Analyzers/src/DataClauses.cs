@@ -1363,6 +1363,8 @@ public static partial class DataDivision
 
         (entry.Class, entry.Category) = PictureType(valid);
 
+        ResetSymbols();
+
         Continue();
     }
 

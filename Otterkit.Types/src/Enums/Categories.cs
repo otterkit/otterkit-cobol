@@ -3,7 +3,7 @@ namespace Otterkit.Types;
 [Flags]
 public enum Categories
 {
-    Error,
+    Invalid,
     Alphabetic,
     Alphanumeric            = 1 << 1,
     AlphanumericEdited      = 1 << 2,

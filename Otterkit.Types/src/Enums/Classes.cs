@@ -3,7 +3,7 @@ namespace Otterkit.Types;
 [Flags]
 public enum Classes
 {
-    Error,
+    Invalid,
     Alphabetic,
     Alphanumeric    = 1 << 1,
     Boolean         = 1 << 2,

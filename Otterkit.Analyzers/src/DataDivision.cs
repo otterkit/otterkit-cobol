@@ -500,7 +500,7 @@ public static partial class DataDivision
         }
         else if (CurrentEquals(TokenType.Identifier))
         {
-            References.Name(Names.Data, false);
+            References.Name();
         }
 
         DataEntry dataLocal = new(itemToken, EntryKind.DataDescription);

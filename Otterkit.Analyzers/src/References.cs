@@ -92,7 +92,7 @@ public static class References
         return qualified;
     }
 
-    public static Unique<Token> Name()
+    public static Unique<Token> Name(bool shouldResolve = true)
     {
         if (CurrentEquals(TokenType.EOF))
         {
@@ -126,7 +126,7 @@ public static class References
 
         var nameToken = Current();
 
-        if (!IsResolutionPass)
+        if (!IsResolutionPass || !shouldResolve)
         {
             Continue();
             return null;

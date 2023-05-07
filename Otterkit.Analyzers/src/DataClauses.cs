@@ -81,7 +81,7 @@ public static partial class DataDivision
         }
     }
 
-    private static void DataEntryClauses(DataEntry dataLocal)
+    private static void DataEntryClauses(DataEntry entry)
     {
         if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL", "TYPEDEF"))
         {
@@ -90,102 +90,106 @@ public static partial class DataDivision
 
         if ((CurrentEquals("IS") && LookaheadEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
         {
-            ExternalClause(dataLocal);
+            ExternalClause(entry);
         }
 
         if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
         {
-            GlobalClause(dataLocal);
+            GlobalClause(entry);
         }
 
         if ((CurrentEquals("IS") && LookaheadEquals(1, "TYPEDEF")) || CurrentEquals("TYPEDEF"))
         {
-            TypedefClause(dataLocal);
+            TypedefClause(entry);
         }
 
         if (CurrentEquals("REDEFINES"))
         {
-            RedefinesClause(dataLocal);
+            RedefinesClause(entry);
         }
 
         if (CurrentEquals("ALIGNED"))
         {
-            AlignedClause(dataLocal);
+            AlignedClause(entry);
         }
 
         if (CurrentEquals("ANY") && LookaheadEquals(1, "LENGTH"))
         {
-            AnyLengthClause(dataLocal);
+            AnyLengthClause(entry);
         }
 
         if (CurrentEquals("BASED"))
         {
-            BasedClause(dataLocal);
+            BasedClause(entry);
         }
 
         if (CurrentEquals("BLANK"))
         {
-            BlankWhenClause(dataLocal);
+            BlankWhenClause(entry);
         }
 
         if (CurrentEquals("CONSTANT") && LookaheadEquals(1, "RECORD"))
         {
-            ConstantRecordClause(dataLocal);
+            ConstantRecordClause(entry);
         }
 
         if (CurrentEquals("DYNAMIC"))
         {
-            DynamicClause(dataLocal);
+            DynamicClause(entry);
         }
 
         if (CurrentEquals("GROUP-USAGE"))
         {
-            GroupUsageClause(dataLocal);
+            GroupUsageClause(entry);
         }
 
         if (CurrentEquals("JUSTIFIED", "JUST"))
         {
-            JustifiedClause(dataLocal);
+            JustifiedClause(entry);
         }
 
         if (CurrentEquals("SYNCHRONIZED", "SYNC"))
         {
-            SynchronizedClause(dataLocal);
+            SynchronizedClause(entry);
         }
 
         if (CurrentEquals("PROPERTY"))
         {
-            PropertyClause(dataLocal);
+            PropertyClause(entry);
         }
 
         if (CurrentEquals("SAME"))
         {
-            SameAsClause(dataLocal);
+            SameAsClause(entry);
         }
 
         if (CurrentEquals("TYPE"))
         {
-            TypeClause(dataLocal);
+            TypeClause(entry);
         }
 
         if (CurrentEquals("OCCURS"))
         {
-            OccursClause(dataLocal);
+            OccursClause(entry);
         }
 
         if (CurrentEquals("PIC", "PICTURE"))
         {
-            PictureClause(dataLocal);
+            PictureClause(entry);
         }
 
         if (CurrentEquals("VALUE"))
         {
-            ValueClause(dataLocal);
+            ValueClause(entry);
         }
 
         if (CurrentEquals("USAGE"))
         {
-            UsageClause(dataLocal);
+            UsageClause(entry);
+
+            ClassifyUsage(entry);
+
+            CategorizeUsage(entry);
         }
     }
 
@@ -627,26 +631,26 @@ public static partial class DataDivision
         }
     }
 
-    private static void ScreenEntryClauses(DataEntry screenLocal)
+    private static void ScreenEntryClauses(DataEntry screen)
     {
         if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
         {
-            GlobalClause(screenLocal);
+            GlobalClause(screen);
         }
 
         if (CurrentEquals("LINE"))
         {
-            LineClause(screenLocal);
+            LineClause(screen);
         }
 
         if (CurrentEquals("COLUMN", "COL"))
         {
-            ColumnClause(screenLocal);
+            ColumnClause(screen);
         }
 
         if (CurrentEquals("PICTURE", "PIC"))
         {
-            PictureClause(screenLocal);
+            PictureClause(screen);
         }
 
         if (CurrentEquals("BLANK") && LookaheadEquals(1, "SCREEN", "LINE"))
@@ -657,17 +661,17 @@ public static partial class DataDivision
 
         if (CurrentEquals("BLANK") && !LookaheadEquals(1, "SCREEN", "LINE"))
         {
-            BlankWhenClause(screenLocal);
+            BlankWhenClause(screen);
         }
 
         if (CurrentEquals("JUSTIFIED", "JUST"))
         {
-            JustifiedClause(screenLocal);
+            JustifiedClause(screen);
         }
 
         if (CurrentEquals("SIGN"))
         {
-            SignClause(screenLocal);
+            SignClause(screen);
         }
 
         if (CurrentEquals("FULL"))
@@ -754,7 +758,7 @@ public static partial class DataDivision
             Choice("DISPLAY", "NATIONAL");
         }
 
-        ScreenValueClause(screenLocal);
+        ScreenValueClause(screen);
     }
 
     private static void LinageClause(DataEntry fileLocal)
@@ -1348,16 +1352,16 @@ public static partial class DataDivision
         }
     }
 
-    private static void PictureClause(DataEntry entryLocal)
+    private static void PictureClause(DataEntry entry)
     {
         Choice("PIC", "PICTURE");
         Optional("IS");
 
-        var picture = Current();
+        entry[DataClause.Picture] = true;
 
-        var isValidPicture = PictureString(picture.Value, out var size);
+        var valid = ParsePictureString(Current().Value);
 
-        entryLocal[DataClause.Picture] = true;
+        (entry.Class, entry.Category) = PictureType(valid);
 
         Continue();
     }
@@ -1391,18 +1395,18 @@ public static partial class DataDivision
         }
     }
 
-    private static void UsageClause(DataEntry entryLocal)
+    private static void UsageClause(DataEntry entry)
     {
         Expected("USAGE");
         Optional("IS");
 
-        entryLocal[DataClause.Usage] = true;
+        entry[DataClause.Usage] = true;
 
         if (CurrentEquals("BINARY"))
         {
             Expected("BINARY");
 
-            entryLocal.Usage = Usages.Binary;
+            entry.Usage = Usages.Binary;
             return;
         }
 
@@ -1425,7 +1429,7 @@ public static partial class DataDivision
         {
             Expected("BIT");
 
-            entryLocal.Usage = Usages.Bit;
+            entry.Usage = Usages.Bit;
             return; 
         }
 
@@ -1433,7 +1437,7 @@ public static partial class DataDivision
         {
             Expected(Current().Value);
 
-            entryLocal.Usage = Usages.Computational;
+            entry.Usage = Usages.Computational;
             return;
         }
 
@@ -1441,7 +1445,7 @@ public static partial class DataDivision
         {
             Expected("DISPLAY");
 
-            entryLocal.Usage = Usages.Display;
+            entry.Usage = Usages.Display;
             return; 
         }
 
@@ -1450,7 +1454,7 @@ public static partial class DataDivision
             Expected("FLOAT-BINARY-32");
             Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
             
-            entryLocal.Usage = Usages.FloatBinary32;
+            entry.Usage = Usages.FloatBinary32;
             return; 
         }
 
@@ -1459,7 +1463,7 @@ public static partial class DataDivision
             Expected("FLOAT-BINARY-64");
             Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
             
-            entryLocal.Usage = Usages.FloatBinary64;
+            entry.Usage = Usages.FloatBinary64;
             return; 
         }
 
@@ -1468,7 +1472,7 @@ public static partial class DataDivision
             Expected("FLOAT-BINARY-128");
             Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
             
-            entryLocal.Usage = Usages.FloatBinary128;
+            entry.Usage = Usages.FloatBinary128;
             return; 
         }
 
@@ -1477,7 +1481,7 @@ public static partial class DataDivision
             Expected("FLOAT-DECIMAL-16");
             Common.EncodingEndianness();
             
-            entryLocal.Usage = Usages.FloatDecimal16;
+            entry.Usage = Usages.FloatDecimal16;
             return; 
         }
 
@@ -1486,7 +1490,7 @@ public static partial class DataDivision
             Expected("FLOAT-DECIMAL-32");
             Common.EncodingEndianness();
             
-            entryLocal.Usage = Usages.FloatDecimal32;
+            entry.Usage = Usages.FloatDecimal32;
             return; 
         }
 
@@ -1494,7 +1498,7 @@ public static partial class DataDivision
         {
             Expected("FLOAT-EXTENDED");
             
-            entryLocal.Usage = Usages.FloatExtended;
+            entry.Usage = Usages.FloatExtended;
             return; 
         }
 
@@ -1502,7 +1506,7 @@ public static partial class DataDivision
         {
             Expected("FLOAT-LONG");
             
-            entryLocal.Usage = Usages.FloatLong;
+            entry.Usage = Usages.FloatLong;
             return; 
         }
 
@@ -1510,7 +1514,7 @@ public static partial class DataDivision
         {
             Expected("FLOAT-SHORT");
             
-            entryLocal.Usage = Usages.FloatShort;
+            entry.Usage = Usages.FloatShort;
             return; 
         }
 
@@ -1518,7 +1522,7 @@ public static partial class DataDivision
         {
             Expected("INDEX");
             
-            entryLocal.Usage = Usages.Index;
+            entry.Usage = Usages.Index;
             return; 
         }
 
@@ -1526,7 +1530,7 @@ public static partial class DataDivision
         {
             Expected("MESSAGE-TAG");
             
-            entryLocal.Usage = Usages.MessageTag;
+            entry.Usage = Usages.MessageTag;
             return; 
         }
 
@@ -1534,7 +1538,7 @@ public static partial class DataDivision
         {
             Expected("NATIONAL");
             
-            entryLocal.Usage = Usages.National;
+            entry.Usage = Usages.National;
             return; 
         }
 
@@ -1571,7 +1575,7 @@ public static partial class DataDivision
                 // isStronglyTyped = true
             }
 
-            entryLocal.Usage = Usages.ObjectReference;
+            entry.Usage = Usages.ObjectReference;
             return; 
         }
 
@@ -1585,7 +1589,7 @@ public static partial class DataDivision
                 References.Identifier();
             }
 
-            entryLocal.Usage = Usages.DataPointer;
+            entry.Usage = Usages.DataPointer;
             return; 
         }
 
@@ -1596,7 +1600,7 @@ public static partial class DataDivision
             
             References.Identifier();
 
-            entryLocal.Usage = Usages.FunctionPointer;
+            entry.Usage = Usages.FunctionPointer;
             return; 
         }
 
@@ -1611,7 +1615,7 @@ public static partial class DataDivision
                 References.Identifier();
             }
             
-            entryLocal.Usage = Usages.ProgramPointer;
+            entry.Usage = Usages.ProgramPointer;
             return; 
         }
 
@@ -1626,5 +1630,45 @@ public static partial class DataDivision
         .CloseError();
 
         AnchorPoint(TokenContext.IsClause);
+    }
+
+    private static void ClassifyUsage(DataEntry entry)
+    {
+        if (entry[DataClause.Picture]) return;
+
+        entry.Class = entry.Usage switch
+        {
+            Usages.None             => entry.Class,
+            Usages.Display          => entry.Class,
+            Usages.Bit              => Classes.Boolean,
+            Usages.Index            => Classes.Index,
+            Usages.MessageTag       => Classes.MessageTag,
+            Usages.National         => Classes.National,
+            Usages.ObjectReference  => Classes.Object,
+            Usages.DataPointer      => Classes.Pointer,
+            Usages.FunctionPointer  => Classes.Pointer,
+            Usages.ProgramPointer   => Classes.Pointer,
+            _ => Classes.Numeric,
+        };
+    }
+
+    private static void CategorizeUsage(DataEntry entry)
+    {
+        if (entry[DataClause.Picture]) return;
+
+        entry.Category = entry.Usage switch
+        {
+            Usages.None             => entry.Category,
+            Usages.Display          => entry.Category,
+            Usages.Bit              => Categories.Boolean,
+            Usages.Index            => Categories.Index,
+            Usages.MessageTag       => Categories.MessageTag,
+            Usages.National         => Categories.National,
+            Usages.ObjectReference  => Categories.ObjectReference,
+            Usages.DataPointer      => Categories.DataPointer,
+            Usages.FunctionPointer  => Categories.FunctionPointer,
+            Usages.ProgramPointer   => Categories.ProgramPointer,
+            _ => Categories.Numeric,
+        };
     }
 }

@@ -45,7 +45,7 @@ public static class ProcedureDivision
         if (!Expected(".", false))
         {
             ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Division header, missing separator period.
                 """)
             .WithSourceLine(Lookahead(-1), """
@@ -66,31 +66,31 @@ public static class ProcedureDivision
     // the PROCEDURE DIVISION header. It's separate from the previous method because its code is needed more than once.
     // COBOL user-defined functions should always return a data item.
 
-    private static HashSet<string> usedDataNames = new();
+    private static HashSet<string> headerDataNames = new();
 
     private static void Using()
     {
         while (CurrentEquals("BY", "REFERENCE", "VALUE") || CurrentEquals(TokenType.Identifier))
-        {   
-            if (CurrentEquals(TokenType.Identifier))
+        {
+            while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
             {
-                References.Identifier();
-                while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
+                var isOptional = false;
+
+                if (CurrentEquals("OPTIONAL"))
                 {
-                    if (CurrentEquals("OPTIONAL"))
-                    {
-                        Expected("OPTIONAL");
-                    }
-                    // TODO: Reimplement parameter item resolution
-                    References.Identifier();
-                }  
+                    Expected("OPTIONAL");
+
+                    isOptional = true;
+                }
+
+                HandleHeaderDataName(true, isOptional, true);
             }
 
             if (CurrentEquals("BY") && !LookaheadEquals(1, "VALUE", "REFERENCE"))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 128,"""
-                    Using phrase, missing keyword.
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """
+                    Using phrase missing word.
                     """)
                 .WithSourceLine(Current(), """
                     Expected 'VALUE' or 'REFERENCE' after this token
@@ -105,34 +105,30 @@ public static class ProcedureDivision
                 Optional("BY");
                 Expected("REFERENCE");
 
-                if (CurrentEquals("OPTIONAL"))
-                {
-                    Expected("OPTIONAL");
-                }
-
-                if (!CurrentEquals(TokenType.Identifier))
+                if (!CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Identifier))
                 {
                     ErrorHandler
-                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 128,"""
-                        Using phrase, missing identifier.
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """
+                        Using phrase missing identifier.
                         """)
-                    .WithSourceLine(Current(), """
-                        BY REFERENCE phrase must contain at least one data item name.
+                    .WithSourceLine(Lookahead(-1), """
+                        Must contain at least one data name.
                         """)
                     .CloseError();
                 }
-                
-                // TODO: Reimplement parameter item resolution
 
-                References.Identifier();
                 while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
                 {
+                    var isOptional = false;
+
                     if (CurrentEquals("OPTIONAL"))
                     {
                         Expected("OPTIONAL");
+
+                        isOptional = true;
                     }
-                    // TODO: Reimplement parameter item resolution
-                    References.Identifier();
+
+                    HandleHeaderDataName(true, isOptional, true);
                 }
             }
 
@@ -140,24 +136,34 @@ public static class ProcedureDivision
             {
                 Optional("BY");
                 Expected("VALUE");
-                if (!CurrentEquals(TokenType.Identifier))
+
+                if (CurrentEquals("OPTIONAL"))
                 {
                     ErrorHandler
-                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 128,"""
-                        Using phrase, missing identifier.
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """
+                        Using phrase invalid optional.
                         """)
                     .WithSourceLine(Current(), """
-                        BY VALUE phrase must contain at least one data item name.
+                        Items passed by value cannot be optional.
                         """)
                     .CloseError();
                 }
-                
-                // TODO: Reimplement parameter item resolution
-                References.Identifier();
+
+                if (!CurrentEquals(TokenType.Identifier))
+                {
+                    ErrorHandler
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """
+                        Using phrase missing identifier.
+                        """)
+                    .WithSourceLine(Lookahead(-1), """
+                        Must contain at least one data name.
+                        """)
+                    .CloseError();
+                }
+
                 while (CurrentEquals(TokenType.Identifier))
                 {
-                    // TODO: Reimplement parameter item resolution
-                    References.Identifier();
+                    HandleHeaderDataName(true, false, false);
                 }
             }
         }
@@ -178,10 +184,13 @@ public static class ProcedureDivision
             return;
         }
 
-        HandleReturningItem();
+        HandleHeaderDataName(false);
     }
 
-    private static void HandleReturningItem()
+    // The syntax, semantics and errors for the formal parameters and
+    // for the returning item are exactly the same, so we handle it
+    // in a sigle method to avoid code duplication.
+    private static void HandleHeaderDataName(bool isParameter, bool isOptional = false, bool isByRef = false)
     {
         var dataName = References.Name();
 
@@ -201,7 +210,7 @@ public static class ProcedureDivision
             .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
                 Reference to non-unique identifier.
                 """)
-            .WithSourceLine(dataToken, $"""
+            .WithSourceLine(dataToken, """
                 Must have a unique name.
                 """)
             .WithNote("""
@@ -219,7 +228,7 @@ public static class ProcedureDivision
             .Build(ErrorType.Resolution, ConsoleColor.Red, 1200, """
                 Name qualification prohibited.
                 """)
-            .WithSourceLine(dataToken, $"""
+            .WithSourceLine(dataToken, """
                 Must not require qualification.
                 """)
             .WithNote("""
@@ -233,15 +242,17 @@ public static class ProcedureDivision
 
         // COBOL standard requirement, data-name used for
         // the returning item must not be the same of a parameter.
-        if (usedDataNames.Contains(dataToken.Value))
+        if (headerDataNames.Contains(dataToken.Value))
         {
             ErrorHandler
             .Build(ErrorType.Resolution, ConsoleColor.Red, 1210, """
                 Name conflict with a formal parameter.
                 """)
-            .WithSourceLine(dataToken, $"""
-                Must not be the same as a parameter name.
-                """)
+            .WithSourceLine(dataToken,
+                isParameter
+                ? "Must not be the same as a parameter name."
+                : "Must not be the same as another parameter name."
+                )
             .CloseError();
             return;
         }
@@ -253,14 +264,13 @@ public static class ProcedureDivision
         if (dataItem.Section is not ActiveScope.LinkageSection)
         {
             ErrorHandler
-            .Build(ErrorType.Resolution, ConsoleColor.Red, 2050, """
-                Invalid returning item definition.
-                """)
-            .WithSourceLine(dataToken, $"""
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 2050,
+                isParameter
+                ? "Invalid parameter definition."
+                : "Invalid returning definition."
+                )
+            .WithSourceLine(dataToken, """
                 Must be defined in the linkage section.
-                """)
-            .WithNote("""
-                Parameters must also be defined in the linkage section.
                 """)
             .CloseError();
         }
@@ -269,31 +279,64 @@ public static class ProcedureDivision
         if (dataItem.LevelNumber is not (1 or 77))
         {
             ErrorHandler
-            .Build(ErrorType.Resolution, ConsoleColor.Red, 2050, """
-                Invalid returning item level number.
-                """)
-            .WithSourceLine(dataToken, $"""
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 2050,
+                isParameter
+                ? "Invalid parameter level number."
+                : "Invalid returning level number."
+                )
+            .WithSourceLine(dataToken, """
                 Must be a 77 or 01 level item.
                 """)
             .CloseError();
         }
-        
+
         // COBOL standard requirement, must not contain a BASED or REDEFINES clause.
         if (dataItem[DataClause.Based] || dataItem[DataClause.Redefines])
         {
             ErrorHandler
-            .Build(ErrorType.Resolution, ConsoleColor.Red, 2050, """
-                Invalid returning item clauses.
-                """)
-            .WithSourceLine(dataToken, $"""
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 2050,
+                isParameter
+                ? "Invalid parameter clauses."
+                : "Invalid returning clauses."
+                )
+            .WithSourceLine(dataToken, """
                 Must not contain a BASED or REDEFINES clause.
                 """)
             .CloseError();
         }
 
+        // COBOL standard requirement, parameters passed by value must
+        // have a class of numeric, message tag, object or pointer
+        if (isParameter && !isByRef && !CheckByValueClass(dataItem.Class))
+        {
+            ErrorHandler
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 2050, """
+                Invalid by value parameter class.
+                """)
+            .WithSourceLine(dataToken, """
+                Must be of class Numeric, Message Tag, Object or Pointer.
+                """)
+            .CloseError();
+        }
+
+        headerDataNames.Add(dataToken.Value);
+
         var activeCallable = CompilerContext.ActiveCallable;
 
+        if (isParameter)
+        {
+            var parameter = (dataItem, isOptional, isByRef);
+
+            activeCallable.Parameters.Add(parameter);
+            return;
+        }
+
         activeCallable.Returning = dataItem;
+    }
+
+    private static bool CheckByValueClass(Classes _class)
+    {
+        return _class is Classes.Numeric or Classes.MessageTag or Classes.Object or Classes.Pointer;
     }
 
     private static void ProcedureBody()
@@ -428,7 +471,7 @@ public static class ProcedureDivision
                 if (!Expected(".", false))
                 {
                     ErrorHandler
-                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                         End marker, missing separator period.
                         """)
                     .WithSourceLine(Lookahead(-1), """
@@ -461,11 +504,11 @@ public static class ProcedureDivision
             case SourceUnit.Factory:
                 Expected("END");
                 Expected("FACTORY");
-                
+
                 if (!Expected(".", false))
                 {
                     ErrorHandler
-                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                         End marker, missing separator period.
                         """)
                     .WithSourceLine(Lookahead(-1), """
@@ -478,17 +521,17 @@ public static class ProcedureDivision
 
                     AnchorPoint("OBJECT", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
                 }
-                
+
                 break;
 
             case SourceUnit.Object:
                 Expected("END");
                 Expected("OBJECT");
-                
+
                 if (!Expected(".", false))
                 {
                     ErrorHandler
-                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 26,"""
+                    .Build(ErrorType.Analyzer, ConsoleColor.Red, 26, """
                         End marker, missing separator period.
                         """)
                     .WithSourceLine(Lookahead(-1), """
@@ -501,7 +544,7 @@ public static class ProcedureDivision
 
                     AnchorPoint("OBJECT", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
                 }
-                
+
                 break;
         }
     }
@@ -529,7 +572,7 @@ public static class ProcedureDivision
         if (!Expected(".", false))
         {
             ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 End marker, missing separator period.
                 """)
             .WithSourceLine(Lookahead(-1), """
@@ -637,7 +680,7 @@ public static class ProcedureDivision
             if (!Expected(".", false))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                     Division header, missing separator period.
                     """)
                 .WithSourceLine(Lookahead(-1), """
@@ -665,7 +708,7 @@ public static class ProcedureDivision
                     DataDivision.Parse();
                 }
 
-                if (CurrentEquals("PROCEDURE")) 
+                if (CurrentEquals("PROCEDURE"))
                 {
                     ParseProcedural();
                 }

@@ -487,25 +487,28 @@ public static partial class DataDivision
     private static void DataEntry()
     {
         int levelNumber = int.Parse(Current().Value);
+
         Literals.Numeric();
 
         Token itemToken = Current();
+
         string dataName = itemToken.Value;
 
         CheckLevelNumber(levelNumber);
 
-        if (CurrentEquals("FILLER"))
+        if (CurrentEquals(TokenType.Identifier))
         {
-            Expected("FILLER");
+            References.Name(false);
         }
-        else if (CurrentEquals(TokenType.Identifier))
+        else
         {
-            References.Name();
+            Optional("FILLER");
         }
 
         DataEntry dataLocal = new(itemToken, EntryKind.DataDescription);
 
         dataLocal.LevelNumber = levelNumber;
+
         dataLocal.Section = CompilerContext.ActiveScope;
 
         if (GroupStack.Count is not 0)
@@ -526,6 +529,10 @@ public static partial class DataDivision
         }
 
         dataLocal.ClauseDeclaration = TokenHandling.Index;
+
+        // COBOL standard requirement
+        // Usage display is the default unless specified otherwise
+        dataLocal.Usage = Usages.Display;
 
         while (CurrentEquals(TokenContext.IsClause))
         {
@@ -705,13 +712,13 @@ public static partial class DataDivision
 
         CheckLevelNumber(levelNumber);
         
-        if (CurrentEquals("FILLER"))
+        if (CurrentEquals(TokenType.Identifier))
         {
-            Expected("FILLER");
+            References.Name(false);
         }
-        else if (CurrentEquals(TokenType.Identifier) && !CurrentEquals(TokenContext.IsClause))
+        else
         {
-            References.Identifier();
+            Optional("FILLER");
         }
 
         DataEntry screenLocal = new(itemToken, EntryKind.ScreenDescription);

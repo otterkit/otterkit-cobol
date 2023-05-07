@@ -1,22 +1,19 @@
 namespace Otterkit.Types;
 
+// Don't use a separate class or struct for this,
+// a ValueTuple is enough, and gives us extra syntax sugar
+using ParameterTuple = ValueTuple<DataEntry, bool, bool>;
+
 public class CallablePrototype : AbstractPrototype
 {
     public LocalNames<RepositoryEntry> RepositoryEntries = new();
     public LocalNames<FileControlEntry> FileEntries = new();
     public LocalNames<DataEntry> DataEntries = new();
-    public List<DataEntry> Parameters = new();
-    public List<bool> IsOptional = new();
-    public List<bool> IsByRef = new();
+    public List<ParameterTuple> Parameters = new();
     public Option<DataEntry> Returning;
     public bool Override;
     public bool IsFinal;
 
     public CallablePrototype(Token identifier, SourceUnit sourcetype)
         : base (identifier, sourcetype) { }
-
-    public (List<DataEntry>, List<bool>, List<bool>) GetParameters()
-    {
-        return (Parameters, IsOptional, IsByRef);
-    }
 }

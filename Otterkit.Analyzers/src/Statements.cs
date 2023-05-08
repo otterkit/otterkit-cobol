@@ -3362,6 +3362,118 @@ public static class Statements
         }
     }
 
+    private static void Using(bool isPrototypeOrMethod)
+    {
+        while (CurrentEquals("BY", "REFERENCE", "CONTENT", "VALUE") || CurrentEquals(TokenType.Identifier))
+        {
+            if (CurrentEquals("BY") && !LookaheadEquals(1, "REFERENCE", "CONTENT", "VALUE"))
+            {
+                ErrorHandler
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """
+                    Using phrase missing word.
+                    """)
+                .WithSourceLine(Current(), """
+                    Expected  'REFERENCE', 'CONTENT' or 'VALUE' after this token.
+                    """)
+                .CloseError();
+
+                AnchorPoint(TokenContext.IsStatement);
+            }
+
+            ByReference(isPrototypeOrMethod);
+
+            ByContent(isPrototypeOrMethod);
+
+            ByValue(isPrototypeOrMethod);
+        }
+    }
+
+    private static void ByReference(bool isPrototypeOrMethod)
+    {
+        if (!CurrentEquals(TokenType.Identifier) && !CurrentEquals("REFERENCE") && !LookaheadEquals(1, "REFERENCE")) return;
+        
+        Optional("BY");
+        Optional("REFERENCE");
+
+        if (!CurrentEquals(TokenType.Identifier))
+        {
+            ErrorHandler
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """
+                Using phrase missing identifier.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Must contain at least one data name.
+                """)
+            .CloseError();
+        }
+
+        if (isPrototypeOrMethod)
+        {
+            References.Name();
+        
+            return;
+        }
+
+        while (CurrentEquals(TokenType.Identifier))
+        {
+            References.Qualified();
+        }
+    }
+
+    private static void ByContent(bool isPrototypeOrMethod)
+    {
+        if (!CurrentEquals("CONTENT") && !LookaheadEquals(1, "CONTENT")) return;
+        
+        Optional("BY");
+        Expected("CONTENT");
+
+        if (!CurrentEquals(TokenType.Identifier))
+        {
+            ErrorHandler
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """
+                Using phrase missing identifier.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Must contain at least one data name.
+                """)
+            .CloseError();
+        }
+
+        if (isPrototypeOrMethod)
+        {
+            References.Name();
+        
+            return;
+        }
+
+        while (CurrentEquals(TokenType.Identifier))
+        {
+            References.Qualified();
+        }
+    }
+
+    private static void ByValue(bool isPrototypeOrMethod)
+    {
+        if (!CurrentEquals("VALUE") && !LookaheadEquals(1, "VALUE")) return;
+        
+        Optional("BY");
+        Expected("VALUE");
+
+        if (!CurrentEquals(TokenType.Identifier))
+        {
+            ErrorHandler
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """
+                Using phrase missing identifier.
+                """)
+            .WithSourceLine(Lookahead(-1), """
+                Must contain at least one data name.
+                """)
+            .CloseError();
+        }
+
+        References.Qualified();
+    }
+
     // This method handles COBOL's slightly inconsistent separator period rules.
     // Statements that are nested inside another statement cannot end with a separator period,
     // since that separator period would mean the end of the containing statement and not the contained statement.

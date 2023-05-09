@@ -4,24 +4,35 @@ public static class Optimization
 {
     public static bool SpaceSeparatedSearch(ReadOnlySpan<char> words, ReadOnlySpan<char> word)
     {
-        Span<char> parsed = stackalloc char[64];
+        Span<char> buffer = stackalloc char[64];
 
-        var index = 0;
+        var length = words.Length;
 
-        foreach (var character in words)
+        var parsed = 0;
+
+        for (var index = 0; index < length; index++)
         {
+            var character = words[index];
+
             if (character is ' ')
             {
-                if (word.Equals(parsed[..index], StringComparison.OrdinalIgnoreCase)) return true;
+                if (word.Equals(buffer[..parsed], StringComparison.OrdinalIgnoreCase)) return true;
 
-                index = 0;
+                parsed = 0;
 
                 continue;
             }
 
-            parsed[index] = character;
+            if (index + 1 == length)
+            {
+                buffer[parsed] = character;
 
-            index++;
+                return word.Equals(buffer[..(parsed + 1)], StringComparison.OrdinalIgnoreCase);
+            }
+
+            buffer[parsed] = character;
+
+            parsed++;
         }
 
         return false;

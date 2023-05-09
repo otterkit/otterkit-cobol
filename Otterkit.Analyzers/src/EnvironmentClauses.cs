@@ -29,7 +29,7 @@ public static partial class EnvironmentDivision
                 return;
             }
 
-            if (CurrentEquals("NATIVE", "UCS-4", "UTF-8", "UTF-16", "UTF-32"))
+            if (CurrentEquals("NATIVE UCS-4 UTF-8 UTF-16 UTF-32", true))
             {
                 Expected(Current().Value);
 
@@ -51,7 +51,7 @@ public static partial class EnvironmentDivision
         }
 
         Optional("IS");
-        if (CurrentEquals("NATIVE", "STANDARD-1", "STANDARD-2", "UTF-8"))
+        if (CurrentEquals("NATIVE STANDARD-1 STANDARD-2 UTF-8", true))
         {
             Expected(Current().Value);
 
@@ -104,7 +104,7 @@ public static partial class EnvironmentDivision
         Expected("CLASS");
         References.Identifier();
 
-        if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
         {
             Optional("FOR");
             Choice("ALPHANUMERIC", "NATIONAL");
@@ -167,7 +167,7 @@ public static partial class EnvironmentDivision
             return;
         }
 
-        if (CurrentEquals("SIGNED", "SHORT", "DELIMITED"))
+        if (CurrentEquals("SIGNED SHORT DELIMITED", true))
         {
             Optional("SIGNED");
             Optional("SHORT");
@@ -201,7 +201,7 @@ public static partial class EnvironmentDivision
         Expected("SYMBOLIC");
         Optional("CHARACTERS");
 
-        if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
         {
             Optional("FOR");
             Choice("ALPHANUMERIC", "NATIONAL");
@@ -237,7 +237,7 @@ public static partial class EnvironmentDivision
         Optional("CHARACTER");
         Expected("CLASSIFICATION");
 
-        if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
         {
             Common.ForAlphanumericForNational();
             return;
@@ -246,7 +246,7 @@ public static partial class EnvironmentDivision
         Optional("IS");
         LocalePhrase();
 
-        if (CurrentEquals(TokenType.Identifier) || CurrentEquals("LOCALE", "SYSTEM-DEFAULT", "USER-DEFAULT"))
+        if (CurrentEquals(TokenType.Identifier) || CurrentEquals("LOCALE SYSTEM-DEFAULT USER-DEFAULT", true))
         {
             LocalePhrase();
         }
@@ -311,7 +311,7 @@ public static partial class EnvironmentDivision
 
     private static void LocalePhrase()
     {
-        if (CurrentEquals("LOCALE", "SYSTEM-DEFAULT", "USER-DEFAULT"))
+        if (CurrentEquals("LOCALE SYSTEM-DEFAULT USER-DEFAULT", true))
         {
             Expected(Current().Value);
         }
@@ -327,7 +327,7 @@ public static partial class EnvironmentDivision
         Optional("COLLATING");
         Expected("SEQUENCE");
 
-        if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
         {
             Common.ForAlphanumericForNational();
             return;
@@ -346,7 +346,7 @@ public static partial class EnvironmentDivision
     {
         Expected("SAME");
 
-        if (CurrentEquals("RECORD", "SORT", "SORT-MERGE"))
+        if (CurrentEquals("RECORD SORT SORT-MERGE", true))
         {
             Expected(Current().Value);
         }
@@ -440,7 +440,7 @@ public static partial class EnvironmentDivision
             Lock(fileControl);
         }
 
-        if (CurrentEquals("ORGANIZATION", "INDEXED", "RELATIVE", "LINE", "RECORD", "SEQUENTIAL"))
+        if (CurrentEquals("ORGANIZATION INDEXED RELATIVE LINE RECORD SEQUENTIAL", true))
         {
             Organization(fileControl);
         }
@@ -462,7 +462,7 @@ public static partial class EnvironmentDivision
         Optional("MODE");
         Optional("IS");
 
-        Choice("DYNAMIC", "RANDOM", "SEQUENTIAL");
+        Choice("DYNAMIC RANDOM SEQUENTIAL");
     }
 
     private static void Record(FileControlEntry fileControl)
@@ -601,7 +601,7 @@ public static partial class EnvironmentDivision
             return;
         }
 
-        if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
         {
             Common.ForAlphanumericForNational();
             return;

@@ -27,14 +27,7 @@ public static class Literals
 
     public static void String()
     {
-        if (!CurrentEquals(
-            TokenType.String, 
-            TokenType.HexString, 
-            TokenType.Boolean, 
-            TokenType.HexBoolean, 
-            TokenType.National, 
-            TokenType.HexNational
-        ))
+        if (!CurrentEquals(TokenType.String, TokenType.HexString))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
@@ -54,10 +47,7 @@ public static class Literals
 
     public static void Boolean()
     {
-        if (!CurrentEquals(
-            TokenType.Boolean, 
-            TokenType.HexBoolean
-        ))
+        if (!CurrentEquals(TokenType.Boolean, TokenType.HexBoolean))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
@@ -77,10 +67,7 @@ public static class Literals
 
     public static void National()
     {
-        if (!CurrentEquals(
-            TokenType.National, 
-            TokenType.HexNational
-        ))
+        if (!CurrentEquals(TokenType.National, TokenType.HexNational))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """

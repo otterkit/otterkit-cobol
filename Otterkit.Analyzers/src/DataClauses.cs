@@ -41,7 +41,7 @@ public static partial class DataDivision
         {
             // TODO: This needs to be fixed later
             Expected("FORMAT");
-            Choice("BIT", "CHARACTER", "NUMERIC");
+            Choice("BIT CHARACTER NUMERIC");
             Optional("DATA");
         }
 
@@ -83,7 +83,7 @@ public static partial class DataDivision
 
     private static void DataEntryClauses(DataEntry entry)
     {
-        if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL", "TYPEDEF"))
+        if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL GLOBAL TYPEDEF", true))
         {
             IsClauseErrorCheck();
         }
@@ -378,18 +378,18 @@ public static partial class DataDivision
                 }
             }
 
-            while (CurrentEquals(TokenType.Numeric) || CurrentEquals("+", "PLUS", "ON", "NEXT"))
+            while (CurrentEquals(TokenType.Numeric) || CurrentEquals("+ PLUS ON NEXT", true))
             {
                 ReportLineClauseLoop();
             }
         }
 
-        if (CurrentEquals("COLUMN", "COLUMNS", "COL", "COLS"))
+        if (CurrentEquals("COLUMN COLUMNS COL COLS", true))
         {
             if (CurrentEquals("COLUMN"))
             {
                 Expected("COLUMN");
-                OptionalChoice("NUMBER", "NUMBERS");
+                OptionalChoice("NUMBER NUMBERS");
             }
             else if (CurrentEquals("COLUMNS"))
             {
@@ -398,7 +398,7 @@ public static partial class DataDivision
             else if (CurrentEquals("COL"))
             {
                 Expected("COL");
-                OptionalChoice("NUMBER", "NUMBERS");
+                OptionalChoice("NUMBER NUMBERS");
             }
             else
             {
@@ -414,7 +414,7 @@ public static partial class DataDivision
                 Optional("LEFT");
             }
 
-            OptionalChoice("IS", "ARE");
+            OptionalChoice("IS ARE");
 
             while(CurrentEquals(TokenType.Numeric) || CurrentEquals("+", "PLUS"))
             {
@@ -594,13 +594,13 @@ public static partial class DataDivision
                 if (CurrentEquals("FROM"))
                 {
                     Expected("FROM");
-                    Common.Arithmetic();
+                    Common.Arithmetic(" ");
                 }
 
                 if (CurrentEquals("BY"))
                 {
                     Expected("BY");
-                    Common.Arithmetic();
+                    Common.Arithmetic(" ");
                 }
             }
         }
@@ -778,7 +778,7 @@ public static partial class DataDivision
             Common.IdentifierOrLiteral(TokenType.Numeric);
         }
 
-        if (CurrentEquals("LINES", "AT", "TOP"))
+        if (CurrentEquals("LINES AT TOP", true))
         {
             Optional("LINES");
             Optional("AT");
@@ -786,7 +786,7 @@ public static partial class DataDivision
             Common.IdentifierOrLiteral(TokenType.Numeric);
         }
 
-        if (CurrentEquals("LINES", "AT", "BOTTOM"))
+        if (CurrentEquals("LINES AT BOTTOM", true))
         {
             Optional("LINES");
             Optional("AT");
@@ -892,7 +892,7 @@ public static partial class DataDivision
 
         fileLocal[DataClause.CodeSet] = true;
 
-        if (CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
         {
             Common.ForAlphanumericForNational();
             return;
@@ -958,7 +958,7 @@ public static partial class DataDivision
 
         screenLocal[DataClause.Line] = true;
 
-        if (CurrentEquals("PLUS", "+", "MINUS", "-"))
+        if (CurrentEquals("PLUS + MINUS -", true))
         {
             Expected(Current().Value);
         }
@@ -981,7 +981,7 @@ public static partial class DataDivision
 
         screenLocal[DataClause.Column] = true;
 
-        if (CurrentEquals("PLUS", "+", "MINUS", "-"))
+        if (CurrentEquals("PLUS + MINUS -", true))
         {
             Expected(Current().Value);
         }
@@ -1211,7 +1211,7 @@ public static partial class DataDivision
             Choice("DETAIL", "DE");
         }
 
-        if (CurrentEquals("CONTROL", "CH", "CF"))
+        if (CurrentEquals("CONTROL CH CF", true))
         {
             var isControlHeading = false;
 
@@ -1236,9 +1236,9 @@ public static partial class DataDivision
                 Expected("CF");
             }
 
-            if (CurrentEquals("OR", "FOR", "FINAL") || CurrentEquals(TokenType.Identifier))
+            if (CurrentEquals("OR FOR FINAL", true) || CurrentEquals(TokenType.Identifier))
             {
-                OptionalChoice("ON", "FOR");
+                OptionalChoice("ON FOR");
                 if (CurrentEquals("FINAL"))
                 {
                     Expected("FINAL");
@@ -1256,7 +1256,7 @@ public static partial class DataDivision
             }
         }
 
-        if (CurrentEquals("RH", "RF", "PH", "PF"))
+        if (CurrentEquals("RH RF PH PF", true))
         {
             Expected(Current().Value);
         }
@@ -1412,7 +1412,7 @@ public static partial class DataDivision
             return;
         }
 
-        if (CurrentEquals("BINARY-CHAR", "BINARY-SHORT", "BINARY-LONG", "BINARY-DOUBLE"))
+        if (CurrentEquals("BINARY-CHAR BINARY-SHORT BINARY-LONG BINARY-DOUBLE", true))
         {
             Expected(Current().Value);
             if (CurrentEquals("SIGNED"))

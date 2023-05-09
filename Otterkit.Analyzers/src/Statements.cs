@@ -253,8 +253,8 @@ public static class Statements
 
         bool reporting = CurrentEquals("GLOBAL") && LookaheadEquals(1, "BEFORE") || CurrentEquals("BEFORE");
 
-        bool fileException = CurrentEquals("GLOBAL") && LookaheadEquals(1, "AFTER", "STANDARD", "EXCEPTION", "ERROR")
-            || CurrentEquals("AFTER", "STANDARD", "EXCEPTION", "ERROR");
+        bool fileException = CurrentEquals("GLOBAL") && LookaheadEquals(1, "AFTER STANDARD EXCEPTION ERROR", true)
+            || CurrentEquals("AFTER STANDARD EXCEPTION ERROR", true);
 
         if (exceptionObject)
         {
@@ -304,9 +304,9 @@ public static class Statements
             Optional("PROCEDURE");
             Optional("ON");
 
-            if (CurrentEquals("INPUT", "OUTPUT", "I-O", "EXTEND"))
+            if (CurrentEquals("INPUT OUTPUT I-O EXTEND", true))
             {
-                Choice("INPUT", "OUTPUT", "I-O", "EXTEND");
+                Choice("INPUT OUTPUT I-O EXTEND");
             }
             else
             {
@@ -336,7 +336,7 @@ public static class Statements
     {
         Expected("DISPLAY");
 
-        if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "AT", "LINE", "COLUMN", "COL"))
+        if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "AT LINE COLUMN COL", true))
         {
             bool isConditional = false;
 
@@ -360,7 +360,7 @@ public static class Statements
                 """)
             .CloseError();
 
-            AnchorPoint("UPON", "WITH", "NO");
+            AnchorPoint("UPON WITH NO");
         }
 
         switch (Current().Type)
@@ -444,10 +444,10 @@ public static class Statements
 
             }
         }
-        else if (CurrentEquals("AT", "LINE", "COLUMN", "COL"))
+        else if (CurrentEquals("AT LINE COLUMN COL", true))
         {
             Optional("AT");
-            if (!CurrentEquals("LINE", "COLUMN", "COL"))
+            if (!CurrentEquals("LINE COLUMN COL", true))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
@@ -888,24 +888,8 @@ public static class Statements
 
         static bool IsCategoryName()
         {
-            if (CurrentEquals(
-            "ALPHABETIC",
-            "ALPHANUMERIC",
-            "ALPHANUMERIC-EDITED",
-            "BOOLEAN",
-            "DATA-POINTER",
-            "FUNCTION-POINTER",
-            "MESSAGE-TAG",
-            "NATIONAL",
-            "NATIONAL-EDITED",
-            "NUMERIC",
-            "NUMERIC-EDITED",
-            "OBJECT-REFERENCE",
-            "PROGRAM-POINTER"
-            )) return true;
-
-            return false;
-        };
+            return CurrentEquals("ALPHABETIC ALPHANUMERIC ALPHANUMERIC-EDITED BOOLEAN DATA-POINTER FUNCTION-POINTER MESSAGE-TAG NATIONAL NATIONAL-EDITED NUMERIC NUMERIC-EDITED OBJECT-REFERENCE PROGRAM-POINTER", true);
+        }
 
         if (IsCategoryName())
         {
@@ -995,7 +979,7 @@ public static class Statements
             }
         }
 
-        if (CurrentEquals("THEN", "TO", "DEFAULT"))
+        if (CurrentEquals("THEN TO DEFAULT", true))
         {
             Optional("THEN");
             Optional("TO");
@@ -1143,7 +1127,7 @@ public static class Statements
             References.Identifier();
 
 
-        while (CurrentEquals("ON", "ASCENDING", "DESCENDING"))
+        while (CurrentEquals("ON ASCENDING DESCENDING", true))
         {
             Optional("ON");
             if (CurrentEquals("ASCENDING"))
@@ -1187,7 +1171,7 @@ public static class Statements
             }
             else
             {
-                if (!CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+                if (!CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
                 {
                     ErrorHandler
                     .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
@@ -1390,7 +1374,7 @@ public static class Statements
     private static void OpenStatement()
     {
         Expected("OPEN");
-        Choice("INPUT", "OUTPUT", "I-O", "EXTEND");
+        Choice("INPUT OUTPUT I-O EXTEND");
 
         if (CurrentEquals("SHARING"))
         {
@@ -1451,9 +1435,9 @@ public static class Statements
             }
         }
 
-        while (CurrentEquals("INPUT", "OUTPUT", "I-O", "EXTEND"))
+        while (CurrentEquals("INPUT OUTPUT I-O EXTEND", true))
         {
-            Choice("INPUT", "OUTPUT", "I-O", "EXTEND");
+            Choice("INPUT OUTPUT I-O EXTEND");
 
             if (CurrentEquals("SHARING"))
             {
@@ -1960,7 +1944,7 @@ public static class Statements
             {
                 Common.TimesPhrase();
             }
-            else if (CurrentEquals("WITH", "TEST", "VARYING", "UNTIL"))
+            else if (CurrentEquals("WITH TEST VARYING UNTIL", true))
             {
                 Common.WithTest();
                 if (CurrentEquals("VARYING"))
@@ -1987,7 +1971,7 @@ public static class Statements
 
                 Common.TimesPhrase();
             }
-            else if (CurrentEquals("TEST", "VARYING", "UNTIL") || CurrentEquals("WITH") && LookaheadEquals(1, "TEST"))
+            else if (CurrentEquals("TEST VARYING UNTIL", true) || CurrentEquals("WITH") && LookaheadEquals(1, "TEST"))
             {
                 isInline = true;
 
@@ -2036,7 +2020,9 @@ public static class Statements
                 else if (CurrentEquals("EXCEPTION"))
                 {
                     Expected("EXCEPTION");
-                    Choice("INPUT", "OUTPUT", "IO", "EXTEND");
+
+                    Choice("INPUT OUTPUT IO EXTEND");
+
                     Statements.WithoutSections(true);
                 }
                 else if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "FILE"))
@@ -2071,7 +2057,9 @@ public static class Statements
                     else if (CurrentEquals("EXCEPTION"))
                     {
                         Expected("EXCEPTION");
-                        Choice("INPUT", "OUTPUT", "IO", "EXTEND");
+
+                        Choice("INPUT OUTPUT IO EXTEND");
+                        
                         Statements.WithoutSections(true);
                     }
                     else if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "FILE"))
@@ -2193,7 +2181,7 @@ public static class Statements
         {
             Common.InvalidKey(ref isConditional);
         }
-        else if (isSequential && CurrentEquals("AT", "END", "NOT"))
+        else if (isSequential && CurrentEquals("AT END NOT", true))
         {
             Common.AtEnd(ref isConditional);
         }
@@ -2377,7 +2365,9 @@ public static class Statements
             while (CurrentEquals("WHEN"))
             {
                 Expected("WHEN");
-                Common.Condition();
+
+                Common.Condition(" ");
+
                 if (CurrentEquals("NEXT") && LookaheadEquals(1, "SENTENCE"))
                 {
                     ErrorHandler
@@ -2389,7 +2379,7 @@ public static class Statements
                         """)
                     .CloseError();
 
-                    AnchorPoint("WHEN", "END-SEARCH");
+                    AnchorPoint("WHEN END-SEARCH");
                 }
 
                 Statements.WithoutSections(true);
@@ -2410,7 +2400,7 @@ public static class Statements
 
         Expected("WHEN");
         References.Identifier();
-        if (CurrentEquals("IS", "EQUAL", "="))
+        if (CurrentEquals("IS EQUAL =", true))
         {
             Optional("IS");
             if (CurrentEquals("EQUAL"))
@@ -2426,7 +2416,7 @@ public static class Statements
 
         if (CurrentEquals(TokenType.Identifier, TokenType.String, TokenType.Numeric) && LookaheadEquals(1, TokenType.Symbol))
         {
-            Common.Arithmetic();
+            Common.Arithmetic(" ");
         }
         else if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Symbol))
         {
@@ -2445,7 +2435,7 @@ public static class Statements
         {
             Expected("AND");
             References.Identifier();
-            if (CurrentEquals("IS", "EQUAL", "="))
+            if (CurrentEquals("IS EQUAL =", true))
             {
                 Optional("IS");
                 if (CurrentEquals("EQUAL"))
@@ -2461,7 +2451,7 @@ public static class Statements
 
             if (CurrentEquals(TokenType.Identifier, TokenType.String, TokenType.Numeric) && LookaheadEquals(1, TokenType.Symbol))
             {
-                Common.Arithmetic();
+                Common.Arithmetic(" ");
             }
             else if (CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Symbol))
             {
@@ -2554,7 +2544,7 @@ public static class Statements
             // TODO: This needs to be fixed to lookup a qualified reference
             DataEntry dataItem = new(Current(), EntryKind.DataDescription);
 
-            if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "UP", "DOWN", "TO"))
+            if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "UP DOWN TO", true))
             {
                 References.Identifier();
                 if (CurrentEquals("UP"))
@@ -2578,7 +2568,7 @@ public static class Statements
                 }
                 else
                 {
-                    Common.Arithmetic();
+                    Common.Arithmetic(" ");
                 }
             }
             else if (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "TO") && LookaheadEquals(2, "LOCALE"))
@@ -2617,7 +2607,7 @@ public static class Statements
                 }
                 else
                 {
-                    Common.Arithmetic();
+                    Common.Arithmetic(" ");
                 }
             }
             else if (dataItem.Usage == Usages.DataPointer || CurrentEquals("ADDRESS"))
@@ -2660,7 +2650,7 @@ public static class Statements
                 {
                     Choice("UP", "DOWN");
                     Expected("BY");
-                    Common.Arithmetic();
+                    Common.Arithmetic(" ");
                 }
             }
             else if (dataItem.Usage is Usages.Index)
@@ -2681,14 +2671,14 @@ public static class Statements
                     }
                     else
                     {
-                        Common.Arithmetic();
+                        Common.Arithmetic(" ");
                     }
                 }
                 else if (checkUsage && CurrentEquals("UP", "DOWN"))
                 {
                     Choice("UP", "DOWN");
                     Expected("BY");
-                    Common.Arithmetic();
+                    Common.Arithmetic(" ");
                 }
 
             }
@@ -2759,7 +2749,7 @@ public static class Statements
             References.Identifier();
 
 
-        while (CurrentEquals("ON", "ASCENDING", "DESCENDING"))
+        while (CurrentEquals("ON ASCENDING DESCENDING", true))
         {
             Optional("ON");
             if (CurrentEquals("ASCENDING"))
@@ -2811,7 +2801,7 @@ public static class Statements
             }
             else
             {
-                if (!CurrentEquals("FOR", "ALPHANUMERIC", "NATIONAL"))
+                if (!CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
                 {
                     ErrorHandler
                     .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, $"""
@@ -3224,7 +3214,7 @@ public static class Statements
             Expected("LOCK");
         }
 
-        if (isSequential && CurrentEquals("AT", "NOT", "END-OF-PAGE", "EOP"))
+        if (isSequential && CurrentEquals("AT NOT END-OF-PAGE EOP", true))
         {
             Common.AtEndOfPage(ref isConditional);
         }
@@ -3244,7 +3234,7 @@ public static class Statements
     // Different from Using(), this one is for the CALL and INVOKE only.
     private static void StatementUsing(bool byValue, bool byContent)
     {
-        while (CurrentEquals("BY", "REFERENCE", "VALUE") || CurrentEquals(TokenType.Identifier))
+        while (CurrentEquals("BY REFERENCE VALUE", true) || CurrentEquals(TokenType.Identifier))
         {   
             if (CurrentEquals(TokenType.Identifier))
             {
@@ -3260,7 +3250,7 @@ public static class Statements
                 }  
             }
 
-            if (CurrentEquals("BY") && !LookaheadEquals(1, "VALUE", "REFERENCE", "CONTENT"))
+            if (CurrentEquals("BY") && !LookaheadEquals(1, "VALUE REFERENCE CONTENT", true))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 128,"""
@@ -3271,7 +3261,7 @@ public static class Statements
                     """)
                 .CloseError();
 
-                AnchorPoint(TokenContext.IsStatement, "RETURNING", ".");
+                AnchorPoint(TokenContext.IsStatement, "RETURNING");
             }
 
             if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
@@ -3364,9 +3354,9 @@ public static class Statements
 
     private static void Using(bool isPrototypeOrMethod)
     {
-        while (CurrentEquals("BY", "REFERENCE", "CONTENT", "VALUE") || CurrentEquals(TokenType.Identifier))
+        while (CurrentEquals("BY REFERENCE CONTENT VALUE", true) || CurrentEquals(TokenType.Identifier))
         {
-            if (CurrentEquals("BY") && !LookaheadEquals(1, "REFERENCE", "CONTENT", "VALUE"))
+            if (CurrentEquals("BY") && !LookaheadEquals(1, "REFERENCE CONTENT VALUE", true))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """

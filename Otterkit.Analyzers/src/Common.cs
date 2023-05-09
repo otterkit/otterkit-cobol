@@ -59,7 +59,7 @@ public static partial class Common
         }
         else
         {
-            Condition();
+            Condition(" ");
         }
     }
 
@@ -152,7 +152,7 @@ public static partial class Common
             hasFor = true;
         }
 
-        Arithmetic("SECONDS", "TIMES");
+        Arithmetic("SECONDS TIMES");
         if (CurrentEquals("SECONDS") || hasFor)
         {
             Expected("SECONDS");
@@ -182,7 +182,7 @@ public static partial class Common
             References.Identifier();
             Expected("FOR");
 
-            if (!CurrentEquals("CHARACTERS", "ALL", "LEADING"))
+            if (!CurrentEquals("CHARACTERS ALL LEADING", true))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
@@ -197,7 +197,7 @@ public static partial class Common
                 .CloseError();
             }
 
-            while (CurrentEquals("CHARACTERS", "ALL", "LEADING"))
+            while (CurrentEquals("CHARACTERS ALL LEADING", true))
             {
                 if (CurrentEquals("CHARACTERS"))
                 {
@@ -281,7 +281,7 @@ public static partial class Common
 
     public static void ReplacingPhrase()
     {
-        if (!CurrentEquals("CHARACTERS", "ALL", "LEADING", "FIRST"))
+        if (!CurrentEquals("CHARACTERS ALL LEADING FIRST", true))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
@@ -296,7 +296,7 @@ public static partial class Common
             .CloseError();
         }
 
-        while (CurrentEquals("CHARACTERS", "ALL", "LEADING", "FIRST"))
+        while (CurrentEquals("CHARACTERS ALL LEADING FIRST", true))
         {
             if (CurrentEquals("CHARACTERS"))
             {
@@ -1160,7 +1160,7 @@ public static partial class Common
 
     public static void AtEndOfPage(ref bool isConditional, bool atEndOfPageExists = false, bool notAtEndOfPageExists = false)
     {
-        if (CurrentEquals("AT", "END-OF-PAGE", "EOP"))
+        if (CurrentEquals("AT END-OF-PAGE EOP", true))
         {
             if (atEndOfPageExists)
             {
@@ -1350,12 +1350,8 @@ public static partial class Common
         {
             Expected("MODE");
             Optional("IS");
-            Choice(
-                "AWAY-FROM-ZERO", "NEAREST-AWAY-FROM-ZERO",
-                "NEAREST-EVEN", "NEAREST-TOWARD-ZERO",
-                "PROHIBITED", "TOWARD-GREATER",
-                "TOWARD-LESSER", "TRUNCATION"
-            );
+
+            Choice("AWAY-FROM-ZERO NEAREST-AWAY-FROM-ZERO NEAREST-EVEN NEAREST-TOWARD-ZERO PROHIBITED TOWARD-GREATER TOWARD-LESSER TRUNCATION");
         }
     }
 
@@ -1398,11 +1394,11 @@ public static partial class Common
         }
     }
 
-    public static void Arithmetic(params string[] delimiter)
+    public static void Arithmetic(ReadOnlySpan<char> delimiters)
     {
         var expression = new List<Token>();
 
-        while (!CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(delimiter))
+        while (!CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(delimiters, true))
         {
             BuildArithmeticExpression(expression);
         }
@@ -1511,11 +1507,11 @@ public static partial class Common
         }
     }
 
-    public static void Condition(params string[] delimiter)
+    public static void Condition(ReadOnlySpan<char> delimiters)
     {
         var expression = new List<Token>();
 
-        while (!CurrentEquals(TokenContext.IsStatement) && !CurrentEquals(delimiter))
+        while (!CurrentEquals(TokenContext.IsStatement) && !CurrentEquals(delimiters, true))
         {
             BuildConditionExpression(expression);
         }
@@ -1650,16 +1646,9 @@ public static partial class Common
 
     public static void StartRelationalOperator()
     {
-        string[] operators =
-        {
-            "<",
-            ">",
-            "<=",
-            ">=",
-            "="
-        };
+        ReadOnlySpan<char> operators = "< > <= >= =";
 
-        if (CurrentEquals("IS") && (LookaheadEquals(1, "GREATER", "LESS", "EQUAL", "NOT") || LookaheadEquals(1, TokenType.Symbol)))
+        if (CurrentEquals("IS") && (LookaheadEquals(1, "GREATER LESS EQUAL NOT", true) || LookaheadEquals(1, TokenType.Symbol)))
         {
             Continue();
         }
@@ -1674,7 +1663,7 @@ public static partial class Common
 
             if (CurrentEquals("THAN", "TO")) Continue();
         }
-        else if (CurrentEquals("GREATER", "LESS", "EQUAL"))
+        else if (CurrentEquals("GREATER LESS EQUAL", true))
         {
             if (CurrentEquals("GREATER") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
             {
@@ -1695,7 +1684,7 @@ public static partial class Common
 
             if (CurrentEquals("THAN", "TO")) Continue();
         }
-        else if (CurrentEquals(operators))
+        else if (CurrentEquals(operators, true))
         {
             Continue();
         }
@@ -1783,12 +1772,12 @@ public static partial class Common
         {
             if (Expressions.ArithmeticPrecedence.ContainsKey(Lookahead(1).Value))
             {
-                Arithmetic("ALSO", "WHEN");
+                Arithmetic("ALSO WHEN");
                 return EvaluateOperand.Arithmetic;
             }
             else
             {
-                Condition("ALSO", "WHEN");
+                Condition("ALSO WHEN");
                 return EvaluateOperand.Condition;
             }
         }
@@ -1850,7 +1839,7 @@ public static partial class Common
         {
             if (arithmetic && Expressions.ArithmeticPrecedence.ContainsKey(Lookahead(1).Value))
             {
-                Arithmetic("ALSO", "WHEN");
+                Arithmetic("ALSO WHEN");
                 RangeExpression(range, EvaluateOperand.Arithmetic);
             }
             else if (CurrentEquals("ANY"))
@@ -1859,12 +1848,12 @@ public static partial class Common
             }
             else
             {
-                Condition("ALSO", "WHEN");
+                Condition("ALSO WHEN");
             }
         }
         else if (truefalse && CurrentEquals("TRUE", "FALSE"))
         {
-            Choice("TRUE", "FALSE", "ANY");
+            Choice("TRUE FALSE ANY");
         }
         else if (CurrentEquals("ANY"))
         {
@@ -1887,7 +1876,7 @@ public static partial class Common
             }
             else if (rangeType is EvaluateOperand.Arithmetic)
             {
-                Arithmetic("ALSO", "WHEN");
+                Arithmetic("ALSO WHEN");
             }
 
             if (CurrentEquals("IS", "UTF-8"))

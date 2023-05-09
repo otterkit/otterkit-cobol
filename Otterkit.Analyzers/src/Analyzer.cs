@@ -76,7 +76,7 @@ public static class Analyzer
 
         ProcedureDivision.EndMarker();
 
-        if (CurrentEquals("IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID"))
+        if (CurrentEquals("IDENTIFICATION PROGRAM-ID FUNCTION-ID CLASS-ID INTERFACE-ID", true))
         {
             Source();
         }

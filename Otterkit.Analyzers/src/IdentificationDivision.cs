@@ -34,7 +34,7 @@ public static class IdentificationDivision
                     """)
                 .CloseError();
 
-                AnchorPoint("PROGRAM-ID", "FUNCTION-ID", "ENVIRONMENT", "DATA", "PROCEDURE");
+                AnchorPoint("PROGRAM-ID FUNCTION-ID ENVIRONMENT DATA PROCEDURE");
             }
         }
         
@@ -55,7 +55,7 @@ public static class IdentificationDivision
         {
             Expected("ARITHMETIC");
             Optional("IS");
-            Choice("NATIVE", "STANDARD-BINARY", "STANDARD-DECIMAL");
+            Choice("NATIVE STANDARD-BINARY STANDARD-DECIMAL");
 
             shouldHavePeriod = true;
         }
@@ -66,12 +66,8 @@ public static class IdentificationDivision
             Expected("ROUNDED");
             Optional("MODE");
             Optional("IS");
-            Choice(
-                "AWAY-FROM-ZERO", "NEAREST-AWAY-FROM-ZERO",
-                "NEAREST-EVEN", "NEAREST-TOWARD-ZERO",
-                "PROHIBITED", "TOWARD-GREATER",
-                "TOWARD-LESSER", "TRUNCATION"
-            );
+
+            Choice("AWAY-FROM-ZERO NEAREST-AWAY-FROM-ZERO NEAREST-EVEN NEAREST-TOWARD-ZERO PROHIBITED TOWARD-GREATER TOWARD-LESSER TRUNCATION");
 
             shouldHavePeriod = true;
         }
@@ -122,7 +118,7 @@ public static class IdentificationDivision
             }
             else
             {
-                Choice("SPACES","LOW-VALUES", "HIGH-VALUES");
+                Choice("SPACES LOW-VALUES HIGH-VALUES");
             }
         }
 
@@ -130,12 +126,8 @@ public static class IdentificationDivision
         {
             Expected("INTERMEDIATE");
             Expected("ROUNDING");
-            Choice(
-                "NEAREST-AWAY-FROM-ZERO",
-                "NEAREST-EVEN",
-                "PROHIBITED",
-                "TRUNCATION"
-            );
+
+            Choice("NEAREST-AWAY-FROM-ZERO NEAREST-EVEN PROHIBITED TRUNCATION");
         }
 
         if (shouldHavePeriod) Expected(".");
@@ -276,7 +268,7 @@ public static class IdentificationDivision
             """)
         .CloseError();
 
-        AnchorPoint("OPTIONS", "ENVIRONMENT", "DATA", "PROCEDURE");
+        AnchorPoint("OPTIONS ENVIRONMENT DATA PROCEDURE");
     }
 
     private static void ProgramId()
@@ -297,7 +289,7 @@ public static class IdentificationDivision
             CompilerContext.ActiveUnits.Push(Lookahead(-1));
         }
 
-        if (CurrentEquals("IS", "COMMON", "INITIAL", "RECURSIVE", "PROTOTYPE"))
+        if (CurrentEquals("IS COMMON INITIAL RECURSIVE PROTOTYPE", true))
         {
             bool isCommon = false;
             bool isInitial = false;
@@ -306,7 +298,7 @@ public static class IdentificationDivision
 
             Optional("IS");
 
-            while (CurrentEquals("COMMON", "INITIAL", "RECURSIVE", "PROTOTYPE"))
+            while (CurrentEquals("COMMON INITIAL RECURSIVE PROTOTYPE", true))
             {
                 if (CurrentEquals("COMMON"))
                 {
@@ -390,7 +382,7 @@ public static class IdentificationDivision
                 """)
             .CloseError();
 
-            AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+            AnchorPoint("OPTION ENVIRONMENT DATA PROCEDURE");
         }
     }
 
@@ -446,7 +438,7 @@ public static class IdentificationDivision
                 """)
             .CloseError();
 
-            AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+            AnchorPoint("OPTION ENVIRONMENT DATA PROCEDURE");
         }
     }
 
@@ -534,7 +526,7 @@ public static class IdentificationDivision
                 """)
             .CloseError();
 
-            AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "FACTORY", "OBJECT");
+            AnchorPoint("OPTION ENVIRONMENT DATA FACTORY OBJECT");
         }
     }
 
@@ -617,7 +609,7 @@ public static class IdentificationDivision
                 """)
             .CloseError();
 
-            AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+            AnchorPoint("OPTION ENVIRONMENT DATA PROCEDURE");
         }
     }
 
@@ -708,7 +700,7 @@ public static class IdentificationDivision
                 """)
             .CloseError();
 
-            AnchorPoint("OPTION", "ENVIRONMENT", "DATA", "PROCEDURE");
+            AnchorPoint("OPTION ENVIRONMENT DATA PROCEDURE");
         }
 
         // We're returning during a resolution pass

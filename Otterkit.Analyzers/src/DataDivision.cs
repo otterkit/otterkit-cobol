@@ -40,7 +40,7 @@ public static partial class DataDivision
                 """)
             .CloseError();
 
-            AnchorPoint("WORKING-STORAGE", "LOCAL-STORAGE", "LINKAGE", "PROCEDURE");
+            AnchorPoint("WORKING-STORAGE LOCAL-STORAGE LINKAGE PROCEDURE");
         }
 
         if (CurrentEquals("FILE"))
@@ -236,7 +236,7 @@ public static partial class DataDivision
 
     private static void ReportEntry()
     {
-        Choice("RD");
+        Expected("RD");
 
         References.Identifier();
 

@@ -165,7 +165,7 @@ public static partial class EnvironmentDivision
             shouldHaveSeparator = true;
         }
 
-        if (CurrentEquals("PROGRAM", "COLLATING", "SEQUENCE"))
+        if (CurrentEquals("PROGRAM COLLATING SEQUENCE", true))
         {
             ProgramCollatingSequence();
             shouldHaveSeparator = true;
@@ -313,7 +313,7 @@ public static partial class EnvironmentDivision
             .CloseError();
         }
 
-        while (CurrentEquals("CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY"))
+        while (CurrentEquals("CLASS INTERFACE FUNCTION PROGRAM PROPERTY", true))
         {
             if (CurrentEquals("CLASS"))
             {
@@ -343,7 +343,7 @@ public static partial class EnvironmentDivision
                             """)
                         .CloseError();
 
-                        AnchorPoint("CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY", "DATA", "PROCEDURE");
+                        AnchorPoint("CLASS INTERFACE FUNCTION PROGRAM PROPERTY DATA PROCEDURE");
                     }
 
                     References.Identifier();
@@ -380,7 +380,7 @@ public static partial class EnvironmentDivision
                             """)
                         .CloseError();
 
-                        AnchorPoint("CLASS", "INTERFACE", "FUNCTION", "PROGRAM", "PROPERTY", "DATA", "PROCEDURE");
+                        AnchorPoint("CLASS INTERFACE FUNCTION PROGRAM PROPERTY DATA PROCEDURE");
                     }
 
                     References.Identifier();

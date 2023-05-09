@@ -70,7 +70,7 @@ public static class ProcedureDivision
 
     private static void Using()
     {
-        while (CurrentEquals("BY", "REFERENCE", "VALUE") || CurrentEquals(TokenType.Identifier))
+        while (CurrentEquals("BY REFERENCE VALUE", true) || CurrentEquals(TokenType.Identifier))
         {
             while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
             {
@@ -97,7 +97,7 @@ public static class ProcedureDivision
                     """)
                 .CloseError();
 
-                AnchorPoint(TokenContext.IsStatement, "RETURNING", ".");
+                AnchorPoint(TokenContext.IsStatement, "RETURNING");
             }
 
             if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
@@ -372,7 +372,7 @@ public static class ProcedureDivision
                 """)
             .CloseError();
 
-            AnchorPoint("END", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+            AnchorPoint("END IDENTIFICATION PROGRAM-ID FUNCTION-ID CLASS-ID INTERFACE-ID");
         }
     }
 
@@ -482,7 +482,7 @@ public static class ProcedureDivision
                         """)
                     .CloseError();
 
-                    AnchorPoint("IDENTIFICATION", "METHOD-ID", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                    AnchorPoint("IDENTIFICATION METHOD-ID PROGRAM-ID FUNCTION-ID CLASS-ID INTERFACE-ID");
                 }
 
                 break;
@@ -519,7 +519,7 @@ public static class ProcedureDivision
                         """)
                     .CloseError();
 
-                    AnchorPoint("OBJECT", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                    AnchorPoint("OBJECT IDENTIFICATION PROGRAM-ID FUNCTION-ID CLASS-ID INTERFACE-ID");
                 }
 
                 break;
@@ -542,7 +542,7 @@ public static class ProcedureDivision
                         """)
                     .CloseError();
 
-                    AnchorPoint("OBJECT", "IDENTIFICATION", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+                    AnchorPoint("OBJECT IDENTIFICATION PROGRAM-ID FUNCTION-ID CLASS-ID INTERFACE-ID");
                 }
 
                 break;
@@ -583,7 +583,7 @@ public static class ProcedureDivision
                 """)
             .CloseError();
 
-            AnchorPoint("IDENTIFICATION", "OBJECT", "METHOD-ID", "PROGRAM-ID", "FUNCTION-ID", "CLASS-ID", "INTERFACE-ID");
+            AnchorPoint("IDENTIFICATION OBJECT METHOD-ID PROGRAM-ID FUNCTION-ID CLASS-ID INTERFACE-ID");
         }
     }
 

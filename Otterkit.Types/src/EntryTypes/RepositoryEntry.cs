@@ -2,17 +2,17 @@ using Otterkit.Types;
 
 namespace Otterkit;
 
-public class RepositoryEntry
+public class RepositoryName
 {
     public Option<Token> Identifier;
-    public EntryKind EntryType;
     public Option<string> ExternalizedName;
 
     public SourceUnit SourceType;
 
-    public RepositoryEntry(Token identifier, EntryKind entryType) 
+    public int DeclarationIndex;
+
+    public RepositoryName(Token identifier) 
     {
         Identifier = identifier;
-        EntryType = entryType;
     }
 }

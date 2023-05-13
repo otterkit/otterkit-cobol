@@ -15,7 +15,7 @@ public static partial class EnvironmentDivision
         Expected("ALPHABET");
         References.Identifier();
 
-        if (CurrentEquals("NATIONAL") || LookaheadEquals(1, "NATIONAL"))
+        if (CurrentEquals("NATIONAL") || PeekEquals(1, "NATIONAL"))
         {
             Optional("FOR");
             Expected("NATIONAL");
@@ -29,7 +29,7 @@ public static partial class EnvironmentDivision
                 return;
             }
 
-            if (CurrentEquals("NATIVE UCS-4 UTF-8 UTF-16 UTF-32", true))
+            if (CurrentEquals("NATIVE UCS-4 UTF-8 UTF-16 UTF-32"))
             {
                 Expected(Current().Value);
 
@@ -44,14 +44,14 @@ public static partial class EnvironmentDivision
             return;
         }
 
-        if (CurrentEquals("ALPHANUMERIC") || LookaheadEquals(1, "ALPHANUMERIC"))
+        if (CurrentEquals("ALPHANUMERIC") || PeekEquals(1, "ALPHANUMERIC"))
         {
             Optional("FOR");
             Expected("ALPHANUMERIC");
         }
 
         Optional("IS");
-        if (CurrentEquals("NATIVE STANDARD-1 STANDARD-2 UTF-8", true))
+        if (CurrentEquals("NATIVE STANDARD-1 STANDARD-2 UTF-8"))
         {
             Expected(Current().Value);
 
@@ -67,9 +67,9 @@ public static partial class EnvironmentDivision
     {
         Literals.String();
 
-        if (CurrentEquals("THROUGH", "THRU"))
+        if (CurrentEquals("THROUGH THRU"))
         {
-            Choice("THROUGH", "THRU");
+            Choice("THROUGH THRU");
             Literals.String();
             return;
         }
@@ -85,9 +85,9 @@ public static partial class EnvironmentDivision
     {
         Literals.National();
 
-        if (CurrentEquals("THROUGH", "THRU"))
+        if (CurrentEquals("THROUGH THRU"))
         {
-            Choice("THROUGH", "THRU");
+            Choice("THROUGH THRU");
             Literals.National();
             return;
         }
@@ -104,20 +104,20 @@ public static partial class EnvironmentDivision
         Expected("CLASS");
         References.Identifier();
 
-        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL"))
         {
             Optional("FOR");
-            Choice("ALPHANUMERIC", "NATIONAL");
+            Choice("ALPHANUMERIC NATIONAL");
         }
 
         Optional("IS");
 
         // Lookbehind:
-        var national = LookaheadEquals(-2, "NATIONAL");
+        var national = PeekEquals(-2, "NATIONAL");
 
         var chosenType = national ? TokenType.National : TokenType.String;
 
-        while(CurrentEquals(TokenType.String, TokenType.National))
+        while(CurrentEquals(TokenType.String | TokenType.National))
         {
             ClassLiteralPhrase(chosenType);
         }
@@ -134,9 +134,9 @@ public static partial class EnvironmentDivision
         if (literalType is TokenType.National)
         {
             Literals.National();
-            if (CurrentEquals("THROUGH", "THRU"))
+            if (CurrentEquals("THROUGH THRU"))
             {
-                Choice("THROUGH", "THRU");
+                Choice("THROUGH THRU");
                 Literals.National();
             }
 
@@ -144,9 +144,9 @@ public static partial class EnvironmentDivision
         }
 
         Literals.String();
-        if (CurrentEquals("THROUGH", "THRU"))
+        if (CurrentEquals("THROUGH THRU"))
         {
-            Choice("THROUGH", "THRU");
+            Choice("THROUGH THRU");
             Literals.String();
         }
     }
@@ -167,7 +167,7 @@ public static partial class EnvironmentDivision
             return;
         }
 
-        if (CurrentEquals("SIGNED SHORT DELIMITED", true))
+        if (CurrentEquals("SIGNED SHORT DELIMITED"))
         {
             Optional("SIGNED");
             Optional("SHORT");
@@ -180,13 +180,13 @@ public static partial class EnvironmentDivision
             Expected("DELIMITED");
         }
 
-        if (!LookaheadEquals(-1, "PREFIXED", "DELIMITED"))
+        if (!PeekEquals(-1, "PREFIXED DELIMITED"))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Missing clause.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected PREFIXED and/or DELIMITED.
                 """)
             .WithNote("""
@@ -201,10 +201,10 @@ public static partial class EnvironmentDivision
         Expected("SYMBOLIC");
         Optional("CHARACTERS");
 
-        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL"))
         {
             Optional("FOR");
-            Choice("ALPHANUMERIC", "NATIONAL");
+            Choice("ALPHANUMERIC NATIONAL");
         }
 
         while (CurrentEquals(TokenType.Identifier))
@@ -214,9 +214,9 @@ public static partial class EnvironmentDivision
                 References.Identifier();
             }
 
-            if (CurrentEquals("IS", "ARE"))
+            if (CurrentEquals("IS ARE"))
             {
-                Choice("IS", "ARE");
+                Choice("IS ARE");
             }
 
             while (CurrentEquals(TokenType.Numeric))
@@ -237,7 +237,7 @@ public static partial class EnvironmentDivision
         Optional("CHARACTER");
         Expected("CLASSIFICATION");
 
-        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL"))
         {
             Common.ForAlphanumericForNational();
             return;
@@ -246,7 +246,7 @@ public static partial class EnvironmentDivision
         Optional("IS");
         LocalePhrase();
 
-        if (CurrentEquals(TokenType.Identifier) || CurrentEquals("LOCALE SYSTEM-DEFAULT USER-DEFAULT", true))
+        if (CurrentEquals(TokenType.Identifier) || CurrentEquals("LOCALE SYSTEM-DEFAULT USER-DEFAULT"))
         {
             LocalePhrase();
         }
@@ -254,7 +254,7 @@ public static partial class EnvironmentDivision
 
     private static void ForAlphaForNationalLocale(bool forAlphanumericExists = false, bool forNationalExists = false)
     {
-        if (CurrentEquals("FOR") && LookaheadEquals(1, "ALPHANUMERIC") || CurrentEquals("ALPHANUMERIC"))
+        if (CurrentEquals("FOR") && PeekEquals(1, "ALPHANUMERIC") || CurrentEquals("ALPHANUMERIC"))
         {
             if (forAlphanumericExists)
             {
@@ -281,7 +281,7 @@ public static partial class EnvironmentDivision
             ForAlphaForNationalLocale(forAlphanumericExists, forNationalExists);
         }
 
-        if (CurrentEquals("FOR") && LookaheadEquals(1, "NATIONAL") || CurrentEquals("NATIONAL"))
+        if (CurrentEquals("FOR") && PeekEquals(1, "NATIONAL") || CurrentEquals("NATIONAL"))
         {
             if (forNationalExists)
             {
@@ -311,7 +311,7 @@ public static partial class EnvironmentDivision
 
     private static void LocalePhrase()
     {
-        if (CurrentEquals("LOCALE SYSTEM-DEFAULT USER-DEFAULT", true))
+        if (CurrentEquals("LOCALE SYSTEM-DEFAULT USER-DEFAULT"))
         {
             Expected(Current().Value);
         }
@@ -327,7 +327,7 @@ public static partial class EnvironmentDivision
         Optional("COLLATING");
         Expected("SEQUENCE");
 
-        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL"))
         {
             Common.ForAlphanumericForNational();
             return;
@@ -346,7 +346,7 @@ public static partial class EnvironmentDivision
     {
         Expected("SAME");
 
-        if (CurrentEquals("RECORD SORT SORT-MERGE", true))
+        if (CurrentEquals("RECORD SORT SORT-MERGE"))
         {
             Expected(Current().Value);
         }
@@ -386,7 +386,7 @@ public static partial class EnvironmentDivision
             fileControl.Assign.Add(Current());
             Common.IdentifierOrLiteral(TokenType.String);
 
-            while (CurrentEquals(TokenType.Identifier, TokenType.String))
+            while (CurrentEquals(TokenType.Identifier | TokenType.String))
             {
                 fileControl.Assign.Add(Current());
                 Common.IdentifierOrLiteral(TokenType.String);
@@ -405,12 +405,12 @@ public static partial class EnvironmentDivision
             Access(fileControl);
         }
 
-        if (CurrentEquals("RECORD") && !LookaheadEquals(1, "DELIMITER"))
+        if (CurrentEquals("RECORD") && !PeekEquals(1, "DELIMITER"))
         {
             Record(fileControl);
         }
 
-        if (CurrentEquals("RECORD") && LookaheadEquals(1, "DELIMITER"))
+        if (CurrentEquals("RECORD") && PeekEquals(1, "DELIMITER"))
         {
             RecordDelimiter(fileControl);
         }
@@ -420,7 +420,7 @@ public static partial class EnvironmentDivision
             AlternateRecord(fileControl);
         }
 
-        if (CurrentEquals("COLLATING", "SEQUENCE"))
+        if (CurrentEquals("COLLATING SEQUENCE"))
         {
             CollatingSequence(fileControl);
         }
@@ -430,7 +430,7 @@ public static partial class EnvironmentDivision
             Relative(fileControl);
         }
 
-        if (CurrentEquals("FILE", "STATUS"))
+        if (CurrentEquals("FILE STATUS"))
         {
             FileStatus(fileControl);
         }
@@ -440,7 +440,7 @@ public static partial class EnvironmentDivision
             Lock(fileControl);
         }
 
-        if (CurrentEquals("ORGANIZATION INDEXED RELATIVE LINE RECORD SEQUENTIAL", true))
+        if (CurrentEquals("ORGANIZATION INDEXED RELATIVE LINE RECORD SEQUENTIAL"))
         {
             Organization(fileControl);
         }
@@ -472,7 +472,7 @@ public static partial class EnvironmentDivision
         Optional("KEY");
         Optional("IS");
 
-        if (!LookaheadEquals(1, "SOURCE"))
+        if (!PeekEquals(1, "SOURCE"))
         {
             References.Identifier();
 
@@ -500,11 +500,11 @@ public static partial class EnvironmentDivision
         Optional("KEY");
         Optional("IS");
 
-        if (!LookaheadEquals(1, "SOURCE"))
+        if (!PeekEquals(1, "SOURCE"))
         {
             References.Identifier();
 
-            if (CurrentEquals("WITH", "DUPLICATES"))
+            if (CurrentEquals("WITH DUPLICATES"))
             {
                 Optional("WITH");
                 Expected("DUPLICATES");
@@ -533,7 +533,7 @@ public static partial class EnvironmentDivision
             References.Identifier();
         }
 
-        if (CurrentEquals("WITH", "DUPLICATES"))
+        if (CurrentEquals("WITH DUPLICATES"))
         {
             Optional("WITH");
             Expected("DUPLICATES");
@@ -554,9 +554,9 @@ public static partial class EnvironmentDivision
         Optional("MODE");
         Optional("IS");
 
-        Choice("MANUAL", "AUTOMATIC");
+        Choice("MANUAL AUTOMATIC");
 
-        if (CurrentEquals("WITH", "LOCK"))
+        if (CurrentEquals("WITH LOCK"))
         {
             Optional("WITH");
             Expected("LOCK");
@@ -567,7 +567,7 @@ public static partial class EnvironmentDivision
                 Expected("MULTIPLE");
             }
 
-            Choice("RECORD", "RECORDS");
+            Choice("RECORD RECORDS");
         }
     }
 
@@ -601,7 +601,7 @@ public static partial class EnvironmentDivision
             return;
         }
 
-        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL"))
         {
             Common.ForAlphanumericForNational();
             return;
@@ -632,7 +632,7 @@ public static partial class EnvironmentDivision
             return;
         }
 
-        if (CurrentEquals("RECORD", "SEQUENTIAL"))
+        if (CurrentEquals("RECORD SEQUENTIAL"))
         {
             Optional("RECORD");
             Expected("SEQUENTIAL");
@@ -640,7 +640,7 @@ public static partial class EnvironmentDivision
             return;
         }
 
-        Choice("INDEXED", "RELATIVE");
+        Choice("INDEXED RELATIVE");
     }
 
     private static void Relative(FileControlEntry fileControl)
@@ -674,7 +674,7 @@ public static partial class EnvironmentDivision
         Expected("RESERVE");
         Literals.Numeric();
 
-        if (CurrentEquals("AREA", "AREAS"))
+        if (CurrentEquals("AREA AREAS"))
         {
             Expected(Current().Value);
         }

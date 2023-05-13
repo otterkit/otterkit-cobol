@@ -100,7 +100,7 @@ public static class References
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
                 Unexpected end of file.
                 """)
-            .WithSourceLine(Lookahead(-1), $"""
+            .WithSourceLine(Peek(-1), $"""
                 Expected an identifier after this token.
                 """)
             .CloseError();
@@ -161,9 +161,9 @@ public static class References
         {
             Name();
 
-            while (CurrentEquals("IN", "OF"))
+            while (CurrentEquals("IN OF"))
             {
-                Choice("IN", "OF");
+                Choice("IN OF");
 
                 Name();
             }
@@ -182,7 +182,7 @@ public static class References
 
         var nameToken = name.Unwrap();
 
-        if (!name.IsUnique && !CurrentEquals("IN", "OF"))
+        if (!name.IsUnique && !CurrentEquals("IN OF"))
         {
             ErrorHandler
             .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
@@ -198,9 +198,9 @@ public static class References
 
         Qualification.Push(nameToken);
 
-        while (CurrentEquals("IN", "OF"))
+        while (CurrentEquals("IN OF"))
         {
-            Choice("IN", "OF");
+            Choice("IN OF");
 
             var parent = Name();
 
@@ -222,7 +222,7 @@ public static class References
                 .CloseError();
             }
 
-            if (!parent.IsUnique && !CurrentEquals("IN", "OF"))
+            if (!parent.IsUnique && !CurrentEquals("IN OF"))
             {
                 ErrorHandler
                 .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
@@ -272,7 +272,7 @@ public static class References
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
                 Unexpected end of file.
                 """)
-            .WithSourceLine(Lookahead(-1), $"""
+            .WithSourceLine(Peek(-1), $"""
                 Expected an identifier after this token.
                 """)
             .CloseError();
@@ -375,7 +375,7 @@ public static class References
             return;
         }
 
-        if (CurrentEquals("ADDRESS") && !LookaheadEquals(1, "PROGRAM", "FUNCTION") && !LookaheadEquals(2, "PROGRAM", "FUNCTION"))
+        if (CurrentEquals("ADDRESS") && !PeekEquals(1, "PROGRAM FUNCTION") && !PeekEquals(2, "PROGRAM FUNCTION"))
         {
             Expected("ADDRESS");
             Optional("OF");
@@ -398,7 +398,7 @@ public static class References
             return;
         }
 
-        if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "FUNCTION") || LookaheadEquals(2, "FUNCTION"))
+        if (CurrentEquals("ADDRESS") && PeekEquals(1, "FUNCTION") || PeekEquals(2, "FUNCTION"))
         {
             Expected("ADDRESS");
             Optional("OF");
@@ -430,7 +430,7 @@ public static class References
             return;
         }
 
-        if (CurrentEquals("ADDRESS") && LookaheadEquals(1, "PROGRAM") || LookaheadEquals(2, "PROGRAM"))
+        if (CurrentEquals("ADDRESS") && PeekEquals(1, "PROGRAM") || PeekEquals(2, "PROGRAM"))
         {
             Expected("ADDRESS");
             Optional("OF");
@@ -465,7 +465,7 @@ public static class References
         if (CurrentEquals("LINAGE-COUNTER"))
         {
             Expected("LINAGE-COUNTER");
-            Choice("IN", "OF");
+            Choice("IN OF");
             if (!HasFlag(allowed, Identifiers.LinageCounter))
             {
                 ErrorHandler
@@ -485,12 +485,12 @@ public static class References
             return;
         }
 
-        if (CurrentEquals("PAGE-COUNTER", "LINE-COUNTER"))
+        if (CurrentEquals("PAGE-COUNTER LINE-COUNTER"))
         {
             var token = Current();
 
-            Choice("PAGE-COUNTER", "LINE-COUNTER");
-            Choice("IN", "OF");
+            Choice("PAGE-COUNTER LINE-COUNTER");
+            Choice("IN OF");
 
             if (!HasFlag(allowed, Identifiers.ReportCounter))
             {
@@ -511,7 +511,7 @@ public static class References
             return;
         }
 
-        if (LookaheadEquals(1, "AS"))
+        if (PeekEquals(1, "AS"))
         {
             // var isFactory = false;
             // var isStronglyTyped = false;
@@ -562,7 +562,7 @@ public static class References
             return;
         }
 
-        if (LookaheadEquals(1, "::"))
+        if (PeekEquals(1, "::"))
         {
 
 
@@ -620,7 +620,7 @@ public static class References
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
                 Unexpected end of file.
                 """)
-            .WithSourceLine(Lookahead(-1), $"""
+            .WithSourceLine(Peek(-1), $"""
                 Expected an identifier after this token.
                 """)
             .CloseError();

@@ -26,9 +26,9 @@ public static partial class Common
 
     public static void AscendingDescendingKey()
     {
-        while (CurrentEquals("ASCENDING", "DESCENDING"))
+        while (CurrentEquals("ASCENDING DESCENDING"))
         {
-            Choice("ASCENDING", "DESCENDING");
+            Choice("ASCENDING DESCENDING");
             Optional("KEY");
             Optional("IS");
 
@@ -127,11 +127,11 @@ public static partial class Common
 
     public static void WithTest()
     {
-        if (CurrentEquals("WITH", "TEST"))
+        if (CurrentEquals("WITH TEST"))
         {
             Optional("WITH");
             Expected("TEST");
-            Choice("BEFORE", "AFTER");
+            Choice("BEFORE AFTER");
         }
     }
 
@@ -165,7 +165,7 @@ public static partial class Common
 
     public static void TallyingPhrase()
     {
-        if (!CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, "FOR"))
+        if (!CurrentEquals(TokenType.Identifier) && !PeekEquals(1, "FOR"))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
@@ -177,12 +177,12 @@ public static partial class Common
             .CloseError();
         }
 
-        while (CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "FOR"))
+        while (CurrentEquals(TokenType.Identifier) && PeekEquals(1, "FOR"))
         {
             References.Identifier();
             Expected("FOR");
 
-            if (!CurrentEquals("CHARACTERS ALL LEADING", true))
+            if (!CurrentEquals("CHARACTERS ALL LEADING"))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
@@ -197,12 +197,12 @@ public static partial class Common
                 .CloseError();
             }
 
-            while (CurrentEquals("CHARACTERS ALL LEADING", true))
+            while (CurrentEquals("CHARACTERS ALL LEADING"))
             {
                 if (CurrentEquals("CHARACTERS"))
                 {
                     Expected("CHARACTERS");
-                    if (CurrentEquals("AFTER", "BEFORE"))
+                    if (CurrentEquals("AFTER BEFORE"))
                     {
                         AfterBeforePhrase();
                     }
@@ -219,12 +219,12 @@ public static partial class Common
                         Literals.String();
                     }
 
-                    if (CurrentEquals("AFTER", "BEFORE"))
+                    if (CurrentEquals("AFTER BEFORE"))
                     {
                         AfterBeforePhrase();
                     }
 
-                    while (CurrentEquals(TokenType.Identifier, TokenType.String))
+                    while (CurrentEquals(TokenType.Identifier | TokenType.String))
                     {
                         if (CurrentEquals(TokenType.Identifier))
                         {
@@ -235,7 +235,7 @@ public static partial class Common
                             Literals.String();
                         }
 
-                        if (CurrentEquals("AFTER", "BEFORE"))
+                        if (CurrentEquals("AFTER BEFORE"))
                         {
                             AfterBeforePhrase();
                         }
@@ -253,12 +253,12 @@ public static partial class Common
                         Literals.String();
                     }
 
-                    if (CurrentEquals("AFTER", "BEFORE"))
+                    if (CurrentEquals("AFTER BEFORE"))
                     {
                         AfterBeforePhrase();
                     }
 
-                    while (CurrentEquals(TokenType.Identifier, TokenType.String))
+                    while (CurrentEquals(TokenType.Identifier | TokenType.String))
                     {
                         if (CurrentEquals(TokenType.Identifier))
                         {
@@ -269,7 +269,7 @@ public static partial class Common
                             Literals.String();
                         }
 
-                        if (CurrentEquals("AFTER", "BEFORE"))
+                        if (CurrentEquals("AFTER BEFORE"))
                         {
                             AfterBeforePhrase();
                         }
@@ -281,7 +281,7 @@ public static partial class Common
 
     public static void ReplacingPhrase()
     {
-        if (!CurrentEquals("CHARACTERS ALL LEADING FIRST", true))
+        if (!CurrentEquals("CHARACTERS ALL LEADING FIRST"))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 132, """
@@ -296,7 +296,7 @@ public static partial class Common
             .CloseError();
         }
 
-        while (CurrentEquals("CHARACTERS ALL LEADING FIRST", true))
+        while (CurrentEquals("CHARACTERS ALL LEADING FIRST"))
         {
             if (CurrentEquals("CHARACTERS"))
             {
@@ -312,7 +312,7 @@ public static partial class Common
                     Literals.String();
                 }
 
-                if (CurrentEquals("AFTER", "BEFORE"))
+                if (CurrentEquals("AFTER BEFORE"))
                 {
                     AfterBeforePhrase();
                 }
@@ -339,12 +339,12 @@ public static partial class Common
                     Literals.String();
                 }
 
-                if (CurrentEquals("AFTER", "BEFORE"))
+                if (CurrentEquals("AFTER BEFORE"))
                 {
                     AfterBeforePhrase();
                 }
 
-                while (CurrentEquals(TokenType.Identifier, TokenType.String))
+                while (CurrentEquals(TokenType.Identifier | TokenType.String))
                 {
                     if (CurrentEquals(TokenType.Identifier))
                     {
@@ -365,12 +365,12 @@ public static partial class Common
                         Literals.String();
                     }
 
-                    if (CurrentEquals("AFTER", "BEFORE"))
+                    if (CurrentEquals("AFTER BEFORE"))
                     {
                         AfterBeforePhrase();
                     }
 
-                    if (CurrentEquals("AFTER", "BEFORE"))
+                    if (CurrentEquals("AFTER BEFORE"))
                     {
                         AfterBeforePhrase();
                     }
@@ -398,17 +398,17 @@ public static partial class Common
                     Literals.String();
                 }
 
-                if (CurrentEquals("AFTER", "BEFORE"))
+                if (CurrentEquals("AFTER BEFORE"))
                 {
                     AfterBeforePhrase();
                 }
 
-                if (CurrentEquals("AFTER", "BEFORE"))
+                if (CurrentEquals("AFTER BEFORE"))
                 {
                     AfterBeforePhrase();
                 }
 
-                while (CurrentEquals(TokenType.Identifier, TokenType.String))
+                while (CurrentEquals(TokenType.Identifier | TokenType.String))
                 {
                     if (CurrentEquals(TokenType.Identifier))
                     {
@@ -429,12 +429,12 @@ public static partial class Common
                         Literals.String();
                     }
 
-                    if (CurrentEquals("AFTER", "BEFORE"))
+                    if (CurrentEquals("AFTER BEFORE"))
                     {
                         AfterBeforePhrase();
                     }
 
-                    if (CurrentEquals("AFTER", "BEFORE"))
+                    if (CurrentEquals("AFTER BEFORE"))
                     {
                         AfterBeforePhrase();
                     }
@@ -462,17 +462,17 @@ public static partial class Common
                     Literals.String();
                 }
 
-                if (CurrentEquals("AFTER", "BEFORE"))
+                if (CurrentEquals("AFTER BEFORE"))
                 {
                     AfterBeforePhrase();
                 }
 
-                if (CurrentEquals("AFTER", "BEFORE"))
+                if (CurrentEquals("AFTER BEFORE"))
                 {
                     AfterBeforePhrase();
                 }
 
-                while (CurrentEquals(TokenType.Identifier, TokenType.String))
+                while (CurrentEquals(TokenType.Identifier | TokenType.String))
                 {
                     if (CurrentEquals(TokenType.Identifier))
                     {
@@ -493,12 +493,12 @@ public static partial class Common
                         Literals.String();
                     }
 
-                    if (CurrentEquals("AFTER", "BEFORE"))
+                    if (CurrentEquals("AFTER BEFORE"))
                     {
                         AfterBeforePhrase();
                     }
 
-                    if (CurrentEquals("AFTER", "BEFORE"))
+                    if (CurrentEquals("AFTER BEFORE"))
                     {
                         AfterBeforePhrase();
                     }
@@ -749,7 +749,7 @@ public static partial class Common
             }
 
             Optional("WITH");
-            Choice("NORMAL", "ERROR");
+            Choice("NORMAL ERROR");
             Optional("STATUS");
             switch (Current().Type)
             {
@@ -1160,7 +1160,7 @@ public static partial class Common
 
     public static void AtEndOfPage(ref bool isConditional, bool atEndOfPageExists = false, bool notAtEndOfPageExists = false)
     {
-        if (CurrentEquals("AT END-OF-PAGE EOP", true))
+        if (CurrentEquals("AT END-OF-PAGE EOP"))
         {
             if (atEndOfPageExists)
             {
@@ -1180,7 +1180,7 @@ public static partial class Common
             atEndOfPageExists = true;
 
             Optional("AT");
-            Choice("END-OF-PAGE", "EOP");
+            Choice("END-OF-PAGE EOP");
 
             Statements.WithoutSections(true);
 
@@ -1208,7 +1208,7 @@ public static partial class Common
 
             Expected("NOT");
             Optional("AT");
-            Choice("END-OF-PAGE", "EOP");
+            Choice("END-OF-PAGE EOP");
 
             Statements.WithoutSections(true);
 
@@ -1218,7 +1218,7 @@ public static partial class Common
 
     public static void ForAlphanumericForNational(bool forAlphanumericExists = false, bool forNationalExists = false)
     {
-        if (CurrentEquals("FOR") && LookaheadEquals(1, "ALPHANUMERIC") || CurrentEquals("ALPHANUMERIC"))
+        if (CurrentEquals("FOR") && PeekEquals(1, "ALPHANUMERIC") || CurrentEquals("ALPHANUMERIC"))
         {
             if (forAlphanumericExists)
             {
@@ -1245,7 +1245,7 @@ public static partial class Common
             ForAlphanumericForNational(forAlphanumericExists, forNationalExists);
         }
 
-        if (CurrentEquals("FOR") && LookaheadEquals(1, "NATIONAL") || CurrentEquals("NATIONAL"))
+        if (CurrentEquals("FOR") && PeekEquals(1, "NATIONAL") || CurrentEquals("NATIONAL"))
         {
             if (forNationalExists)
             {
@@ -1308,7 +1308,7 @@ public static partial class Common
             LineColumn(lineExists, columnExists);
         }
 
-        if (CurrentEquals("COLUMN", "COL"))
+        if (CurrentEquals("COLUMN COL"))
         {
             if (columnExists)
             {
@@ -1398,7 +1398,7 @@ public static partial class Common
     {
         var expression = new List<Token>();
 
-        while (!CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(delimiters, true))
+        while (!CurrentEquals(TokenType.ReservedKeyword) && !CurrentEquals(delimiters))
         {
             BuildArithmeticExpression(expression);
         }
@@ -1440,7 +1440,7 @@ public static partial class Common
             return Expressions.ArithmeticPrecedence.ContainsKey(current.Value);
         }
 
-        if (CurrentEquals(TokenType.Identifier, TokenType.Numeric))
+        if (CurrentEquals(TokenType.Identifier | TokenType.Numeric))
         {
             expression.Add(Current());
             Continue();
@@ -1511,7 +1511,7 @@ public static partial class Common
     {
         var expression = new List<Token>();
 
-        while (!CurrentEquals(TokenContext.IsStatement) && !CurrentEquals(delimiters, true))
+        while (!CurrentEquals(TokenContext.IsStatement) && !CurrentEquals(delimiters))
         {
             BuildConditionExpression(expression);
         }
@@ -1548,31 +1548,31 @@ public static partial class Common
 
     public static void BuildConditionExpression(List<Token> expression)
     {
-        if (CurrentEquals("IS") && (Lookahead(1).Value is "GREATER" or "LESS" or "EQUAL" or "NOT" || Lookahead(1).Type is TokenType.Symbol))
+        if (CurrentEquals("IS") && (Peek(1).Value is "GREATER" or "LESS" or "EQUAL" or "NOT" || Peek(1).Type is TokenType.Symbol))
         {
             Continue();
         }
-        else if (CurrentEquals("NOT") && (LookaheadEquals(1, ">") || LookaheadEquals(1, "<")))
+        else if (CurrentEquals("NOT") && (PeekEquals(1, ">") || PeekEquals(1, "<")))
         {
-            var combined = new Token($"NOT {Lookahead(1).Value}", TokenType.Symbol, Current().Line, Current().Column);
+            var combined = new Token($"NOT {Peek(1).Value}", TokenType.Symbol, Current().Line, Current().Column);
             expression.Add(combined);
             Continue(2);
         }
-        else if (CurrentEquals("NOT") && (LookaheadEquals(1, "GREATER") || LookaheadEquals(1, "LESS") || LookaheadEquals(1, "EQUAL")))
+        else if (CurrentEquals("NOT") && (PeekEquals(1, "GREATER") || PeekEquals(1, "LESS") || PeekEquals(1, "EQUAL")))
         {
-            if (LookaheadEquals(1, "GREATER"))
+            if (PeekEquals(1, "GREATER"))
             {
                 var combined = new Token($"NOT >", TokenType.Symbol, Current().Line, Current().Column);
                 expression.Add(combined);
             }
 
-            if (LookaheadEquals(1, "LESS"))
+            if (PeekEquals(1, "LESS"))
             {
                 var combined = new Token($"NOT <", TokenType.Symbol, Current().Line, Current().Column);
                 expression.Add(combined);
             }
 
-            if (LookaheadEquals(1, "EQUAL"))
+            if (PeekEquals(1, "EQUAL"))
             {
                 var combined = new Token($"<>", TokenType.Symbol, Current().Line, Current().Column);
                 expression.Add(combined);
@@ -1580,7 +1580,7 @@ public static partial class Common
 
             Continue(2);
 
-            if (CurrentEquals("THAN", "TO")) Continue();
+            if (CurrentEquals("THAN TO")) Continue();
         }
         else if (CurrentEquals("GREATER") || CurrentEquals("LESS") || CurrentEquals("EQUAL"))
         {
@@ -1602,21 +1602,21 @@ public static partial class Common
                 expression.Add(converted);
             }
 
-            if (CurrentEquals("GREATER") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
+            if (CurrentEquals("GREATER") && (PeekEquals(1, "OR") || PeekEquals(2, "OR")))
             {
-                if (!LookaheadEquals(1, "THAN")) Continue(2);
+                if (!PeekEquals(1, "THAN")) Continue(2);
 
-                if (LookaheadEquals(1, "THAN")) Continue(3);
+                if (PeekEquals(1, "THAN")) Continue(3);
 
                 var converted = new Token($">=", TokenType.Symbol, Current().Line, Current().Column);
                 expression.Add(converted);
             }
 
-            if (CurrentEquals("LESS") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
+            if (CurrentEquals("LESS") && (PeekEquals(1, "OR") || PeekEquals(2, "OR")))
             {
-                if (LookaheadEquals(1, "THAN")) Continue(3);
+                if (PeekEquals(1, "THAN")) Continue(3);
 
-                if (!LookaheadEquals(1, "THAN")) Continue(2);
+                if (!PeekEquals(1, "THAN")) Continue(2);
 
                 var converted = new Token($"<=", TokenType.Symbol, Current().Line, Current().Column);
                 expression.Add(converted);
@@ -1624,11 +1624,11 @@ public static partial class Common
 
             Continue();
 
-            if (CurrentEquals("THAN", "TO")) Continue();
+            if (CurrentEquals("THAN TO")) Continue();
         }
         else
         {
-            if (CurrentEquals("FUNCTION") || CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "("))
+            if (CurrentEquals("FUNCTION") || CurrentEquals(TokenType.Identifier) && PeekEquals(1, "("))
             {
                 var current = Current();
                 while (!CurrentEquals(")")) Continue();
@@ -1648,43 +1648,43 @@ public static partial class Common
     {
         ReadOnlySpan<char> operators = "< > <= >= =";
 
-        if (CurrentEquals("IS") && (LookaheadEquals(1, "GREATER LESS EQUAL NOT", true) || LookaheadEquals(1, TokenType.Symbol)))
+        if (CurrentEquals("IS") && (PeekEquals(1, "GREATER LESS EQUAL NOT") || PeekEquals(1, TokenType.Symbol)))
         {
             Continue();
         }
 
-        if (CurrentEquals("NOT") && LookaheadEquals(1, ">", "<"))
+        if (CurrentEquals("NOT") && PeekEquals(1, "> <"))
         {
             Continue(2);
         }
-        else if (CurrentEquals("NOT") && LookaheadEquals(1, "GREATER", "LESS"))
+        else if (CurrentEquals("NOT") && PeekEquals(1, "GREATER LESS"))
         {
             Continue(2);
 
-            if (CurrentEquals("THAN", "TO")) Continue();
+            if (CurrentEquals("THAN TO")) Continue();
         }
-        else if (CurrentEquals("GREATER LESS EQUAL", true))
+        else if (CurrentEquals("GREATER LESS EQUAL"))
         {
-            if (CurrentEquals("GREATER") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
+            if (CurrentEquals("GREATER") && (PeekEquals(1, "OR") || PeekEquals(2, "OR")))
             {
-                if (!LookaheadEquals(1, "THAN")) Continue(2);
+                if (!PeekEquals(1, "THAN")) Continue(2);
 
-                if (LookaheadEquals(1, "THAN")) Continue(3);
+                if (PeekEquals(1, "THAN")) Continue(3);
             }
 
-            if (CurrentEquals("LESS") && (LookaheadEquals(1, "OR") || LookaheadEquals(2, "OR")))
+            if (CurrentEquals("LESS") && (PeekEquals(1, "OR") || PeekEquals(2, "OR")))
             {
-                if (LookaheadEquals(1, "THAN")) Continue(3);
+                if (PeekEquals(1, "THAN")) Continue(3);
 
-                if (!LookaheadEquals(1, "THAN")) Continue(2);
+                if (!PeekEquals(1, "THAN")) Continue(2);
 
             }
 
             Continue();
 
-            if (CurrentEquals("THAN", "TO")) Continue();
+            if (CurrentEquals("THAN TO")) Continue();
         }
-        else if (CurrentEquals(operators, true))
+        else if (CurrentEquals(operators))
         {
             Continue();
         }
@@ -1708,7 +1708,7 @@ public static partial class Common
 
     public static void EncodingEndianness(bool encodingExists = false, bool endiannessExists = false)
     {
-        if (CurrentEquals("BINARY-ENCODING", "DECIMAL-ENCODING"))
+        if (CurrentEquals("BINARY-ENCODING DECIMAL-ENCODING"))
         {
             if (encodingExists)
             {
@@ -1731,7 +1731,7 @@ public static partial class Common
             EncodingEndianness(encodingExists, endiannessExists);
         }
 
-        if (CurrentEquals("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT"))
+        if (CurrentEquals("HIGH-ORDER-LEFT HIGH-ORDER-RIGHT"))
         {
             if (endiannessExists)
             {
@@ -1757,7 +1757,7 @@ public static partial class Common
 
     public static EvaluateOperand SelectionSubject()
     {
-        if (CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && !LookaheadEquals(1, TokenType.Symbol))
+        if (CurrentEquals(TokenType.Identifier | TokenType.Numeric | TokenType.String) && !PeekEquals(1, TokenType.Symbol))
         {
             if (CurrentEquals(TokenType.Identifier))
             {
@@ -1768,9 +1768,9 @@ public static partial class Common
             ParseLiteral(true, true);
             return EvaluateOperand.Literal;
         }
-        else if (CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && LookaheadEquals(1, TokenType.Symbol))
+        else if (CurrentEquals(TokenType.Identifier | TokenType.Numeric | TokenType.String) && PeekEquals(1, TokenType.Symbol))
         {
-            if (Expressions.ArithmeticPrecedence.ContainsKey(Lookahead(1).Value))
+            if (Expressions.ArithmeticPrecedence.ContainsKey(Peek(1).Value))
             {
                 Arithmetic("ALSO WHEN");
                 return EvaluateOperand.Arithmetic;
@@ -1781,9 +1781,9 @@ public static partial class Common
                 return EvaluateOperand.Condition;
             }
         }
-        else if (CurrentEquals("TRUE", "FALSE"))
+        else if (CurrentEquals("TRUE FALSE"))
         {
-            Choice("TRUE", "FALSE");
+            Choice("TRUE FALSE");
             return EvaluateOperand.TrueOrFalse;
         }
 
@@ -1818,7 +1818,7 @@ public static partial class Common
         bool truefalse = operand is
             EvaluateOperand.Condition or EvaluateOperand.TrueOrFalse;
 
-        if (identifier || literal && CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && !LookaheadEquals(1, TokenType.Symbol))
+        if (identifier || literal && CurrentEquals(TokenType.Identifier | TokenType.Numeric | TokenType.String) && !PeekEquals(1, TokenType.Symbol))
         {
             if (identifier && CurrentEquals(TokenType.Identifier))
             {
@@ -1835,9 +1835,9 @@ public static partial class Common
                 RangeExpression(range, EvaluateOperand.Literal);
             }
         }
-        else if (arithmetic || condition && CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String) && LookaheadEquals(1, TokenType.Symbol))
+        else if (arithmetic || condition && CurrentEquals(TokenType.Identifier | TokenType.Numeric | TokenType.String) && PeekEquals(1, TokenType.Symbol))
         {
-            if (arithmetic && Expressions.ArithmeticPrecedence.ContainsKey(Lookahead(1).Value))
+            if (arithmetic && Expressions.ArithmeticPrecedence.ContainsKey(Peek(1).Value))
             {
                 Arithmetic("ALSO WHEN");
                 RangeExpression(range, EvaluateOperand.Arithmetic);
@@ -1851,7 +1851,7 @@ public static partial class Common
                 Condition("ALSO WHEN");
             }
         }
-        else if (truefalse && CurrentEquals("TRUE", "FALSE"))
+        else if (truefalse && CurrentEquals("TRUE FALSE"))
         {
             Choice("TRUE FALSE ANY");
         }
@@ -1863,9 +1863,9 @@ public static partial class Common
 
     public static void RangeExpression(bool canHaveRange, EvaluateOperand rangeType)
     {
-        if (canHaveRange && CurrentEquals("THROUGH", "THRU"))
+        if (canHaveRange && CurrentEquals("THROUGH THRU"))
         {
-            Choice("THROUGH", "THRU");
+            Choice("THROUGH THRU");
             if (rangeType is EvaluateOperand.Identifier)
             {
                 References.Identifier();
@@ -1879,7 +1879,7 @@ public static partial class Common
                 Arithmetic("ALSO WHEN");
             }
 
-            if (CurrentEquals("IS", "UTF-8"))
+            if (CurrentEquals("IS UTF-8"))
             {
                 Optional("IS");
                 // Need to implement other alphabet support
@@ -1890,7 +1890,7 @@ public static partial class Common
 
     public static void ParseLiteral(bool numeric, bool @string)
     {
-        if (!CurrentEquals(TokenType.Identifier, TokenType.Numeric, TokenType.String))
+        if (!CurrentEquals(TokenType.Identifier | TokenType.Numeric | TokenType.String))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
@@ -1919,23 +1919,11 @@ public static partial class Common
 
     public static bool IdentifierOrLiteral()
     {
-        return CurrentEquals(
-            TokenType.Identifier,
-            TokenType.Numeric,
-            TokenType.String,
-            TokenType.HexString,
-            TokenType.Boolean,
-            TokenType.HexBoolean,
-            TokenType.National,
-            TokenType.HexNational
-        );
+        return CurrentEquals(TokenType.Identifier | TokenType.Numeric | TokenType.String | TokenType.HexString | TokenType.Boolean | TokenType.HexBoolean | TokenType.National | TokenType.HexNational);
     }
 
     public static bool IdentifierOrLiteral(TokenType literalType)
     {
-        return CurrentEquals(
-            TokenType.Identifier,
-            literalType
-        );
+        return CurrentEquals(TokenType.Identifier | literalType);
     }
 }

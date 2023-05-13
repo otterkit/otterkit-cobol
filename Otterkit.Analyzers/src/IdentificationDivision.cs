@@ -26,7 +26,7 @@ public static class IdentificationDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                     Division header, missing separator period.
                     """)
-                .WithSourceLine(Lookahead(-1), """
+                .WithSourceLine(Peek(-1), """
                     Expected a separator period '. ' after this token
                     """)
                 .WithNote("""
@@ -87,7 +87,7 @@ public static class IdentificationDivision
             Optional("DEFAULT");
             Optional("IS");
 
-            Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+            Choice("HIGH-ORDER-LEFT HIGH-ORDER-RIGHT");
         }
 
         if (CurrentEquals("FLOAT-DECIMAL"))
@@ -286,10 +286,10 @@ public static class IdentificationDivision
             Expected("AS");
             CompilerContext.ActiveUnits.Pop();
             Literals.String();
-            CompilerContext.ActiveUnits.Push(Lookahead(-1));
+            CompilerContext.ActiveUnits.Push(Peek(-1));
         }
 
-        if (CurrentEquals("IS COMMON INITIAL RECURSIVE PROTOTYPE", true))
+        if (CurrentEquals("IS COMMON INITIAL RECURSIVE PROTOTYPE"))
         {
             bool isCommon = false;
             bool isInitial = false;
@@ -298,7 +298,7 @@ public static class IdentificationDivision
 
             Optional("IS");
 
-            while (CurrentEquals("COMMON INITIAL RECURSIVE PROTOTYPE", true))
+            while (CurrentEquals("COMMON INITIAL RECURSIVE PROTOTYPE"))
             {
                 if (CurrentEquals("COMMON"))
                 {
@@ -374,7 +374,7 @@ public static class IdentificationDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 Program definition, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -402,7 +402,7 @@ public static class IdentificationDivision
             Literals.String();
         }
 
-        if (CurrentEquals("IS", "PROTOTYPE"))
+        if (CurrentEquals("IS PROTOTYPE"))
         {
             Optional("IS");
             Expected("PROTOTYPE");
@@ -430,7 +430,7 @@ public static class IdentificationDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 Function definition, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -460,7 +460,7 @@ public static class IdentificationDivision
             Literals.String();
         }
 
-        if (CurrentEquals("IS", "FINAL"))
+        if (CurrentEquals("IS FINAL"))
         {
             Optional("IS");
             Expected("FINAL");
@@ -477,7 +477,7 @@ public static class IdentificationDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
                     Class definition, missing INHERITS class.
                     """)
-                .WithSourceLine(Lookahead(-1), """
+                .WithSourceLine(Peek(-1), """
                     The INHERITS phrase must contain a class name.
                     """)
                 .CloseError();
@@ -495,7 +495,7 @@ public static class IdentificationDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
                     Class definition, missing using parameter.
                     """)
-                .WithSourceLine(Lookahead(-1), """
+                .WithSourceLine(Peek(-1), """
                     The USING phrase must contain at least one parameter.
                     """)
                 .CloseError();
@@ -518,7 +518,7 @@ public static class IdentificationDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 Class definition, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -559,7 +559,7 @@ public static class IdentificationDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
                     Interface definition, missing INHERITS class.
                     """)
-                .WithSourceLine(Lookahead(-1), """
+                .WithSourceLine(Peek(-1), """
                     The INHERITS phrase must contain at least one interface name.
                     """)
                 .CloseError();
@@ -578,7 +578,7 @@ public static class IdentificationDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
                     Interface definition, missing using parameter.
                     """)
-                .WithSourceLine(Lookahead(-1), """
+                .WithSourceLine(Peek(-1), """
                     The USING phrase must contain at least one parameter.
                     """)
                 .CloseError();
@@ -601,7 +601,7 @@ public static class IdentificationDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 Interface definition, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -680,7 +680,7 @@ public static class IdentificationDivision
 
         if (CurrentEquals("OVERRIDE")) Expected("OVERRIDE");
 
-        if (CurrentEquals("IS", "FINAL"))
+        if (CurrentEquals("IS FINAL"))
         {
             Optional("IS");
             Expected("FINAL");
@@ -692,7 +692,7 @@ public static class IdentificationDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 Interface definition, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -766,7 +766,7 @@ public static class IdentificationDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 95,"""
                     Missing implements interfaces.
                     """)
-                .WithSourceLine(Lookahead(-1), """
+                .WithSourceLine(Peek(-1), """
                     The IMPLEMENTS phrase must contain at least one interface name.
                     """)
                 .CloseError();
@@ -808,7 +808,7 @@ public static class IdentificationDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 95,"""
                     Missing implements interfaces.
                     """)
-                .WithSourceLine(Lookahead(-1), """
+                .WithSourceLine(Peek(-1), """
                     The IMPLEMENTS phrase must contain at least one interface name.
                     """)
                 .CloseError();

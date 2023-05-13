@@ -48,7 +48,7 @@ public static class ProcedureDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Division header, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token
                 """)
             .WithNote("""
@@ -70,7 +70,7 @@ public static class ProcedureDivision
 
     private static void Using()
     {
-        while (CurrentEquals("BY REFERENCE VALUE", true) || CurrentEquals(TokenType.Identifier))
+        while (CurrentEquals("BY REFERENCE VALUE") || CurrentEquals(TokenType.Identifier))
         {
             while (CurrentEquals(TokenType.Identifier) || CurrentEquals("OPTIONAL"))
             {
@@ -86,7 +86,7 @@ public static class ProcedureDivision
                 HandleHeaderDataName(true, isOptional, true);
             }
 
-            if (CurrentEquals("BY") && !LookaheadEquals(1, "VALUE", "REFERENCE"))
+            if (CurrentEquals("BY") && !PeekEquals(1, "VALUE REFERENCE"))
             {
                 ErrorHandler
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """
@@ -100,18 +100,18 @@ public static class ProcedureDivision
                 AnchorPoint(TokenContext.IsStatement, "RETURNING");
             }
 
-            if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && LookaheadEquals(1, "REFERENCE"))
+            if (CurrentEquals("REFERENCE") || CurrentEquals("BY") && PeekEquals(1, "REFERENCE"))
             {
                 Optional("BY");
                 Expected("REFERENCE");
 
-                if (!CurrentEquals(TokenType.Identifier) && !LookaheadEquals(1, TokenType.Identifier))
+                if (!CurrentEquals(TokenType.Identifier) && !PeekEquals(1, TokenType.Identifier))
                 {
                     ErrorHandler
                     .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """
                         Using phrase missing identifier.
                         """)
-                    .WithSourceLine(Lookahead(-1), """
+                    .WithSourceLine(Peek(-1), """
                         Must contain at least one data name.
                         """)
                     .CloseError();
@@ -132,7 +132,7 @@ public static class ProcedureDivision
                 }
             }
 
-            if (CurrentEquals("VALUE") || CurrentEquals("BY") && LookaheadEquals(1, "VALUE"))
+            if (CurrentEquals("VALUE") || CurrentEquals("BY") && PeekEquals(1, "VALUE"))
             {
                 Optional("BY");
                 Expected("VALUE");
@@ -155,7 +155,7 @@ public static class ProcedureDivision
                     .Build(ErrorType.Analyzer, ConsoleColor.Red, 128, """
                         Using phrase missing identifier.
                         """)
-                    .WithSourceLine(Lookahead(-1), """
+                    .WithSourceLine(Peek(-1), """
                         Must contain at least one data name.
                         """)
                     .CloseError();
@@ -177,7 +177,7 @@ public static class ProcedureDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 75, """
                 Missing returning data item.
                 """)
-            .WithSourceLine(Lookahead(-1), $"""
+            .WithSourceLine(Peek(-1), $"""
                 Missing returning identifier after this token.
                 """)
             .CloseError();
@@ -204,7 +204,7 @@ public static class ProcedureDivision
 
         // Uniqueness has not been handled above, 
         // so we handle it here.
-        if (!dataName.IsUnique && !CurrentEquals("IN", "OF"))
+        if (!dataName.IsUnique && !CurrentEquals("IN OF"))
         {
             ErrorHandler
             .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
@@ -222,7 +222,7 @@ public static class ProcedureDivision
 
         // COBOL standard requirement, data-name doesn't have
         // a name qualification syntax. Only identifiers do.
-        if (CurrentEquals("IN", "OF"))
+        if (CurrentEquals("IN OF"))
         {
             ErrorHandler
             .Build(ErrorType.Resolution, ConsoleColor.Red, 1200, """
@@ -344,7 +344,7 @@ public static class ProcedureDivision
         var currentSource = CompilerContext.SourceTypes.Peek();
 
         bool isProcedureDeclarative = CurrentEquals("DECLARATIVES")
-            || CurrentEquals(TokenType.Identifier) && LookaheadEquals(1, "SECTION");
+            || CurrentEquals(TokenType.Identifier) && PeekEquals(1, "SECTION");
 
         bool canContainStatements = currentSource switch
         {
@@ -419,7 +419,7 @@ public static class ProcedureDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 27, $"""
                 End marker, {errorMessageChoice}
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a source unit end marker after this token
                 """)
             .CloseError();
@@ -474,7 +474,7 @@ public static class ProcedureDivision
                     .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                         End marker, missing separator period.
                         """)
-                    .WithSourceLine(Lookahead(-1), """
+                    .WithSourceLine(Peek(-1), """
                         Expected a separator period '. ' after this token
                         """)
                     .WithNote("""
@@ -511,7 +511,7 @@ public static class ProcedureDivision
                     .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                         End marker, missing separator period.
                         """)
-                    .WithSourceLine(Lookahead(-1), """
+                    .WithSourceLine(Peek(-1), """
                         Expected a separator period '. ' after this token
                         """)
                     .WithNote("""
@@ -534,7 +534,7 @@ public static class ProcedureDivision
                     .Build(ErrorType.Analyzer, ConsoleColor.Red, 26, """
                         End marker, missing separator period.
                         """)
-                    .WithSourceLine(Lookahead(-1), """
+                    .WithSourceLine(Peek(-1), """
                         Expected a separator period '. ' after this token
                         """)
                     .WithNote("""
@@ -575,7 +575,7 @@ public static class ProcedureDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 End marker, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token
                 """)
             .WithNote("""
@@ -589,7 +589,7 @@ public static class ProcedureDivision
 
     public static void ParseObjects()
     {
-        if (CurrentEquals("FACTORY") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "FACTORY"))
+        if (CurrentEquals("FACTORY") || CurrentEquals("IDENTIFICATION") && PeekEquals(3, "FACTORY"))
         {
             IdentificationDivision.Parse();
 
@@ -607,7 +607,7 @@ public static class ProcedureDivision
             Expected("DIVISION");
             Expected(".");
 
-            while (CurrentEquals("METHOD-ID") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "METHOD-ID"))
+            while (CurrentEquals("METHOD-ID") || CurrentEquals("IDENTIFICATION") && PeekEquals(3, "METHOD-ID"))
             {
                 IdentificationDivision.Parse();
 
@@ -629,7 +629,7 @@ public static class ProcedureDivision
             EndMarker();
         }
 
-        if (CurrentEquals("OBJECT") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "OBJECT"))
+        if (CurrentEquals("OBJECT") || CurrentEquals("IDENTIFICATION") && PeekEquals(3, "OBJECT"))
         {
             IdentificationDivision.Parse();
 
@@ -647,7 +647,7 @@ public static class ProcedureDivision
             Expected("DIVISION");
             Expected(".");
 
-            while (CurrentEquals("METHOD-ID") || (CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "METHOD-ID")))
+            while (CurrentEquals("METHOD-ID") || (CurrentEquals("IDENTIFICATION") && PeekEquals(3, "METHOD-ID")))
             {
                 IdentificationDivision.Parse();
 
@@ -683,7 +683,7 @@ public static class ProcedureDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                     Division header, missing separator period.
                     """)
-                .WithSourceLine(Lookahead(-1), """
+                .WithSourceLine(Peek(-1), """
                     Expected a separator period '. ' after this token
                     """)
                 .WithNote("""
@@ -694,7 +694,7 @@ public static class ProcedureDivision
                 AnchorPoint(TokenContext.IsStatement);
             }
 
-            while (CurrentEquals("METHOD-ID") || CurrentEquals("IDENTIFICATION") && LookaheadEquals(3, "METHOD-ID"))
+            while (CurrentEquals("METHOD-ID") || CurrentEquals("IDENTIFICATION") && PeekEquals(3, "METHOD-ID"))
             {
                 IdentificationDivision.Parse();
 

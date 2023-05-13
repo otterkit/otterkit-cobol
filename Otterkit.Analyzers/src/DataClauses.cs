@@ -22,17 +22,17 @@ public static partial class DataDivision
 
     private static void FileEntryClauses(DataEntry fileLocal)
     {
-        if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL", "GLOBAL"))
+        if (CurrentEquals("IS") && !PeekEquals(1, "EXTERNAL GLOBAL"))
         {
             IsClauseErrorCheck();
         }
 
-        if ((CurrentEquals("IS") && LookaheadEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
+        if ((CurrentEquals("IS") && PeekEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
         {
             ExternalClause(fileLocal);
         }
 
-        if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
+        if ((CurrentEquals("IS") && PeekEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
         {
             GlobalClause(fileLocal);
         }
@@ -50,14 +50,14 @@ public static partial class DataDivision
             Expected("BLOCK");
             Optional("CONTAINS");
             
-            if (LookaheadEquals(1, "TO"))
+            if (PeekEquals(1, "TO"))
             {
                 Literals.Numeric();
                 Expected("TO");
             }
 
             Literals.Numeric();
-            Choice("CHARACTERS", "RECORDS");
+            Choice("CHARACTERS RECORDS");
         }
 
         if (CurrentEquals("RECORD"))
@@ -75,7 +75,7 @@ public static partial class DataDivision
             CodeSetClause(fileLocal);
         }
 
-        if (CurrentEquals("REPORT", "REPORTS"))
+        if (CurrentEquals("REPORT REPORTS"))
         {
             ReportsClause(fileLocal);
         }
@@ -83,22 +83,22 @@ public static partial class DataDivision
 
     private static void DataEntryClauses(DataEntry entry)
     {
-        if (CurrentEquals("IS") && !LookaheadEquals(1, "EXTERNAL GLOBAL TYPEDEF", true))
+        if (CurrentEquals("IS") && !PeekEquals(1, "EXTERNAL GLOBAL TYPEDEF"))
         {
             IsClauseErrorCheck();
         }
 
-        if ((CurrentEquals("IS") && LookaheadEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
+        if ((CurrentEquals("IS") && PeekEquals(1, "EXTERNAL")) || CurrentEquals("EXTERNAL"))
         {
             ExternalClause(entry);
         }
 
-        if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
+        if ((CurrentEquals("IS") && PeekEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
         {
             GlobalClause(entry);
         }
 
-        if ((CurrentEquals("IS") && LookaheadEquals(1, "TYPEDEF")) || CurrentEquals("TYPEDEF"))
+        if ((CurrentEquals("IS") && PeekEquals(1, "TYPEDEF")) || CurrentEquals("TYPEDEF"))
         {
             TypedefClause(entry);
         }
@@ -113,7 +113,7 @@ public static partial class DataDivision
             AlignedClause(entry);
         }
 
-        if (CurrentEquals("ANY") && LookaheadEquals(1, "LENGTH"))
+        if (CurrentEquals("ANY") && PeekEquals(1, "LENGTH"))
         {
             AnyLengthClause(entry);
         }
@@ -128,7 +128,7 @@ public static partial class DataDivision
             BlankWhenClause(entry);
         }
 
-        if (CurrentEquals("CONSTANT") && LookaheadEquals(1, "RECORD"))
+        if (CurrentEquals("CONSTANT") && PeekEquals(1, "RECORD"))
         {
             ConstantRecordClause(entry);
         }
@@ -143,12 +143,12 @@ public static partial class DataDivision
             GroupUsageClause(entry);
         }
 
-        if (CurrentEquals("JUSTIFIED", "JUST"))
+        if (CurrentEquals("JUSTIFIED JUST"))
         {
             JustifiedClause(entry);
         }
 
-        if (CurrentEquals("SYNCHRONIZED", "SYNC"))
+        if (CurrentEquals("SYNCHRONIZED SYNC"))
         {
             SynchronizedClause(entry);
         }
@@ -173,7 +173,7 @@ public static partial class DataDivision
             OccursClause(entry);
         }
 
-        if (CurrentEquals("PIC", "PICTURE"))
+        if (CurrentEquals("PIC PICTURE"))
         {
             PictureClause(entry);
         }
@@ -195,7 +195,7 @@ public static partial class DataDivision
 
     private static void ReportEntryClauses()
     {
-        if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
+        if ((CurrentEquals("IS") && PeekEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
         {
             Optional("IS");
             Expected("GLOBAL");
@@ -208,7 +208,7 @@ public static partial class DataDivision
             Common.IdentifierOrLiteral(TokenType.String);
         }
 
-        if (CurrentEquals("CONTROL", "CONTROLS"))
+        if (CurrentEquals("CONTROL CONTROLS"))
         {
             if (CurrentEquals("CONTROL"))
             {
@@ -257,19 +257,19 @@ public static partial class DataDivision
 
             Literals.Numeric();
 
-            if (CurrentEquals("LINE", "LINES"))
+            if (CurrentEquals("LINE LINES"))
             {
-                Choice("LINE", "LINES");
+                Choice("LINE LINES");
             }
 
-            if (LookaheadEquals(1, "COL", "COLUMNS") && !LookaheadEquals(-1, TokenType.Numeric))
+            if (PeekEquals(1, "COL COLUMNS") && !PeekEquals(-1, TokenType.Numeric))
             {
                 Literals.Numeric();
-                Choice("COL", "COLUMNS");
+                Choice("COL COLUMNS");
             }
-            else if (CurrentEquals("COL", "COLUMNS") && LookaheadEquals(-1, TokenType.Numeric))
+            else if (CurrentEquals("COL COLUMNS") && PeekEquals(-1, TokenType.Numeric))
             {
-                Choice("COL", "COLUMNS");
+                Choice("COL COLUMNS");
             }
 
             if (CurrentEquals("HEADING"))
@@ -282,12 +282,12 @@ public static partial class DataDivision
             if (CurrentEquals("FIRST"))
             {
                 Expected("FIRST");
-                Choice("DETAIL", "DE");
+                Choice("DETAIL DE");
                 Optional("IS");
                 Literals.Numeric();
             }
 
-            if (CurrentEquals("LAST") && LookaheadEquals(1, "CONTROL", "CH"))
+            if (CurrentEquals("LAST") && PeekEquals(1, "CONTROL CH"))
             {
                 Expected("LAST");
                 if (CurrentEquals("CONTROL"))
@@ -304,10 +304,10 @@ public static partial class DataDivision
                 Literals.Numeric();
             }
 
-            if (CurrentEquals("LAST") && LookaheadEquals(1, "DETAIL", "DE"))
+            if (CurrentEquals("LAST") && PeekEquals(1, "DETAIL DE"))
             {
                 Expected("LAST");
-                Choice("DETAIL", "DE");
+                Choice("DETAIL DE");
                 Optional("IS");
                 Literals.Numeric();
             }
@@ -339,15 +339,15 @@ public static partial class DataDivision
                 Expected("NEXT");
                 Expected("PAGE");
 
-                if (CurrentEquals("WITH", "RESET"))
+                if (CurrentEquals("WITH RESET"))
                 {
                     Optional("WITH");
                     Expected("RESET");
                 }
             }
-            else if (CurrentEquals("+", "PLUS"))
+            else if (CurrentEquals("+ PLUS"))
             {
-                Choice("+", "PLUS");
+                Choice("+ PLUS");
                 Literals.Numeric();
             }
             else
@@ -356,7 +356,7 @@ public static partial class DataDivision
             }
         }
 
-        if (CurrentEquals("LINE", "LINES"))
+        if (CurrentEquals("LINE LINES"))
         {
             if (CurrentEquals("LINES"))
             {
@@ -378,13 +378,13 @@ public static partial class DataDivision
                 }
             }
 
-            while (CurrentEquals(TokenType.Numeric) || CurrentEquals("+ PLUS ON NEXT", true))
+            while (CurrentEquals(TokenType.Numeric) || CurrentEquals("+ PLUS ON NEXT"))
             {
                 ReportLineClauseLoop();
             }
         }
 
-        if (CurrentEquals("COLUMN COLUMNS COL COLS", true))
+        if (CurrentEquals("COLUMN COLUMNS COL COLS"))
         {
             if (CurrentEquals("COLUMN"))
             {
@@ -405,9 +405,9 @@ public static partial class DataDivision
                 Expected("COLS");
             }
 
-            if (CurrentEquals("CENTER", "RIGHT"))
+            if (CurrentEquals("CENTER RIGHT"))
             {
-                Choice("CENTER", "RIGHT");
+                Choice("CENTER RIGHT");
             }
             else
             {
@@ -416,11 +416,11 @@ public static partial class DataDivision
 
             OptionalChoice("IS ARE");
 
-            while(CurrentEquals(TokenType.Numeric) || CurrentEquals("+", "PLUS"))
+            while(CurrentEquals(TokenType.Numeric) || CurrentEquals("+ PLUS"))
             {
-                if (CurrentEquals("+", "PLUS"))
+                if (CurrentEquals("+ PLUS"))
                 {
-                    Choice("+", "PLUS");
+                    Choice("+ PLUS");
                     Literals.Numeric();
                 }
                 else
@@ -430,7 +430,7 @@ public static partial class DataDivision
             }
         }
 
-        if (CurrentEquals("PICTURE", "PIC"))
+        if (CurrentEquals("PICTURE PIC"))
         {
             PictureClause(reportEntry);
         }
@@ -440,7 +440,7 @@ public static partial class DataDivision
             SignClause(reportEntry);
         }
 
-        if (CurrentEquals("JUSTIFIED", "JUST"))
+        if (CurrentEquals("JUSTIFIED JUST"))
         {
             JustifiedClause(reportEntry);
         }
@@ -466,7 +466,7 @@ public static partial class DataDivision
         if (CurrentEquals("OCCURS"))
         {
             Expected("OCCURS");
-            if (LookaheadEquals(1, "TO"))
+            if (PeekEquals(1, "TO"))
             {
                 Literals.Numeric();
                 Expected("TO");
@@ -494,7 +494,7 @@ public static partial class DataDivision
             Expected("USAGE");
             Optional("IS");
 
-            Choice("DISPLAY", "NATIONAL");
+            Choice("DISPLAY NATIONAL");
         }
         
         if (CurrentEquals("SUM"))
@@ -541,7 +541,7 @@ public static partial class DataDivision
             }
         }
 
-        if (CurrentEquals("SOURCE", "SOURCES"))
+        if (CurrentEquals("SOURCE SOURCES"))
         {
             if (CurrentEquals("SOURCES"))
             {
@@ -562,7 +562,7 @@ public static partial class DataDivision
             }
         }
 
-        if (CurrentEquals("VALUE", "VALUES"))
+        if (CurrentEquals("VALUE VALUES"))
         {
             if (CurrentEquals("VALUE"))
             {
@@ -608,21 +608,21 @@ public static partial class DataDivision
 
     private static void ReportLineClauseLoop()
     {
-        if (CurrentEquals("ON", "NEXT"))
+        if (CurrentEquals("ON NEXT"))
         {
             Optional("ON");
             Expected("NEXT");
             Expected("PAGE");
         }
-        else if (CurrentEquals("+", "PLUS"))
+        else if (CurrentEquals("+ PLUS"))
         {
-            Choice("+", "PLUS");
+            Choice("+ PLUS");
             Literals.Numeric();
         }
         else
         {
             Literals.Numeric();
-            if (CurrentEquals("ON", "NEXT"))
+            if (CurrentEquals("ON NEXT"))
             {
                 Optional("ON");
                 Expected("NEXT");
@@ -633,7 +633,7 @@ public static partial class DataDivision
 
     private static void ScreenEntryClauses(DataEntry screen)
     {
-        if ((CurrentEquals("IS") && LookaheadEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
+        if ((CurrentEquals("IS") && PeekEquals(1, "GLOBAL")) || CurrentEquals("GLOBAL"))
         {
             GlobalClause(screen);
         }
@@ -643,28 +643,28 @@ public static partial class DataDivision
             LineClause(screen);
         }
 
-        if (CurrentEquals("COLUMN", "COL"))
+        if (CurrentEquals("COLUMN COL"))
         {
             ColumnClause(screen);
         }
 
-        if (CurrentEquals("PICTURE", "PIC"))
+        if (CurrentEquals("PICTURE PIC"))
         {
             PictureClause(screen);
         }
 
-        if (CurrentEquals("BLANK") && LookaheadEquals(1, "SCREEN", "LINE"))
+        if (CurrentEquals("BLANK") && PeekEquals(1, "SCREEN LINE"))
         {
             Expected("BLANK");
-            Choice("SCREEN", "LINE");
+            Choice("SCREEN LINE");
         }
 
-        if (CurrentEquals("BLANK") && !LookaheadEquals(1, "SCREEN", "LINE"))
+        if (CurrentEquals("BLANK") && !PeekEquals(1, "SCREEN LINE"))
         {
             BlankWhenClause(screen);
         }
 
-        if (CurrentEquals("JUSTIFIED", "JUST"))
+        if (CurrentEquals("JUSTIFIED JUST"))
         {
             JustifiedClause(screen);
         }
@@ -699,9 +699,9 @@ public static partial class DataDivision
             Expected("BELL");
         }
 
-        if (CurrentEquals("HIGHLIGHT", "LOWLIGHT"))
+        if (CurrentEquals("HIGHLIGHT LOWLIGHT"))
         {
-            Choice("HIGHLIGHT", "LOWLIGHT");
+            Choice("HIGHLIGHT LOWLIGHT");
         }
 
         if (CurrentEquals("REVERSE-VIDEO"))
@@ -755,7 +755,7 @@ public static partial class DataDivision
             Expected("USAGE");
             Optional("IS");
 
-            Choice("DISPLAY", "NATIONAL");
+            Choice("DISPLAY NATIONAL");
         }
 
         ScreenValueClause(screen);
@@ -771,14 +771,14 @@ public static partial class DataDivision
         Common.IdentifierOrLiteral(TokenType.Numeric);
         Optional("LINES");
 
-        if (CurrentEquals("WITH", "FOOTING"))
+        if (CurrentEquals("WITH FOOTING"))
         {
             Optional("WITH");
             Expected("FOOTING");
             Common.IdentifierOrLiteral(TokenType.Numeric);
         }
 
-        if (CurrentEquals("LINES AT TOP", true))
+        if (CurrentEquals("LINES AT TOP"))
         {
             Optional("LINES");
             Optional("AT");
@@ -786,7 +786,7 @@ public static partial class DataDivision
             Common.IdentifierOrLiteral(TokenType.Numeric);
         }
 
-        if (CurrentEquals("LINES AT BOTTOM", true))
+        if (CurrentEquals("LINES AT BOTTOM"))
         {
             Optional("LINES");
             Optional("AT");
@@ -801,7 +801,7 @@ public static partial class DataDivision
 
         fileLocal[DataClause.Record] = true;
 
-        if (CurrentEquals("IS", "VARYING"))
+        if (CurrentEquals("IS VARYING"))
         {
             Optional("IS");
             Expected("VARYING");
@@ -820,7 +820,7 @@ public static partial class DataDivision
                 Literals.Numeric();
             }
             
-            if (CurrentEquals("BYTES", "CHARACTERS"))
+            if (CurrentEquals("BYTES CHARACTERS"))
             {
                 Expected(Current().Value);
             }
@@ -838,11 +838,11 @@ public static partial class DataDivision
         // If the record is not varying in size
         Optional("CONTAINS");
         
-        if (!LookaheadEquals(1, "TO"))
+        if (!PeekEquals(1, "TO"))
         {
             Literals.Numeric();
 
-            if (CurrentEquals("BYTES", "CHARACTERS"))
+            if (CurrentEquals("BYTES CHARACTERS"))
             {
                 Expected(Current().Value);
             }
@@ -857,7 +857,7 @@ public static partial class DataDivision
 
         Literals.Numeric();
 
-        if (CurrentEquals("BYTES", "CHARACTERS"))
+        if (CurrentEquals("BYTES CHARACTERS"))
         {
             Expected(Current().Value);
         }
@@ -865,11 +865,11 @@ public static partial class DataDivision
 
     private static void ReportsClause(DataEntry fileLocal)
     {
-        Choice("REPORT", "REPORTS");
+        Choice("REPORT REPORTS");
 
         fileLocal[DataClause.Report] = true;
 
-        if (LookaheadEquals(-1, "REPORT"))
+        if (PeekEquals(-1, "REPORT"))
         {
             Optional("IS");
         }
@@ -892,7 +892,7 @@ public static partial class DataDivision
 
         fileLocal[DataClause.CodeSet] = true;
 
-        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL", true))
+        if (CurrentEquals("FOR ALPHANUMERIC NATIONAL"))
         {
             Common.ForAlphanumericForNational();
             return;
@@ -958,7 +958,7 @@ public static partial class DataDivision
 
         screenLocal[DataClause.Line] = true;
 
-        if (CurrentEquals("PLUS + MINUS -", true))
+        if (CurrentEquals("PLUS + MINUS -"))
         {
             Expected(Current().Value);
         }
@@ -975,13 +975,13 @@ public static partial class DataDivision
 
     private static void ColumnClause(DataEntry screenLocal)
     {
-        Choice("COLUMN", "COL");
+        Choice("COLUMN COL");
         Optional("NUMBER");
         Optional("IS");
 
         screenLocal[DataClause.Column] = true;
 
-        if (CurrentEquals("PLUS + MINUS -", true))
+        if (CurrentEquals("PLUS + MINUS -"))
         {
             Expected(Current().Value);
         }
@@ -1003,7 +1003,7 @@ public static partial class DataDivision
 
         entryLocal[DataClause.Sign] = true;
 
-        Choice("LEADING", "TRAILING");
+        Choice("LEADING TRAILING");
 
         if (CurrentEquals("SEPARATE"))
         {
@@ -1121,14 +1121,14 @@ public static partial class DataDivision
     {
         Expected("GROUP-USAGE");
         Optional("IS");
-        Choice("BIT", "NATIONAL");
+        Choice("BIT NATIONAL");
 
         entryLocal[DataClause.GroupUsage] = true;
     }
 
     private static void JustifiedClause(DataEntry entryLocal)
     {
-        Choice("JUSTIFIED", "JUST");
+        Choice("JUSTIFIED JUST");
         Optional("RIGHT");
 
         entryLocal[DataClause.Justified] = true;
@@ -1136,7 +1136,7 @@ public static partial class DataDivision
 
     private static void SynchronizedClause(DataEntry entryLocal)
     {
-        Choice("SYNCHRONIZED", "SYNC");
+        Choice("SYNCHRONIZED SYNC");
 
         entryLocal[DataClause.Synchronized] = true;
 
@@ -1156,14 +1156,14 @@ public static partial class DataDivision
 
         entryLocal[DataClause.Property] = true;
 
-        if (CurrentEquals("WITH", "NO"))
+        if (CurrentEquals("WITH NO"))
         {
             Optional("WITH");
             Expected("NO");
-            Choice("GET", "SET");
+            Choice("GET SET");
         }
 
-        if (CurrentEquals("IS", "FINAL"))
+        if (CurrentEquals("IS FINAL"))
         {
             Optional("IS");
             Expected("FINAL");
@@ -1197,31 +1197,31 @@ public static partial class DataDivision
         if (CurrentEquals("REPORT"))
         {
             Expected("REPORT");
-            Choice("HEADING", "FOOTING");
+            Choice("HEADING FOOTING");
         }
 
         if (CurrentEquals("PAGE"))
         {
             Expected("PAGE");
-            Choice("HEADING", "FOOTING");
+            Choice("HEADING FOOTING");
         }
 
-        if (CurrentEquals("DETAIL", "DE"))
+        if (CurrentEquals("DETAIL DE"))
         {
-            Choice("DETAIL", "DE");
+            Choice("DETAIL DE");
         }
 
-        if (CurrentEquals("CONTROL CH CF", true))
+        if (CurrentEquals("CONTROL CH CF"))
         {
             var isControlHeading = false;
 
-            if (CurrentEquals("CONTROL") && LookaheadEquals(1, "HEADING"))
+            if (CurrentEquals("CONTROL") && PeekEquals(1, "HEADING"))
             {
                 Expected("CONTROL");
                 Expected("HEADING");
                 isControlHeading = true;
             }
-            else if (CurrentEquals("CONTROL") && LookaheadEquals(1, "FOOTING"))
+            else if (CurrentEquals("CONTROL") && PeekEquals(1, "FOOTING"))
             {
                 Expected("CONTROL");
                 Expected("FOOTING");
@@ -1236,7 +1236,7 @@ public static partial class DataDivision
                 Expected("CF");
             }
 
-            if (CurrentEquals("OR FOR FINAL", true) || CurrentEquals(TokenType.Identifier))
+            if (CurrentEquals("OR FOR FINAL") || CurrentEquals(TokenType.Identifier))
             {
                 OptionalChoice("ON FOR");
                 if (CurrentEquals("FINAL"))
@@ -1256,7 +1256,7 @@ public static partial class DataDivision
             }
         }
 
-        if (CurrentEquals("RH RF PH PF", true))
+        if (CurrentEquals("RH RF PH PF"))
         {
             Expected(Current().Value);
         }
@@ -1306,7 +1306,7 @@ public static partial class DataDivision
             return;
         }
 
-        if (LookaheadEquals(1, "TO"))
+        if (PeekEquals(1, "TO"))
         {
             Literals.Numeric();
             Expected("TO");
@@ -1354,7 +1354,7 @@ public static partial class DataDivision
 
     private static void PictureClause(DataEntry entry)
     {
-        Choice("PIC", "PICTURE");
+        Choice("PIC PICTURE");
         Optional("IS");
 
         entry[DataClause.Picture] = true;
@@ -1374,7 +1374,7 @@ public static partial class DataDivision
 
         entryLocal[DataClause.Value] = true;
 
-        if (!CurrentEquals(TokenType.String, TokenType.Numeric))
+        if (!CurrentEquals(TokenType.String | TokenType.Numeric))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """
@@ -1412,7 +1412,7 @@ public static partial class DataDivision
             return;
         }
 
-        if (CurrentEquals("BINARY-CHAR BINARY-SHORT BINARY-LONG BINARY-DOUBLE", true))
+        if (CurrentEquals("BINARY-CHAR BINARY-SHORT BINARY-LONG BINARY-DOUBLE"))
         {
             Expected(Current().Value);
             if (CurrentEquals("SIGNED"))
@@ -1435,7 +1435,7 @@ public static partial class DataDivision
             return; 
         }
 
-        if (CurrentEquals("COMP", "COMPUTATIONAL"))
+        if (CurrentEquals("COMP COMPUTATIONAL"))
         {
             Expected(Current().Value);
 
@@ -1454,7 +1454,7 @@ public static partial class DataDivision
         if (CurrentEquals("FLOAT-BINARY-32"))
         {
             Expected("FLOAT-BINARY-32");
-            Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+            Choice("HIGH-ORDER-LEFT HIGH-ORDER-RIGHT");
             
             entry.Usage = Usages.FloatBinary32;
             return; 
@@ -1463,7 +1463,7 @@ public static partial class DataDivision
         if (CurrentEquals("FLOAT-BINARY-64"))
         {
             Expected("FLOAT-BINARY-64");
-            Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+            Choice("HIGH-ORDER-LEFT HIGH-ORDER-RIGHT");
             
             entry.Usage = Usages.FloatBinary64;
             return; 
@@ -1472,7 +1472,7 @@ public static partial class DataDivision
         if (CurrentEquals("FLOAT-BINARY-128"))
         {
             Expected("FLOAT-BINARY-128");
-            Choice("HIGH-ORDER-LEFT", "HIGH-ORDER-RIGHT");
+            Choice("HIGH-ORDER-LEFT HIGH-ORDER-RIGHT");
             
             entry.Usage = Usages.FloatBinary128;
             return; 
@@ -1625,7 +1625,7 @@ public static partial class DataDivision
         .Build(ErrorType.Analyzer, ConsoleColor.Red, 50, """
             Unrecognized USAGE clause.
             """)
-        .WithSourceLine(Lookahead(-1))
+        .WithSourceLine(Peek(-1))
         .WithNote("""
             This could be due to an unsupported third-party extension.
             """)

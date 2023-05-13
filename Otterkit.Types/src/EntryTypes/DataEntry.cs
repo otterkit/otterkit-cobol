@@ -65,7 +65,7 @@ public partial class DataEntry
 
         while (CurrentEquals(TokenContext.IsClause))
         {
-            if (CurrentEquals("TYPEDEF") && LookaheadEquals(1, "STRONG"))
+            if (CurrentEquals("TYPEDEF") && PeekEquals(1, "STRONG"))
             {
                 isStrong = true;
                 break;
@@ -85,7 +85,7 @@ public partial class DataEntry
 
         while (CurrentEquals(TokenContext.IsClause))
         {
-            if (CurrentEquals("TYPE") && LookaheadEquals(1, TokenType.Identifier))
+            if (CurrentEquals("TYPE") && PeekEquals(1, TokenType.Identifier))
             {
                 Continue();
                 break;
@@ -176,7 +176,7 @@ public partial class DataEntry
 
         while (CurrentEquals(TokenContext.IsClause))
         {
-            if (CurrentEquals("PICTURE", "PIC"))
+            if (CurrentEquals("PICTURE PIC"))
             {
                 Continue();
                 Optional("IS");

@@ -22,7 +22,7 @@ public static class TokenHandling
                 return;
             }
 
-            if (CurrentEquals(anchors, true))
+            if (CurrentEquals(anchors))
             {
                 return;
             }
@@ -35,7 +35,7 @@ public static class TokenHandling
     {
         while (!CurrentEquals(TokenType.EOF))
         {
-            if (CurrentEquals(".", ". "))
+            if (CurrentEquals(".") || CurrentEquals(". "))
             {
                 Continue();
                 return;
@@ -60,7 +60,7 @@ public static class TokenHandling
                 return;
             }
 
-            if (CurrentEquals(anchors, true) || CurrentEquals(anchor))
+            if (CurrentEquals(anchors) || CurrentEquals(anchor))
             {
                 return;
             }
@@ -69,31 +69,26 @@ public static class TokenHandling
         }
     }
 
-    public static Token Lookahead(int amount)
+    public static Token Peek(int amount)
     {
         if (Index + amount >= Source.Count) return Source[^1];
 
         return Index + amount < 0 ? Source[0] : Source[Index + amount];
     }
 
-    public static bool LookaheadEquals(int lookahead, ReadOnlySpan<char> keyword, bool multipleKeywords = false)
+    public static bool PeekEquals(int amount, ReadOnlySpan<char> keyword)
     {
-        if (multipleKeywords)
+        if (keyword.Contains(' '))
         {
-            return Optimization.SpaceSeparatedSearch(keyword, Current().Value);
+            return Optimization.SpaceSeparatedSearch(keyword, Peek(amount).Value);
         }
-        
-        return keyword.Equals(Lookahead(lookahead).Value, StringComparison.OrdinalIgnoreCase);
+
+        return keyword.Equals(Peek(amount).Value, StringComparison.OrdinalIgnoreCase);
     }
 
-    public static bool LookaheadEquals(int lookahead, ReadOnlySpan<char> keyword, ReadOnlySpan<char> otherKeyword)
+    public static bool PeekEquals(int lookahead, TokenType type)
     {
-        return LookaheadEquals(lookahead, keyword) || LookaheadEquals(lookahead, otherKeyword);
-    }
-
-    public static bool LookaheadEquals(int lookahead, TokenType type)
-    {
-        return Lookahead(lookahead).Type == type;
+        return Peek(lookahead).Type == type;
     }
 
     public static Token Current()
@@ -101,9 +96,9 @@ public static class TokenHandling
         return Source[Index];
     }
 
-    public static bool CurrentEquals(ReadOnlySpan<char> keyword, bool multipleKeywords = false)
+    public static bool CurrentEquals(ReadOnlySpan<char> keyword)
     {
-        if (multipleKeywords)
+        if (keyword.Contains(' '))
         {
             return Optimization.SpaceSeparatedSearch(keyword, Current().Value);
         }
@@ -111,29 +106,9 @@ public static class TokenHandling
         return keyword.Equals(Current().Value, StringComparison.OrdinalIgnoreCase);
     }
 
-    public static bool CurrentEquals(ReadOnlySpan<char> keyword, ReadOnlySpan<char> otherKeyword)
-    {
-        return CurrentEquals(keyword) || CurrentEquals(otherKeyword);
-    }
-
     public static bool CurrentEquals(TokenType tokenType)
     {
-        return Current().Type == tokenType;
-    }
-
-    public static bool CurrentEquals(TokenType type, TokenType otherType)
-    {
-        return CurrentEquals(type) || CurrentEquals(otherType);
-    }
-
-    public static bool CurrentEquals(params TokenType[] tokenTypesToCompare)
-    {
-        foreach (var type in tokenTypesToCompare)
-        {
-            if (Current().Type == type) return true;
-        }
-
-        return false;
+        return tokenType.HasFlag(Current().Type);
     }
 
     public static bool CurrentEquals(TokenContext tokenContext)
@@ -146,27 +121,6 @@ public static class TokenHandling
         if (CurrentEquals(TokenType.EOF) && Index >= Source.Count - 1) return;
 
         Index += amount;
-    }
-
-    public static void Choice(ReadOnlySpan<char> firstKeyword, ReadOnlySpan<char> otherKeyword)
-    {
-        if (CurrentEquals(firstKeyword) || CurrentEquals(otherKeyword))
-        {
-            Continue();
-
-            return;
-        }
-        
-        ErrorHandler
-        .Build(ErrorType.Analyzer, ConsoleColor.Red, 5, """
-            Unexpected token.
-            """)
-        .WithSourceLine(Current(), $"""
-            Expected one of the following: {firstKeyword}, {otherKeyword}.
-            """)
-        .CloseError();
-
-        Continue();
     }
 
     public static void Choice(ReadOnlySpan<char> choices)
@@ -211,7 +165,7 @@ public static class TokenHandling
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
                 Unexpected end of file.
                 """)
-            .WithSourceLine(Lookahead(-1), $"""
+            .WithSourceLine(Peek(-1), $"""
                 Expected {expected} after this token.
                 """)
             .CloseError();

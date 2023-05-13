@@ -25,7 +25,7 @@ public static partial class EnvironmentDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Division header, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token
                 """)
             .WithNote("""
@@ -45,7 +45,7 @@ public static partial class EnvironmentDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                     Section header, missing separator period.
                     """)
-                .WithSourceLine(Lookahead(-1), """
+                .WithSourceLine(Peek(-1), """
                     Expected a separator period '. ' after this token
                     """)
                 .WithNote("""
@@ -86,7 +86,7 @@ public static partial class EnvironmentDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                     Section header, missing separator period.
                     """)
-                .WithSourceLine(Lookahead(-1), """
+                .WithSourceLine(Peek(-1), """
                     Expected a separator period '. ' after this token
                     """)
                 .WithNote("""
@@ -116,7 +116,7 @@ public static partial class EnvironmentDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Paragraph header, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -142,7 +142,7 @@ public static partial class EnvironmentDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Paragraph header, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -159,13 +159,13 @@ public static partial class EnvironmentDivision
             shouldHaveSeparator = true;
         }
 
-        if (CurrentEquals("CHARACTER", "CLASSIFICATION"))
+        if (CurrentEquals("CHARACTER CLASSIFICATION"))
         {
             CharacterClassification();
             shouldHaveSeparator = true;
         }
 
-        if (CurrentEquals("PROGRAM COLLATING SEQUENCE", true))
+        if (CurrentEquals("PROGRAM COLLATING SEQUENCE"))
         {
             ProgramCollatingSequence();
             shouldHaveSeparator = true;
@@ -186,7 +186,7 @@ public static partial class EnvironmentDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Paragraph header, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -222,7 +222,7 @@ public static partial class EnvironmentDivision
 
             Literals.String();
 
-            if (CurrentEquals("WITH", "PICTURE"))
+            if (CurrentEquals("WITH PICTURE"))
             {
                 Optional("WITH");
                 Expected("PICTURE");
@@ -287,7 +287,7 @@ public static partial class EnvironmentDivision
             Literals.String();
         }
 
-        if (!LookaheadEquals(-2, "SPECIAL-NAMES") && !LookaheadEquals(-1, "SPECIAL-NAMES"))
+        if (!PeekEquals(-2, "SPECIAL-NAMES") && !PeekEquals(-1, "SPECIAL-NAMES"))
         {
             Expected(".");
         }
@@ -304,7 +304,7 @@ public static partial class EnvironmentDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Paragraph header, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -313,7 +313,7 @@ public static partial class EnvironmentDivision
             .CloseError();
         }
 
-        while (CurrentEquals("CLASS INTERFACE FUNCTION PROGRAM PROPERTY", true))
+        while (CurrentEquals("CLASS INTERFACE FUNCTION PROGRAM PROPERTY"))
         {
             if (CurrentEquals("CLASS"))
             {
@@ -338,7 +338,7 @@ public static partial class EnvironmentDivision
                         .Build(ErrorType.Analyzer, ConsoleColor.Red, 105, """
                             Missing USING phrase class or interface name.
                             """)
-                        .WithSourceLine(Lookahead(-1), """
+                        .WithSourceLine(Peek(-1), """
                             The USING phrase must define at least one class or interface name.
                             """)
                         .CloseError();
@@ -375,7 +375,7 @@ public static partial class EnvironmentDivision
                         .Build(ErrorType.Analyzer, ConsoleColor.Red, 105, """
                             Missing USING phrase class or interface name.
                             """)
-                        .WithSourceLine(Lookahead(-1), """
+                        .WithSourceLine(Peek(-1), """
                             The USING phrase must define at least one class or interface name.
                             """)
                         .CloseError();
@@ -447,7 +447,7 @@ public static partial class EnvironmentDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Paragraph body, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -468,7 +468,7 @@ public static partial class EnvironmentDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Paragraph header, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -515,7 +515,7 @@ public static partial class EnvironmentDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Paragraph header, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -552,7 +552,7 @@ public static partial class EnvironmentDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
                 Unexpected token.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected file control clauses or a separator period after this token.
                 """)
             .CloseError();
@@ -569,7 +569,7 @@ public static partial class EnvironmentDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 File control, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""

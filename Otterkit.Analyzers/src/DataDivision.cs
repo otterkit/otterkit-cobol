@@ -32,7 +32,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 Division header, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token
                 """)
             .WithNote("""
@@ -72,7 +72,7 @@ public static partial class DataDivision
         CompilerContext.ActiveScope = ActiveScope.FileSection;
 
         Expected(".");
-        while (CurrentEquals("FD", "SD"))
+        while (CurrentEquals("FD SD"))
         {
             FileEntry();
         }
@@ -155,16 +155,16 @@ public static partial class DataDivision
         if (CurrentEquals("77"))
             DataEntry();
 
-        if ((CurrentEquals("01") || CurrentEquals("1")) && !LookaheadEquals(2, "CONSTANT"))
+        if ((CurrentEquals("01") || CurrentEquals("1")) && !PeekEquals(2, "CONSTANT"))
             GroupEntry();
 
-        if (LookaheadEquals(2, "CONSTANT"))
+        if (PeekEquals(2, "CONSTANT"))
             ConstantEntry();
     }
 
     private static void ReportEntries()
     {
-        if (!CurrentEquals("01", "1"))
+        if (!CurrentEquals("01 1"))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
@@ -179,16 +179,16 @@ public static partial class DataDivision
             .CloseError(); 
         }
 
-        if (CurrentEquals("01", "1") && !LookaheadEquals(2, "CONSTANT"))
+        if (CurrentEquals("01 1") && !PeekEquals(2, "CONSTANT"))
             GroupEntry();
 
-        if (LookaheadEquals(2, "CONSTANT"))
+        if (PeekEquals(2, "CONSTANT"))
             ConstantEntry();
     }
 
     private static void RecordGroupEntries()
     {
-        if (!CurrentEquals("01", "1"))
+        if (!CurrentEquals("01 1"))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
@@ -203,16 +203,16 @@ public static partial class DataDivision
             .CloseError(); 
         }
 
-        if (CurrentEquals("01", "1") && !LookaheadEquals(2, "CONSTANT"))
+        if (CurrentEquals("01 1") && !PeekEquals(2, "CONSTANT"))
             GroupEntry();
 
-        if (LookaheadEquals(2, "CONSTANT"))
+        if (PeekEquals(2, "CONSTANT"))
             ConstantEntry();
     }
 
     private static void ScreenEntries()
     {
-        if (!CurrentEquals("01", "1"))
+        if (!CurrentEquals("01 1"))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
@@ -227,10 +227,10 @@ public static partial class DataDivision
             .CloseError(); 
         }
 
-        if (CurrentEquals("01", "1") && !LookaheadEquals(2, "CONSTANT"))
+        if (CurrentEquals("01 1") && !PeekEquals(2, "CONSTANT"))
             GroupEntry();
 
-        if (LookaheadEquals(2, "CONSTANT"))
+        if (PeekEquals(2, "CONSTANT"))
             ConstantEntry();
     }
 
@@ -246,7 +246,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
                 Unexpected token.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected report description clauses or a separator period after this token.
                 """)
             .CloseError();
@@ -263,7 +263,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 Report description, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token.
                 """)
             .WithNote("""
@@ -313,7 +313,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
                 Unexpected token.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected report item clauses or a separator period after this token
                 """)
             .CloseError();
@@ -334,7 +334,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 Report item definition, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token
                 """)
             .WithNote("""
@@ -373,7 +373,7 @@ public static partial class DataDivision
 
     private static void FileEntry()
     {
-        Choice("FD", "SD");
+        Choice("FD SD");
 
         Token itemToken = Current();
         string fileName = itemToken.Value;
@@ -390,7 +390,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
                 Unexpected token.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected file description clauses or a separator period after this token
                 """)
             .CloseError();
@@ -407,7 +407,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 File description, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token
                 """)
             .WithNote("""
@@ -522,7 +522,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
                 Unexpected token.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected data item clauses or a separator period after this token
                 """)
             .CloseError();
@@ -545,7 +545,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 Data item definition, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token
                 """)
             .WithNote("""
@@ -669,7 +669,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 Data item definition, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token
                 """)
             .WithNote("""
@@ -737,7 +737,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2,"""
                 Unexpected token.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected screen item clauses or a separator period after this token
                 """)
             .CloseError();
@@ -754,7 +754,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                 Screen item definition, missing separator period.
                 """)
-            .WithSourceLine(Lookahead(-1), """
+            .WithSourceLine(Peek(-1), """
                 Expected a separator period '. ' after this token
                 """)
             .WithNote("""
@@ -992,9 +992,9 @@ public static partial class DataDivision
                     Literals.String(); break;
             }
 
-            if (CurrentEquals("THROUGH", "THRU"))
+            if (CurrentEquals("THROUGH THRU"))
             {
-                Choice("THROUGH", "THRU");
+                Choice("THROUGH THRU");
 
                 switch (firstConditionType)
                 {
@@ -1016,7 +1016,7 @@ public static partial class DataDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
                     Data item definition, missing separator period.
                     """)
-                .WithSourceLine(Lookahead(-1), """
+                .WithSourceLine(Peek(-1), """
                     Expected a separator period '. ' after this token
                     """)
                 .WithNote("""

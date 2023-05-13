@@ -23,7 +23,7 @@ public static partial class DataDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
                     Invalid picture clause character string.
                     """)
-                .WithSourceLine(Lookahead(-1))
+                .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbol 'S' must be the first symbol of the picture string.
                     """)
@@ -38,7 +38,7 @@ public static partial class DataDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
                     Invalid picture clause character string.
                     """)
-                .WithSourceLine(Lookahead(-1))
+                .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbol 'N' must not follow any symbols other than 'N'.
                     """)
@@ -53,7 +53,7 @@ public static partial class DataDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
                     Invalid picture clause character string.
                     """)
-                .WithSourceLine(Lookahead(-1))
+                .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbol '1' must not follow any symbols other than '1'.
                     """)
@@ -68,7 +68,7 @@ public static partial class DataDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
                     Invalid picture clause character string.
                     """)
-                .WithSourceLine(Lookahead(-1))
+                .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbols 'A' and 'X' may only follow the symbols '9A' or 'X'.
                     """)
@@ -83,7 +83,7 @@ public static partial class DataDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
                     Invalid picture clause character string.
                     """)
-                .WithSourceLine(Lookahead(-1))
+                .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbol 'V' may only appear once in the same picture string.
                     """)
@@ -98,7 +98,7 @@ public static partial class DataDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
                     Invalid picture clause character string.
                     """)
-                .WithSourceLine(Lookahead(-1))
+                .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbols 'V' and 'P' must not follow the symbols 'AX1N' or 'E'.
                     """)
@@ -115,7 +115,7 @@ public static partial class DataDivision
                 .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
                     Invalid picture clause character string.
                     """)
-                .WithSourceLine(Lookahead(-1))
+                .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbol 'P' or a string of 'P' may only appear once in a picture clause.
                     """)

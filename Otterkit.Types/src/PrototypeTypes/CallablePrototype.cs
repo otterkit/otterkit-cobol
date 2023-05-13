@@ -6,9 +6,9 @@ using ParameterTuple = ValueTuple<DataEntry, bool, bool>;
 
 public class CallablePrototype : AbstractPrototype
 {
-    public LocalNames<RepositoryEntry> RepositoryEntries = new();
-    public LocalNames<FileControlEntry> FileEntries = new();
-    public LocalNames<DataEntry> DataEntries = new();
+    public LocalNames<RepositoryName> RepositoryNames = new();
+    public LocalNames<FileControlEntry> FileNames = new();
+    public DataNames<DataEntry> DataEntries = new();
     public List<ParameterTuple> Parameters = new();
     public Option<DataEntry> Returning;
     public bool Override;

@@ -34,7 +34,7 @@ public static class Literals
                 Unexpected token type.
                 """)
             .WithSourceLine(Current(), $"""
-                Expected a string type literal.
+                Expected an alphanumeric literal.
                 """)
             .CloseError();
 

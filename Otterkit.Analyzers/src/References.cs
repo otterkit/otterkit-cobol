@@ -12,7 +12,7 @@ public static class References
     private static CallablePrototype ActiveCallable 
         => CompilerContext.ActiveCallable;
         
-    private static LocalNames<DataEntry> ActiveData 
+    private static DataNames<DataEntry> ActiveData 
         => CompilerContext.ActiveData;
 
     private static Stack<Token> Qualification = new(); 

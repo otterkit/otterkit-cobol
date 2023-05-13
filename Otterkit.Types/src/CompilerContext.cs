@@ -46,7 +46,7 @@ public static class CompilerContext
         set => StoredCallable = value;
     }
 
-    public static LocalNames<DataEntry> ActiveData
+    public static DataNames<DataEntry> ActiveData
     {
         get => ActiveCallable.DataEntries;
     }

@@ -49,12 +49,12 @@ public sealed partial record Token
 
     private static bool IsStandardIntrinsic(string value)
     {
-        ref var context = ref CollectionsMarshal.GetValueRefOrNullRef(ContextLookup, value);
+        ref var intrinsics = ref CollectionsMarshal.GetValueRefOrNullRef(IntrinsicLookup, value);
 
-        return !Unsafe.IsNullRef(ref context) && context is 6;
+        return !Unsafe.IsNullRef(ref intrinsics);
     }
 
-    private static Dictionary<string, int> ReservedLookup = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, int> ReservedLookup = new(400, StringComparer.OrdinalIgnoreCase)
     {
         {"ACCEPT",                          0},
         {"ACCESS",                          0},
@@ -457,7 +457,7 @@ public sealed partial record Token
         {"XOR",                             0},
     };
 
-    private static Dictionary<string, int> ContextLookup = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, int> ContextLookup = new(168, StringComparer.OrdinalIgnoreCase)
     {
         // TokenContext
         // None         = 0
@@ -648,7 +648,7 @@ public sealed partial record Token
         {"_",                   5},
     };
 
-    private static Dictionary<string, int> IntrinsicLookup = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, int> IntrinsicLookup = new(95, StringComparer.OrdinalIgnoreCase)
     {
         {"ABS",                         0},
         {"ACOS",                        0},

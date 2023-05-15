@@ -1,4 +1,5 @@
 using static Otterkit.Types.TokenHandling;
+using static Otterkit.Types.CompilerContext;
 using Otterkit.Types;
 
 namespace Otterkit.Analyzers;
@@ -23,7 +24,7 @@ public static class IdentificationDivision
             if (!Expected(".", false))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                     Division header, missing separator period.
                     """)
                 .WithSourceLine(Peek(-1), """
@@ -37,10 +38,10 @@ public static class IdentificationDivision
                 AnchorPoint("PROGRAM-ID FUNCTION-ID ENVIRONMENT DATA PROCEDURE");
             }
         }
-        
+
         IdDefinitions();
 
-        if (CurrentEquals("OPTIONS")) 
+        if (CurrentEquals("OPTIONS"))
             Options();
     }
 
@@ -134,7 +135,7 @@ public static class IdentificationDivision
     }
 
     private static void InitializeChoices(bool localExists = false, bool screenExists = false, bool workingExists = false)
-    {        
+    {
         if (CurrentEquals("LOCAL-STORAGE"))
         {
             if (localExists)
@@ -210,54 +211,54 @@ public static class IdentificationDivision
 
     // The following methods are responsible for parsing the -ID paragraph.
     // That includes the program, user-defined function, method, class, interface, factory or object identifier that should be specified right after.
-    // This is where SourceId and CompilerContext.SourceTypeStack get their values for a COBOL source unit.
+    // This is where SourceId and SourceTypeStack get their values for a COBOL source unit.
 
     private static void IdDefinitions()
     {
-        if (CurrentEquals("CLASS-ID")) 
+        if (CurrentEquals("CLASS-ID"))
         {
             ClassId();
             return;
         }
 
-        if (CurrentEquals("PROGRAM-ID")) 
+        if (CurrentEquals("PROGRAM-ID"))
         {
             ProgramId();
             return;
         }
 
-        if (CurrentEquals("FUNCTION-ID")) 
+        if (CurrentEquals("FUNCTION-ID"))
         {
             FunctionId();
             return;
         }
 
-        if (CurrentEquals("INTERFACE-ID")) 
+        if (CurrentEquals("INTERFACE-ID"))
         {
-            InterfaceId(); 
+            InterfaceId();
             return;
         }
 
-        if (CurrentEquals("METHOD-ID")) 
+        if (CurrentEquals("METHOD-ID"))
         {
             MethodId();
             return;
         }
 
-        if (CurrentEquals("FACTORY")) 
+        if (CurrentEquals("FACTORY"))
         {
             Factory();
             return;
         }
 
-        if (CurrentEquals("OBJECT")) 
+        if (CurrentEquals("OBJECT"))
         {
             Object();
             return;
         }
 
         ErrorHandler
-        .Build(ErrorType.Analyzer, ConsoleColor.Red, 85,"""
+        .Build(ErrorType.Analyzer, ConsoleColor.Red, 85, """
             Missing source unit definition.
             """)
         .WithSourceLine(Current(), """
@@ -276,17 +277,22 @@ public static class IdentificationDivision
         Expected("PROGRAM-ID");
         Expected(".");
 
-        CompilerContext.ActiveUnits.Push(Current());
-        CompilerContext.SourceTypes.Push(SourceUnit.Program);
-        CompilerContext.ActiveScope = ActiveScope.ProgramId;
+        ActiveUnits.Push(Current());
+
+        SourceTypes.Push(UnitKind.Program);
+
+        ActiveScope = SourceScope.ProgramId;
 
         References.Identifier();
         if (CurrentEquals("AS"))
         {
             Expected("AS");
-            CompilerContext.ActiveUnits.Pop();
+
+            ActiveUnits.Pop();
+
             Literals.String();
-            CompilerContext.ActiveUnits.Push(Peek(-1));
+
+            ActiveUnits.Push(Peek(-1));
         }
 
         if (CurrentEquals("IS COMMON INITIAL RECURSIVE PROTOTYPE"))
@@ -321,8 +327,11 @@ public static class IdentificationDivision
                 if (CurrentEquals("PROTOTYPE"))
                 {
                     Expected("PROTOTYPE");
-                    CompilerContext.SourceTypes.Pop();
-                    CompilerContext.SourceTypes.Push(SourceUnit.ProgramPrototype);
+
+                    SourceTypes.Pop();
+
+                    SourceTypes.Push(UnitKind.ProgramPrototype);
+
                     isPrototype = true;
                 }
             }
@@ -330,10 +339,10 @@ public static class IdentificationDivision
             if (isPrototype && (isCommon || isInitial || isRecursive))
             {
                 ErrorHandler
-                .Build(ErrorType.Syntax, ConsoleColor.Red, 55,"""
+                .Build(ErrorType.Syntax, ConsoleColor.Red, 55, """
                     Invalid program prototype definition.
                     """)
-                .WithSourceLine(CompilerContext.ActiveUnits.Peek(), """
+                .WithSourceLine(ActiveUnits.Peek(), """
                     Program prototypes cannot be defined as common, initial or recursive.
                     """)
                 .CloseError();
@@ -342,10 +351,10 @@ public static class IdentificationDivision
             if (isInitial && isRecursive)
             {
                 ErrorHandler
-                .Build(ErrorType.Syntax, ConsoleColor.Red, 55,"""
+                .Build(ErrorType.Syntax, ConsoleColor.Red, 55, """
                     Invalid program definition.
                     """)
-                .WithSourceLine(CompilerContext.ActiveUnits.Peek(), """
+                .WithSourceLine(ActiveUnits.Peek(), """
                     Initial programs cannot be defined as recursive.
                     """)
                 .CloseError();
@@ -354,24 +363,24 @@ public static class IdentificationDivision
             if (!isPrototype) Optional("PROGRAM");
         }
 
-        if (!CompilerContext.IsResolutionPass)
+        if (!IsResolutionPass)
         {
-            var signature = new CallablePrototype(CompilerContext.ActiveUnits.Peek(), CompilerContext.SourceTypes.Peek());
+            var signature = new CallablePrototype(ActiveUnits.Peek(), SourceTypes.Peek());
 
-            Symbols.TryAddName(CompilerContext.ActiveUnits.Peek().Value, signature);
+            ActiveNames.TryAdd(ActiveUnits.Peek(), signature);
 
-            CompilerContext.ActiveCallable = signature;
+            ActiveCallable = signature;
         }
 
-        if (CompilerContext.IsResolutionPass)
+        if (IsResolutionPass)
         {
-            CompilerContext.ActiveCallable = Symbols.GetPrototype<CallablePrototype>(CompilerContext.ActiveUnits.Peek().Value);
+            ActiveCallable = ActiveNames.Fetch<CallablePrototype>(ActiveUnits.Peek());
         }
 
         if (!Expected(".", false))
         {
             ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Program definition, missing separator period.
                 """)
             .WithSourceLine(Peek(-1), """
@@ -391,8 +400,9 @@ public static class IdentificationDivision
         Expected("FUNCTION-ID");
         Expected(".");
 
-        CompilerContext.SourceTypes.Push(SourceUnit.Function);
-        CompilerContext.ActiveScope = ActiveScope.FunctionId;
+        SourceTypes.Push(UnitKind.Function);
+
+        ActiveScope = SourceScope.FunctionId;
 
         References.Identifier();
 
@@ -406,28 +416,28 @@ public static class IdentificationDivision
         {
             Optional("IS");
             Expected("PROTOTYPE");
-            CompilerContext.SourceTypes.Pop();
-            CompilerContext.SourceTypes.Push(SourceUnit.FunctionPrototype);
+            SourceTypes.Pop();
+            SourceTypes.Push(UnitKind.FunctionPrototype);
         }
 
-        if (!CompilerContext.IsResolutionPass)
+        if (!IsResolutionPass)
         {
-            var signature = new CallablePrototype(CompilerContext.ActiveUnits.Peek(), CompilerContext.SourceTypes.Peek());
+            var signature = new CallablePrototype(ActiveUnits.Peek(), SourceTypes.Peek());
 
-            Symbols.TryAddName(CompilerContext.ActiveUnits.Peek().Value, signature);
+            ActiveNames.TryAdd(ActiveUnits.Peek(), signature);
 
-            CompilerContext.ActiveCallable = signature;
+            ActiveCallable = signature;
         }
 
-        if (CompilerContext.IsResolutionPass)
+        if (IsResolutionPass)
         {
-            CompilerContext.ActiveCallable = Symbols.GetPrototype<CallablePrototype>(CompilerContext.ActiveUnits.Peek().Value);
+            ActiveCallable = ActiveNames.Fetch<CallablePrototype>(ActiveUnits.Peek());
         }
 
         if (!Expected(".", false))
         {
             ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Function definition, missing separator period.
                 """)
             .WithSourceLine(Peek(-1), """
@@ -447,10 +457,10 @@ public static class IdentificationDivision
         Expected("CLASS-ID");
         Expected(".");
 
-        CompilerContext.ActiveUnits.Push(Current());
+        ActiveUnits.Push(Current());
 
-        CompilerContext.SourceTypes.Push(SourceUnit.Class);
-        CompilerContext.ActiveScope = ActiveScope.ClassId;
+        SourceTypes.Push(UnitKind.Class);
+        ActiveScope = SourceScope.ClassId;
 
         References.Identifier();
 
@@ -474,7 +484,7 @@ public static class IdentificationDivision
             if (!CurrentEquals(TokenType.Identifier))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 60, """
                     Class definition, missing INHERITS class.
                     """)
                 .WithSourceLine(Peek(-1), """
@@ -492,7 +502,7 @@ public static class IdentificationDivision
             if (!CurrentEquals(TokenType.Identifier))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 60, """
                     Class definition, missing using parameter.
                     """)
                 .WithSourceLine(Peek(-1), """
@@ -505,17 +515,17 @@ public static class IdentificationDivision
             while (CurrentEquals(TokenType.Identifier)) References.Identifier();
         }
 
-        if (!CompilerContext.IsResolutionPass)
+        if (!IsResolutionPass)
         {
-            var signature = new ClassPrototype(CompilerContext.ActiveUnits.Peek(), CompilerContext.SourceTypes.Peek());
+            var signature = new ClassPrototype(ActiveUnits.Peek(), SourceTypes.Peek());
 
-            Symbols.TryAddName(CompilerContext.ActiveUnits.Peek().Value, signature);
+            ActiveNames.TryAdd(ActiveUnits.Peek(), signature);
         }
 
         if (!Expected(".", false))
         {
             ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Class definition, missing separator period.
                 """)
             .WithSourceLine(Peek(-1), """
@@ -534,11 +544,11 @@ public static class IdentificationDivision
     {
         Expected("INTERFACE-ID");
         Expected(".");
-        
-        CompilerContext.ActiveUnits.Push(Current());
 
-        CompilerContext.SourceTypes.Push(SourceUnit.Interface);
-        CompilerContext.ActiveScope = ActiveScope.InterfaceId;
+        ActiveUnits.Push(Current());
+
+        SourceTypes.Push(UnitKind.Interface);
+        ActiveScope = SourceScope.InterfaceId;
 
         References.Identifier();
 
@@ -556,7 +566,7 @@ public static class IdentificationDivision
             if (!CurrentEquals(TokenType.Identifier))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 60, """
                     Interface definition, missing INHERITS class.
                     """)
                 .WithSourceLine(Peek(-1), """
@@ -575,7 +585,7 @@ public static class IdentificationDivision
             if (!CurrentEquals(TokenType.Identifier))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 60,"""
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 60, """
                     Interface definition, missing using parameter.
                     """)
                 .WithSourceLine(Peek(-1), """
@@ -588,17 +598,17 @@ public static class IdentificationDivision
             while (CurrentEquals(TokenType.Identifier)) References.Identifier();
         }
 
-        if (!CompilerContext.IsResolutionPass)
+        if (!IsResolutionPass)
         {
-            var signature = new InterfacePrototype(CompilerContext.ActiveUnits.Peek(), CompilerContext.SourceTypes.Peek());
+            var signature = new InterfacePrototype(ActiveUnits.Peek(), SourceTypes.Peek());
 
-            Symbols.TryAddName(CompilerContext.ActiveUnits.Peek().Value, signature);
+            ActiveNames.TryAdd(ActiveUnits.Peek(), signature);
         }
 
         if (!Expected(".", false))
         {
             ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Interface definition, missing separator period.
                 """)
             .WithSourceLine(Peek(-1), """
@@ -615,13 +625,10 @@ public static class IdentificationDivision
 
     private static void MethodId()
     {
-        var sourceTypes = CompilerContext.SourceTypes;
-        var activeUnits = CompilerContext.ActiveUnits;
-
-        if (sourceTypes.Peek() is not (SourceUnit.Object or SourceUnit.Factory or SourceUnit.Interface))
+        if (SourceTypes.Peek() is not (UnitKind.Object or UnitKind.Factory or UnitKind.Interface))
         {
             ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 90,"""
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 90, """
                 Misplaced source unit definition.
                 """)
             .WithSourceLine(Current(), """
@@ -633,32 +640,32 @@ public static class IdentificationDivision
         Expected("METHOD-ID");
         Expected(".");
 
-        CompilerContext.ActiveScope = ActiveScope.MethodId;
+        ActiveScope = SourceScope.MethodId;
 
-        if (sourceTypes.Peek() != SourceUnit.Interface && CurrentEquals("GET"))
+        if (SourceTypes.Peek() != UnitKind.Interface && CurrentEquals("GET"))
         {
             Expected("GET");
             Expected("PROPERTY");
 
-            activeUnits.Push(Current());
-            sourceTypes.Push(SourceUnit.MethodGetter);
+            ActiveUnits.Push(Current());
+            SourceTypes.Push(UnitKind.MethodGetter);
 
             References.Identifier();
 
         }
-        else if (sourceTypes.Peek() != SourceUnit.Interface && CurrentEquals("SET"))
+        else if (SourceTypes.Peek() != UnitKind.Interface && CurrentEquals("SET"))
         {
             Expected("SET");
             Expected("PROPERTY");
 
-            CompilerContext.ActiveUnits.Push(Current());
-            CompilerContext.SourceTypes.Push(SourceUnit.MethodSetter);
+            ActiveUnits.Push(Current());
+            SourceTypes.Push(UnitKind.MethodSetter);
 
             References.Identifier();
         }
         else // If not a getter or a setter
         {
-            CompilerContext.ActiveUnits.Push(Current());
+            ActiveUnits.Push(Current());
 
             References.Identifier();
 
@@ -668,13 +675,13 @@ public static class IdentificationDivision
                 Literals.String();
             }
 
-            if (sourceTypes.Peek() == SourceUnit.Interface)
+            if (SourceTypes.Peek() == UnitKind.Interface)
             {
-                CompilerContext.SourceTypes.Push(SourceUnit.MethodPrototype);
+                SourceTypes.Push(UnitKind.MethodPrototype);
             }
             else
             {
-                CompilerContext.SourceTypes.Push(SourceUnit.Method);
+                SourceTypes.Push(UnitKind.Method);
             }
         }
 
@@ -689,7 +696,7 @@ public static class IdentificationDivision
         if (!Expected(".", false))
         {
             ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25,"""
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 25, """
                 Interface definition, missing separator period.
                 """)
             .WithSourceLine(Peek(-1), """
@@ -704,46 +711,43 @@ public static class IdentificationDivision
         }
 
         // We're returning during a resolution pass
-        if (CompilerContext.IsResolutionPass) return;
+        if (IsResolutionPass) return;
 
         // Because we don't want to run this again during it:
-
-
-
-        if (sourceTypes.Peek() is SourceUnit.Interface)
+        if (SourceTypes.Peek() is UnitKind.Interface)
         {
-            var parentInterface = Symbols.GetPrototype<InterfacePrototype>(activeUnits.Peek().Value);
+            var parentInterface = ActiveNames.Fetch<InterfacePrototype>(ActiveUnits.Peek());
 
-            var methodPrototype = new CallablePrototype(activeUnits.Peek(), sourceTypes.Peek());
+            var methodPrototype = new CallablePrototype(ActiveUnits.Peek(), SourceTypes.Peek());
 
             parentInterface.Methods.Add(methodPrototype);
 
-            CompilerContext.ActiveCallable = methodPrototype;
+            ActiveCallable = methodPrototype;
         }
 
-        var parentClass = Symbols.GetPrototype<ClassPrototype>(activeUnits.Peek().Value);
+        var parentClass = ActiveNames.Fetch<ClassPrototype>(ActiveUnits.Peek());
 
-        var method = new CallablePrototype(activeUnits.Peek(), sourceTypes.Peek());
+        var method = new CallablePrototype(ActiveUnits.Peek(), SourceTypes.Peek());
 
-        if (sourceTypes.Peek() is SourceUnit.Object)
+        if (SourceTypes.Peek() is UnitKind.Object)
         {
             parentClass.ObjectMethods.Add(method);
         }
 
-        if (sourceTypes.Peek() is SourceUnit.Factory)
+        if (SourceTypes.Peek() is UnitKind.Factory)
         {
             parentClass.FactoryMethods.Add(method);
         }
-        
-        CompilerContext.ActiveCallable = method;
+
+        ActiveCallable = method;
     }
 
     private static void Factory()
     {
-        if (CompilerContext.SourceTypes.Peek() is not SourceUnit.Class)
+        if (SourceTypes.Peek() is not UnitKind.Class)
         {
             ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 90,"""
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 90, """
                 Misplaced source unit definition.
                 """)
             .WithSourceLine(Current(), """
@@ -755,7 +759,7 @@ public static class IdentificationDivision
         Expected("FACTORY");
         Expected(".");
 
-        CompilerContext.SourceTypes.Push(SourceUnit.Factory);
+        SourceTypes.Push(UnitKind.Factory);
 
         if (CurrentEquals("IMPLEMENTS"))
         {
@@ -763,7 +767,7 @@ public static class IdentificationDivision
             if (!CurrentEquals(TokenType.Identifier))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 95,"""
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 95, """
                     Missing implements interfaces.
                     """)
                 .WithSourceLine(Peek(-1), """
@@ -782,10 +786,10 @@ public static class IdentificationDivision
 
     private static void Object()
     {
-        if (CompilerContext.SourceTypes.Peek() is not SourceUnit.Class)
+        if (SourceTypes.Peek() is not UnitKind.Class)
         {
             ErrorHandler
-            .Build(ErrorType.Analyzer, ConsoleColor.Red, 90,"""
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 90, """
                 Misplaced source unit definition.
                 """)
             .WithSourceLine(Current(), """
@@ -797,7 +801,7 @@ public static class IdentificationDivision
         Expected("OBJECT");
         Expected(".");
 
-        CompilerContext.SourceTypes.Push(SourceUnit.Object);
+        SourceTypes.Push(UnitKind.Object);
 
         if (CurrentEquals("IMPLEMENTS"))
         {
@@ -805,7 +809,7 @@ public static class IdentificationDivision
             if (!CurrentEquals(TokenType.Identifier))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 95,"""
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 95, """
                     Missing implements interfaces.
                     """)
                 .WithSourceLine(Peek(-1), """

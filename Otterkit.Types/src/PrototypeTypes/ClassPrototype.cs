@@ -12,6 +12,6 @@ public class ClassPrototype : AbstractPrototype
     public List<CallablePrototype> FactoryMethods = new();    
     public List<CallablePrototype> ObjectMethods = new();
 
-    public ClassPrototype(Token identifier, SourceUnit sourcetype)
-        : base (identifier, sourcetype) { }
+    public ClassPrototype(Token identifier, UnitKind sourceKind)
+        : base (identifier, sourceKind) { }
 }

@@ -14,6 +14,6 @@ public class CallablePrototype : AbstractPrototype
     public bool Override;
     public bool IsFinal;
 
-    public CallablePrototype(Token identifier, SourceUnit sourcetype)
-        : base (identifier, sourcetype) { }
+    public CallablePrototype(Token identifier, UnitKind sourceKind)
+        : base (identifier, sourceKind) { }
 }

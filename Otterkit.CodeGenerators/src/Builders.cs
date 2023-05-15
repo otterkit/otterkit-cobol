@@ -115,7 +115,7 @@ public class DataItemBuilder
     private int Length = 0;
     private int FractionalLength = 0;
     private string DataValue = string.Empty;
-    private ActiveScope Section;
+    private SourceScope Section;
     private readonly ProgramBuilder ProgramBuilder;
     private readonly Action<int> Continue;
     private readonly Func<Token> Current;
@@ -131,14 +131,14 @@ public class DataItemBuilder
 
     public void ExportDataItem()
     {
-        if (Section == ActiveScope.WorkingStorage)
+        if (Section == SourceScope.WorkingStorage)
             ProgramBuilder.AppendWorkingStorage(CompiledDataItem);
 
-        if (Section == ActiveScope.LocalStorage)
+        if (Section == SourceScope.LocalStorage)
             ProgramBuilder.AppendLocalStorage(CompiledDataItem);
     }
 
-    public void BuildDataItem(ActiveScope section = ActiveScope.WorkingStorage)
+    public void BuildDataItem(SourceScope section = SourceScope.WorkingStorage)
     {
         Section = section;
         if (Current().Type != TokenType.Numeric)
@@ -238,10 +238,10 @@ public class DataItemBuilder
             };
         }
 
-        if (Section == ActiveScope.WorkingStorage && isElementary)
+        if (Section == SourceScope.WorkingStorage && isElementary)
             CompiledDataItem = $"\n    private static {ConvertType(DataType)} {FormatIdentifier(Identifier)} = ";
 
-        if (Section == ActiveScope.LocalStorage && isElementary)
+        if (Section == SourceScope.LocalStorage && isElementary)
             CompiledDataItem = $"\n    private {ConvertType(DataType)} {FormatIdentifier(Identifier)} = ";
 
         string value;
@@ -289,22 +289,22 @@ public class DataItemBuilder
         }
 
 
-        if (Section == ActiveScope.WorkingStorage && isLevelOne && isExternal)
+        if (Section == SourceScope.WorkingStorage && isLevelOne && isExternal)
             CompiledDataItem = $"""
             private static DataItem _{FormatIdentifier(Identifier)} = new(External.Resolver("{Identifier}", {TotalLength}));{CompiledDataItem}
             """;
 
-        if (Section == ActiveScope.LocalStorage && isLevelOne && isExternal)
+        if (Section == SourceScope.LocalStorage && isLevelOne && isExternal)
             CompiledDataItem = $"""
             private DataItem _{FormatIdentifier(Identifier)} = new(External.Resolver("{Identifier}", {TotalLength}));{CompiledDataItem}
             """;
 
-        if (Section == ActiveScope.WorkingStorage && isLevelOne && !isExternal)
+        if (Section == SourceScope.WorkingStorage && isLevelOne && !isExternal)
             CompiledDataItem = $"""
             private static DataItem _{FormatIdentifier(Identifier)} = new({TotalLength});{CompiledDataItem}
             """;
 
-        if (Section == ActiveScope.LocalStorage && isLevelOne && !isExternal)
+        if (Section == SourceScope.LocalStorage && isLevelOne && !isExternal)
             CompiledDataItem = $"""
             private DataItem _{FormatIdentifier(Identifier)} = new({TotalLength});{CompiledDataItem}
             """;
@@ -315,10 +315,10 @@ public class DataItemBuilder
     {
         string sectionAccessModifier = string.Empty;
 
-        if (Section == ActiveScope.WorkingStorage)
+        if (Section == SourceScope.WorkingStorage)
             CompiledDataItem = $"private static readonly Constant {FormatIdentifier(Identifier)} = ";
 
-        if (Section == ActiveScope.LocalStorage)
+        if (Section == SourceScope.LocalStorage)
             CompiledDataItem = $"private readonly Constant {FormatIdentifier(Identifier)} = ";
 
         while (!CurrentEquals("AS")) Continue(1);
@@ -401,10 +401,10 @@ public class DataItemBuilder
             Continue(1);
         }
 
-        if (Section == ActiveScope.WorkingStorage)
+        if (Section == SourceScope.WorkingStorage)
             CompiledDataItem = $"private static {DataType} {FormatIdentifier(Identifier)} = ";
 
-        if (Section == ActiveScope.LocalStorage)
+        if (Section == SourceScope.LocalStorage)
             CompiledDataItem = $"private {DataType} {FormatIdentifier(Identifier)} = ";
 
         string value;

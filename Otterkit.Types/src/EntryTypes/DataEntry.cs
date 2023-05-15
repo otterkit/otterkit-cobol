@@ -9,7 +9,7 @@ public partial class DataEntry
     public Option<string> ExternalizedName;
     public EntryKind EntryKind;
 
-    public ActiveScope Section;
+    public SourceScope Section;
     public int LevelNumber;
 
     public Classes Class;

@@ -8,7 +8,7 @@ public class FileControlEntry
     public EntryKind EntryType;
     public Option<string> ExternalizedName;
 
-    public ActiveScope Section;
+    public SourceScope Section;
     public List<Token> Assign;
     public bool HasUsing;
     public Option<string> Organization;

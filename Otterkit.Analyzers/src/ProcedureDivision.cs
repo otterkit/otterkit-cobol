@@ -21,7 +21,7 @@ public static class ProcedureDivision
         Expected("PROCEDURE");
         Expected("DIVISION");
 
-        CompilerContext.ActiveScope = ActiveScope.ProcedureDivision;
+        CompilerContext.ActiveScope = SourceScope.ProcedureDivision;
 
         var currentSource = CompilerContext.SourceTypes.Peek();
 
@@ -31,7 +31,7 @@ public static class ProcedureDivision
             Using();
         }
 
-        if (CompilerContext.SourceTypes.Peek() is SourceUnit.Function or SourceUnit.FunctionPrototype)
+        if (CompilerContext.SourceTypes.Peek() is UnitKind.Function or UnitKind.FunctionPrototype)
         {
             Expected("RETURNING");
             Returning();
@@ -192,7 +192,7 @@ public static class ProcedureDivision
     // in a sigle method to avoid code duplication.
     private static void HandleHeaderDataName(bool isParameter, bool isOptional = false, bool isByRef = false)
     {
-        var dataName = References.Name();
+        var dataName = References.LocalName();
 
         // Don't resolve if it's not a resolution pass.
         if (!CompilerContext.IsResolutionPass) return;
@@ -261,7 +261,7 @@ public static class ProcedureDivision
 
         // COBOL standard requirement, all parameters and returning items
         // must be defined in the linkage section only.
-        if (dataItem.Section is not ActiveScope.LinkageSection)
+        if (dataItem.Section is not SourceScope.LinkageSection)
         {
             ErrorHandler
             .Build(ErrorType.Resolution, ConsoleColor.Red, 2050,
@@ -348,9 +348,9 @@ public static class ProcedureDivision
 
         bool canContainStatements = currentSource switch
         {
-            SourceUnit.FunctionPrototype => false,
-            SourceUnit.ProgramPrototype => false,
-            SourceUnit.MethodPrototype => false,
+            UnitKind.FunctionPrototype => false,
+            UnitKind.ProgramPrototype => false,
+            UnitKind.MethodPrototype => false,
             _ => true
         };
 
@@ -380,35 +380,35 @@ public static class ProcedureDivision
     {
         var currentType = CompilerContext.SourceTypes.Peek();
 
-        if (currentType != SourceUnit.Program && !CurrentEquals("END") || currentType == SourceUnit.Program && (!CurrentEquals(TokenType.EOF) && !CurrentEquals("END")))
+        if (currentType != UnitKind.Program && !CurrentEquals("END") || currentType == UnitKind.Program && (!CurrentEquals(TokenType.EOF) && !CurrentEquals("END")))
         {
             string errorMessageChoice = currentType switch
             {
-                SourceUnit.Program or SourceUnit.ProgramPrototype => """
+                UnitKind.Program or UnitKind.ProgramPrototype => """
                 Missing END PROGRAM marker.
                 """,
 
-                SourceUnit.Function or SourceUnit.FunctionPrototype => """
+                UnitKind.Function or UnitKind.FunctionPrototype => """
                 Missing END FUNCTION marker.
                 """,
 
-                SourceUnit.Method or SourceUnit.MethodPrototype or SourceUnit.MethodGetter or SourceUnit.MethodSetter => """
+                UnitKind.Method or UnitKind.MethodPrototype or UnitKind.MethodGetter or UnitKind.MethodSetter => """
                 Missing END METHOD marker.
                 """,
 
-                SourceUnit.Class => """
+                UnitKind.Class => """
                 Missing END CLASS marker.
                 """,
 
-                SourceUnit.Interface => """
+                UnitKind.Interface => """
                 Missing END INTERFACE marker.
                 """,
 
-                SourceUnit.Factory => """
+                UnitKind.Factory => """
                 Missing END FACTORY marker.
                 """,
 
-                SourceUnit.Object => """
+                UnitKind.Object => """
                 Missing END OBJECT marker.
                 """,
 
@@ -427,7 +427,7 @@ public static class ProcedureDivision
             return;
         }
 
-        if (currentType == SourceUnit.Program && CurrentEquals("EOF"))
+        if (currentType == UnitKind.Program && CurrentEquals("EOF"))
         {
             CompilerContext.SourceTypes.Pop();
             return;
@@ -439,8 +439,8 @@ public static class ProcedureDivision
 
         switch (currentType)
         {
-            case SourceUnit.Program:
-            case SourceUnit.ProgramPrototype:
+            case UnitKind.Program:
+            case UnitKind.ProgramPrototype:
 
                 Expected("END");
                 Expected("PROGRAM");
@@ -448,22 +448,22 @@ public static class ProcedureDivision
                 EndMarkerErrorHandling(endMarkerToken);
                 break;
 
-            case SourceUnit.Function:
-            case SourceUnit.FunctionPrototype:
+            case UnitKind.Function:
+            case UnitKind.FunctionPrototype:
                 Expected("END");
                 Expected("FUNCTION");
 
                 EndMarkerErrorHandling(endMarkerToken);
                 break;
 
-            case SourceUnit.Method:
-            case SourceUnit.MethodPrototype:
-            case SourceUnit.MethodGetter:
-            case SourceUnit.MethodSetter:
+            case UnitKind.Method:
+            case UnitKind.MethodPrototype:
+            case UnitKind.MethodGetter:
+            case UnitKind.MethodSetter:
                 Expected("END");
                 Expected("METHOD");
 
-                if (currentType is SourceUnit.Method or SourceUnit.MethodPrototype)
+                if (currentType is UnitKind.Method or UnitKind.MethodPrototype)
                 {
                     References.Identifier(endMarkerToken);
                 }
@@ -487,21 +487,21 @@ public static class ProcedureDivision
 
                 break;
 
-            case SourceUnit.Class:
+            case UnitKind.Class:
                 Expected("END");
                 Expected("CLASS");
 
                 EndMarkerErrorHandling(endMarkerToken);
                 break;
 
-            case SourceUnit.Interface:
+            case UnitKind.Interface:
                 Expected("END");
                 Expected("INTERFACE");
 
                 EndMarkerErrorHandling(endMarkerToken);
                 break;
 
-            case SourceUnit.Factory:
+            case UnitKind.Factory:
                 Expected("END");
                 Expected("FACTORY");
 
@@ -524,7 +524,7 @@ public static class ProcedureDivision
 
                 break;
 
-            case SourceUnit.Object:
+            case UnitKind.Object:
                 Expected("END");
                 Expected("OBJECT");
 

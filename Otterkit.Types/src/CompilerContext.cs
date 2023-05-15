@@ -18,7 +18,7 @@ public static class CompilerContext
     /// Used for keeping track of which scope is being parsed.
     /// Scope meaning the current division, section or paragragh.
     /// </summary>
-    public static ActiveScope ActiveScope { get; set; }
+    public static SourceScope ActiveScope { get; set; }
 
     /// <summary>
     /// Used for keeping track of where the current source unit was defined, including its containing parent.
@@ -29,12 +29,17 @@ public static class CompilerContext
     /// <summary>
     /// Used for keeping track of the source unit types, including the type of its containing parent.
     /// </summary>
-    public static readonly Stack<SourceUnit> SourceTypes = new();
+    public static readonly Stack<UnitKind> SourceTypes = new();
 
     /// <summary>
     /// Used for storing the current source unit signature.
     /// </summary>
     private static Option<CallablePrototype> StoredCallable;
+
+    /// <summary>
+    /// Used for storing all the active global names (AKA the global symbol table).
+    /// </summary>
+    public static readonly GlobalNames ActiveNames = new();
 
     /// <summary>
     /// Used for getting and setting the signature of the source unit currently being parsed.

@@ -8,8 +8,8 @@ public class IntrinsicPrototype : AbstractPrototype
     public List<bool> IsOptional = new();
     public Option<IntrinsicType> Returning;
 
-    public IntrinsicPrototype(Token identifier, SourceUnit sourcetype)
-        : base (identifier, sourcetype) { }
+    public IntrinsicPrototype(Token identifier, UnitKind sourceKind)
+        : base (identifier, sourceKind) { }
 
     public (List<IntrinsicType> Types, List<bool> IsOptional) GetParameters()
     {

@@ -9,6 +9,6 @@ public class InterfacePrototype : AbstractPrototype
     // Interface prototype methods
     public List<CallablePrototype> Methods = new();
 
-    public InterfacePrototype(Token identifier, SourceUnit sourcetype)
-        : base (identifier, sourcetype) { }
+    public InterfacePrototype(Token identifier, UnitKind sourceKind)
+        : base (identifier, sourceKind) { }
 }

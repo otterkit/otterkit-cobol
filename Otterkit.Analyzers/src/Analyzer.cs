@@ -53,8 +53,8 @@ public static class Analyzer
 
         var isClassOrInterface = sourceTypes.Peek() switch
         {
-            SourceUnit.Class => true,
-            SourceUnit.Interface => true,
+            UnitKind.Class => true,
+            UnitKind.Interface => true,
             _ => false
         };
 
@@ -65,11 +65,11 @@ public static class Analyzer
                 ProcedureDivision.ParseProcedural();
             }
         }
-        else if (sourceTypes.Peek() == SourceUnit.Class)
+        else if (sourceTypes.Peek() == UnitKind.Class)
         {
             ProcedureDivision.ParseObjects();
         }
-        else if (sourceTypes.Peek() == SourceUnit.Interface)
+        else if (sourceTypes.Peek() == UnitKind.Interface)
         {
             ProcedureDivision.ParseInterface();
         }

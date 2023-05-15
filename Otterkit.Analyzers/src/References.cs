@@ -1,25 +1,17 @@
 using static Otterkit.Types.TokenHandling;
+using static Otterkit.Types.CompilerContext;
 using Otterkit.Types;
 using System.Diagnostics;
 
 namespace Otterkit.Analyzers;
 
-public static class References
+public static partial class References
 {
-    private static bool IsResolutionPass 
-        => CompilerContext.IsResolutionPass;
+    private static Stack<Token> Qualification = new();
 
-    private static CallablePrototype ActiveCallable 
-        => CompilerContext.ActiveCallable;
-        
-    private static DataNames<DataEntry> ActiveData 
-        => CompilerContext.ActiveData;
-
-    private static Stack<Token> Qualification = new(); 
-    
-    private static bool HasFlag(Enum type, Enum flag)
+    public static bool HasFlag(Enum type, Enum flag)
         => type.HasFlag(flag);
-    
+
     private static bool CheckParent(Token entry, Token parent)
     {
         var entries = ActiveData.EntriesList(entry);
@@ -40,7 +32,7 @@ public static class References
 
             var parentToken = parentEntry.Identifier.Unwrap();
 
-            if (parentToken.Value == parent.Value) 
+            if (parentToken.Value == parent.Value)
             {
                 Qualification.Push(parentToken);
 
@@ -71,7 +63,7 @@ public static class References
 
             var parentToken = parentEntry.Identifier.Unwrap();
 
-            if (parentToken.Line == qualified.Line && parentToken.Column == qualified.Column) 
+            if (parentToken.Line == qualified.Line && parentToken.Column == qualified.Column)
             {
                 return item.Identifier.Unwrap();
             }
@@ -92,7 +84,7 @@ public static class References
         return qualified;
     }
 
-    public static Unique<Token> Name(bool shouldResolve = true)
+    public static Unique<Token> LocalName(bool shouldResolve = true)
     {
         if (CurrentEquals(TokenType.EOF))
         {
@@ -159,19 +151,19 @@ public static class References
     {
         if (!IsResolutionPass)
         {
-            Name();
+            LocalName();
 
             while (CurrentEquals("IN OF"))
             {
                 Choice("IN OF");
 
-                Name();
+                LocalName();
             }
 
             return null;
         }
 
-        var name = Name();
+        var name = LocalName();
 
         if (!name.Exists)
         {
@@ -202,7 +194,7 @@ public static class References
         {
             Choice("IN OF");
 
-            var parent = Name();
+            var parent = LocalName();
 
             if (!parent.Exists) continue;
 
@@ -675,5 +667,90 @@ public static class References
         Continue();
 
         return true;
+    }
+
+    public static Option<Token> GlobalName(bool shouldExist, bool shouldResolve = true)
+    {
+        if (CurrentEquals(TokenType.EOF))
+        {
+            ErrorHandler
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
+                Unexpected end of file.
+                """)
+            .WithSourceLine(Peek(-1), $"""
+                Expected an identifier after this token.
+                """)
+            .CloseError();
+
+            return null;
+        }
+
+        if (!CurrentEquals(TokenType.Identifier))
+        {
+            ErrorHandler
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a user-defined word (an identifier).
+                """)
+            .CloseError();
+
+            Continue();
+
+            return null;
+        }
+
+        var nameToken = Current();
+
+        if (!IsResolutionPass || !shouldResolve)
+        {
+            Continue();
+            return null;
+        }
+
+        var exists = ActiveNames.Exists(nameToken);
+
+        if (!exists && shouldExist)
+        {
+            ErrorHandler
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
+                Reference to undefined identifier.
+                """)
+            .WithSourceLine(Current(), $"""
+                Name does not exist in the current context.
+                """)
+            .CloseError();
+
+            Continue();
+
+            return null;
+        }
+
+        if (exists && !shouldExist)
+        {
+            var original = ActiveNames.Fetch(nameToken);
+
+            var token = original.Identifier;
+
+            ErrorHandler
+            .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
+                Duplicate global name definition.
+                """)
+            .WithSourceLine(Current(), $"""
+                Already defined in this codebase.
+                """)
+            .WithSourceNote(token)
+            .WithNote("The original name was defined here.")
+            .CloseError();
+
+            Continue();
+
+            return null;
+        }
+
+        Continue();
+
+        return nameToken;
     }
 }

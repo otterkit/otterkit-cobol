@@ -17,7 +17,7 @@ public static partial class EnvironmentDivision
     {
         Expected("ENVIRONMENT");
         Expected("DIVISION");
-        CompilerContext.ActiveScope = ActiveScope.EnvironmentDivision;
+        CompilerContext.ActiveScope = SourceScope.EnvironmentDivision;
 
         if (!Expected(".", false))
         {
@@ -296,7 +296,7 @@ public static partial class EnvironmentDivision
     private static void Repository()
     {
         Expected("REPOSITORY");
-        CompilerContext.ActiveScope = ActiveScope.Repository;
+        CompilerContext.ActiveScope = SourceScope.Repository;
 
         if (!Expected(".", false))
         {
@@ -318,6 +318,7 @@ public static partial class EnvironmentDivision
             if (CurrentEquals("CLASS"))
             {
                 Expected("CLASS");
+
                 References.Identifier();
 
                 if (CurrentEquals("AS"))
@@ -460,7 +461,7 @@ public static partial class EnvironmentDivision
     private static void IoControl()
     {
         Expected("I-O-CONTROL");
-        CompilerContext.ActiveScope = ActiveScope.FileControl;
+        CompilerContext.ActiveScope = SourceScope.FileControl;
 
         if (!Expected(".", false))
         {
@@ -507,7 +508,7 @@ public static partial class EnvironmentDivision
     private static void FileControl()
     {
         Expected("FILE-CONTROL");
-        CompilerContext.ActiveScope = ActiveScope.FileControl;
+        CompilerContext.ActiveScope = SourceScope.FileControl;
 
         if (!Expected(".", false))
         {

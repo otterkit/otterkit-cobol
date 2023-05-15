@@ -3,12 +3,12 @@ namespace Otterkit.Types;
 public abstract class AbstractPrototype
 {
     public Token Identifier;
-    public SourceUnit SourceType;
+    public UnitKind SourceKind;
     public Option<string> ExternalizedName;
 
-    protected AbstractPrototype(Token identifier, SourceUnit sourcetype)
+    protected AbstractPrototype(Token identifier, UnitKind sourceKind)
     {
         Identifier = identifier;
-        SourceType = sourcetype;
+        SourceKind = sourceKind;
     }
 }

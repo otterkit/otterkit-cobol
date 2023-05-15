@@ -3399,7 +3399,7 @@ public static class Statements
 
         if (isPrototypeOrMethod)
         {
-            References.Name();
+            References.LocalName();
         
             return;
         }
@@ -3431,7 +3431,7 @@ public static class Statements
 
         if (isPrototypeOrMethod)
         {
-            References.Name();
+            References.LocalName();
         
             return;
         }

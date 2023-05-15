@@ -35,7 +35,7 @@ Otterkit is available to install on the [Nuget package manager](https://www.nuge
 ```
 dotnet new install Otterkit.Templates::1.0.45-alpha
 
-dotnet tool install --global Otterkit --version 1.0.70
+dotnet tool install --global Otterkit --version 1.0.75
 ```
 
 ### Create and Build a COBOL Project

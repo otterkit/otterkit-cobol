@@ -741,7 +741,9 @@ public static partial class References
                 Already defined in this codebase.
                 """)
             .WithSourceNote(token)
-            .WithNote("The original name was defined here.")
+            .WithNote("""
+                The original name was defined here.
+                """)
             .CloseError();
 
             Continue();

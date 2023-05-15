@@ -1,6 +1,6 @@
 namespace Otterkit.Types;
 
-public enum ActiveScope
+public enum SourceScope
 {
     ProgramId,
     FunctionId,

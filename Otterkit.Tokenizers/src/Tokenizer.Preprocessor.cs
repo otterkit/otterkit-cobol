@@ -17,7 +17,12 @@ public static partial class Tokenizer
 
         Encoding.UTF8.GetChars(bytes, sourceChars);
 
-        if (!HasDetectedSourceFormat && CompilerOptions.Format == SourceFormat.Auto)
+        if (CompilerOptions.Format is not SourceFormat.Auto)
+        {
+            HasDetectedSourceFormat = true;
+        }
+
+        if (!HasDetectedSourceFormat && CompilerOptions.Format is SourceFormat.Auto)
         {
             if (sourceChars.Length >= 15 && sourceChars.Slice(7, 8).StartsWith(">>SOURCE"))
             {
@@ -55,7 +60,7 @@ public static partial class Tokenizer
             }
         }
 
-        if (CompilerOptions.Format == SourceFormat.Fixed || !HasDetectedSourceFormat)
+        if (CompilerOptions.Format is SourceFormat.Fixed || !HasDetectedSourceFormat)
         {
             if (sourceChars.Length >= CompilerOptions.Columns)
             {
@@ -92,7 +97,7 @@ public static partial class Tokenizer
             }
         }
 
-        if (CompilerOptions.Format == SourceFormat.Free)
+        if (CompilerOptions.Format is SourceFormat.Free)
         {
             int commentIndex = sourceChars.IndexOf("*>");
             if (commentIndex > -1)

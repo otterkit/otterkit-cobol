@@ -1,6 +1,6 @@
 namespace Otterkit.Types;
 
-public enum SourceUnit
+public enum UnitKind
 {
     Program,
     ProgramPrototype,
@@ -13,5 +13,6 @@ public enum SourceUnit
     Object,
     Method,
     MethodGetter,
-    MethodSetter
+    MethodSetter,
+    Intrinsic
 }

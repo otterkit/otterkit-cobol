@@ -319,7 +319,7 @@ public sealed partial record Token
 
     public bool SamePosition(Token token)
     {
-        var sameFile = FetchFile == token.FetchFile;
+        var sameFile = FileIndex == token.FileIndex;
 
         if (!sameFile) return false;
 

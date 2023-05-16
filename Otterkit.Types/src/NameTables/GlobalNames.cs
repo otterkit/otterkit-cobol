@@ -5,9 +5,9 @@ namespace Otterkit.Types;
 
 public sealed class GlobalNames
 {
-    private readonly Dictionary<string, AbstractPrototype> NameLookup = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, AbstractUnit> NameLookup = new(StringComparer.OrdinalIgnoreCase);
 
-    public bool TryAdd(Token nameToken, AbstractPrototype prototype)
+    public bool TryAdd(Token nameToken, AbstractUnit prototype)
     {
         ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrAddDefault(NameLookup, nameToken.Value, out var exists);
 
@@ -30,7 +30,7 @@ public sealed class GlobalNames
     }
 
     public bool Exists<TPrototype>(Token nameToken)
-        where TPrototype : AbstractPrototype
+        where TPrototype : AbstractUnit
     {
         ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, nameToken.Value);
 
@@ -39,7 +39,7 @@ public sealed class GlobalNames
         return false;
     }
 
-    public AbstractPrototype Fetch(Token nameToken)
+    public AbstractUnit Fetch(Token nameToken)
     {
         ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, nameToken.Value);
 
@@ -52,7 +52,7 @@ public sealed class GlobalNames
     }
 
     public TPrototype Fetch<TPrototype>(Token nameToken)
-        where TPrototype : AbstractPrototype
+        where TPrototype : AbstractUnit
     {
         ref var prototypeRef = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, nameToken.Value);
 

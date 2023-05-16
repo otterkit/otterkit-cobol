@@ -365,7 +365,7 @@ public static class IdentificationDivision
 
         if (!IsResolutionPass)
         {
-            var signature = new CallablePrototype(ActiveUnits.Peek(), SourceTypes.Peek());
+            var signature = new CallableUnit(ActiveUnits.Peek(), SourceTypes.Peek());
 
             ActiveNames.TryAdd(ActiveUnits.Peek(), signature);
 
@@ -374,7 +374,7 @@ public static class IdentificationDivision
 
         if (IsResolutionPass)
         {
-            ActiveCallable = ActiveNames.Fetch<CallablePrototype>(ActiveUnits.Peek());
+            ActiveCallable = ActiveNames.Fetch<CallableUnit>(ActiveUnits.Peek());
         }
 
         if (!Expected(".", false))
@@ -422,7 +422,7 @@ public static class IdentificationDivision
 
         if (!IsResolutionPass)
         {
-            var signature = new CallablePrototype(ActiveUnits.Peek(), SourceTypes.Peek());
+            var signature = new CallableUnit(ActiveUnits.Peek(), SourceTypes.Peek());
 
             ActiveNames.TryAdd(ActiveUnits.Peek(), signature);
 
@@ -431,7 +431,7 @@ public static class IdentificationDivision
 
         if (IsResolutionPass)
         {
-            ActiveCallable = ActiveNames.Fetch<CallablePrototype>(ActiveUnits.Peek());
+            ActiveCallable = ActiveNames.Fetch<CallableUnit>(ActiveUnits.Peek());
         }
 
         if (!Expected(".", false))
@@ -517,7 +517,7 @@ public static class IdentificationDivision
 
         if (!IsResolutionPass)
         {
-            var signature = new ClassPrototype(ActiveUnits.Peek(), SourceTypes.Peek());
+            var signature = new ClassUnit(ActiveUnits.Peek(), SourceTypes.Peek());
 
             ActiveNames.TryAdd(ActiveUnits.Peek(), signature);
         }
@@ -600,7 +600,7 @@ public static class IdentificationDivision
 
         if (!IsResolutionPass)
         {
-            var signature = new InterfacePrototype(ActiveUnits.Peek(), SourceTypes.Peek());
+            var signature = new InterfaceUnit(ActiveUnits.Peek(), SourceTypes.Peek());
 
             ActiveNames.TryAdd(ActiveUnits.Peek(), signature);
         }
@@ -716,18 +716,18 @@ public static class IdentificationDivision
         // Because we don't want to run this again during it:
         if (SourceTypes.Peek() is UnitKind.Interface)
         {
-            var parentInterface = ActiveNames.Fetch<InterfacePrototype>(ActiveUnits.Peek());
+            var parentInterface = ActiveNames.Fetch<InterfaceUnit>(ActiveUnits.Peek());
 
-            var methodPrototype = new CallablePrototype(ActiveUnits.Peek(), SourceTypes.Peek());
+            var methodPrototype = new CallableUnit(ActiveUnits.Peek(), SourceTypes.Peek());
 
             parentInterface.Methods.Add(methodPrototype);
 
             ActiveCallable = methodPrototype;
         }
 
-        var parentClass = ActiveNames.Fetch<ClassPrototype>(ActiveUnits.Peek());
+        var parentClass = ActiveNames.Fetch<ClassUnit>(ActiveUnits.Peek());
 
-        var method = new CallablePrototype(ActiveUnits.Peek(), SourceTypes.Peek());
+        var method = new CallableUnit(ActiveUnits.Peek(), SourceTypes.Peek());
 
         if (SourceTypes.Peek() is UnitKind.Object)
         {

@@ -2,14 +2,11 @@ using Otterkit.Types;
 
 namespace Otterkit;
 
-public class RepositoryName
+public class RepositoryEntry : AbstractEntry
 {
-    public Token Identifier;
     public UnitKind SourceType;
     public int DeclarationIndex;
 
-    public RepositoryName(Token identifier) 
-    {
-        Identifier = identifier;
-    }
+    public RepositoryEntry(Token identifier, EntryKind entryKind)
+        : base (identifier, entryKind) { }
 }

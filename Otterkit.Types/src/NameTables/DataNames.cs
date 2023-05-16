@@ -7,7 +7,7 @@ public sealed class DataNames<TValue> where TValue: notnull
 {
     private readonly Dictionary<string, List<TValue>> NameLookup = new(StringComparer.OrdinalIgnoreCase);
 
-    public void AddEntry(Token entry, TValue localEntry)
+    public void Add(Token entry, TValue localEntry)
     {
         ref var entries = ref CollectionsMarshal.GetValueRefOrAddDefault(NameLookup, entry.Value, out var exists);
 
@@ -25,7 +25,7 @@ public sealed class DataNames<TValue> where TValue: notnull
         }
     }
 
-    public bool EntryExists(Token entry)
+    public bool Exists(Token entry)
     {
         ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entry.Value);
 
@@ -34,7 +34,7 @@ public sealed class DataNames<TValue> where TValue: notnull
         return false;
     }
 
-    public (bool, bool) HasUniqueEntry(Token entry)
+    public (bool, bool) HasUnique(Token entry)
     {
         ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entry.Value);
 
@@ -46,7 +46,7 @@ public sealed class DataNames<TValue> where TValue: notnull
         return (false, false);
     }
 
-    public List<TValue> EntriesList(Token entry)
+    public List<TValue> FetchList(Token entry)
     {
         ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entry.Value);
 
@@ -58,7 +58,7 @@ public sealed class DataNames<TValue> where TValue: notnull
         throw new ArgumentOutOfRangeException(nameof(entry), "Local entry does not exist in the NameLookup dictionary");
     }
 
-    public TValue UniqueEntry(Token entry)
+    public TValue FetchUnique(Token entry)
     {
         ref var entries = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, entry.Value);
 

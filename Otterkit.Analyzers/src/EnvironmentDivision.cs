@@ -585,7 +585,7 @@ public static partial class EnvironmentDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.FileNames.NameExists(fileToken))
+        if (sourceUnit.LocalNames.Exists(fileToken))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -600,6 +600,6 @@ public static partial class EnvironmentDivision
             .CloseError();
         }
 
-        sourceUnit.FileNames.TryAddName(fileToken, fileControl);
+        sourceUnit.LocalNames.TryAdd(fileToken, fileControl);
     }
 }

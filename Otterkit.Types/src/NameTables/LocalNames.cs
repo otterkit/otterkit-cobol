@@ -7,7 +7,7 @@ public sealed class LocalNames<TValue> where TValue: notnull
 {
     private readonly Dictionary<string, TValue> NameLookup = new(StringComparer.OrdinalIgnoreCase);
 
-    public bool TryAddName(Token name, TValue localName)
+    public bool TryAdd(Token name, TValue localName)
     {
         ref var names = ref CollectionsMarshal.GetValueRefOrAddDefault(NameLookup, name.Value, out var exists);
 
@@ -21,7 +21,7 @@ public sealed class LocalNames<TValue> where TValue: notnull
         return false;
     }
 
-    public bool NameExists(Token name)
+    public bool Exists(Token name)
     {
         ref var names = ref CollectionsMarshal.GetValueRefOrNullRef(NameLookup, name.Value);
 

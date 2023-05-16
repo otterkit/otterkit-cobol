@@ -14,7 +14,7 @@ public static partial class References
 
     private static bool CheckParent(Token entry, Token parent)
     {
-        var entries = ActiveData.EntriesList(entry);
+        var entries = ActiveData.FetchList(entry);
 
         foreach (var item in entries)
         {
@@ -45,7 +45,7 @@ public static partial class References
 
     private static Token FindSubordinate(Token qualified, Token subordinate)
     {
-        var entries = ActiveData.EntriesList(subordinate);
+        var entries = ActiveData.FetchList(subordinate);
 
         foreach (var item in entries)
         {
@@ -124,7 +124,7 @@ public static partial class References
             return null;
         }
 
-        var (exists, isUnique) = ActiveData.HasUniqueEntry(nameToken);
+        var (exists, isUnique) = ActiveData.HasUnique(nameToken);
 
         if (!exists)
         {
@@ -240,7 +240,7 @@ public static partial class References
 
     public static DataEntry FetchDataEntry(Token qualifiedToken)
     {
-        var entries = ActiveData.EntriesList(qualifiedToken);
+        var entries = ActiveData.FetchList(qualifiedToken);
 
         foreach (var entry in entries)
         {

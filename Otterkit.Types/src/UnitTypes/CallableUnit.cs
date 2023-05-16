@@ -4,16 +4,15 @@ namespace Otterkit.Types;
 // a ValueTuple is enough, and gives us extra syntax sugar
 using ParameterTuple = ValueTuple<DataEntry, bool, bool>;
 
-public class CallablePrototype : AbstractPrototype
+public class CallableUnit : AbstractUnit
 {
-    public LocalNames<RepositoryName> RepositoryNames = new();
-    public LocalNames<FileControlEntry> FileNames = new();
-    public DataNames<DataEntry> DataEntries = new();
+    public LocalNames<AbstractEntry> LocalNames = new();
+    public DataNames<DataEntry> DataNames = new();
     public List<ParameterTuple> Parameters = new();
     public Option<DataEntry> Returning;
     public bool Override;
     public bool IsFinal;
 
-    public CallablePrototype(Token identifier, UnitKind sourceKind)
+    public CallableUnit(Token identifier, UnitKind sourceKind)
         : base (identifier, sourceKind) { }
 }

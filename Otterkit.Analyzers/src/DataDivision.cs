@@ -353,7 +353,7 @@ public static partial class DataDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataEntries.EntryExists(itemToken) && levelNumber is 1 or 77)
+        if (sourceUnit.DataNames.Exists(itemToken) && levelNumber is 1 or 77)
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -368,7 +368,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataEntries.AddEntry(itemToken, dataLocal);
+        sourceUnit.DataNames.Add(itemToken, dataLocal);
     }
 
     private static void FileEntry()
@@ -427,7 +427,7 @@ public static partial class DataDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataEntries.EntryExists(itemToken))
+        if (sourceUnit.DataNames.Exists(itemToken))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -442,7 +442,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataEntries.AddEntry(itemToken, fileLocal);
+        sourceUnit.DataNames.Add(itemToken, fileLocal);
     }
 
     private static void GroupEntry()
@@ -570,7 +570,7 @@ public static partial class DataDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataEntries.EntryExists(itemToken) && levelNumber is 1 or 77)
+        if (sourceUnit.DataNames.Exists(itemToken) && levelNumber is 1 or 77)
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -585,7 +585,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataEntries.AddEntry(itemToken, dataLocal);
+        sourceUnit.DataNames.Add(itemToken, dataLocal);
     }
 
     private static void ConstantEntry()
@@ -684,7 +684,7 @@ public static partial class DataDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataEntries.EntryExists(itemToken) && levelNumber is 1 or 77)
+        if (sourceUnit.DataNames.Exists(itemToken) && levelNumber is 1 or 77)
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -699,7 +699,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataEntries.AddEntry(itemToken, dataLocal);
+        sourceUnit.DataNames.Add(itemToken, dataLocal);
     }
 
     private static void ScreenEntry()
@@ -775,7 +775,7 @@ public static partial class DataDivision
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataEntries.EntryExists(itemToken) && levelNumber is 1 or 77)
+        if (sourceUnit.DataNames.Exists(itemToken) && levelNumber is 1 or 77)
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
@@ -790,7 +790,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataEntries.AddEntry(itemToken, screenLocal);
+        sourceUnit.DataNames.Add(itemToken, screenLocal);
     }
 
     private static void HandleLevelStack(DataEntry entryLocal)
@@ -1031,7 +1031,7 @@ public static partial class DataDivision
             // Because we don't want to run this again during it
             var sourceUnit = CompilerContext.ActiveCallable;
 
-            if (sourceUnit.DataEntries.EntryExists(itemToken))
+            if (sourceUnit.DataNames.Exists(itemToken))
             {
                 // TODO: This is incorrect, but was done to replace the old error message system
                 ErrorHandler
@@ -1047,7 +1047,7 @@ public static partial class DataDivision
                 .CloseError();
             }
 
-            sourceUnit.DataEntries.AddEntry(itemToken, dataLocal);
+            sourceUnit.DataNames.Add(itemToken, dataLocal);
         }
     }
 }

@@ -2,12 +2,10 @@ using static Otterkit.Types.TokenHandling;
 
 namespace Otterkit.Types;
 
-public partial class DataEntry
+public partial class DataEntry : AbstractEntry
 {
     public Option<DataEntry> Parent;
-    public Option<Token> Identifier;
     public Option<string> ExternalizedName;
-    public EntryKind EntryKind;
 
     public SourceScope Section;
     public int LevelNumber;
@@ -22,11 +20,8 @@ public partial class DataEntry
     private ulong ClauseBitField;
     public int ClauseDeclaration;
 
-    public DataEntry(Token identifier, EntryKind entryType) 
-    {
-        Identifier = identifier;
-        EntryKind = entryType;
-    }
+    public DataEntry(Token identifier, EntryKind entryType)
+        : base (identifier, entryType) { }
 
     public bool this[DataClause clauseName]
     {

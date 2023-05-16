@@ -34,7 +34,7 @@ public static class CompilerContext
     /// <summary>
     /// Used for storing the current source unit signature.
     /// </summary>
-    private static Option<CallablePrototype> StoredCallable;
+    private static Option<CallableUnit> StoredCallable;
 
     /// <summary>
     /// Used for storing all the active global names (AKA the global symbol table).
@@ -44,16 +44,16 @@ public static class CompilerContext
     /// <summary>
     /// Used for getting and setting the signature of the source unit currently being parsed.
     /// </summary>
-    public static CallablePrototype ActiveCallable
+    public static CallableUnit ActiveCallable
     {
-        get => (CallablePrototype)StoredCallable;
+        get => (CallableUnit)StoredCallable;
 
         set => StoredCallable = value;
     }
 
     public static DataNames<DataEntry> ActiveData
     {
-        get => ActiveCallable.DataEntries;
+        get => ActiveCallable.DataNames;
     }
 
     public static bool IsResolutionPass { get; set; }

@@ -2,10 +2,8 @@ using Otterkit.Types;
 
 namespace Otterkit;
 
-public class FileControlEntry
+public class FileControlEntry : AbstractEntry
 {
-    public Option<Token> Identifier;
-    public EntryKind EntryType;
     public Option<string> ExternalizedName;
 
     public SourceScope Section;
@@ -13,10 +11,9 @@ public class FileControlEntry
     public bool HasUsing;
     public Option<string> Organization;
 
-    public FileControlEntry(Token identifier, EntryKind entryType, bool hasUsing) 
+    public FileControlEntry(Token identifier, EntryKind entryType, bool hasUsing)
+        : base (identifier, entryType)
     {
-        Identifier = identifier;
-        EntryType = entryType;
         Assign = new(1);
         HasUsing = hasUsing;
     }

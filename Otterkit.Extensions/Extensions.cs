@@ -1,6 +1,6 @@
 ﻿namespace Otterkit.Extensions;
 
-public class Extensions
+public static class Extensions
 {
 
 }

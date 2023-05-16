@@ -437,11 +437,11 @@ public static partial class EnvironmentDivision
                     continue;
                 }
 
-                if (CurrentEquals(TokenType.IntrinsicFunction))
+                if (CurrentEquals(TokenType.IntrinsicFunction) || PeekEquals(1, "INTRINSIC") || CurrentEquals(TokenType.Identifier) && PeekEquals(1, TokenType.Identifier | TokenType.IntrinsicFunction))
                 {
                     References.IntrinsicName();
 
-                    while (CurrentEquals(TokenType.IntrinsicFunction) || CurrentEquals("RANDOM"))
+                    while (!CurrentEquals("INTRINSIC"))
                     {
                         References.IntrinsicName();
                     }

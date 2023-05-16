@@ -283,7 +283,8 @@ public static class IdentificationDivision
 
         ActiveScope = SourceScope.ProgramId;
 
-        References.Identifier();
+        References.GlobalName(false);
+
         if (CurrentEquals("AS"))
         {
             Expected("AS");

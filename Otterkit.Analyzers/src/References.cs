@@ -12,6 +12,15 @@ public static partial class References
     public static bool HasFlag(Enum type, Enum flag)
         => type.HasFlag(flag);
 
+    public static bool IsSameName(Token token)
+    {
+        var name = ActiveNames.Fetch(token);
+
+        var originalToken = name.Identifier;
+
+        return originalToken.SamePosition(token);
+    }
+
     private static bool CheckParent(Token entry, Token parent)
     {
         var entries = ActiveData.FetchList(entry);
@@ -725,6 +734,13 @@ public static partial class References
             Continue();
 
             return null;
+        }
+
+        if (exists && !shouldExist && IsSameName(nameToken))
+        {
+            Continue();
+
+            return nameToken;
         }
 
         if (exists && !shouldExist)

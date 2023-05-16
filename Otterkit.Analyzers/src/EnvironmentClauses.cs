@@ -373,27 +373,22 @@ public static partial class EnvironmentDivision
         {
             Expected("USING");
 
-            fileControl = new(fileToken, EntryKind.FileControl, true);
+            fileControl = new(fileToken, EntryKind.FileControl);
 
-            fileControl.Assign.Add(Current());
             References.Identifier();
         }
         else
         {
             Optional("TO");
-            fileControl = new(fileToken, EntryKind.FileControl, false);
+            fileControl = new(fileToken, EntryKind.FileControl);
 
-            fileControl.Assign.Add(Current());
             Common.IdentifierOrLiteral(TokenType.String);
 
             while (CurrentEquals(TokenType.Identifier | TokenType.String))
             {
-                fileControl.Assign.Add(Current());
                 Common.IdentifierOrLiteral(TokenType.String);
             }
         }
-
-        fileControl.Section = CompilerContext.ActiveScope;
 
         return fileControl;
     }

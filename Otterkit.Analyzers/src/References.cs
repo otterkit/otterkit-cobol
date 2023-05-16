@@ -701,13 +701,13 @@ public static partial class References
             return null;
         }
 
-        var nameToken = Current();
-
         if (!IsResolutionPass || !shouldResolve)
         {
             Continue();
             return null;
         }
+
+        var nameToken = Current();
 
         var exists = ActiveNames.Exists(nameToken);
 
@@ -718,7 +718,7 @@ public static partial class References
                 Reference to undefined identifier.
                 """)
             .WithSourceLine(Current(), $"""
-                Name does not exist in the current context.
+                Name does not exist in the current codebase.
                 """)
             .CloseError();
 
@@ -748,6 +748,51 @@ public static partial class References
 
             return null;
         }
+
+        Continue();
+
+        return nameToken;
+    }
+
+    public static Option<Token> IntrinsicName()
+    {
+        if (CurrentEquals(TokenType.EOF))
+        {
+            ErrorHandler
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
+                Unexpected end of file.
+                """)
+            .WithSourceLine(Peek(-1), $"""
+                Expected an identifier after this token.
+                """)
+            .CloseError();
+
+            return null;
+        }
+
+        if (!CurrentEquals(TokenType.IntrinsicFunction) && !CurrentEquals("RANDOM"))
+        {
+            ErrorHandler
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected an intrinsic function name.
+                """)
+            .CloseError();
+
+            Continue();
+
+            return null;
+        }
+
+        if (!IsResolutionPass)
+        {
+            Continue();
+            return null;
+        }
+
+        var nameToken = Current();
 
         Continue();
 

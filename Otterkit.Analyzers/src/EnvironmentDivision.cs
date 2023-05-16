@@ -1,4 +1,5 @@
 using static Otterkit.Types.TokenHandling;
+using static Otterkit.Types.CompilerContext;
 using Otterkit.Types;
 
 namespace Otterkit.Analyzers;
@@ -319,18 +320,27 @@ public static partial class EnvironmentDivision
             {
                 Expected("CLASS");
 
-                References.Identifier();
+                var option = TryNewRepository();
+
+                if (!option.Exists) continue;
+
+                var repository = option.Unwrap();
 
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
+
                     Literals.String();
+
+                    repository[RepositoryClause.External] = true;
                 }
 
                 if (CurrentEquals("EXPANDS"))
                 {
                     Expected("EXPANDS");
-                    References.Identifier();
+                    References.GlobalName(true);
+
+                    repository[RepositoryClause.Expands] = true;
 
                     Expected("USING");
                     if (!CurrentEquals(TokenType.Identifier))
@@ -347,29 +357,48 @@ public static partial class EnvironmentDivision
                         AnchorPoint("CLASS INTERFACE FUNCTION PROGRAM PROPERTY DATA PROCEDURE");
                     }
 
-                    References.Identifier();
+                    References.GlobalName(true);
 
-                    while (CurrentEquals(TokenType.Identifier)) References.Identifier();
+                    while (CurrentEquals(TokenType.Identifier))
+                    {
+                        References.GlobalName(true);
+                    }
                 }
+
+                var token = repository.Identifier.Unwrap();
+
+                ActiveCallable.LocalNames.TryAdd(token, repository);
             }
 
             if (CurrentEquals("INTERFACE"))
             {
                 Expected("INTERFACE");
-                References.Identifier();
+
+                var option = TryNewRepository();
+
+                if (!option.Exists) continue;
+
+                var repository = option.Unwrap();
 
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
+
                     Literals.String();
+
+                    repository[RepositoryClause.External] = true;
                 }
 
                 if (CurrentEquals("EXPANDS"))
                 {
                     Expected("EXPANDS");
-                    References.Identifier();
+
+                    References.GlobalName(true);
+
+                    repository[RepositoryClause.Expands] = true;
 
                     Expected("USING");
+
                     if (!CurrentEquals(TokenType.Identifier))
                     {
                         ErrorHandler
@@ -384,10 +413,17 @@ public static partial class EnvironmentDivision
                         AnchorPoint("CLASS INTERFACE FUNCTION PROGRAM PROPERTY DATA PROCEDURE");
                     }
 
-                    References.Identifier();
+                    References.GlobalName(true);
 
-                    while (CurrentEquals(TokenType.Identifier)) References.Identifier();
+                    while (CurrentEquals(TokenType.Identifier)) 
+                    {
+                        References.GlobalName(true);
+                    }
                 }
+
+                var token = repository.Identifier.Unwrap();
+
+                ActiveCallable.LocalNames.TryAdd(token, repository);
             }
 
             if (CurrentEquals("FUNCTION"))
@@ -397,43 +433,72 @@ public static partial class EnvironmentDivision
                 {
                     Expected("ALL");
                     Expected("INTRINSIC");
+
+                    continue;
                 }
-                else if (CurrentEquals(TokenType.IntrinsicFunction))
+
+                if (CurrentEquals(TokenType.IntrinsicFunction))
                 {
-                    Continue();
+                    References.IntrinsicName();
+
                     while (CurrentEquals(TokenType.IntrinsicFunction) || CurrentEquals("RANDOM"))
                     {
-                        Continue();
+                        References.IntrinsicName();
                     }
 
                     Expected("INTRINSIC");
+
+                    continue;
                 }
-                else
+
+                var option = TryNewRepository();
+
+                if (!option.Exists) continue;
+
+                var repository = option.Unwrap();
+
+                if (CurrentEquals("AS"))
                 {
-                    References.Identifier();
-                    if (CurrentEquals("AS"))
-                    {
-                        Expected("AS");
-                        Literals.String();
-                    }
+                    Expected("AS");
+                    Literals.String();
+
+                    repository[RepositoryClause.External] = true;
                 }
+
+                var token = repository.Identifier.Unwrap();
+
+                ActiveCallable.LocalNames.TryAdd(token, repository);
             }
 
             if (CurrentEquals("PROGRAM"))
             {
                 Expected("PROGRAM");
-                References.Identifier();
+
+                var option = TryNewRepository();
+
+                if (!option.Exists) continue;
+
+                var repository = option.Unwrap();
+
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
                     Literals.String();
+
+                    repository[RepositoryClause.External] = true;
                 }
+
+                var token = repository.Identifier.Unwrap();
+
+                ActiveCallable.LocalNames.TryAdd(token, repository);
             }
 
             if (CurrentEquals("PROPERTY"))
             {
                 Expected("PROPERTY");
+
                 References.Identifier();
+                
                 if (CurrentEquals("AS"))
                 {
                     Expected("AS");
@@ -456,6 +521,22 @@ public static partial class EnvironmentDivision
                 """)
             .CloseError();
         }
+    }
+
+    private static Option<RepositoryEntry> TryNewRepository()
+    {
+        var token = References.GlobalName(true);
+
+        if (!token.Exists)
+        {
+            return null;
+        }
+
+        var repository = new RepositoryEntry(token.Unwrap(), EntryKind.RepositoryEntry);
+
+        repository.DeclarationIndex = TokenHandling.Index;
+
+        return repository;
     }
 
     private static void IoControl()

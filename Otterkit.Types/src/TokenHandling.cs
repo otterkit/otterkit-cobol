@@ -86,9 +86,9 @@ public static class TokenHandling
         return keyword.Equals(Peek(amount).Value, StringComparison.OrdinalIgnoreCase);
     }
 
-    public static bool PeekEquals(int lookahead, TokenType type)
+    public static bool PeekEquals(int amount, TokenType type)
     {
-        return Peek(lookahead).Type == type;
+        return type.HasFlag(Peek(amount).Type);
     }
 
     public static Token Current()

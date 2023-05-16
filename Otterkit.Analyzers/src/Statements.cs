@@ -29,15 +29,41 @@ public static class Statements
             AnchorPoint(TokenContext.IsStatement);
         }
 
-        while (!isNested ? !CurrentEquals("EOF END") && !(CurrentEquals(TokenType.Identifier) && PeekEquals(1, "SECTION")) : CurrentEquals(TokenContext.IsStatement))
+        if (isNested)
         {
-            Statement(isNested);
+            NestedStatementLoop();
 
-            ScopeTerminator(isNested);
+            return;
+        }
 
-            if (isNested && !CurrentEquals(TokenContext.IsStatement)) return;
+        NonNestedStatementLoop();
+    }
 
-            if (CurrentEquals(TokenType.Identifier) && PeekEquals(1, "SECTION")) return;
+    private static void NestedStatementLoop()
+    {
+        while (CurrentEquals(TokenContext.IsStatement))
+        {
+            Statement(true);
+
+            ScopeTerminator(true);
+
+            if (!CurrentEquals(TokenContext.IsStatement)) break;
+
+            if (CurrentEquals(TokenType.Identifier) && PeekEquals(1, "SECTION")) break;
+        }
+    }
+
+    private static void NonNestedStatementLoop()
+    {
+        while (!CurrentEquals("EOF END") && !(CurrentEquals(TokenType.Identifier) && PeekEquals(1, "SECTION")))
+        {
+            Statement(false);
+
+            ScopeTerminator(false);
+
+            if (!CurrentEquals(TokenContext.IsStatement)) break;
+
+            if (CurrentEquals(TokenType.Identifier) && PeekEquals(1, "SECTION")) break;
         }
     }
 
@@ -3471,7 +3497,7 @@ public static class Statements
     {
         if (isNested) return;
 
-        if (CurrentEquals(". . "))
+        if (CurrentEquals("."))
         {
             Expected(".");
             return;

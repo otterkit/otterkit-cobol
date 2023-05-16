@@ -183,7 +183,7 @@ public static class TokenHandling
                 Unexpected token.
                 """)
             .WithSourceLine(Current(), $"""
-                $"Expected '{expected}' here, found '{Current().Value}' instead"
+                Expected '{expected}' here, found '{Current().Value}' instead
                 """)
             .CloseError();
 

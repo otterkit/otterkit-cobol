@@ -7,7 +7,7 @@ namespace Otterkit.Types;
 public sealed partial record Token
 {
     public string FetchFile => CompilerContext.FileNames[FileIndex];
-
+    
     public static List<Token> ClassifyTokens(List<Token> tokens)
     {
         Token previousToken = tokens[0];
@@ -315,6 +315,23 @@ public sealed partial record Token
             [..] => false
         };
 
+    }
+
+    public bool SamePosition(Token token)
+    {
+        var sameFile = FetchFile == token.FetchFile;
+
+        if (!sameFile) return false;
+
+        var sameLine = Line == token.Line;
+
+        if (!sameLine) return false;
+
+        var sameColumn = Column == token.Column;
+
+        if (!sameColumn) return false;
+
+        return true;
     }
 
     public override sealed string ToString()

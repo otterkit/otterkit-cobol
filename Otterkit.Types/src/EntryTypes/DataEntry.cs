@@ -20,8 +20,8 @@ public partial class DataEntry : AbstractEntry
     private ulong ClauseBitField;
     public int ClauseDeclaration;
 
-    public DataEntry(Token identifier, EntryKind entryType)
-        : base (identifier, entryType) { }
+    public DataEntry(Token identifier, EntryKind entryKind)
+        : base (identifier, entryKind) { }
 
     public bool this[DataClause clauseName]
     {

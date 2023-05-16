@@ -106,6 +106,10 @@ public static class Otterkit
                     case "--free":
                         CompilerOptions.Format = SourceFormat.Free;
                         break;
+
+                    case "--enable-extensions":
+                        CompilerContext.ExtensionsEnabled = true;
+                        break;
                 }
             }
 

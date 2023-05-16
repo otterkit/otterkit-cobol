@@ -57,4 +57,9 @@ public static class CompilerContext
     }
 
     public static bool IsResolutionPass { get; set; }
+
+    /// <summary>
+    /// Used for checking if third-party COBOL extensions are enabled.
+    /// </summary>
+    public static bool ExtensionsEnabled { get; set; }
 }

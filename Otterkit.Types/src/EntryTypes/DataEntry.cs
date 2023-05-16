@@ -17,39 +17,14 @@ public partial class DataEntry : AbstractEntry
     public bool IsGroup;
     public bool IsConstant;
 
-    private ulong ClauseBitField;
-    public int ClauseDeclaration;
-
     public DataEntry(Token identifier, EntryKind entryKind)
         : base (identifier, entryKind) { }
 
     public bool this[DataClause clauseName]
     {
-        get => GetClauseBit(clauseName);
+        get => GetBit((int)clauseName);
 
-        set => SetClauseBit(clauseName, value);
-    }
-
-    private void SetClauseBit(DataClause clause, bool bit)
-    {
-        var mask = 1UL << (int)clause - 1;
-
-        if (bit)
-        {
-            ClauseBitField |= mask;
-            return;
-        }
-
-        ClauseBitField &= ~mask;
-    }
-
-    private bool GetClauseBit(DataClause clause)
-    {
-        var position = (int)clause - 1;
-
-        var bit = (ClauseBitField >> position) & 1;
-
-        return bit == 1UL;
+        set => SetBit((int)clauseName, value);
     }
 
     public bool FetchTypedef()
@@ -197,7 +172,7 @@ public partial class DataEntry : AbstractEntry
 
         var currentIndex = TokenHandling.Index;
 
-        TokenHandling.Index = ClauseDeclaration;
+        TokenHandling.Index = DeclarationIndex;
 
         return currentIndex;
     }

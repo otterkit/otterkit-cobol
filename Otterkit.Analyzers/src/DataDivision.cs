@@ -528,7 +528,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        dataLocal.ClauseDeclaration = TokenHandling.Index;
+        dataLocal.DeclarationIndex = TokenHandling.Index;
 
         // COBOL standard requirement
         // Usage display is the default unless specified otherwise

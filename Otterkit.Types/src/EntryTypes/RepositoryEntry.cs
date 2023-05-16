@@ -5,8 +5,14 @@ namespace Otterkit;
 public class RepositoryEntry : AbstractEntry
 {
     public UnitKind SourceType;
-    public int DeclarationIndex;
 
     public RepositoryEntry(Token identifier, EntryKind entryKind)
         : base (identifier, entryKind) { }
+
+    public bool this[RepositoryClause clauseName]
+    {
+        get => GetBit((int)clauseName);
+
+        set => SetBit((int)clauseName, value);
+    }
 }

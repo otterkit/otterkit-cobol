@@ -731,8 +731,6 @@ public static partial class References
         {
             var original = ActiveNames.Fetch(nameToken);
 
-            var token = original.Identifier;
-
             ErrorHandler
             .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
                 Duplicate global name definition.
@@ -740,7 +738,7 @@ public static partial class References
             .WithSourceLine(Current(), $"""
                 Already defined in this codebase.
                 """)
-            .WithSourceNote(token)
+            .WithSourceNote(original.Identifier)
             .WithNote("""
                 The original name was defined here.
                 """)

@@ -114,10 +114,9 @@ public static class Statements
         }
     }
 
-    public static OtterkitNativeMemory<byte> ALLOCATE(int bytes, BasedDataItem dataItem)
+    public static void ALLOCATE()
     {
-        dataItem.Allocate(bytes, false);
-        return dataItem.UnsafeMemory;
+        // TODO: Reimplement based data item allocation
     }
 
     public static void CALL(Action procedure)
@@ -288,12 +287,9 @@ public static class Statements
         // TODO: Implement EXIT
     }
 
-    public static void FREE(params BasedDataItem[] dataItems)
+    public static void FREE()
     {
-        foreach (BasedDataItem dataItem in dataItems)
-        {
-            dataItem.Free();
-        }
+        // TODO: Reimplement based data item allocation
     }
 
     public static void GENERATE()

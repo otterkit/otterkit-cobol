@@ -1,0 +1,3 @@
+[submodule "Libraries/Otterkit.Numerics"]
+	path = Libraries/Otterkit.Numerics
+	url = https://github.com/otterkit/otterkit-numerics.git

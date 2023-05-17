@@ -58,6 +58,8 @@ public unsafe sealed class OtterMemory : IDisposable
 
     public void Dispose()
     {
+        if (!Allocated) return;
+
         NativeMemory.Free(Pointer);
 
         Pointer = null;

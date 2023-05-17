@@ -1375,7 +1375,7 @@ public static partial class DataDivision
 
         entryLocal[DataClause.Value] = true;
 
-        if (!Literals.CurrentEqualsAny())
+        if (!Literals.IsAny())
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """

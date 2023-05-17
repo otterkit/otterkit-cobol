@@ -5,7 +5,7 @@ namespace Otterkit.Analyzers;
 
 public static class Literals
 {
-    public static bool CurrentEqualsAny()
+    public static bool IsAny()
     {
         return CurrentEquals(TokenType.Numeric | TokenType.String | TokenType.HexString | TokenType.Boolean | TokenType.HexBoolean | TokenType.National | TokenType.HexNational | TokenType.Figurative);
     }

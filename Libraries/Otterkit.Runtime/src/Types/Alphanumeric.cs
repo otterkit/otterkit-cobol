@@ -4,39 +4,41 @@ namespace Otterkit.Runtime;
 
 public readonly struct Alphanumeric : ICOBOLType
 {
-    public readonly Memory<byte> Memory { get; init; }
+    public readonly OtterMemory Memory { get; init; }
     public readonly int Length;
     private readonly int Offset;
 
-    public Alphanumeric(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory, ICOBOLType[]? fields = null)
+    public Alphanumeric(ReadOnlySpan<byte> value, OtterMemory memory, int offset, int length)
     {
         Length = length;
         Offset = offset;
 
-        Memory = memory.Slice(offset, length);
+        Memory = memory;
+
+        var span = Memory.Slice(offset, length);
  
-        Memory.Span.Fill(32);
+        span.Fill(32);
 
         int byteLength = Length < value.Length
             ? Length
             : value.Length;
 
-        value[..byteLength].CopyTo(Memory.Span);
+        value[..byteLength].CopyTo(span);
     }
 
-    public Alphanumeric(Memory<byte> memory, int offset, int length, ICOBOLType[]? fields = null)
+    public Alphanumeric(OtterMemory memory, int offset, int length)
     {
         Length = length;
         Offset = offset;
 
-        Memory = memory.Slice(offset, length);
+        Memory = memory;
     }
 
     public Alphanumeric(ReadOnlySpan<byte> alphanumeric)
     {
         Length = alphanumeric.Length;
         
-        Memory = new byte[Length];
+        Memory = new OtterMemory(Length);
 
         alphanumeric.CopyTo(Memory.Span);
     }
@@ -89,17 +91,19 @@ public readonly struct Alphanumeric : ICOBOLType
     {
         get
         {
-            return Memory.Span;
+            return Memory.Slice(Offset, Length);
         }
         set
         {
-            Memory.Span.Fill(32);
+            var span = Memory.Slice(Offset, Length);
+
+            span.Fill(32);
 
             int length = Length < value.Length
             ? Length
             : value.Length;
 
-            value[..length].CopyTo(Memory.Span);
+            value[..length].CopyTo(span);
         }
     }
 
@@ -107,7 +111,9 @@ public readonly struct Alphanumeric : ICOBOLType
     {
         get
         {
-            return Encoding.UTF8.GetString(Memory.Span);
+            var span = Memory.Slice(Offset, Length);
+
+            return Encoding.UTF8.GetString(span);
         }
     }
 }

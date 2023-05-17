@@ -4,58 +4,53 @@ namespace Otterkit.Runtime;
 
 public readonly struct Bit : ICOBOLType
 {
-    public readonly Memory<byte> Memory { get; init; }
+    public readonly OtterMemory Memory { get; init; }
     public readonly int Offset;
     public readonly int Length;
 
-    public Bit(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
+    public Bit(ReadOnlySpan<byte> value, OtterMemory memory, int offset, int length)
     {
         Length = length;
         Offset = offset;
 
-        Memory = memory.Slice(offset, length);
+        Memory = memory;
 
-        Memory.Span.Fill(32);
+        var span = Memory.Slice(offset, length);
+ 
+        span.Fill(32);
 
         int byteLength = Length < value.Length
             ? Length
             : value.Length;
 
-        value[..byteLength].CopyTo(Memory.Span);
+        value[..byteLength].CopyTo(span);
     }
 
-    public Bit(Memory<byte> memory, int offset, int length)
+    public Bit(OtterMemory memory, int offset, int length)
     {
         Length = length;
         Offset = offset;
 
-        Memory = memory.Slice(offset, length);
-    }
-
-    public Bit(ReadOnlySpan<byte> bit)
-    {
-        Length = bit.Length;
-
-        Memory = new byte[Length];
-
-        bit.CopyTo(Memory.Span);
+        Memory = memory;
     }
 
     public ReadOnlySpan<byte> Bytes
     {
         get
         {
-            return Memory.Span;
+            return Memory.Slice(Offset, Length);
         }
         set
         {
-            Memory.Span.Fill(48);
+            var span = Memory.Slice(Offset, Length);
+
+            span.Fill(32);
 
             int length = Length < value.Length
             ? Length
             : value.Length;
 
-            value[..length].CopyTo(Memory.Span);
+            value[..length].CopyTo(span);
         }
     }
 
@@ -63,7 +58,9 @@ public readonly struct Bit : ICOBOLType
     {
         get
         {
-            return Encoding.UTF8.GetString(Memory.Span);
+            var span = Memory.Slice(Offset, Length);
+
+            return Encoding.UTF8.GetString(span);
         }
     }
 }

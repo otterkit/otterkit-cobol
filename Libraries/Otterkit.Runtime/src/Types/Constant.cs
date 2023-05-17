@@ -4,14 +4,14 @@ namespace Otterkit.Runtime;
 
 public readonly struct Constant : ICOBOLType
 {
-    public readonly Memory<byte> Memory { get; init; }
+    public readonly OtterMemory Memory { get; init; }
     public readonly int Length;
 
     public Constant(ReadOnlySpan<byte> bytes)
     {
         Length = bytes.Length;
 
-        Memory = new byte[Length];
+        Memory = new OtterMemory(Length);
 
         bytes.CopyTo(Memory.Span);
     }

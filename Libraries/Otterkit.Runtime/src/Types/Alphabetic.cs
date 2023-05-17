@@ -4,47 +4,52 @@ namespace Otterkit.Runtime;
 
 public readonly struct Alphabetic : ICOBOLType
 {
-    public readonly Memory<byte> Memory { get; init; }
+    public readonly OtterMemory Memory { get; init; }
     public readonly int Length;
     private readonly int Offset;
 
-    public Alphabetic(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
+    public Alphabetic(ReadOnlySpan<byte> value, OtterMemory memory, int offset, int length)
     {
         Offset = offset;
         Length = length;
-        Memory = memory.Slice(offset, length);
-        
-        Memory.Span.Fill(32);
+
+        Memory = memory;
+
+        var span = Memory.Slice(offset, length);
+ 
+        span.Fill(32);
 
         int byteLength = Length < value.Length
             ? Length
             : value.Length;
 
-        value[..byteLength].CopyTo(Memory.Span);
+        value[..byteLength].CopyTo(span);
     }
 
-    public Alphabetic(Memory<byte> memory, int offset, int length)
+    public Alphabetic(OtterMemory memory, int offset, int length)
     {
         Offset = offset;
         Length = length;
-        Memory = memory.Slice(offset, length);
+        Memory = memory;
     }
 
     public ReadOnlySpan<byte> Bytes
     {
         get
         {
-            return Memory.Span;
+            return Memory.Slice(Offset, Length);
         }
         set
         {
-            Memory.Span.Fill(32);
+            var span = Memory.Slice(Offset, Length);
+
+            span.Fill(32);
 
             int length = Length < value.Length
             ? Length
             : value.Length;
 
-            value[..length].CopyTo(Memory.Span);
+            value[..length].CopyTo(span);
         }
     }
 
@@ -52,7 +57,9 @@ public readonly struct Alphabetic : ICOBOLType
     {
         get
         {
-            return Encoding.UTF8.GetString(Memory.Span);
+            var span = Memory.Slice(Offset, Length);
+
+            return Encoding.UTF8.GetString(span);
         }
     }
 }

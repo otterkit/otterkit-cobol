@@ -45,7 +45,7 @@ public static class Functions
         // TODO BASE-CONVERT
     }
 
-    public static Bit BOOLEAN_OF_INTEGER(Numeric argument, Option<Numeric> length)
+    public static Temporary BOOLEAN_OF_INTEGER(Numeric argument, Option<Numeric> length)
     {
         // TODO BOOLEAN-OF-INTEGER
 
@@ -109,9 +109,7 @@ public static class Functions
             trueText = "-" + trueText;
         }
 
-        Bit result = new(Encoding.UTF8.GetBytes(trueText), 0, trueText.Length, new byte[trueText.Length]);
-
-        return result;
+        return new Temporary(Encoding.UTF8.GetBytes(trueText));
        
 
     }
@@ -127,13 +125,13 @@ public static class Functions
         return byteLength;
     }
 
-    public static Alphanumeric CHAR(Numeric argument)
+    public static Temporary CHAR(Numeric argument)
     {
         ReadOnlySpan<byte> bytes = argument.Bytes;
         int parseInt = int.Parse(Encoding.UTF8.GetString(bytes));
         ReadOnlySpan<byte> charAsByte = new(((byte)parseInt));
 
-        return new Alphanumeric(charAsByte, 0, 1, new byte[1]);
+        return new Temporary(charAsByte);
     }
 
     public static string CHAR_NATIONAL(Numeric argument)
@@ -148,7 +146,7 @@ public static class Functions
         return date;
     }
 
-    public static ICOBOLType CONCAT(params ICOBOLType[] inputs)
+    public static Temporary CONCAT(params ICOBOLType[] inputs)
     {
         string[] strings = new String[inputs.Length];
         for (int i = 0; i < inputs.Length; i++)
@@ -159,21 +157,7 @@ public static class Functions
 
         string returnType = inputs[1].GetType().Name.ToString();
 
-        if (returnType == typeof(Alphabetic).Name.ToString()){
-            return new Alphabetic(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
-        } else if (returnType == typeof(Alphanumeric).Name.ToString()){
-            return new Alphanumeric(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
-        } else if (returnType == typeof(Numeric).Name.ToString()) {
-            return new Alphanumeric(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
-        } else if (returnType == typeof(Bit).Name.ToString()){
-            return  new Alphanumeric(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
-        } else if (returnType == typeof(National).Name.ToString()){
-            return new National(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
-        } else {
-            return new Alphabetic(Encoding.UTF8.GetBytes(concat), 0, concat.Length, new byte[concat.Length]);
-        }
-            
-
+        return new Temporary(Encoding.UTF8.GetBytes(concat));
     }
 
     public static void CONVERT(Numeric value, Numeric source, Numeric target)
@@ -186,7 +170,7 @@ public static class Functions
         return Decimal128.Cos(radians);
     }
 
-    public static Alphanumeric CURRENT_DATE()
+    public static Temporary CURRENT_DATE()
     {
         DateTime currentDate = DateTime.Now;
         TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
@@ -202,9 +186,7 @@ public static class Functions
             DatePlusOffset = new String(formattedDate + "-" + offset.ToString("hhmm"));
         }
 
-        Alphanumeric output = new(Encoding.UTF8.GetBytes(DatePlusOffset), 0, 8, new byte[8]);
-
-        return output;
+        return new Temporary(Encoding.UTF8.GetBytes(DatePlusOffset));
     }
 
     public static Numeric DATE_OF_INTEGER(Numeric date)
@@ -654,11 +636,17 @@ public static class Functions
         // TODO: Implement NATIONAL types
     }
 
-    public static Numeric NUMVAL(Alphanumeric argument)
+    public static Temporary NUMVAL<T>(T argument) where T : ICOBOLType
     {
         // Needs further testing, might not work properly
         // and doesn't implement all NUMVAL functionality
-        return (Decimal128)argument.Bytes;
+        Span<byte> span = stackalloc byte[45];
+
+        var toNum = new Decimal128(argument.Bytes);
+
+        var length = toNum.AsSpan(span);
+
+        return new Temporary(span.Slice(0, length));
     }
 
     public static void NUMVAL_C(Alphanumeric argument)
@@ -747,24 +735,24 @@ public static class Functions
         return output;
     }
 
-    public static ICOBOLType REVERSE(ICOBOLType input)
+    public static Temporary REVERSE<T>(T input) where T : ICOBOLType
     {
-        char[] array = input.Display.ToCharArray();
-        Array.Reverse(array);
-        var output = new String(array);
-        string returnType = input.GetType().Name.ToString();
+        var bytes = input.Bytes;
 
-        if (returnType == typeof(Alphabetic).Name.ToString()){
-            return new Alphabetic(Encoding.UTF8.GetBytes(output), 0, output.Length, new byte[output.Length]);
-        } else if (returnType == typeof(Alphanumeric).Name.ToString()){
-            return new Alphanumeric(Encoding.UTF8.GetBytes(output), 0, output.Length, new byte[output.Length]);
-        } else if (returnType == typeof(National).Name.ToString()){
-            return new National(Encoding.UTF8.GetBytes(output), 0, output.Length, new byte[output.Length]);
-        } else {
-            return new Alphabetic(Encoding.UTF8.GetBytes(output), 0, output.Length, new byte[output.Length]);
+        var length = bytes.Length;
+
+        Span<byte> reverse = stackalloc byte[length];
+
+        var forwardIndex = 0;
+
+        for (var index = length - 1; index >= 0; index--)
+        {
+            reverse[forwardIndex] = bytes[index];
+
+            forwardIndex++;
         }
-        // TODO: implement Type error 
 
+        return new Temporary(reverse);
     }
 
     public static void SECONDS_FROM_FORMATTED_TIME(Alphanumeric format, Alphanumeric time)
@@ -985,9 +973,10 @@ public static class Functions
         if (!current.Exists)
         {
             //TODO: make sure NUMVAL works fully
-            String slice = CURRENT_DATE().Display[..4];
-            Alphanumeric date = new(Encoding.UTF8.GetBytes(slice), 0, 8, new byte[8]);
-            current = NUMVAL(date);
+            var slice = CURRENT_DATE();
+
+            // TODO: Turn this method generic
+            // current = NUMVAL(slice);
         }
         
         var uwindow = window.Unwrap();

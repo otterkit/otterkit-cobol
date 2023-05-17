@@ -5,58 +5,53 @@ namespace Otterkit.Runtime;
 
 public readonly struct National : ICOBOLType
 {
-    public readonly Memory<byte> Memory { get; init; }
+    public readonly OtterMemory Memory { get; init; }
     public readonly int Length;
     private readonly int Offset;
 
-    public National(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
+    public National(ReadOnlySpan<byte> value, OtterMemory memory, int offset, int length)
     {
         Length = length;
         Offset = offset;
 
-        Memory = memory.Slice(offset, length);
+        Memory = memory;
+
+        var span = Memory.Slice(offset, length);
  
-        Memory.Span.Fill(32);
+        span.Fill(32);
 
         int byteLength = Length < value.Length
             ? Length
             : value.Length;
 
-        value[..byteLength].CopyTo(Memory.Span);
+        value[..byteLength].CopyTo(span);
     }
 
-    public National(Memory<byte> memory, int offset, int length)
+    public National(OtterMemory memory, int offset, int length)
     {
         Length = length;
         Offset = offset;
 
-        Memory = memory.Slice(offset, length);
-    }
-
-    public National(ReadOnlySpan<byte> national)
-    {
-        Length = national.Length;
-        
-        Memory = new byte[Length];
- 
-        national.CopyTo(Memory.Span);
+        Memory = memory;
     }
 
     public ReadOnlySpan<byte> Bytes
     {
         get
         {
-            return Memory.Span;
+            return Memory.Slice(Offset, Length);
         }
         set
         {
-            Memory.Span.Fill(32);
+            var span = Memory.Slice(Offset, Length);
+
+            span.Fill(32);
 
             int length = Length < value.Length
             ? Length
             : value.Length;
 
-            value[..length].CopyTo(Memory.Span);
+            value[..length].CopyTo(span);
         }
     }
 
@@ -64,7 +59,9 @@ public readonly struct National : ICOBOLType
     {
         get
         {
-            return Encoding.UTF8.GetString(Memory.Span);
+            var span = Memory.Slice(Offset, Length);
+
+            return Encoding.UTF8.GetString(span);
         }
     }
 }

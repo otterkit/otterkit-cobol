@@ -39,7 +39,7 @@
 
   <ItemGroup>
     <!-- <PackageReference Include="Otterkit.Numerics" Version="1.7.10" /> -->
-    <!-- <ProjectReference Include="../libotterkit/Otterkit.Runtime.csproj" /> -->
+    <ProjectReference Include="../Libraries/Otterkit.Runtime/Otterkit.Runtime.csproj" />
   </ItemGroup>
 
   <ItemGroup>

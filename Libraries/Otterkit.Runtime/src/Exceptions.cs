@@ -1,83 +1,6 @@
-using System.Runtime.Serialization;
-
 namespace Otterkit.Runtime;
 
-//Exceptions as objects similar to C# exceptions are currently depreciated. May return to implement COBOL exception objects.
-
-
-[Serializable]
-public sealed class EcArgumentFunction : Exception
-{
-    static readonly string defaultError = "EC-ARGUMENT-FUNCTION: Function argument error";
-    public EcArgumentFunction()
-        : base(defaultError) { }
-
-    public EcArgumentFunction(string message)
-        : base(message) { }
-
-    public EcArgumentFunction(string message, Exception inner)
-        : base(message, inner) { }
-
-    private EcArgumentFunction(SerializationInfo info, StreamingContext context)
-        : base(info, context) { }
-}
-
-[Serializable]
-public sealed class EcDataPtrNull : Exception
-{
-    static readonly string defaultError = "EC-DATA-PTR-NULL: Based item data-pointer was null when referenced";
-    public EcDataPtrNull()
-        : base(defaultError) { }
-
-    public EcDataPtrNull(string message)
-        : base(message) { }
-
-    public EcDataPtrNull(string message, Exception inner)
-        : base(message, inner) { }
-
-    private EcDataPtrNull(SerializationInfo info, StreamingContext context)
-        : base(info, context) { }
-}
-
-[Serializable]
-public sealed class EcBoundPtr : Exception
-{
-    static readonly string defaultError = "EC-BOUND-PTR: Data-pointer contains an address that is out of bounds";
-    public EcBoundPtr()
-        : base(defaultError) { }
-
-    public EcBoundPtr(string message)
-        : base(message) { }
-
-    public EcBoundPtr(string message, Exception inner)
-        : base(message, inner) { }
-
-    private EcBoundPtr(SerializationInfo info, StreamingContext context)
-        : base(info, context) { }
-}
-
-[Serializable]
-public sealed class EcExternalFormatConflict : Exception
-{
-    static readonly string defaultError = """
-    EC-EXTERNAL-FORMAT-CONFLICT: Current external definitions are no compatible with each other. External definitions that share the same name must also have the same byte length and same default value
-    """;
-    public EcExternalFormatConflict()
-        : base(defaultError) { }
-
-    public EcExternalFormatConflict(string message)
-        : base(message) { }
-
-    public EcExternalFormatConflict(string message, Exception inner)
-        : base(message, inner) { }
-
-    private EcExternalFormatConflict(SerializationInfo info, StreamingContext context)
-        : base(info, context) { }
-}
-
-
 // Implementing COBOL default/regular exceptions as a singleton containing a dictionary of exception status indicators
-
 public static class ExceptionRegistry
 {
     public enum IsFatal
@@ -97,27 +20,27 @@ public static class ExceptionRegistry
 
         public ExceptionMetadata(bool isActivated, bool isChecked, IsFatal fatalityType)
         {
-            this.IsActivated = isActivated;
-            this.IsChecked = isChecked;
-            this.FatalityState = fatalityType;
+            IsActivated = isActivated;
+            IsChecked = isChecked;
+            FatalityState = fatalityType;
         }
     }
 
     private static ExceptionMetadata ChangeStatus(string name, bool condition)
     {
-        ExceptionMetadata current = ExceptionRegistry.registry[name];
+        ExceptionMetadata current = ExceptionRegistry.RegistryLookup[name];
         current.IsActivated = condition;
         return current;
     }
 
     private static void ChangeChecked(string name, bool checkedCondition)
     {
-        ExceptionRegistry.registry[name].IsChecked = checkedCondition;
+        RegistryLookup[name].IsChecked = checkedCondition;
     }
 
     private static bool IsExceptionChecked(string name)
     {
-        return ExceptionRegistry.registry[name].IsChecked;
+        return RegistryLookup[name].IsChecked;
     }
 
     public static void CheckOn(string name)
@@ -154,7 +77,7 @@ public static class ExceptionRegistry
 
     public static ExceptionMetadata? LastException { get; set; }
 
-    private static Dictionary<string, ExceptionMetadata> registry = new(StringComparer.OrdinalIgnoreCase)
+    private readonly static Dictionary<string, ExceptionMetadata> RegistryLookup = new(StringComparer.OrdinalIgnoreCase)
     {
         /*
         It seems that all regular exceptions are uppercase

@@ -19,7 +19,6 @@ public static partial class External
             return Resolver(dataItemName, bytes);
         }
 
-        throw new EcExternalFormatConflict();
+        ExceptionRegistry.ActivateException("EC-EXTERNAL-FORMAT-CONFLICT");
     }
-
 }

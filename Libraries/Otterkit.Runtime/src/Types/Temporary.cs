@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Text;
+using Otterkit.Numerics;
 
 namespace Otterkit.Runtime;
 
@@ -16,6 +17,20 @@ public readonly struct Temporary : ICOBOLType, IDisposable
         ByteArray = Pool.Rent(Length);
 
         bytes.CopyTo(ByteArray);
+    }
+
+    public static implicit operator Decimal128(Temporary value)
+    {
+        return Decimal128.Parse(value.Bytes);
+    }
+
+    public static implicit operator Temporary(Decimal128 value)
+    {
+        Span<byte> result = stackalloc byte[45];
+
+        var length = value.AsSpan(result);
+
+        return new Temporary(result.Slice(0, length));
     }
 
     public ReadOnlySpan<byte> Bytes

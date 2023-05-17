@@ -3,39 +3,38 @@ using Otterkit.Numerics;
 
 namespace Otterkit.Runtime;
 
-public readonly struct Numeric : ICOBOLType, IComparable<Numeric>
+public readonly struct Numeric : ICOBOLType, INumeric, IComparable<Numeric>
 {
-    public readonly Memory<byte> Memory { get; init; }
+    public readonly Memory<byte> Memory;
     public readonly int Offset;
-    public readonly int Length;
-    public readonly int FractionalLength;
 
-    public readonly bool IsInteger;
-    public readonly bool IsSigned;
+    public readonly (int Integer, int Fractional) Length { get; init; }
+
+    public readonly bool IsInteger { get; init; }
+    public readonly bool IsSigned { get; init; }
     public readonly bool IsNegative
     {
         get => Memory.Span[0] is 45;
     }
 
-    public Numeric(ReadOnlySpan<byte> value, int offset, int length, int fractionalLength, Memory<byte> memory)
+    public Numeric(ReadOnlySpan<byte> value, Memory<byte> memory, int offset, int integer, int fractional)
     {
         Offset = offset;
-        Length = length;
-        FractionalLength = fractionalLength;
+        Length = (integer, fractional);
 
-        IsInteger = fractionalLength == 0;
+        IsInteger = fractional == 0;
         IsSigned = value[0] is 43 or 45;
 
-        if (fractionalLength == 0)
+        if (fractional == 0)
         {
             int signedSpace = IsSigned ? 1 : 0;
-            Memory = memory.Slice(offset, length + signedSpace);
+            Memory = memory.Slice(offset, integer + signedSpace);
         }
 
-        if (fractionalLength > 0)
+        if (fractional > 0)
         {
             int signedSpace = IsSigned ? 2 : 1;
-            Memory = memory.Slice(offset, length + fractionalLength + signedSpace);
+            Memory = memory.Slice(offset, integer + fractional + signedSpace);
         }
 
         Memory.Span.Fill(48);
@@ -49,83 +48,31 @@ public readonly struct Numeric : ICOBOLType, IComparable<Numeric>
         Format(value);
     }
 
-    public Numeric(Memory<byte> memory, int offset, int length, int fractionalLength, bool isSigned)
+    public Numeric(Memory<byte> memory, int offset, int integer, int fractional, bool isSigned)
     {
         Offset = offset;
-        Length = length;
-        FractionalLength = fractionalLength;
+        Length = (integer, fractional);
 
         IsSigned = isSigned;
-        IsInteger = fractionalLength == 0;
+        IsInteger = fractional == 0;
 
-        if (fractionalLength == 0)
+        if (fractional == 0)
         {
             int signedSpace = isSigned ? 1 : 0;
-            Memory = memory.Slice(offset, length + signedSpace);
+            Memory = memory.Slice(offset, integer + signedSpace);
         }
 
-        if (fractionalLength > 0)
+        if (fractional > 0)
         {
             int signedSpace = isSigned ? 2 : 1;
-            Memory = memory.Slice(offset, length + fractionalLength + signedSpace);
+            Memory = memory.Slice(offset, integer + fractional + signedSpace);
         }
-    }
-
-    public Numeric(ReadOnlySpan<byte> utf8String, bool isSigned)
-    {
-        Offset = 0;
-
-        int DecimalPointIndex = utf8String.IndexOf("."u8);
-
-        if (DecimalPointIndex >= 0)
-        {
-            int minusSignOffset = utf8String[0] != 45 ? 0 : 1;
-
-            Length = isSigned ? DecimalPointIndex - minusSignOffset : DecimalPointIndex;
-            FractionalLength = isSigned ? utf8String.Length - Length - (minusSignOffset + 1) : utf8String.Length - Length - 1;
-        }
-        else
-        {
-            if (utf8String[0] is 45 or 43)
-            {
-                Length = utf8String.Length - 1;
-            }
-            else
-            {
-                Length = utf8String.Length;
-            }
-
-            FractionalLength = 0;
-        }
-
-        IsSigned = isSigned;
-        IsInteger = FractionalLength == 0;
-
-        if (FractionalLength == 0)
-        {
-            int signedSpace = isSigned ? 1 : 0;
-            Memory = new byte[Length + signedSpace];
-        }
-
-        if (FractionalLength > 0)
-        {
-            int signedSpace = isSigned ? 2 : 1;
-            Memory = new byte[Length + FractionalLength + signedSpace];
-        }
-
-        Memory.Span.Fill(48);
-
-        if (isSigned)
-        {
-            FormatSigned(utf8String);
-            return;
-        }
-
-        Format(utf8String);
     }
 
     private void Format(ReadOnlySpan<byte> bytes, bool isSigned = false)
     {
+        var (integer, fractional) = Length;
+
         Span<byte> formatted = stackalloc byte[Memory.Length];
         formatted.Fill(48);
 
@@ -134,39 +81,40 @@ public readonly struct Numeric : ICOBOLType, IComparable<Numeric>
         if (!IsInteger && indexOfDecimal < 0)
         {
             indexOfDecimal = bytes.Length;
-            formatted[Length + (IsSigned ? 1 : 0)] = 46;
+            formatted[integer + (IsSigned ? 1 : 0)] = 46;
         }
 
         int startIndex;
         if (!IsInteger || indexOfDecimal > -1)
         {
-            startIndex = Math.Max(0, indexOfDecimal - Length);
+            startIndex = Math.Max(0, indexOfDecimal - integer);
         }
         else
         {
-            startIndex = Math.Max(0, bytes.Length - Length);
+            startIndex = Math.Max(0, bytes.Length - integer);
         }
 
         int endIndex;
         if (!IsInteger)
         {
-            endIndex = Math.Min(bytes.Length - startIndex, Length + FractionalLength + 1);
+            endIndex = Math.Min(bytes.Length - startIndex, integer + fractional + 1);
         }
         else
         {
             endIndex = indexOfDecimal < 0
-            ? Math.Min(Length, bytes.Length)
-            : Math.Min(Length, indexOfDecimal);
+            ? Math.Min(integer, bytes.Length)
+            : Math.Min(integer, indexOfDecimal);
         }
 
         int offset;
+
         if (indexOfDecimal < 0)
         {
             offset = Math.Max(0, Memory.Length - bytes.Length);
         }
         else
         {
-            offset = Math.Max(0, Length - indexOfDecimal);
+            offset = Math.Max(0, integer - indexOfDecimal);
         }
 
         if (isSigned)
@@ -207,15 +155,6 @@ public readonly struct Numeric : ICOBOLType, IComparable<Numeric>
         withSign[0] = 43;
 
         Format(withSign, true);
-    }
-
-    public static implicit operator Numeric(Decimal128 value)
-    {
-        Span<byte> span = stackalloc byte[43];
-
-        var length = value.AsSpan(span);
-
-        return new Numeric(span.Slice(0, length), true);
     }
 
     public static implicit operator Decimal128(Numeric value)
@@ -269,83 +208,6 @@ public readonly struct Numeric : ICOBOLType, IComparable<Numeric>
         Decimal128 Rdec = right;
 
         return Ldec != Rdec;
-    }
-
-    public static Numeric operator +(Numeric left, Numeric right)
-    {
-        Decimal128 Ldec = left;
-        Decimal128 Rdec = right;
-
-        Decimal128 Dres = Ldec + Rdec;
-
-        return Dres;
-    }
-
-    public static Numeric operator ++(Numeric number)
-    {
-        Decimal128 num = number;
-
-        num = num++;
-
-        return num;
-    }
-
-    public static Numeric operator -(Numeric left, Numeric right)
-    {
-        Decimal128 Ldec = left;
-        Decimal128 Rdec = right;
-
-        Decimal128 Dres = Ldec - Rdec;
-
-        return Dres;
-    }
-
-    public static Numeric operator -(Numeric number)
-    {
-        Decimal128 num = number;
-
-        num = -num;
-
-        return num;
-    }
-
-    public static Numeric operator --(Numeric number)
-    {
-        Decimal128 num = number;
-
-        num = num--;
-
-        return num;
-    }
-
-    public static Numeric operator *(Numeric left, Numeric right)
-    {
-        Decimal128 Ldec = left;
-        Decimal128 Rdec = right;
-
-        Decimal128 Dres = Ldec * Rdec;
-
-        return Dres;
-    }
-
-    public static Numeric operator /(Numeric left, Numeric right)
-    {
-        Decimal128 Ldec = left;
-        Decimal128 Rdec = right;
-
-        Decimal128 Dres = Ldec / Rdec;
-
-        return Dres;
-    }
-
-    public static Numeric operator %(Numeric left, Numeric right)
-    {
-        Decimal128 Ldec = left;
-        Decimal128 Rdec = right;
-
-        Decimal128 Dres = Ldec % Rdec;
-
-        return Dres;
     }
 
     public override bool Equals(object? obj)

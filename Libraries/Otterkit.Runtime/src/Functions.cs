@@ -32,7 +32,7 @@ public static class Functions
         return new Temporary(result.Slice(0, length));
     }
 
-    public static Numeric ANNUITY(Numeric interest, Numeric periods)
+    public static Temporary ANNUITY(Numeric interest, Numeric periods)
     {
         Decimal128 Dinterest = interest;
         Decimal128 Dperiods = periods;
@@ -43,6 +43,7 @@ public static class Functions
 
         // (argument-1 / (1 – (1 + argument-1)** (– (argument-2))))
         Decimal128 output = Dinterest / (1 - Decimal128.Pow(Decimal128.One + Dinterest, -Dperiods));
+
         return output; //an annuity is always positive, right? 
     }
 
@@ -86,19 +87,21 @@ public static class Functions
         Decimal128 two = 2;
 
         Stack<Decimal128> digits = new Stack<Decimal128>();
-        
+
         Decimal128 current = Decimal128.Abs(input);
 
-        while(current/two != 0){
+        while (current / two != 0)
+        {
             Decimal128 remainder = Decimal128.Remainder(current, 2); //Decimal128.RemainderNear outputs negative numbers, which breaks the calculation.
             digits.Push(remainder);
-            current = Decimal128.Divide(current-remainder, 2);
+            current = Decimal128.Divide(current - remainder, 2);
         }
 
         var text = new StringBuilder();
 
 
-        foreach(Decimal128 bit in digits){
+        foreach (Decimal128 bit in digits)
+        {
             text.Append(bit.ToString());
         }
 
@@ -111,45 +114,47 @@ public static class Functions
 
             var len = int.Parse(ulength.Display);
 
-            if(len < text.Length)
+            if (len < text.Length)
             {
                 int difference = text.Length - len;
                 trueText = text.ToString(difference, len);
-            } 
+            }
             else if (len > text.Length)
             {
                 int difference = len - text.Length;
-                for(int i = 0; i < difference; i++)
+                for (int i = 0; i < difference; i++)
                 {
-                    text.Insert(0 , "0");
+                    text.Insert(0, "0");
                 }
 
                 trueText = text.ToString();
 
-            } 
-            else 
+            }
+            else
             {
                 trueText = text.ToString();
             }
 
-        } else 
+        }
+        else
         {
             trueText = text.ToString();
         }
-        if(input < 0)
+        if (input < 0)
         {
             trueText = "-" + trueText;
         }
 
         return new Temporary(Encoding.UTF8.GetBytes(trueText));
-       
+
 
     }
 
-    public static Numeric BYTE_LENGTH(Numeric argument)
+    public static Temporary BYTE_LENGTH(Numeric argument)
     {
         // Does not cover all BYTE-LENGTH functionality
         Decimal128 byteLength = 0;
+
         foreach (var _ in argument.Bytes)
         {
             byteLength++;
@@ -235,28 +240,29 @@ public static class Functions
 
         String date_stamp = date_object.ToString("yyyyMMdd");
 
-        Numeric output = new(Encoding.UTF8.GetBytes(date_stamp), 0, 8, 0, new byte[8]);
+        Numeric output = new(Encoding.UTF8.GetBytes(date_stamp), new byte[8], 8, 0, 0);
 
         return output;
     }
 
-    public static Numeric DATE_TO_YYYYMMDD(Numeric date, Option<Numeric> window, Option<Numeric> Current)
+    public static void DATE_TO_YYYYMMDD(Numeric date, Option<Numeric> window, Option<Numeric> Current)
     {
         Decimal128 ten_thousand = new(Encoding.UTF8.GetBytes("10000"));
 
         Decimal128 date_dec = new(Encoding.UTF8.GetBytes(date.Display));
         Decimal128 yy = date_dec / ten_thousand;
         //TODO: replace INTEGER_PART with proper INTEGER
-        Numeric yy_num = INTEGER_PART(yy);
 
-        Decimal128 mmdd = date_dec % ten_thousand;
+        // TODO: Refactor so that a Temporary can be returned
+        // Temporary yy_num = INTEGER_PART(yy);
 
-        Numeric yyyy = YEAR_TO_YYYY(yy_num, window, Current);
-        Decimal128 year = new(Encoding.UTF8.GetBytes(yyyy.Display));
-        Decimal128 result = (year * ten_thousand) + mmdd;
+        // Decimal128 mmdd = date_dec % ten_thousand;
 
-        return result;
+        // Numeric yyyy = YEAR_TO_YYYY(yy_num, window, Current);
+        // Decimal128 year = new(Encoding.UTF8.GetBytes(yyyy.Display));
+        // Decimal128 result = (year * ten_thousand) + mmdd;
 
+        // return result;
     }
 
     public static Numeric DAY_OF_INTEGER(Numeric date)
@@ -266,27 +272,30 @@ public static class Functions
 
         String date_stamp = date_object.ToString("yyyy" + day_of_year);
 
-        Numeric output = new(Encoding.UTF8.GetBytes(date_stamp), 0, 7, 0, new byte[7]);
+        Numeric output = new(Encoding.UTF8.GetBytes(date_stamp), new byte[7], 7, 0, 0);
 
         return output;
     }
 
-    public static Numeric DAY_TO_YYYYDDD(Numeric date, Option<Numeric> window, Option<Numeric> Current)
+    public static void DAY_TO_YYYYDDD(Numeric date, Option<Numeric> window, Option<Numeric> Current)
     {
         Decimal128 thousand = new(Encoding.UTF8.GetBytes("1000"));
 
         Decimal128 date_dec = new(Encoding.UTF8.GetBytes(date.Display));
         Decimal128 yy = date_dec / thousand;
         //TODO: replace INTEGER_PART with proper INTEGER
-        Numeric yy_num = INTEGER_PART(yy);
 
-        Decimal128 nnn = date_dec % thousand;
+        // TODO: Refactor so that a Temporary can be returned
+        // Temporary yy_num = INTEGER_PART(yy);
 
-        Numeric yyyy = YEAR_TO_YYYY(yy_num, window, Current);
-        Decimal128 year = new(Encoding.UTF8.GetBytes(yyyy.Display));
-        Decimal128 result = (year * thousand) + nnn;
+        // Decimal128 nnn = date_dec % thousand;
 
-        return result;
+        // Temporary yyyy = YEAR_TO_YYYY(yy_num, window, Current);
+
+        // Decimal128 year = new(Encoding.UTF8.GetBytes(yyyy.Display));
+        // Decimal128 result = (year * thousand) + nnn;
+
+        // return result;
     }
 
     public static void DISPLAY_OF(Numeric date)
@@ -333,12 +342,12 @@ public static class Functions
         // Implement COBOL exceptions
     }
 
-    public static Numeric EXP(Numeric exponent)
+    public static Temporary EXP(Numeric exponent)
     {
         return Decimal128.Exp(exponent);
     }
 
-    public static Numeric EXP10(Numeric exponent)
+    public static Temporary EXP10(Numeric exponent)
     {
         return Decimal128.Pow(10, exponent);
     }
@@ -368,7 +377,7 @@ public static class Functions
     }
     */
 
-    public static Numeric FACTORIAL(Numeric argument)
+    public static Temporary FACTORIAL(Numeric argument)
     {
         // These two variables (FirstInteger and SecondInteger)
         // convert the bytes value from the Decimal128 argument
@@ -447,25 +456,33 @@ public static class Functions
         // TODO: Implement FORMATTED-TIME
     }
 
-    public static Numeric FRACTION_PART(Numeric argument)
+    public static Temporary FRACTION_PART<T>(T argument) where T : ICOBOLType, INumeric
     {
-        Span<byte> FractionPart = stackalloc byte[2 + argument.FractionalLength];
+        var (integer, fraction) = argument.Length;
+
+        Span<byte> FractionPart = stackalloc byte[2 + fraction];
+
         "0."u8.CopyTo(FractionPart);
 
         int indexOfDecimal = argument.Bytes.IndexOf("."u8);
         if (indexOfDecimal == -1)
-            return new Numeric("0.0"u8, 0, 1, 1, new byte[2]);
+        {
+            return new Temporary("0.0"u8);
+        }
 
         argument.Bytes[(indexOfDecimal + 1)..].CopyTo(FractionPart[2..]);
-        return new Numeric(FractionPart, 0, 1, argument.FractionalLength, new byte[2 + argument.FractionalLength]);
+
+        return new Temporary(FractionPart);
     }
 
-    public static Numeric HIGHEST_ALGEBRAIC(Numeric argument)
+    public static Temporary HIGHEST_ALGEBRAIC<T>(T argument) where T : ICOBOLType, INumeric
     {
-        int integer = argument.Length;
-        int fraction = argument.FractionalLength;
+        var (integer, fraction) = argument.Length;
+
         Span<byte> HighestAlgebraic = stackalloc byte[integer + fraction + 2];
+
         HighestAlgebraic[0] = 43;
+
         HighestAlgebraic.Slice(1, integer).Fill(57);
 
         if (fraction > 0)
@@ -474,18 +491,18 @@ public static class Functions
             HighestAlgebraic[(integer + 2)..].Fill(57);
         }
 
-        return new Numeric(HighestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 2]);
+        return new Temporary(HighestAlgebraic);
     }
 
-    public static Numeric INTEGER_OF_BOOLEAN(Bit argument)
+    public static Temporary INTEGER_OF_BOOLEAN(Bit argument)
     {
         string str = Convert.ToInt64(argument.Display, 2).ToString();
         ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(str);
 
-        return new Numeric(bytes, 0, bytes.Length, 0, new byte[bytes.Length]);
+        return new Temporary(bytes);
     }
 
-    public static Numeric INTEGER_OF_DATE(Numeric argument)
+    public static Temporary INTEGER_OF_DATE(Numeric argument)
     {
         DateTime Y1600 = new(1600, 12, 31);
         int intValue = int.Parse(argument.Display);
@@ -496,10 +513,10 @@ public static class Functions
         string str = (current.Date - Y1600.Date).Days.ToString();
         ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(str);
 
-        return new Numeric(bytes, 0, bytes.Length, 0, new byte[bytes.Length]);
+        return new Temporary(bytes);
     }
 
-    public static Numeric INTEGER_OF_DAY(Numeric argument)
+    public static Temporary INTEGER_OF_DAY(Numeric argument)
     {
         DateTime Y1600 = new(1600, 12, 31);
         int intValue = int.Parse(argument.Display);
@@ -513,7 +530,7 @@ public static class Functions
         ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(str);
 
 
-        return new Numeric(bytes, 0, bytes.Length, 0, new byte[bytes.Length]);
+        return new Temporary(bytes);
     }
 
     public static void INTEGER_OF_FORMATTED_DATE(int argument)
@@ -521,22 +538,24 @@ public static class Functions
         // TODO: Implement INTEGER-OF-FORMATTED-DATE
     }
 
-    public static Numeric INTEGER_PART(Numeric argument)
+    public static Temporary INTEGER_PART(Numeric argument)
     {
         int indexOfDecimal = argument.Bytes.IndexOf("."u8);
+
         ReadOnlySpan<byte> IntegerPart = indexOfDecimal > 0
             ? argument.Bytes[..indexOfDecimal]
             : argument.Bytes;
 
-        return new Numeric(IntegerPart, 0, argument.Length, 0, new byte[argument.Length]);
+        return new Temporary(IntegerPart);
     }
 
-    public static Numeric LENGTH(ICOBOLType argument)//Technically, this is supposed to only be national, alphanumeric, or bit/boolean
+    public static Temporary LENGTH(ICOBOLType argument)//Technically, this is supposed to only be national, alphanumeric, or bit/boolean
     {
         // Does not cover all LENGTH functionality
         string inside = argument.Display;
         int len = inside.Length;
-        return new Numeric(Encoding.UTF8.GetBytes(len.ToString()), 0, len.ToString().Length, 0, new byte[len.ToString().Length]);
+
+        return new Temporary(Encoding.UTF8.GetBytes(len.ToString()));
     }
 
     public static void LOCALE_COMPARE(Alphanumeric argument)
@@ -559,12 +578,12 @@ public static class Functions
         // TODO: Implement COBOL locale functionality
     }
 
-    public static Numeric LOG(Numeric argument)
+    public static Temporary LOG(Numeric argument)
     {
         return Decimal128.Ln(argument);
     }
 
-    public static Numeric LOG10(Numeric argument)
+    public static Temporary LOG10(Numeric argument)
     {
         return Decimal128.Log10(argument);
     }
@@ -574,84 +593,105 @@ public static class Functions
         return argument.ToLower();
     }
 
-    public static Numeric LOWEST_ALGEBRAIC(Numeric argument)
+    public static Temporary LOWEST_ALGEBRAIC<T>(T argument) where T : ICOBOLType, INumeric
     {
-        int integer = argument.Length;
-        int fraction = argument.FractionalLength;
+        var (integer, fraction) = argument.Length;
+
         Span<byte> LowestAlgebraic = stackalloc byte[integer + fraction + 2];
+
         LowestAlgebraic[0] = 45;
+
         LowestAlgebraic.Slice(1, integer).Fill(57);
 
         if (fraction > 0)
         {
             LowestAlgebraic[integer + 1] = 46;
+
             LowestAlgebraic[(integer + 2)..].Fill(57);
         }
 
-        bool isSigned = argument.IsSigned;
-        if (!isSigned) return new Numeric("0"u8, 0, 1, 0, new byte[1]);
+        if (!argument.IsSigned)
+        {
+            return new Temporary("0"u8);
+        }
 
-        return new Numeric(LowestAlgebraic, 0, integer, fraction, new byte[integer + fraction + 2]);
+        return new Temporary(LowestAlgebraic);
     }
 
     public static Numeric MAX(Numeric[] argument)
     {
-        Numeric max = new Numeric("-9999999999999999999999999999999999"u8, 0, 34, 0, new byte[35]);
-        foreach(Numeric element in argument){
-            if (element > max){
+        Numeric max = new Numeric("-9999999999999999999999999999999999"u8, new byte[35], 34, 0, 0);
+
+        foreach (Numeric element in argument)
+        {
+            if (element > max)
+            {
                 max = element;
             }
         }
         return max;
     }
 
-    public static Numeric MEAN(Numeric[] argument)
+    public static Temporary MEAN(Numeric[] argument)
     {
-        Numeric sum = new Numeric("+0"u8, 0, 1, 0, new byte[2]);
-        foreach (Numeric element in argument){
+        var sum = Decimal128.Zero;
+
+        foreach (Decimal128 element in argument)
+        {
             sum = sum + element;
         }
         Decimal128 d_len = new Decimal128(Encoding.UTF8.GetBytes(argument.Length.ToString()));
-        Numeric len = d_len;
-        Numeric avg = sum/len;
+
+        Decimal128 len = d_len;
+        Decimal128 avg = sum / len;
 
         return avg;
 
     }
 
-    public static Numeric MEDIAN(Numeric[] argument)
+    public static void MEDIAN(Numeric[] argument)
     {
         Numeric[] copy = new Numeric[argument.Length];
-        Numeric two = new Numeric("2"u8, 0, 1, 0, new byte[1]);
-        Numeric result;
+        Numeric two = new Numeric("2"u8, new byte[1], 1, 0, 0);
+        // Numeric result;
         Array.Copy(argument, copy, argument.Length);
         Array.Sort(copy);
-        if ((copy.Length % 2) == 0 ){
-            int left = copy.Length/2-1;
-            int right = ((copy.Length)/2);
-            Numeric lower = copy[left];
-            Numeric upper = copy[right];
-            result = ((lower+upper)/two);
-        } else {
-            int index = (int)Math.Ceiling((double)copy.Length/2)-1;
-            result = copy[index];
-        }
-        return result;
+
+        // TODO: Refactor so that a Temporary can be returned
+        // if ((copy.Length % 2) == 0)
+        // {
+        //     int left = copy.Length / 2 - 1;
+        //     int right = ((copy.Length) / 2);
+        //     Numeric lower = copy[left];
+        //     Numeric upper = copy[right];
+
+        //     result = ((lower + upper) / two);
+        // }
+        // else
+        // {
+        //     int index = (int)Math.Ceiling((double)copy.Length / 2) - 1;
+        //     result = copy[index];
+        // }
+        // return result;
     }
 
-    public static Numeric MIDRANGE(Numeric[] argument)
+    public static void MIDRANGE(Numeric[] argument)
     {
-        Numeric two = new Numeric("2"u8, 0, 1, 0, new byte[1]);
+        Numeric two = new Numeric("2"u8, new byte[1], 1, 0, 0);
         Numeric min = MIN(argument);
         Numeric max = MAX(argument);
-        return ((min + max)/two);
+
+        // TODO: Refactor so that a Temporary can be returned
+        // return ((min + max) / two);
     }
 
     public static Numeric MIN(Numeric[] argument)
     {
-        Numeric min = new Numeric("9999999999999999999999999999999999"u8, 0, 34, 0, new byte[34]);
-        foreach(Numeric element in argument){
-            if (element < min){
+        Numeric min = new Numeric("9999999999999999999999999999999999"u8, new byte[34], 34, 0, 0);
+        foreach (Numeric element in argument)
+        {
+            if (element < min)
+            {
                 min = element;
             }
         }
@@ -659,15 +699,19 @@ public static class Functions
 
     }
 
-    public static Numeric MOD(Numeric left, Numeric right)
+    public static void MOD(Numeric left, Numeric right)
     {
-        Numeric rem = REM(left, right);
+        var rem = REM(left, right);
+
         Decimal128 mod = rem;
+
         if (mod < 0)
         {
             mod = (Decimal128)right < 0 ? mod - (Decimal128)right : mod + (Decimal128)right;
         }
-        return mod;
+
+        // TODO: Refactor so that a Temporary can be returned
+        // return mod;
     }
 
     public static void MODULE_NAME()
@@ -703,19 +747,20 @@ public static class Functions
         // TODO: Implement NUMVAL-F
     }
 
-    public static Numeric ORD(ICOBOLType argument) //recieves an alphanumeric, alphabetic, or national
+    public static void ORD(ICOBOLType argument) //recieves an alphanumeric, alphabetic, or national
     {
         // TODO: return error if argument is not alphabetic, alphanumeric, or national
         // TODO: return error if argument is not a single character
 
         uint one = 1;
-        uint value = argument.Bytes[0] + one; 
+        uint value = argument.Bytes[0] + one;
         //should this be signed?
         //there might be a more efficient conversion here, just wanted to play it safe
 
         Decimal128 DecValue = new(Encoding.UTF8.GetBytes(value.ToString()));
 
-        return DecValue;
+        // TODO: Refactor so that a Temporary can be returned
+        // return DecValue;
     }
 
     public static void ORD_MAX(Alphanumeric argument)
@@ -742,7 +787,7 @@ public static class Functions
         // TODO: Implement PRESENT-VALUE
     }
 
-    public static Numeric RANDOM(Option<Numeric> argument)
+    public static Temporary RANDOM(Option<Numeric> argument)
     {
         Random random;
         Encoding encoding = Encoding.UTF8;
@@ -773,10 +818,10 @@ public static class Functions
         // This function depends on the functionality of MAX and MIN
     }
 
-    public static Numeric REM(Numeric left, Numeric right)
+    public static Temporary REM(Numeric left, Numeric right)
     {
         // The COBOL standard suggested this calculation:
-        Decimal128 subsidiaryQuotient = left / right;
+        Decimal128 subsidiaryQuotient = (Decimal128)left / right;
         // if (subsidiaryQuotient.Bytes.IndexOf("."u8) > -1)
         //     subsidiaryQuotient = subsidiaryQuotient.Bytes[..^1];
         Decimal128 output = (Decimal128)left - (subsidiaryQuotient * (Decimal128)right);
@@ -808,23 +853,36 @@ public static class Functions
         // TODO: Implement SECONDS-FROM-FORMATTED-TIME
     }
 
-    public static Numeric SECONDS_PAST_MIDNIGHT()
+    public static Temporary SECONDS_PAST_MIDNIGHT()
     {
+        Span<char> chars = stackalloc char[32];
+
+        Span<byte> bytes = stackalloc byte[64];
+
         DateTime timeNow = DateTime.Now;
-        string TotalSeconds = timeNow.TimeOfDay.TotalSeconds.ToString();
-        ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(TotalSeconds);
-        return new Numeric(bytes, 0, bytes.Length, 0, new byte[bytes.Length]);
+
+        _ = timeNow.TimeOfDay.TotalSeconds.TryFormat(chars, out var length);
+
+        var bytesLength = Encoding.UTF8.GetBytes(chars, bytes);
+
+        return new Temporary(bytes.Slice(0, bytesLength));
     }
 
-    public static Numeric SIGN(Numeric argument)
+    public static Temporary SIGN<T>(T argument) where T : ICOBOLType, INumeric
     {
-        Decimal128 temporary = argument;
-        if (temporary < 0)
-            return new Numeric("-1"u8, 0, 2, 0, new byte[3]);
-        if (temporary == 0)
-            return new Numeric("0"u8, 0, 1, 0, new byte[1]);
+        Decimal128 temporary = new Decimal128(argument.Bytes);
 
-        return new Numeric("1"u8, 0, 1, 0, new byte[1]);
+        if (temporary < 0)
+        {
+            return new Temporary("-1"u8);
+        }
+
+        if (temporary == 0)
+        {
+            return new Temporary("0"u8);
+        }
+
+        return new Temporary("1"u8);
     }
 
     public static Temporary SIN<T>(T argument) where T : ICOBOLType
@@ -874,7 +932,7 @@ public static class Functions
         // Should be possible with String.Replace()
     }
 
-    public static Numeric SUM(params Numeric[] argument)
+    public static Temporary SUM(params Numeric[] argument)
     {
         Decimal128 sum = 0;
         foreach (Numeric dec in argument)
@@ -898,7 +956,7 @@ public static class Functions
         return new Temporary(result.Slice(0, length));
     }
 
-    public static Numeric TEST_DATE_YYYYMMDD(Numeric argument)
+    public static void TEST_DATE_YYYYMMDD(Numeric argument)
     {
         Decimal128 input = new(argument.Bytes);
         Decimal128 ten_thousand = new("10000"u8);
@@ -909,51 +967,57 @@ public static class Functions
 
         Decimal128 month_check = input % ten_thousand;
         Decimal128 day_check_1 = input % hundred;
-        Numeric day_check_2 = INTEGER_PART(day_check_1);
-        int day_check_3 = int.Parse(day_check_2.Display);
 
-        Decimal128 day_m_check_1 = (input % ten_thousand) / hundred;
-        //TODO: Replace INTEGER_PART with proper INTEGER
-        Numeric day_m_check_2 = INTEGER_PART(day_m_check_1);
-        int day_m_check_3 = int.Parse(day_m_check_2.Display);
+        // TODO: Refactor so that a Temporary can be returned
 
-        Decimal128 day_y_check_1 = input / ten_thousand;
-        Numeric day_y_check_2 = INTEGER_PART(day_y_check_1);
-        int day_y_check_3 = int.Parse(day_y_check_2.Display);
+        // Temporary day_check_2 = INTEGER_PART(day_check_1);
 
-        Boolean day_works = true;
+        // int day_check_3 = int.Parse(day_check_2.Display);
 
-        try
-        {
-            DateTime check_month = new(day_y_check_3, day_m_check_3, day_check_3);
-        }
-        catch (System.ArgumentOutOfRangeException)
-        {
+        // Decimal128 day_m_check_1 = (input % ten_thousand) / hundred;
+        // //TODO: Replace INTEGER_PART with proper INTEGER
 
-            day_works = false;
-        }
+        // Temporary day_m_check_2 = INTEGER_PART(day_m_check_1);
 
-        if ((input < year_lower_bound) || (input > year_upper_bound))
-        {
-            return new Numeric("1"u8, 0, 1, 0, new byte[1]);
-        }
-        else if ((month_check < hundred) || (month_check > tweleve_ninety_nine))
-        {
-            return new Numeric("2"u8, 0, 1, 0, new byte[1]);
-        }
-        else if ((day_check_3 < 1) || (!day_works))
-        {
-            return new Numeric("3"u8, 0, 1, 0, new byte[1]);
-        }
-        else
-        {
-            return new Numeric("0"u8, 0, 1, 0, new byte[1]);
-        }
+        // int day_m_check_3 = int.Parse(day_m_check_2.Display);
 
+        // Decimal128 day_y_check_1 = input / ten_thousand;
+        
+        // Temporary day_y_check_2 = INTEGER_PART(day_y_check_1);
 
+        // int day_y_check_3 = int.Parse(day_y_check_2.Display);
+
+        // Boolean day_works = true;
+
+        // try
+        // {
+        //     DateTime check_month = new(day_y_check_3, day_m_check_3, day_check_3);
+        // }
+        // catch (System.ArgumentOutOfRangeException)
+        // {
+
+        //     day_works = false;
+        // }
+
+        // if ((input < year_lower_bound) || (input > year_upper_bound))
+        // {
+        //     return new Temporary("1"u8);
+        // }
+        // else if ((month_check < hundred) || (month_check > tweleve_ninety_nine))
+        // {
+        //     return new Temporary("2"u8);
+        // }
+        // else if ((day_check_3 < 1) || (!day_works))
+        // {
+        //     return new Temporary("3"u8);
+        // }
+        // else
+        // {
+        //     return new Temporary("0"u8);
+        // }
     }
 
-    public static Numeric TEST_DAY_YYYYDDD(Numeric argument)
+    public static void TEST_DAY_YYYYDDD(Numeric argument)
     {
         Decimal128 input = argument;
         Decimal128 thousand = new("1000"u8);
@@ -961,36 +1025,40 @@ public static class Functions
         Decimal128 year_upper_bound = new("9999999"u8);
 
         Decimal128 day_check_1 = input % thousand;
-        Numeric day_check_2 = day_check_1;
-        int day_check_3 = int.Parse(day_check_2.Display);
 
-        Decimal128 y_check_1 = input / thousand;
-        Numeric y_check_2 = INTEGER_PART(y_check_1);
-        int y_check_3 = int.Parse(y_check_2.Display);
+        // TODO: Refactor so that a Temporary can be returned
 
-        Boolean day_works = true;
+        // Numeric day_check_2 = day_check_1;
+        // int day_check_3 = int.Parse(day_check_2.Display);
 
-        DateTime check_year = new(y_check_3, 1, 1);
-        check_year.AddDays(day_check_3);
+        // Decimal128 y_check_1 = input / thousand;
 
-        if (check_year.Year != y_check_3)
-        {
-            day_works = false;
-        }
+        // Temporary y_check_2 = INTEGER_PART(y_check_1);
 
-        if ((input < year_lower_bound) || (input > year_upper_bound))
-        {
-            return new Numeric("1"u8, 0, 1, 0, new byte[1]);
-        }
-        else if ((day_check_3 < 1) || (!day_works))
-        {
-            return new Numeric("2"u8, 0, 1, 0, new byte[1]);
-        }
-        else
-        {
-            return new Numeric("0"u8, 0, 1, 0, new byte[1]);
-        }
+        // int y_check_3 = int.Parse(y_check_2.Display);
 
+        // Boolean day_works = true;
+
+        // DateTime check_year = new(y_check_3, 1, 1);
+        // check_year.AddDays(day_check_3);
+
+        // if (check_year.Year != y_check_3)
+        // {
+        //     day_works = false;
+        // }
+
+        // if ((input < year_lower_bound) || (input > year_upper_bound))
+        // {
+        //     return new Temporary("1"u8);
+        // }
+        // else if ((day_check_3 < 1) || (!day_works))
+        // {
+        //     return new Temporary("2"u8);
+        // }
+        // else
+        // {
+        //     return new Temporary("0"u8);
+        // }
     }
 
     public static void TEST_FORMATTED_DATETIME(Numeric argument)
@@ -1036,11 +1104,15 @@ public static class Functions
         return argument;
     }
 
-    public static Numeric YEAR_TO_YYYY(Numeric yy, Option<Numeric> window, Option<Numeric> current)
+    public static void YEAR_TO_YYYY<T>(T yy, Option<T> window, Option<T> current) where T : ICOBOLType
     {
         //TODO: Implement runtime exceptions for invalid inputs
-        if (!window.Exists) window = new Numeric("50"u8, false);
-        
+        if (!window.Exists) 
+        {
+            // TODO: Refactor so that a new numeric is not needed:
+            // window = new Numeric("50"u8);
+        }
+
         if (!current.Exists)
         {
             //TODO: make sure NUMVAL works fully
@@ -1049,7 +1121,7 @@ public static class Functions
             // TODO: Turn this method generic
             // current = NUMVAL(slice);
         }
-        
+
         var uwindow = window.Unwrap();
 
         Decimal128 yy_num = new(Encoding.UTF8.GetBytes(yy.Display));
@@ -1060,20 +1132,27 @@ public static class Functions
         Decimal128 hundred = new(Encoding.UTF8.GetBytes("100"));
         Decimal128 one = new(Encoding.UTF8.GetBytes("1"));
         //TODO: replace with true INTEGER function
-        if ((max_year % hundred) >= yy_num)
-        {
-            Numeric part = INTEGER_PART(max_year / hundred);
-            Decimal128 coefficient = new(Encoding.UTF8.GetBytes(part.Display));
-            Decimal128 result = (yy_num + hundred * coefficient);
-            return result;
-        }
-        else
-        {
-            Numeric part = INTEGER_PART(max_year / hundred);
-            Decimal128 coefficient = new(Encoding.UTF8.GetBytes(part.Display));
-            coefficient -= one;
-            Decimal128 result = (yy_num + hundred * coefficient);
-            return result;
-        }
+
+        // TODO: Refactor so that a Temporary can be returned
+
+        // if ((max_year % hundred) >= yy_num)
+        // {
+        //     Temporary part = INTEGER_PART(max_year / hundred);
+
+        //     Decimal128 coefficient = new(Encoding.UTF8.GetBytes(part.Display));
+        //     Decimal128 result = (yy_num + hundred * coefficient);
+
+        //     return result;
+        // }
+        // else
+        // {
+        //     Temporary part = INTEGER_PART(max_year / hundred);
+
+        //     Decimal128 coefficient = new(Encoding.UTF8.GetBytes(part.Display));
+        //     coefficient -= one;
+        //     Decimal128 result = (yy_num + hundred * coefficient);
+
+        //     return result;
+        // }
     }
 }

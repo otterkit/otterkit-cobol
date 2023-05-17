@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Text;
 using Otterkit.Numerics;
 
@@ -5,6 +6,8 @@ namespace Otterkit.Runtime;
 
 public static class Statements
 {
+    private static readonly ArrayPool<byte> Buffer = ArrayPool<byte>.Shared;
+
     public static void ACCEPT(Alphanumeric dataItem, string from, string format = "")
     {
         // ACCEPT Statement devices: STANDARD-INPUT, COMMAND-LINE.
@@ -20,7 +23,7 @@ public static class Statements
                 return;
 
             case "COMMAND-LINE":
-                string CommandLine =  Environment.CommandLine;
+                string CommandLine = Environment.CommandLine;
                 bytes = encoding.GetBytes(CommandLine);
                 dataItem.Bytes = bytes;
                 return;
@@ -69,49 +72,73 @@ public static class Statements
         bytes = encoding.GetBytes(_default ?? " ");
         dataItem.Bytes = bytes;
     }
-    
-    public static void ADD(Numeric[] values, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
+
+    public static void ADD(Numeric[] values, Action OnSizeError, Action NotSizeError, params Numeric[] returning)
     {
         Decimal128 result = 0;
+
         foreach (Numeric value in values)
         {
             result += (Decimal128)value;
         }
 
-        for (int i = 0; i < dataItems.Length; i++)
+        var buffer = Buffer.Rent(45);
+
+        for (int i = 0; i < returning.Length; i++)
         {
-            Numeric variable = dataItems[i];
+            var variable = returning[i];
 
-            if (result + (Decimal128)variable > (Decimal128)Functions.HIGHEST_ALGEBRAIC(variable))
-                OnSizeError();
+            Decimal128 d128Var = variable;
 
-            if(result + (Decimal128)variable <= (Decimal128)Functions.HIGHEST_ALGEBRAIC(variable))
-                NotSizeError();
+            var compute = result + d128Var;
 
-            variable.Bytes = ((Numeric)((Decimal128)variable + result)).Bytes;
+            using (var temporary = Functions.HIGHEST_ALGEBRAIC(variable))
+            {
+                if (compute > temporary) OnSizeError();
+
+                if (compute <= temporary) NotSizeError();
+            }
+
+            var length = compute.AsSpan(buffer);
+
+            variable.Bytes = buffer.AsSpan().Slice(0, length);
         }
+
+        Buffer.Return(buffer);
     }
 
     public static void ADD(Numeric[] values, Numeric to, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
     {
         Decimal128 result = 0;
+        
         foreach (Numeric value in values)
         {
             result += (Decimal128)value;
         }
 
+        var buffer = Buffer.Rent(45);
+
         for (int i = 0; i < giving.Length; i++)
         {
-            Numeric variable = giving[i];
+            var variable = giving[i];
 
-            if (result + (Decimal128)to > (Decimal128)Functions.HIGHEST_ALGEBRAIC(variable))
-                OnSizeError();
+            Decimal128 d128Var = variable;
 
-            if(result + (Decimal128)to <= (Decimal128)Functions.HIGHEST_ALGEBRAIC(variable))
-                NotSizeError();
+            var compute = result + to;
 
-            variable.Bytes = ((Numeric)(result + (Decimal128)to)).Bytes;
+            using (var temporary = Functions.HIGHEST_ALGEBRAIC(variable))
+            {
+                if (compute > temporary) OnSizeError();
+
+                if (compute <= temporary) NotSizeError();
+            }
+
+            var length = compute.AsSpan(buffer);
+
+            variable.Bytes = buffer.AsSpan().Slice(0, length);
         }
+
+        Buffer.Return(buffer);
     }
 
     public static void ALLOCATE()
@@ -128,7 +155,7 @@ public static class Statements
     {
         // TODO: Implement CANCEL
     }
-    
+
     public static void CLOSE()
     {
         // TODO: Implement CLOSE
@@ -139,24 +166,31 @@ public static class Statements
         // TODO: Implement COMMIT
     }
 
-    public static void COMPUTE(Decimal128 compute, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
+    public static void COMPUTE(Decimal128 compute, Action OnSizeError, Action NotSizeError, params Numeric[] returning)
     {
-        Decimal128 result = compute;
+        var buffer = Buffer.Rent(45);
 
-        for (int i = 0; i < dataItems.Length; i++)
+        for (int i = 0; i < returning.Length; i++)
         {
-            Numeric variable = dataItems[i];
+            var variable = returning[i];
 
-            if (result > (Decimal128)Functions.HIGHEST_ALGEBRAIC(variable))
-                OnSizeError();
+            Decimal128 d128Var = variable;
 
-            if(result <= (Decimal128)Functions.HIGHEST_ALGEBRAIC(variable))
-                NotSizeError();
+            using (var temporary = Functions.HIGHEST_ALGEBRAIC(variable))
+            {
+                if (compute > temporary) OnSizeError();
 
-            variable.Bytes = ((Numeric)result).Bytes;
+                if (compute <= temporary) NotSizeError();
+            }
+
+            var length = compute.AsSpan(buffer);
+
+            variable.Bytes = buffer.AsSpan().Slice(0, length);
         }
+
+        Buffer.Return(buffer);
     }
-    
+
     public static void CONTINUE(double seconds)
     {
         if (seconds > 0)
@@ -199,81 +233,142 @@ public static class Statements
         }
         Console.Write(String.Join(String.Empty, strings));
         return;
-        
+
     }
 
-    public static void DIVIDE(Numeric value, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
+    public static void DIVIDE(Numeric value, Action OnSizeError, Action NotSizeError, Span<Numeric> dataItems)
     {
+        var buffer = Buffer.Rent(45);
+
         for (int i = 0; i < dataItems.Length; i++)
         {
-            Numeric variable = dataItems[i];
+            var variable = dataItems[i];
 
-            if (variable / value > Functions.HIGHEST_ALGEBRAIC(variable))
-                OnSizeError();
+            Decimal128 d128Var = variable;
 
-            if(variable / value <= Functions.HIGHEST_ALGEBRAIC(variable))
-                NotSizeError();
+            Decimal128 d128Value = value;
 
-            variable.Bytes = (variable / value).Bytes;
+            using (var temporary = Functions.HIGHEST_ALGEBRAIC(variable))
+            {
+                if (d128Var / d128Value > temporary) OnSizeError();
+
+                if (d128Var / d128Value <= temporary) NotSizeError();
+            }
+
+            (d128Var / d128Value).AsSpan(buffer);
+
+            variable.Bytes = buffer;
         }
+
+        Buffer.Return(buffer);
     }
 
     public static void DIVIDE(bool by, Numeric value, Numeric into, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
-    {   
+    {
+        var buffer = Buffer.Rent(45);
+
         if (by)
         {
             for (int i = 0; i < giving.Length; i++)
             {
-                Numeric variable = giving[i];
+                var variable = giving[i];
 
-                if (value / into > Functions.HIGHEST_ALGEBRAIC(variable))
-                    OnSizeError();
+                Decimal128 d128Into = into;
 
-                if(value / into <= Functions.HIGHEST_ALGEBRAIC(variable))
-                    NotSizeError();
+                Decimal128 d128Value = value;
 
-                variable.Bytes = (value / into).Bytes;
+                using (var temporary = Functions.HIGHEST_ALGEBRAIC(variable))
+                {
+                    if (d128Value / d128Into > temporary) OnSizeError();
+
+                    if (d128Value / d128Into <= temporary) NotSizeError();
+                }
+
+                var length = (d128Value / d128Into).AsSpan(buffer);
+
+                variable.Bytes = buffer.AsSpan(0, length);
             }
+
             return;
         }
 
         for (int i = 0; i < giving.Length; i++)
         {
-            Numeric variable = giving[i];
+            var variable = giving[i];
 
-            if (into / value > Functions.HIGHEST_ALGEBRAIC(variable))
-                OnSizeError();
+            Decimal128 d128Into = into;
 
-            if(into / value <= Functions.HIGHEST_ALGEBRAIC(variable))
-                NotSizeError();
+            Decimal128 d128Value = value;
 
-            variable.Bytes = (into / value).Bytes;
+            using (var temporary = Functions.HIGHEST_ALGEBRAIC(variable))
+            {
+                if (d128Into / d128Value > temporary) OnSizeError();
+
+                if (d128Into / d128Value <= temporary) NotSizeError();
+            }
+
+            var length = (d128Into / d128Value).AsSpan(buffer);
+
+            variable.Bytes = buffer.AsSpan(0, length);
         }
+
+        Buffer.Return(buffer);
     }
 
     public static void DIVIDE(bool by, Numeric value, Numeric into, Numeric giving, Numeric remainder, Action OnSizeError, Action NotSizeError)
-    {   
+    {
+        var buffer = Buffer.Rent(45);
+
+        Decimal128 d128Into;
+
+        Decimal128 d128Value;
+
+        int length;
+
         if (by)
         {
-            if(value / into > Functions.HIGHEST_ALGEBRAIC(giving))
-                OnSizeError();
+            d128Into = into;
 
-            if(value / into <= Functions.HIGHEST_ALGEBRAIC(giving))
-                NotSizeError();
+            d128Value = value;
 
-            giving.Bytes = (value / into).Bytes;
+            var computeBy = d128Value / d128Into;
+
+            using (var temporary = Functions.HIGHEST_ALGEBRAIC(giving))
+            {
+                if (computeBy > temporary) OnSizeError();
+
+                if (computeBy <= temporary) NotSizeError();
+            }
+
+            length = computeBy.AsSpan(buffer);
+
+            giving.Bytes = buffer.AsSpan().Slice(0, length);
+
             remainder.Bytes = Functions.REM(value, into).Bytes;
+
             return;
         }
 
-        if(into / value > Functions.HIGHEST_ALGEBRAIC(giving))
-            OnSizeError();
+        d128Into = into;
 
-        if(into / value <= Functions.HIGHEST_ALGEBRAIC(giving))
-            NotSizeError();
+        d128Value = value;
 
-        giving.Bytes = (into / value).Bytes;
+        var compute = d128Into / d128Value;
+
+        using (var temporary = Functions.HIGHEST_ALGEBRAIC(giving))
+        {
+            if (compute > temporary) OnSizeError();
+
+            if (compute <= temporary) NotSizeError();
+        }
+
+        length = compute.AsSpan(buffer);
+
+        giving.Bytes = buffer.AsSpan().Slice(0, length);
+
         remainder.Bytes = Functions.REM(value, into).Bytes;
+
+        Buffer.Return(buffer);
     }
 
     public static void EVALUATE()
@@ -316,14 +411,14 @@ public static class Statements
     {
         // TODO: Implement IF
     }
-    
+
     public static void INITIALIZE()
     {
         // TODO: Implement INITIALIZE
         // Assigns values to variables
         // Basically, initializes them with a value
     }
-    
+
     public static void INITIATE()
     {
         // TODO: Implement INITIARE
@@ -352,36 +447,58 @@ public static class Statements
         // Move data between variables and assign values to variables
     }
 
-    public static void MULTIPLY(Numeric value, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
+    public static void MULTIPLY(Numeric value, Action OnSizeError, Action NotSizeError, Span<Numeric> returning)
     {
-        for (int i = 0; i < dataItems.Length; i++)
+        var buffer = Buffer.Rent(45);
+
+        for (int i = 0; i < returning.Length; i++)
         {
-            Numeric variable = dataItems[i];
+            var variable = returning[i];
 
-            if (value * variable > Functions.HIGHEST_ALGEBRAIC(variable))
-                OnSizeError();
+            Decimal128 d128Var = variable;
 
-            if(value * variable <= Functions.HIGHEST_ALGEBRAIC(variable))
-                NotSizeError();
+            Decimal128 d128Value = value;
 
-            variable.Bytes = (value * variable).Bytes;
+            using (var temporary = Functions.HIGHEST_ALGEBRAIC(variable))
+            {
+                if (d128Value * d128Var > temporary) OnSizeError();
+
+                if (d128Value * d128Var <= temporary) NotSizeError();
+            }
+
+            var length = (d128Value * d128Var).AsSpan(buffer);
+
+            variable.Bytes = buffer.AsSpan().Slice(0, length);
         }
+
+        Buffer.Return(buffer);
     }
 
-    public static void MULTIPLY(Numeric value, Numeric by, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
+    public static void MULTIPLY(Numeric value, Numeric by, Action OnSizeError, Action NotSizeError, Span<Numeric> giving)
     {
+        var buffer = Buffer.Rent(45);
+
         for (int i = 0; i < giving.Length; i++)
         {
-            Numeric variable = giving[i];
+            var variable = giving[i];
 
-            if (value * by > Functions.HIGHEST_ALGEBRAIC(variable))
-                OnSizeError();
+            Decimal128 d128By = by;
 
-            if(value * by <= Functions.HIGHEST_ALGEBRAIC(variable))
-                NotSizeError();
+            Decimal128 d128Value = value;
 
-            variable.Bytes = (value * by).Bytes;
+            using (var temporary = Functions.HIGHEST_ALGEBRAIC(variable))
+            {
+                if (d128Value * d128By > temporary) OnSizeError();
+
+                if (d128Value * d128By <= temporary) NotSizeError();
+            }
+
+            var length = (d128Value * d128By).AsSpan(buffer);
+
+            variable.Bytes = buffer.AsSpan().Slice(0, length);
         }
+
+        Buffer.Return(buffer);
     }
 
     public static void OPEN()
@@ -409,7 +526,7 @@ public static class Statements
         // Equivalent to C# throw Exception()
         // Need to implement COBOL exception handling first
     }
-    
+
     public static void READ()
     {
         // TODO: Implement READ
@@ -500,46 +617,72 @@ public static class Statements
         // Similar to String.Join()
     }
 
-    public static void SUBTRACT(Numeric[] values, Action OnSizeError, Action NotSizeError, params Numeric[] dataItems)
+    public static void SUBTRACT(Numeric[] values, Action OnSizeError, Action NotSizeError, params Numeric[] returning)
     {
         Decimal128 result = 0;
+
         foreach (Numeric value in values)
         {
             result += (Decimal128)value;
         }
 
-        for (int i = 0; i < dataItems.Length; i++)
+        var buffer = Buffer.Rent(45);
+
+        for (int i = 0; i < returning.Length; i++)
         {
-            Numeric variable = dataItems[i];
-            
-            if (result - (Decimal128)variable > (Decimal128)Functions.HIGHEST_ALGEBRAIC(variable))
-                OnSizeError();
+            var variable = returning[i];
 
-            if(result - (Decimal128)variable <= (Decimal128)Functions.HIGHEST_ALGEBRAIC(variable))
-                NotSizeError();
+            Decimal128 d128Var = variable;
 
-            variable.Bytes = ((Numeric)((Decimal128)variable - result)).Bytes;
+            var compute = result - d128Var;
+
+            using (var temporary = Functions.HIGHEST_ALGEBRAIC(variable))
+            {
+                if (compute > temporary) OnSizeError();
+
+                if (compute <= temporary) NotSizeError();
+            }
+
+            var length = compute.AsSpan(buffer);
+
+            variable.Bytes = buffer.AsSpan().Slice(0, length);
         }
+
+        Buffer.Return(buffer);
     }
 
     public static void SUBTRACT(Numeric[] values, Numeric from, Action OnSizeError, Action NotSizeError, params Numeric[] giving)
     {
         Decimal128 result = 0;
+
         foreach (Numeric value in values)
         {
             result += (Decimal128)value;
         }
-        
-        foreach (Numeric variable in giving)
+
+        var buffer = Buffer.Rent(45);
+
+        for (int i = 0; i < giving.Length; i++)
         {
-            if(result - (Decimal128)from > (Decimal128)Functions.HIGHEST_ALGEBRAIC(variable))
-                OnSizeError();
+            var variable = giving[i];
 
-            if(result - (Decimal128)from <= (Decimal128)Functions.HIGHEST_ALGEBRAIC(variable))
-                NotSizeError();
+            Decimal128 d128Var = variable;
 
-            variable.Bytes = ((Numeric)((Decimal128)from - result)).Bytes;
+            var compute = result - from;
+
+            using (var temporary = Functions.HIGHEST_ALGEBRAIC(variable))
+            {
+                if (compute > temporary) OnSizeError();
+
+                if (compute <= temporary) NotSizeError();
+            }
+
+            var length = compute.AsSpan(buffer);
+
+            variable.Bytes = buffer.AsSpan().Slice(0, length);
         }
+
+        Buffer.Return(buffer);
     }
 
     public static void SUPPRESS()
@@ -551,7 +694,7 @@ public static class Statements
     {
         // TODO: Implement TERMINATE
     }
-    
+
     public static void UNLOCK()
     {
         // TODO: Implement UNLOCK
@@ -573,7 +716,7 @@ public static class Statements
     {
         // TODO: Implement VALIDATE
     }
-    
+
     public static void WRITE()
     {
         // TODO: Implement WRITE

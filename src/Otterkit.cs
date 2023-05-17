@@ -196,6 +196,21 @@ public static class Otterkit
             };
 
             arguments = $"new {templateType} --force";
+
+            if (Directory.Exists(".otterkit") && File.Exists("package.otterproj"))
+            {
+                Console.WriteLine("A project already exists in this directory.");
+                Console.Write("Delete project and create a new one? ['y' or 'n'] ");
+
+                var character = Console.ReadKey().KeyChar;
+
+                Console.WriteLine();
+
+                if (character is not 'y') return;
+
+                Directory.Delete(".otterkit", true);
+                File.Delete("package.otterproj");
+            }
         }
 
         if (operation.Equals("run"))
@@ -257,11 +272,6 @@ public static class Otterkit
             }
 
             dotnet.WaitForExit();
-        }
-
-        if (Directory.Exists(".otterkit/Build/OtterkitMath"))
-        {
-            Directory.Delete(".otterkit/Build/OtterkitMath", true);
         }
     }
 

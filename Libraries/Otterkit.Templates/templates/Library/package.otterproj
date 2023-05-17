@@ -1,5 +1,5 @@
 {
-  "name": "Otterkit",
+  "name": "MyProject",
 
   "project": {
     "sdk": "Microsoft.NET.Sdk",
@@ -8,8 +8,8 @@
   },
 
   "build": {
-    "main": "test.cob",
-    "output": "Application",
+    "main": "main.cob",
+    "output": "Library",
     "format": "Auto",
     "columns": 80
   }

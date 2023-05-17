@@ -1,0 +1,16 @@
+{
+    "$schema": "https://json.schemastore.org/template",
+    "author": "KTSnowy <KTSnowy@outlook.com>",
+    "classifications": ["COBOL", "Library"],
+    "identity": "OtterkitLibrary",
+    "name": "Otterkit COBOL Library",
+    "description": "Used by the Otterkit COBOL compiler to generate a new COBOL library",
+    "shortName": "otterkit-lib",
+    "defaultName": "OtterkitLibrary",
+    "preferNameDirectory": false,
+    "thirdPartyNotices": "https://github.com/otterkit/otterkit/",
+    "tags": {
+        "language": "C#",
+        "type": "project"
+    }
+}

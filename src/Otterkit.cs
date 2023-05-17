@@ -42,10 +42,12 @@ public static class Otterkit
                 switch (argument)
                 {
                     case "app":
+                    case "application":
                         CompilerOptions.Output = OutputType.Application;
                         break;
 
-                    case "module":
+                    case "lib":
+                    case "library":
                         CompilerOptions.Output = OutputType.Library;
                         break;
                     
@@ -188,14 +190,12 @@ public static class Otterkit
         {
             var templateType = CompilerOptions.Output switch
             {
-                OutputType.Application => "otterkit-export",
-                OutputType.Library => "otterkit-module-export",
-                _ => "otterkit-export"
+                OutputType.Application => "otterkit-app",
+                OutputType.Library => "otterkit-lib",
+                _ => "otterkit-app"
             };
 
-            Directory.CreateDirectory(".otterkit");
-
-            arguments = $"new {templateType} -n OtterkitExport -o .otterkit --force";
+            arguments = $"new {templateType} --force";
         }
 
         if (operation.Equals("run"))
@@ -209,12 +209,12 @@ public static class Otterkit
                 binaryName = @".otterkit\Build\OtterkitExport.exe";
             }
 
-            using Process outputBinary = new();
-            outputBinary.StartInfo.FileName = binaryName;
-            outputBinary.StartInfo.UseShellExecute = false;
-            outputBinary.Start();
+            using Process binary = new();
+            binary.StartInfo.FileName = binaryName;
+            binary.StartInfo.UseShellExecute = false;
+            binary.Start();
 
-            outputBinary.WaitForExit();
+            binary.WaitForExit();
 
             return;
         }
@@ -239,7 +239,7 @@ public static class Otterkit
             }
 
             arguments = $"""
-            publish .otterkit/OtterkitExport/OtterkitExport.csproj -r {runtimeIdentifier} -c Release -o .otterkit/Build
+            publish .otterkit/Artifacts/OtterkitExport.csproj -r {runtimeIdentifier} -c Release -o .otterkit/Build
             """;
         }
 

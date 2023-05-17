@@ -33,7 +33,7 @@ It's almost like these features never existed, but we want to help improve this 
 Otterkit is available to install on the [Nuget package manager](https://www.nuget.org/packages/Otterkit/) ([.NET 7](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) is required). To install, type these two lines into the command line:
 
 ```
-dotnet new install Otterkit.Templates::1.0.45-alpha
+dotnet new install Otterkit.Templates::1.7.50
 
 dotnet tool install --global Otterkit --version 1.0.80
 ```

@@ -1,13 +1,12 @@
 {
     "$schema": "https://json.schemastore.org/template",
     "author": "KTSnowy <KTSnowy@outlook.com>",
-    "classifications": ["COBOL", "App"],
-    "identity": "OtterkitExport",
+    "classifications": ["COBOL", "Application"],
+    "identity": "OtterkitApplication",
     "name": "Otterkit COBOL Application",
     "description": "Used by the Otterkit COBOL compiler to generate a new COBOL application",
-    "shortName": "otterkit-export",
-    "defaultName": "OtterkitExport",
-    "sourceName": "OtterkitExport",
+    "shortName": "otterkit-app",
+    "defaultName": "OtterkitApplication",
     "preferNameDirectory": false,
     "thirdPartyNotices": "https://github.com/otterkit/otterkit/",
     "tags": {

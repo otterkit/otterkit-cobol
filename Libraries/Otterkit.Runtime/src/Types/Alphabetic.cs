@@ -1,20 +1,19 @@
 using System.Text;
 
-namespace Otterkit.Library;
+namespace Otterkit.Runtime;
 
-public sealed class Alphabetic : ICOBOLType
+public readonly struct Alphabetic : ICOBOLType
 {
-    public Memory<byte> Memory { get; init; }
-    public ICOBOLType[] Fields { get; init; }
-    public int Offset { get; init; }
-    public int Length { get; init; }
+    public readonly Memory<byte> Memory { get; init; }
+    public readonly int Length;
+    private readonly int Offset;
 
     public Alphabetic(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory)
     {
-        this.Fields = Array.Empty<ICOBOLType>();
-        this.Offset = offset;
-        this.Length = length;
-        this.Memory = memory.Slice(offset, length);
+        Offset = offset;
+        Length = length;
+        Memory = memory.Slice(offset, length);
+        
         Memory.Span.Fill(32);
 
         int byteLength = Length < value.Length
@@ -26,10 +25,9 @@ public sealed class Alphabetic : ICOBOLType
 
     public Alphabetic(Memory<byte> memory, int offset, int length)
     {
-        this.Fields = Array.Empty<ICOBOLType>();
-        this.Offset = offset;
-        this.Length = length;
-        this.Memory = memory.Slice(offset, length);
+        Offset = offset;
+        Length = length;
+        Memory = memory.Slice(offset, length);
     }
 
     public ReadOnlySpan<byte> Bytes

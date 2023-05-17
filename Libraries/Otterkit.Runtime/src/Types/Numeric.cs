@@ -1,38 +1,41 @@
 using System.Text;
 using Otterkit.Numerics;
 
-namespace Otterkit.Library;
+namespace Otterkit.Runtime;
 
-public sealed class Numeric : ICOBOLType, IComparable<Numeric>
+public readonly struct Numeric : ICOBOLType, IComparable<Numeric>
 {
-    public Memory<byte> Memory { get; init; }
-    public ICOBOLType[] Fields { get; init; } 
-    public int Offset { get; init; }
-    public int Length { get; init; }
-    public int FractionalLength { get; init; }
-    public bool IsInteger { get; private set; }
-    public bool IsSigned { get; private set; }
-    public bool IsNegative { get; private set; }
+    public readonly Memory<byte> Memory { get; init; }
+    public readonly int Offset;
+    public readonly int Length;
+    public readonly int FractionalLength;
+
+    public readonly bool IsInteger;
+    public readonly bool IsSigned;
+    public readonly bool IsNegative
+    {
+        get => Memory.Span[0] is 45;
+    }
 
     public Numeric(ReadOnlySpan<byte> value, int offset, int length, int fractionalLength, Memory<byte> memory)
     {
-        this.Fields = Array.Empty<ICOBOLType>();
-        this.IsSigned = value[0] == 43 || value[0] == 45;
-        this.Offset = offset;
-        this.Length = length;
-        this.FractionalLength = fractionalLength;
-        this.IsInteger = fractionalLength == 0;
+        Offset = offset;
+        Length = length;
+        FractionalLength = fractionalLength;
+
+        IsInteger = fractionalLength == 0;
+        IsSigned = value[0] is 43 or 45;
 
         if (fractionalLength == 0)
         {
             int signedSpace = IsSigned ? 1 : 0;
-            this.Memory = memory.Slice(offset, length + signedSpace);
+            Memory = memory.Slice(offset, length + signedSpace);
         }
 
         if (fractionalLength > 0)
         {
             int signedSpace = IsSigned ? 2 : 1;
-            this.Memory = memory.Slice(offset, length + fractionalLength + signedSpace);
+            Memory = memory.Slice(offset, length + fractionalLength + signedSpace);
         }
 
         Memory.Span.Fill(48);
@@ -48,30 +51,29 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
 
     public Numeric(Memory<byte> memory, int offset, int length, int fractionalLength, bool isSigned)
     {
-        this.Fields = Array.Empty<ICOBOLType>();
-        this.Offset = offset;
-        this.Length = length;
-        this.FractionalLength = fractionalLength;
-        this.IsSigned = isSigned;
-        this.IsInteger = fractionalLength == 0;
+        Offset = offset;
+        Length = length;
+        FractionalLength = fractionalLength;
+
+        IsSigned = isSigned;
+        IsInteger = fractionalLength == 0;
 
         if (fractionalLength == 0)
         {
             int signedSpace = isSigned ? 1 : 0;
-            this.Memory = memory.Slice(offset, length + signedSpace);
+            Memory = memory.Slice(offset, length + signedSpace);
         }
 
         if (fractionalLength > 0)
         {
             int signedSpace = isSigned ? 2 : 1;
-            this.Memory = memory.Slice(offset, length + fractionalLength + signedSpace);
+            Memory = memory.Slice(offset, length + fractionalLength + signedSpace);
         }
     }
 
     public Numeric(ReadOnlySpan<byte> utf8String, bool isSigned)
     {
-        this.Fields = Array.Empty<ICOBOLType>();
-        this.Offset = 0;
+        Offset = 0;
 
         int DecimalPointIndex = utf8String.IndexOf("."u8);
 
@@ -79,36 +81,36 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
         {
             int minusSignOffset = utf8String[0] != 45 ? 0 : 1;
 
-            this.Length = isSigned ? DecimalPointIndex - minusSignOffset : DecimalPointIndex;
-            this.FractionalLength = isSigned ? utf8String.Length - Length - (minusSignOffset + 1) : utf8String.Length - Length - 1;
+            Length = isSigned ? DecimalPointIndex - minusSignOffset : DecimalPointIndex;
+            FractionalLength = isSigned ? utf8String.Length - Length - (minusSignOffset + 1) : utf8String.Length - Length - 1;
         }
         else
         {
             if (utf8String[0] is 45 or 43)
             {
-                this.Length = utf8String.Length - 1;
+                Length = utf8String.Length - 1;
             }
             else
             {
-                this.Length = utf8String.Length;
+                Length = utf8String.Length;
             }
 
-            this.FractionalLength = 0;
+            FractionalLength = 0;
         }
 
-        this.IsSigned = isSigned;
-        this.IsInteger = FractionalLength == 0;
+        IsSigned = isSigned;
+        IsInteger = FractionalLength == 0;
 
-        if (this.FractionalLength == 0)
+        if (FractionalLength == 0)
         {
             int signedSpace = isSigned ? 1 : 0;
-            this.Memory = new byte[Length + signedSpace];
+            Memory = new byte[Length + signedSpace];
         }
 
-        if (this.FractionalLength > 0)
+        if (FractionalLength > 0)
         {
             int signedSpace = isSigned ? 2 : 1;
-            this.Memory = new byte[Length + FractionalLength + signedSpace];
+            Memory = new byte[Length + FractionalLength + signedSpace];
         }
 
         Memory.Span.Fill(48);
@@ -144,9 +146,9 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
         {
             startIndex = Math.Max(0, bytes.Length - Length);
         }
-        
+
         int endIndex;
-        if (!IsInteger) 
+        if (!IsInteger)
         {
             endIndex = Math.Min(bytes.Length - startIndex, Length + FractionalLength + 1);
         }
@@ -156,7 +158,7 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
             ? Math.Min(Length, bytes.Length)
             : Math.Min(Length, indexOfDecimal);
         }
-        
+
         int offset;
         if (indexOfDecimal < 0)
         {
@@ -191,25 +193,20 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
 
     private void FormatSigned(ReadOnlySpan<byte> bytes)
     {
-        if (bytes[0] == 45)
+        if (bytes[0] is 45 or 43)
         {
-            IsNegative = true;
             Format(bytes, true);
+
             return;
         }
 
-        if (bytes[0] != 43)
-        {
-            Span<byte> withSign = stackalloc byte[bytes.Length + 1];
-            bytes.CopyTo(withSign[1..]);
-            withSign[0] = 43;
-            IsNegative = false;
-            Format(withSign, true);
-            return;
-        }
+        Span<byte> withSign = stackalloc byte[bytes.Length + 1];
 
-        IsNegative = false;
-        Format(bytes, true);
+        bytes.CopyTo(withSign[1..]);
+
+        withSign[0] = 43;
+
+        Format(withSign, true);
     }
 
     public static implicit operator Numeric(Decimal128 value)
@@ -351,34 +348,34 @@ public sealed class Numeric : ICOBOLType, IComparable<Numeric>
         return Dres;
     }
 
-    public static implicit operator ReadOnlySpan<object>(Numeric v)
-    {
-        throw new NotImplementedException();
-    }
-
     public override bool Equals(object? obj)
     {
         if (obj is null || GetType() != obj.GetType())
         {
             return false;
         }
-        
+
         return this == (Numeric)obj;
     }
 
-    public int CompareTo(Numeric? other)
-    { 
+    public bool Equals(Numeric obj)
+    {
+        return this == obj;
+    }
+
+    public int CompareTo(Numeric other)
+    {
         //for implementing default C# sorting
-        if (other is null || this > other) return 1;
-        
-        if (this.Equals(other)) return 0;
-         
+        if (this > other) return 1;
+
+        if (Equals(other)) return 0;
+
         return -1;
     }
-    
+
     public override int GetHashCode()
     {
-        return Memory.Span[0].GetHashCode();
+        return Memory.GetHashCode();
     }
 
     public ReadOnlySpan<byte> Bytes

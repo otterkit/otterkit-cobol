@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace Otterkit.Library;
+namespace Otterkit.Runtime;
 
 //Exceptions as objects similar to C# exceptions are currently depreciated. May return to implement COBOL exception objects.
 

@@ -14,10 +14,10 @@
 
   <PropertyGroup>
     <PackRelease>true</PackRelease> 
-    <PackageId>Otterkit.Library</PackageId>
+    <PackageId>Otterkit.Runtime</PackageId>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.0.45-alpha</Version>
+    <Version>1.7.50</Version>
     <Copyright>Copyright (c) Otterkit 2023</Copyright>
     <Authors>Otterkit Authors</Authors>
     <Company>Otterkit Project</Company>
@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Otterkit.Numerics" Version="1.7.35" />
+    <PackageReference Include="Otterkit.Numerics" Version="1.7.45" />
   </ItemGroup>
   
 </Project>

@@ -1,18 +1,17 @@
 using System.Text;
 
-namespace Otterkit.Library;
+namespace Otterkit.Runtime;
 
-public sealed class Constant : ICOBOLType
+public readonly struct Constant : ICOBOLType
 {
-    public Memory<byte> Memory { get; init; }
-    public ICOBOLType[] Fields { get; init; }
-    public int Length { get; init; }
+    public readonly Memory<byte> Memory { get; init; }
+    public readonly int Length;
 
     public Constant(ReadOnlySpan<byte> bytes)
     {
-        this.Length = bytes.Length;
-        this.Memory = new byte[Length];
-        this.Fields = Array.Empty<ICOBOLType>();
+        Length = bytes.Length;
+
+        Memory = new byte[Length];
 
         bytes.CopyTo(Memory.Span);
     }

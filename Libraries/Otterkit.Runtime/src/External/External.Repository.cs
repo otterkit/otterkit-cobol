@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
-namespace Otterkit.Library;
+namespace Otterkit.Runtime;
 
 public static partial class External
 {

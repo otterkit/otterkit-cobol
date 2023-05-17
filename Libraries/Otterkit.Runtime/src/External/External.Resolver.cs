@@ -1,4 +1,4 @@
-namespace Otterkit.Library;
+namespace Otterkit.Runtime;
 
 public static partial class External
 {

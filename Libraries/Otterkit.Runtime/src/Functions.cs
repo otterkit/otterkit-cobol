@@ -2,7 +2,7 @@
 using System.Text;
 using Otterkit.Numerics;
 
-namespace Otterkit.Library;
+namespace Otterkit.Runtime;
 
 public static class Functions
 {
@@ -45,7 +45,7 @@ public static class Functions
         // TODO BASE-CONVERT
     }
 
-    public static Bit BOOLEAN_OF_INTEGER(Numeric argument, Numeric? length = null)
+    public static Bit BOOLEAN_OF_INTEGER(Numeric argument, Option<Numeric> length)
     {
         // TODO BOOLEAN-OF-INTEGER
 
@@ -63,7 +63,7 @@ public static class Functions
             current = Decimal128.Divide(current-remainder, 2);
         }
 
-        var text = new System.Text.StringBuilder();
+        var text = new StringBuilder();
 
 
         foreach(Decimal128 bit in digits){
@@ -73,27 +73,40 @@ public static class Functions
         //string trueText = text.ToString();
 
         string trueText;
-        if (!(length is null)){
-            var len = int.Parse(length.Display);
-            if(len < text.Length){
+        if (length.Exists)
+        {
+            var ulength = length.Unwrap();
+
+            var len = int.Parse(ulength.Display);
+
+            if(len < text.Length)
+            {
                 int difference = text.Length - len;
                 trueText = text.ToString(difference, len);
-            } else if (len > text.Length){
+            } 
+            else if (len > text.Length)
+            {
                 int difference = len - text.Length;
-                for(int i = 0; i < difference; i++){
+                for(int i = 0; i < difference; i++)
+                {
                     text.Insert(0 , "0");
                 }
+
                 trueText = text.ToString();
 
-            } else {
+            } 
+            else 
+            {
                 trueText = text.ToString();
             }
 
-        } else {
+        } else 
+        {
             trueText = text.ToString();
         }
-        if(input < 0){
-            trueText = "-"+trueText;
+        if(input < 0)
+        {
+            trueText = "-" + trueText;
         }
 
         Bit result = new(Encoding.UTF8.GetBytes(trueText), 0, trueText.Length, new byte[trueText.Length]);
@@ -205,7 +218,7 @@ public static class Functions
         return output;
     }
 
-    public static Numeric DATE_TO_YYYYMMDD(Numeric date, Numeric? window, Numeric? Current)
+    public static Numeric DATE_TO_YYYYMMDD(Numeric date, Option<Numeric> window, Option<Numeric> Current)
     {
         Decimal128 ten_thousand = new(Encoding.UTF8.GetBytes("10000"));
 
@@ -236,7 +249,7 @@ public static class Functions
         return output;
     }
 
-    public static Numeric DAY_TO_YYYYDDD(Numeric date, Numeric? window, Numeric? Current)
+    public static Numeric DAY_TO_YYYYDDD(Numeric date, Option<Numeric> window, Option<Numeric> Current)
     {
         Decimal128 thousand = new(Encoding.UTF8.GetBytes("1000"));
 
@@ -693,19 +706,21 @@ public static class Functions
         // TODO: Implement PRESENT-VALUE
     }
 
-    public static Numeric RANDOM(Numeric? argument = null)
+    public static Numeric RANDOM(Option<Numeric> argument)
     {
         Random random;
         Encoding encoding = Encoding.UTF8;
 
-        if (argument is null)
+        if (!argument.Exists)
         {
             random = new();
         }
-
         else
         {
-            Decimal128 range = (Decimal128)argument.Bytes[..Math.Min(9, argument.Bytes.Length)];
+            var uargument = argument.Unwrap();
+
+            var range = (Decimal128)uargument.Bytes[..Math.Min(9, uargument.Bytes.Length)];
+
             int int_arg = int.Parse(range.ToString()); // The range variable above makes sure that it fits inside of an Int32
             random = new(int_arg);//what about fractional arguments? Accoridng to the standard, those are not supported
         }
@@ -962,22 +977,24 @@ public static class Functions
         return argument;
     }
 
-    public static Numeric YEAR_TO_YYYY(Numeric yy, Numeric? window, Numeric? current)
+    public static Numeric YEAR_TO_YYYY(Numeric yy, Option<Numeric> window, Option<Numeric> current)
     {
         //TODO: Implement runtime exceptions for invalid inputs
-        window ??= new Decimal128("50"u8);
+        if (!window.Exists) window = new Numeric("50"u8, false);
         
-        if (current is null)
+        if (!current.Exists)
         {
             //TODO: make sure NUMVAL works fully
             String slice = CURRENT_DATE().Display[..4];
             Alphanumeric date = new(Encoding.UTF8.GetBytes(slice), 0, 8, new byte[8]);
             current = NUMVAL(date);
         }
+        
+        var uwindow = window.Unwrap();
 
         Decimal128 yy_num = new(Encoding.UTF8.GetBytes(yy.Display));
-        Decimal128 window_num = new(Encoding.UTF8.GetBytes(window.Display));
-        Decimal128 current_num = new(Encoding.UTF8.GetBytes(current.Display));
+        Decimal128 window_num = new(Encoding.UTF8.GetBytes(uwindow.Display));
+        Decimal128 current_num = new(Encoding.UTF8.GetBytes(uwindow.Display));
 
         Decimal128 max_year = window_num + current_num;
         Decimal128 hundred = new(Encoding.UTF8.GetBytes("100"));

@@ -1,20 +1,20 @@
 using System.Text;
 
-namespace Otterkit.Library;
+namespace Otterkit.Runtime;
 
-public sealed class Alphanumeric : ICOBOLType
+public readonly struct Alphanumeric : ICOBOLType
 {
-    public Memory<byte> Memory { get; init; }
-    public ICOBOLType[] Fields { get; init; }
-    public int Offset { get; init; }
-    public int Length { get; init; }
+    public readonly Memory<byte> Memory { get; init; }
+    public readonly int Length;
+    private readonly int Offset;
 
     public Alphanumeric(ReadOnlySpan<byte> value, int offset, int length, Memory<byte> memory, ICOBOLType[]? fields = null)
     {
-        this.Offset = offset;
-        this.Length = length;
-        this.Memory = memory.Slice(offset, length);
-        this.Fields = fields ?? Array.Empty<ICOBOLType>();
+        Length = length;
+        Offset = offset;
+
+        Memory = memory.Slice(offset, length);
+ 
         Memory.Span.Fill(32);
 
         int byteLength = Length < value.Length
@@ -26,17 +26,18 @@ public sealed class Alphanumeric : ICOBOLType
 
     public Alphanumeric(Memory<byte> memory, int offset, int length, ICOBOLType[]? fields = null)
     {
-        this.Offset = offset;
-        this.Length = length;
-        this.Memory = memory.Slice(offset, length);
-        this.Fields = fields ?? Array.Empty<ICOBOLType>();
+        Length = length;
+        Offset = offset;
+
+        Memory = memory.Slice(offset, length);
     }
 
     public Alphanumeric(ReadOnlySpan<byte> alphanumeric)
     {
-        this.Length = alphanumeric.Length;
-        this.Memory = new byte[Length];
-        this.Fields = Array.Empty<ICOBOLType>();
+        Length = alphanumeric.Length;
+        
+        Memory = new byte[Length];
+
         alphanumeric.CopyTo(Memory.Span);
     }
 

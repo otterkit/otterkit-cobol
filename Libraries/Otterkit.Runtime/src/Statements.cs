@@ -1,7 +1,7 @@
 using System.Text;
 using Otterkit.Numerics;
 
-namespace Otterkit.Library;
+namespace Otterkit.Runtime;
 
 public static class Statements
 {

@@ -6,14 +6,30 @@ namespace Otterkit.Runtime;
 
 public static class Functions
 {
-    public static Numeric ABS(Numeric argument)
+    public static Temporary ABS<T>(T argument) where T : ICOBOLType
     {
-        return Decimal128.Abs(argument);
+        Span<byte> result = stackalloc byte[45];
+
+        var d128 = new Decimal128(argument.Bytes);
+
+        var abs = Decimal128.Abs(d128);
+
+        var length = abs.AsSpan(result);
+
+        return new Temporary(result.Slice(0, length));
     }
 
-    public static Numeric ACOS(Numeric ratio)
+    public static Temporary ACOS<T>(T ratio) where T : ICOBOLType
     {
-        return Decimal128.Acos(ratio);
+        Span<byte> result = stackalloc byte[45];
+
+        var d128 = new Decimal128(ratio.Bytes);
+
+        var abs = Decimal128.Acos(d128);
+
+        var length = abs.AsSpan(result);
+
+        return new Temporary(result.Slice(0, length));
     }
 
     public static Numeric ANNUITY(Numeric interest, Numeric periods)
@@ -30,14 +46,30 @@ public static class Functions
         return output; //an annuity is always positive, right? 
     }
 
-    public static Numeric ASIN(Numeric ratio)
+    public static Temporary ASIN<T>(T ratio) where T : ICOBOLType
     {
-        return Decimal128.Asin(ratio);
+        Span<byte> result = stackalloc byte[45];
+
+        var d128 = new Decimal128(ratio.Bytes);
+
+        var abs = Decimal128.Asin(d128);
+
+        var length = abs.AsSpan(result);
+
+        return new Temporary(result.Slice(0, length));
     }
 
-    public static Numeric ATAN(Numeric ratio)
+    public static Temporary ATAN<T>(T ratio) where T : ICOBOLType
     {
-        return Decimal128.Atan(ratio);
+        Span<byte> result = stackalloc byte[45];
+
+        var d128 = new Decimal128(ratio.Bytes);
+
+        var abs = Decimal128.Atan(d128);
+
+        var length = abs.AsSpan(result);
+
+        return new Temporary(result.Slice(0, length));
     }
 
     public static void BASE_CONVERT(Numeric input, Numeric current, Numeric target)
@@ -165,9 +197,17 @@ public static class Functions
         // TODO: Need to implement other COBOL data types first
     }
 
-    public static Numeric COS(Numeric radians)
+    public static Temporary COS<T>(T ratio) where T : ICOBOLType
     {
-        return Decimal128.Cos(radians);
+        Span<byte> result = stackalloc byte[45];
+
+        var d128 = new Decimal128(ratio.Bytes);
+
+        var abs = Decimal128.Cos(d128);
+
+        var length = abs.AsSpan(result);
+
+        return new Temporary(result.Slice(0, length));
     }
 
     public static Temporary CURRENT_DATE()
@@ -254,9 +294,13 @@ public static class Functions
         // TODO: implement National type
     }
 
-    public static Numeric E()
+    public static Temporary E()
     {
-        return Decimal128.E;
+        Span<byte> result = stackalloc byte[45];
+
+        var length = Decimal128.E.AsSpan(result);
+
+        return new Temporary(result.Slice(0, length));
     }
 
     public static void EXCEPTION_FILE(string? filename)
@@ -684,9 +728,13 @@ public static class Functions
         // TODO: Implement ORD-MIN
     }
 
-    public static Numeric PI()
+    public static Temporary PI()
     {
-        return Decimal128.Pi;
+        Span<byte> result = stackalloc byte[45];
+
+        var length = Decimal128.Pi.AsSpan(result);
+
+        return new Temporary(result.Slice(0, length));
     }
 
     public static void PRESENT_VALUE()
@@ -779,20 +827,35 @@ public static class Functions
         return new Numeric("1"u8, 0, 1, 0, new byte[1]);
     }
 
-    public static Numeric SIN(Numeric argument)
+    public static Temporary SIN<T>(T argument) where T : ICOBOLType
     {
-        return Decimal128.Sin(argument);
-    }
+        Span<byte> result = stackalloc byte[45];
 
+        var d128 = new Decimal128(argument.Bytes);
+
+        var abs = Decimal128.Sin(d128);
+
+        var length = abs.AsSpan(result);
+
+        return new Temporary(result.Slice(0, length));
+    }
 
     public static void SMALLEST_ALGEBRAIC()
     {
         // TODO: Implement SMALLEST-ALGEBRAIC
     }
 
-    public static Numeric SQRT(Numeric argument)
+    public static Temporary SQRT<T>(T argument) where T : ICOBOLType
     {
-        return Decimal128.Sqrt(argument);
+        Span<byte> result = stackalloc byte[45];
+
+        var d128 = new Decimal128(argument.Bytes);
+
+        var abs = Decimal128.Sqrt(d128);
+
+        var length = abs.AsSpan(result);
+
+        return new Temporary(result.Slice(0, length));
     }
 
     public static void STANDARD_COMPARE(Alphanumeric argument)
@@ -822,9 +885,17 @@ public static class Functions
         return sum;
     }
 
-    public static Numeric TAN(Numeric argument)
+    public static Temporary TAN<T>(T argument) where T : ICOBOLType
     {
-        return Decimal128.Tan(argument);
+        Span<byte> result = stackalloc byte[45];
+
+        var d128 = new Decimal128(argument.Bytes);
+
+        var abs = Decimal128.Tan(d128);
+
+        var length = abs.AsSpan(result);
+
+        return new Temporary(result.Slice(0, length));
     }
 
     public static Numeric TEST_DATE_YYYYMMDD(Numeric argument)

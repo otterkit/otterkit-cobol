@@ -20,5 +20,8 @@ public static partial class External
         }
 
         ExceptionRegistry.ActivateException("EC-EXTERNAL-FORMAT-CONFLICT");
+
+        // We should probably crash here...
+        return Array.Empty<byte>();
     }
 }

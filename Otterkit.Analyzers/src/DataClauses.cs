@@ -178,7 +178,7 @@ public static partial class DataDivision
             PictureClause(entry);
         }
 
-        if (CurrentEquals("VALUE"))
+        if (CurrentEquals("VALUE VALUES"))
         {
             ValueClause(entry);
         }
@@ -1371,30 +1371,28 @@ public static partial class DataDivision
     private static void ValueClause(DataEntry entryLocal)
     {
         Expected("VALUE");
+        Optional("IS");
 
         entryLocal[DataClause.Value] = true;
 
-        if (!CurrentEquals(TokenType.String | TokenType.Numeric))
+        if (!Literals.CurrentEqualsAny())
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 2, """
                 Unexpected token.
                 """)
             .WithSourceLine(Current(), """
-                Expected a string or numeric literal.
+                Expected a type literal.
                 """)
             .CloseError();
+
+            Continue();
+
+            return;
         }
 
-        if (CurrentEquals(TokenType.String))
-        {
-            Literals.String();
-        }
-
-        if (CurrentEquals(TokenType.Numeric))
-        {
-            Literals.Numeric();
-        }
+        // TODO: Type check literals during resolution stage.
+        var literal = Literals.Any();
     }
 
     private static void UsageClause(DataEntry entry)

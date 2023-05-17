@@ -218,7 +218,7 @@ public sealed partial record Token
 
         // check if the value is a figurative literal
         if (IsFigurativeLiteral(value))
-            return TokenType.FigurativeLiteral;
+            return TokenType.Figurative;
 
         if (IsOtterkitDevice(token.Value))
             return TokenType.Device;

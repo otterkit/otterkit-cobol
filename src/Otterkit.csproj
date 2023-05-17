@@ -39,7 +39,8 @@
 
   <ItemGroup>
     <!-- <ProjectReference Include="../Libraries/Otterkit.Numerics/src/Otterkit.Numerics.csproj" /> -->
-    <ProjectReference Include="../Libraries/Otterkit.Runtime/Otterkit.Runtime.csproj" />
+    <!-- <ProjectReference Include="../Libraries/Otterkit.Runtime/Otterkit.Runtime.csproj" /> -->
+    <!-- <PackageReference Include="BenchmarkDotNet" Version="0.13.5" /> -->
   </ItemGroup>
 
   <ItemGroup>
@@ -49,9 +50,5 @@
     <ProjectReference Include="../Otterkit.Workspaces/Otterkit.Workspaces.csproj" />
     <ProjectReference Include="../Otterkit.Types/Otterkit.Types.csproj" />
   </ItemGroup>
-
-  <!-- <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
-  </ItemGroup> -->
 
 </Project>

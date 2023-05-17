@@ -5,7 +5,43 @@ namespace Otterkit.Analyzers;
 
 public static class Literals
 {
-    public static void Numeric()
+    public static bool CurrentEqualsAny()
+    {
+        return CurrentEquals(TokenType.Numeric | TokenType.String | TokenType.HexString | TokenType.Boolean | TokenType.HexBoolean | TokenType.National | TokenType.HexNational | TokenType.Figurative);
+    }
+
+    public static Option<Token> Any()
+    {
+        if (CurrentEquals(TokenType.String | TokenType.HexString))
+        {
+            return Literals.String();
+        }
+
+        if (CurrentEquals(TokenType.National | TokenType.HexNational))
+        {
+            return Literals.National();
+        }
+
+        if (CurrentEquals(TokenType.Boolean | TokenType.HexBoolean))
+        {
+            return Literals.Boolean();
+        }
+
+        if (CurrentEquals(TokenType.Numeric))
+        {
+            return Literals.Numeric();
+        }
+
+        if (CurrentEquals(TokenType.Figurative))
+        {
+            return Literals.Figurative();
+        }
+
+        // Return empty Option<Token> if no literal is found.
+        return null;
+    }
+
+    public static Option<Token> Numeric()
     {
         if (!CurrentEquals(TokenType.Numeric))
         {
@@ -19,13 +55,16 @@ public static class Literals
             .CloseError();
 
             Continue();
-            return;
+
+            return null;
         }
 
         Continue();
+
+        return Peek(-1);
     }
 
-    public static void String()
+    public static Option<Token> String()
     {
         if (!CurrentEquals(TokenType.String | TokenType.HexString))
         {
@@ -39,13 +78,16 @@ public static class Literals
             .CloseError();
 
             Continue();
-            return;
+
+            return null;
         }
 
         Continue();
+
+        return Peek(-1);
     }
 
-    public static void Boolean()
+    public static Option<Token> Boolean()
     {
         if (!CurrentEquals(TokenType.Boolean | TokenType.HexBoolean))
         {
@@ -59,13 +101,16 @@ public static class Literals
             .CloseError();
 
             Continue();
-            return;
+
+            return null;
         }
 
         Continue();
+
+        return Peek(-1);
     }
 
-    public static void National()
+    public static Option<Token> National()
     {
         if (!CurrentEquals(TokenType.National | TokenType.HexNational))
         {
@@ -79,15 +124,18 @@ public static class Literals
             .CloseError();
 
             Continue();
-            return;
+
+            return null;
         }
 
         Continue();
+
+        return Peek(-1);
     }
 
-    public static void Figurative()
+    public static Option<Token> Figurative()
     {
-        if (!CurrentEquals(TokenType.FigurativeLiteral))
+        if (!CurrentEquals(TokenType.Figurative))
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
@@ -99,9 +147,12 @@ public static class Literals
             .CloseError();
 
             Continue();
-            return;
+
+            return null;
         }
 
         Continue();
+
+        return Peek(-1);
     }
 }

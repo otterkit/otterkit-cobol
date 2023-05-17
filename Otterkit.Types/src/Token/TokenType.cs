@@ -6,7 +6,7 @@ public enum TokenType
     None,
     Error,
     ReservedKeyword = 1 << 1,
-    FigurativeLiteral = 1 << 2,
+    Figurative = 1 << 2,
     IntrinsicFunction = 1 << 3,
     Symbol = 1 << 4,
     Picture = 1 << 5,

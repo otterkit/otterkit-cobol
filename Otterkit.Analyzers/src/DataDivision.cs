@@ -642,7 +642,7 @@ public static partial class DataDivision
                     Literals.Numeric();
                     break;
 
-                case TokenType.FigurativeLiteral:
+                case TokenType.Figurative:
                     Literals.Figurative();
                     break;
             }

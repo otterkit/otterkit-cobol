@@ -1,0 +1,13 @@
+158,159c158,166
+<   #define UBFROMUS(b, i)  (uswork=(i), memcpy(b, (void *)&uswork, 2), uswork)
+<   #define UBFROMUI(b, i)  (uiwork=(i), memcpy(b, (void *)&uiwork, 4), uiwork)
+---
+> /*  #define UBFROMUS(b, i)  (uswork=(i), memcpy(b, (void *)&uswork, 2), uswork) */
+> /*  #define UBFROMUI(b, i)  (uiwork=(i), memcpy(b, (void *)&uiwork, 4), uiwork) */
+> 
+>   /* The last part of the expression is never used in any code, so    */
+>   /* gcc emits [-Wunused-value] everywhere the macros are used.       */
+>   /* Removed the last expression rather than putting (void) in front  */
+>   /* of every use of the macros.                                      */
+>   #define UBFROMUS(b, i)  (uswork=(i), memcpy(b, (void *)&uswork, 2))
+>   #define UBFROMUI(b, i)  (uiwork=(i), memcpy(b, (void *)&uiwork, 4))

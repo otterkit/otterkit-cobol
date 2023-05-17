@@ -1,0 +1,87 @@
+name: Compile decNumber bindings
+
+on: workflow_dispatch
+
+jobs:
+  compile-linux-x64:
+    runs-on: ubuntu-latest
+    env: 
+      COMMIT_MESSAGE: Automated Linux-x64 Build Files
+      COMMIT_AUTHOR: Continuous Integration
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.OTTERKIT_GITHUB_TOKEN }}
+    
+    - name: Compile decNumber Bindings
+      run: |
+        cd nativeBindings
+        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o decDoubleBindings.so decDoubleBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decDouble.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o decQuadBindings.so decQuadBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+        cp decDoubleBindings.so decQuadBindings.so ../src
+        cd ../src
+        
+    - name: GIT Commit Build Files
+      run: |
+        git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+        git config --global user.email "KTSnowy@users.noreply.github.com"
+        git pull
+        git add .
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git push
+
+  compile-macos-x64:
+    runs-on: macos-latest
+    env: 
+      COMMIT_MESSAGE: Automated macOS-x64 Build Files
+      COMMIT_AUTHOR: Continuous Integration
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.OTTERKIT_GITHUB_TOKEN }}
+    
+    - name: Compile decNumber Bindings
+      run: |
+        cd nativeBindings
+        clang -dynamiclib -O2 -Wall -W -o decDoubleBindings.dylib decDoubleBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decDouble.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+        clang -dynamiclib -O2 -Wall -W -o decQuadBindings.dylib decQuadBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+        cp decDoubleBindings.dylib decQuadBindings.dylib ../src
+        cd ../src
+        
+    - name: GIT Commit Build Files
+      run: |
+        git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+        git config --global user.email "KTSnowy@users.noreply.github.com"
+        git pull
+        git add .
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git push
+  
+  compile-windows-x64:
+    runs-on: windows-latest
+    env: 
+      COMMIT_MESSAGE: Automated Windows-x64 Build Files
+      COMMIT_AUTHOR: Continuous Integration
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.OTTERKIT_GITHUB_TOKEN }}
+    
+    - name: Compile decNumber Bindings
+      shell: cmd
+      run: |
+        cd nativeBindings
+        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        
+        cl.exe /O2 /LD decDoubleBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decDouble.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
+        cl.exe /O2 /LD decQuadBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
+        copy decDoubleBindings.dll decQuadBindings.dll ..\src
+        cd ..\src
+        
+    - name: GIT Commit Build Files
+      run: |
+        git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+        git config --global user.email "KTSnowy@users.noreply.github.com"
+        git add .
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git push

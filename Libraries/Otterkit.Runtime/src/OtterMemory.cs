@@ -3,16 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace Otterkit.Runtime;
 
-public unsafe sealed class OtterMemory : IDisposable
+public readonly struct OtterMemory : IDisposable
 {
-    internal void* Pointer;
-
+    internal readonly byte[] Memory;
     public int Length { get; init; }
-    public bool Allocated => Pointer is not null;
 
     public OtterMemory()
     {
-        Pointer = null;
+        Memory = Array.Empty<byte>();
         Length = 0;
     }
 
@@ -20,16 +18,17 @@ public unsafe sealed class OtterMemory : IDisposable
     {
         if (length < 0) throw new ArgumentOutOfRangeException(nameof(length), "Cannot allocate less than 0 bytes.");
 
-        Pointer = NativeMemory.Alloc((nuint)length);
-
+        Memory = OtterPool.Rent(length);
         Length = length;
     }
 
-    public OtterMemory(byte* pointer, int length)
+    public OtterMemory(byte[] memory)
     {
+        var length = memory.Length;
+
         if (length < 0) throw new ArgumentOutOfRangeException(nameof(length), "Cannot allocate less than 0 bytes.");
 
-        Pointer = pointer;
+        Memory = memory;
         Length = length;
     }
 
@@ -38,9 +37,9 @@ public unsafe sealed class OtterMemory : IDisposable
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if (!Allocated) throw new NullReferenceException("Null pointer used.");
+            if (Length is 0) throw new NullReferenceException("Null memory used.");
 
-            return new Span<byte>(Pointer, Length);
+            return Memory.AsSpan(0, Length);
         }
     }
 
@@ -54,14 +53,10 @@ public unsafe sealed class OtterMemory : IDisposable
 
     public bool TryCopyTo(Span<byte> destination) => Span.TryCopyTo(destination);
 
-    public byte[] ToArray() => Span.ToArray();
+    public byte[] FetchArray() => Memory;
 
     public void Dispose()
     {
-        if (!Allocated) return;
-
-        NativeMemory.Free(Pointer);
-
-        Pointer = null;
+        OtterPool.Return(Memory);
     }
 }

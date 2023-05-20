@@ -1,0 +1,90 @@
+name: Compile Native Bindings
+
+on: workflow_dispatch
+
+jobs:
+  compile-linux-x64:
+    runs-on: ubuntu-latest
+    env: 
+      COMMIT_MESSAGE: Automated Linux-x64 Build Files
+      COMMIT_AUTHOR: Continuous Integration
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.OTTERKIT_GITHUB_TOKEN }}
+    
+    - name: Compile Native Bindings
+      run: |
+        cd Libraries/Otterkit.Numerics/bindings
+        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o ../build/decDoubleBindings.so decDoubleBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decDouble.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o ../build/decQuadBindings.so decQuadBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+
+        cd ../../Otterkit.Native/native
+        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o ../build/nativelib.so stackalloc.c
+        
+#     - name: GIT Commit Build Files
+#       run: |
+#         git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+#         git config --global user.email "KTSnowy@users.noreply.github.com"
+#         git pull
+#         git add --all
+#         git commit -m "${{ env.COMMIT_MESSAGE }}"
+#         git push
+
+  compile-macos-x64:
+    runs-on: macos-latest
+    env: 
+      COMMIT_MESSAGE: Automated macOS-x64 Build Files
+      COMMIT_AUTHOR: Continuous Integration
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.OTTERKIT_GITHUB_TOKEN }}
+    
+    - name: Compile Native Bindings
+      run: |
+        cd Libraries/Otterkit.Numerics/bindings
+        clang -dynamiclib -O2 -Wall -W -o ../build/decDoubleBindings.dylib decDoubleBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decDouble.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+        clang -dynamiclib -O2 -Wall -W -o ../build/decQuadBindings.dylib decQuadBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+
+        cd ../../Otterkit.Native/native
+        clang -dynamiclib -O2 -Wall -W -o ../build/nativelib.dylib stackalloc.c
+        
+#     - name: GIT Commit Build Files
+#       run: |
+#         git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+#         git config --global user.email "KTSnowy@users.noreply.github.com"
+#         git pull
+#         git add --all
+#         git commit -m "${{ env.COMMIT_MESSAGE }}"
+#         git push
+  
+  compile-windows-x64:
+    runs-on: windows-latest
+    env: 
+      COMMIT_MESSAGE: Automated Windows-x64 Build Files
+      COMMIT_AUTHOR: Continuous Integration
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.OTTERKIT_GITHUB_TOKEN }}
+    
+    - name: Compile Native Bindings
+      shell: cmd
+      run: |
+        cd Libraries\Otterkit.Numerics\bindings
+        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        
+        cl.exe /O2 /LD /OUT:..\build\decDoubleBindings.dll decDoubleBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decDouble.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
+        cl.exe /O2 /LD /OUT:..\build\decQuadBindings.dll decQuadBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
+        
+        cd ..\..\Otterkit.Native\native
+        cl.exe /O2 /LD /OUT:..\build\nativelib.dll stackalloc.c
+        
+#     - name: GIT Commit Build Files
+#       run: |
+#         git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+#         git config --global user.email "KTSnowy@users.noreply.github.com"
+#         git add --all
+#         git commit -m "${{ env.COMMIT_MESSAGE }}"
+#         git push

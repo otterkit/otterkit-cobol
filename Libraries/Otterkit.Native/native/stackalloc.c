@@ -1,23 +1,26 @@
+#include <stdlib.h>
 #include <stdint.h>
+#include <malloc.h>
 
 #ifdef _WIN32
     #define _export __declspec(dllexport)
 
-    #include <heapapi.h> // HeapAlloc
-    #include <sysinfoapi.h> // page size
-
-    #define PAGESIZE 
 #else
     #define _export
 
-    #include <sys/mman.h> // mmap
-    #include <unistd.h> // page size
-
-    #define PAGESIZE sysconf(_SC_PAGESIZE)
 #endif
+
+// compile win-x64: cl.exe /O2 /LD /Fe:..\build\nativelib.dll stackalloc.c
+
+// compile linux-x64: clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o ../build/nativelib.dylib stackalloc.c
+
+// compile macos-x64: clang -dynamiclib -O2 -Wall -W -o ../build/nativelib.dylib stackalloc.c
 
 // Default stack length: 512KB.
 #define DEFAULT_LENGTH 524288
+
+// Max stack length: 25MB.
+#define MAX_LENGTH 26214400
 
 typedef struct
 {
@@ -28,41 +31,24 @@ typedef struct
     
 } ottrstack_t;
 
-// Align stack memory to page size.
-inline size_t align(size_t length) 
-{
-    #ifdef _WIN32
-    // TODO: Windows page size alignment...
-    return 0;
-    #else
-    // Unix page size aligment
-    return (length + PAGESIZE - 1) & ~(PAGESIZE - 1);
-
-    #endif
-}
-
 _export ottrstack_t alloc(size_t length)
 {
     // alloc(0) to use default length.
-    if (length < 1) length = DEFAULT_LENGTH;
-    
-    length = align(length);
+    // We don't want to allocate less than 512KB of stack memory.
+    if (length < DEFAULT_LENGTH) length = DEFAULT_LENGTH;
 
     ottrstack_t stack = {NULL, 0};
 
-    // Return a null stack, if memory requested is bigger than 2GB.
-    // We don't want to attempt allocating more than 2GB of stack memory.
-    if (length > INT32_MAX) return stack;
+    // Return a null stack, if memory requested is bigger than 25MB.
+    // We don't want to attempt allocating more than 25MB of stack memory.
+    if (length > MAX_LENGTH) return stack;
 
     #ifdef _WIN32
-    // TODO: Windows memory allocation
-    void *pointer = NULL;
-    #else
-    // Unix memory allocation
-    void *pointer = mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    uint8_t *pointer = _aligned_malloc(length, sizeof(uint8_t));
 
-    // Return null stack if mmap fails.
-    if (pointer == MAP_FAILED) return stack;
+    #else
+    uint8_t *pointer = aligned_alloc(sizeof(uint8_t), length);
+
     #endif
 
     stack.pointer = pointer;
@@ -77,9 +63,10 @@ _export void dealloc(ottrstack_t stack)
     if (stack.pointer == NULL || stack.length == 0) return;
     
     #ifdef _WIN32
-    // TODO: Windows memory deallocation
+    _aligned_free(stack.pointer);
+    
     #else
-    // Unix memory deallocation
-    munmap(stack.pointer, stack.length);
+    free(stack.pointer);
+
     #endif
 }

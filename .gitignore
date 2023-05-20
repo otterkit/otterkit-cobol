@@ -13,6 +13,14 @@ publish/
 *.cbl
 *.cpy
 
+# Build files
+nativeBindings/*.dylib
+nativeBindings/*.dll
+nativeBindings/*.so
+*.exp
+*.lib
+*.obj
+
 # macOS DS_Store
 .DS_Store
 

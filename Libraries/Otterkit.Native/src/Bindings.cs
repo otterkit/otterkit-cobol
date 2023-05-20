@@ -1,6 +1,6 @@
 ﻿namespace Otterkit.Native;
 
-public static class Bindings
+public static partial class Bindings
 {
 
 }

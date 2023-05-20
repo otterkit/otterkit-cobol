@@ -44,11 +44,11 @@ inline size_t align(size_t length)
 _export ottrstack_t alloc(size_t length)
 {
     // alloc(0) to use default length.
-    if (length <= 0UL) length = align(DEFAULT_LENGTH);
+    if (length < 1) length = DEFAULT_LENGTH;
     
-    if (length >= 1UL) length = align(length);
+    length = align(length);
 
-    ottrstack_t stack = {NULL, 0UL};
+    ottrstack_t stack = {NULL, 0};
 
     // Return a null stack, if memory requested is bigger than 2GB.
     // We don't want to attempt allocating more than 2GB of stack memory.

@@ -4,6 +4,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Optimize>true</Optimize>
     <Deterministic>true</Deterministic>
     <PublishRelease>true</PublishRelease>
     <!-- <PublishAot>true</PublishAot> -->

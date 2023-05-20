@@ -22,19 +22,18 @@
 
 typedef struct
 {
-    // Pointer to the allocated stack memory.
+    // Byte pointer to the allocated stack memory.
     uint8_t *pointer;
     // Length of the stack memory.
     size_t length;
-    // Is the stack currently allocated?
-    bool allocated;
+    
 } ottrstack_t;
 
 // Align stack memory to page size.
-_export size_t align(size_t length) 
+inline size_t align(size_t length) 
 {
     #ifdef _WIN32
-    // TODO Windows page size alignment...
+    // TODO: Windows page size alignment...
     return 0;
     #else
     // Unix page size aligment
@@ -45,43 +44,41 @@ _export size_t align(size_t length)
 
 _export ottrstack_t alloc(size_t length)
 {
+    // alloc(0) to use default length.
     if (length <= 0UL) length = align(DEFAULT_LENGTH);
     
     if (length >= 1UL) length = align(length);
 
-    ottrstack_t stack = {NULL, 0UL, false};
+    ottrstack_t stack = {NULL, 0UL};
+
+    // Return a null stack, if memory requested is bigger than 2GB.
+    // We don't want to attempt allocating more than 2GB of stack memory.
+    if (length > INT32_MAX) return stack;
 
     #ifdef _WIN32
-    // TODO Windows memory allocation
+    // TODO: Windows memory allocation
     void *pointer = NULL;
     #else
     // Unix memory allocation
     void *pointer = mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-    if (pointer == MAP_FAILED)
-    {
-        // Return empty stack.
-        return stack;
-    }
+    // Return null stack if mmap fails.
+    if (pointer == MAP_FAILED) return stack;
     #endif
 
     stack.pointer = pointer;
 
     stack.length = length;
 
-    stack.allocated = true;
-
     return stack;
 }
 
-_export void dealloc(ottrstack_t *stack)
+_export void dealloc(ottrstack_t stack)
 {
     #ifdef _WIN32
-    // TODO Windows memory deallocation
+    // TODO: Windows memory deallocation
     #else
     // Unix memory deallocation
-    munmap(stack->pointer, stack->length);
+    munmap(stack.pointer, stack.length);
     #endif
-
-    stack->allocated = false;
 }

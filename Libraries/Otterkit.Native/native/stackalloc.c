@@ -74,6 +74,8 @@ _export ottrstack_t alloc(size_t length)
 
 _export void dealloc(ottrstack_t stack)
 {
+    if (stack.pointer == NULL || stack.length == 0) return;
+    
     #ifdef _WIN32
     // TODO: Windows memory deallocation
     #else

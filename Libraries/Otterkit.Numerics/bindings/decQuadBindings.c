@@ -1,15 +1,13 @@
 #include <stdlib.h>
 
 #ifdef _WIN32
-    #define DLLEXPORT __declspec(dllexport)
+    #define _export __declspec(dllexport)
     #define DECUSE64 1
 
     #include "..\decNumber\decimal128.h"
     #include "..\decNumber\decQuad.h" // decQuad library
-#endif
-
-#ifndef _WIN32
-    #define DLLEXPORT
+#else
+    #define _export
     #define DECUSE64 1
 
     #include "../decNumber/decimal128.h"
@@ -51,8 +49,7 @@ managedDecQuad decQuadToManaged(decQuad value)
 }
 
 /* Computational operations */
-DLLEXPORT
-managedDecQuad nativeDecQuadToIntegralValue(managedDecQuad value, enum rounding mode)
+_export managedDecQuad nativeDecQuadToIntegralValue(managedDecQuad value, enum rounding mode)
 {
     decQuad nativeValue;
     decContext context;
@@ -66,8 +63,7 @@ managedDecQuad nativeDecQuadToIntegralValue(managedDecQuad value, enum rounding 
     return decQuadToManaged(nativeValue);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadSqrt(managedDecQuad value)
+_export managedDecQuad nativeDecQuadSqrt(managedDecQuad value)
 {
     decQuad nativeValue;
     decNumber decNumValue;
@@ -87,8 +83,7 @@ managedDecQuad nativeDecQuadSqrt(managedDecQuad value)
     return decQuadToManaged(nativeValue);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadLn(managedDecQuad value)
+_export managedDecQuad nativeDecQuadLn(managedDecQuad value)
 {
     decQuad nativeValue;
     decNumber decNumValue;
@@ -108,8 +103,7 @@ managedDecQuad nativeDecQuadLn(managedDecQuad value)
     return decQuadToManaged(nativeValue);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadExp(managedDecQuad value)
+_export managedDecQuad nativeDecQuadExp(managedDecQuad value)
 {
     decQuad nativeValue;
     decNumber decNumValue;
@@ -129,8 +123,7 @@ managedDecQuad nativeDecQuadExp(managedDecQuad value)
     return decQuadToManaged(nativeValue);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadLogB(managedDecQuad value)
+_export managedDecQuad nativeDecQuadLogB(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -144,8 +137,7 @@ managedDecQuad nativeDecQuadLogB(managedDecQuad value)
     return decQuadToManaged(nativeValue);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadLog10(managedDecQuad value)
+_export managedDecQuad nativeDecQuadLog10(managedDecQuad value)
 {
     decQuad nativeValue;
     decNumber decNumValue;
@@ -165,8 +157,7 @@ managedDecQuad nativeDecQuadLog10(managedDecQuad value)
     return decQuadToManaged(nativeValue);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadAbs(managedDecQuad value)
+_export managedDecQuad nativeDecQuadAbs(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -180,8 +171,7 @@ managedDecQuad nativeDecQuadAbs(managedDecQuad value)
     return decQuadToManaged(nativeValue);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadPlus(managedDecQuad value)
+_export managedDecQuad nativeDecQuadPlus(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -195,8 +185,7 @@ managedDecQuad nativeDecQuadPlus(managedDecQuad value)
     return decQuadToManaged(nativeValue);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadMinus(managedDecQuad value)
+_export managedDecQuad nativeDecQuadMinus(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -210,8 +199,7 @@ managedDecQuad nativeDecQuadMinus(managedDecQuad value)
     return decQuadToManaged(nativeValue);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadAdd(managedDecQuad left, managedDecQuad right)
+_export managedDecQuad nativeDecQuadAdd(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -228,8 +216,7 @@ managedDecQuad nativeDecQuadAdd(managedDecQuad left, managedDecQuad right)
     return decQuadToManaged(nativeLeft);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadSub(managedDecQuad left, managedDecQuad right)
+_export managedDecQuad nativeDecQuadSub(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -246,8 +233,7 @@ managedDecQuad nativeDecQuadSub(managedDecQuad left, managedDecQuad right)
     return decQuadToManaged(nativeLeft);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadMul(managedDecQuad left, managedDecQuad right)
+_export managedDecQuad nativeDecQuadMul(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -264,8 +250,7 @@ managedDecQuad nativeDecQuadMul(managedDecQuad left, managedDecQuad right)
     return decQuadToManaged(nativeLeft);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadDiv(managedDecQuad left, managedDecQuad right)
+_export managedDecQuad nativeDecQuadDiv(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -282,8 +267,7 @@ managedDecQuad nativeDecQuadDiv(managedDecQuad left, managedDecQuad right)
     return decQuadToManaged(nativeLeft);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadRem(managedDecQuad left, managedDecQuad right)
+_export managedDecQuad nativeDecQuadRem(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -300,8 +284,7 @@ managedDecQuad nativeDecQuadRem(managedDecQuad left, managedDecQuad right)
     return decQuadToManaged(nativeLeft);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadRemNear(managedDecQuad left, managedDecQuad right)
+_export managedDecQuad nativeDecQuadRemNear(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -318,8 +301,7 @@ managedDecQuad nativeDecQuadRemNear(managedDecQuad left, managedDecQuad right)
     return decQuadToManaged(nativeLeft);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadMax(managedDecQuad left, managedDecQuad right)
+_export managedDecQuad nativeDecQuadMax(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -336,8 +318,7 @@ managedDecQuad nativeDecQuadMax(managedDecQuad left, managedDecQuad right)
     return decQuadToManaged(nativeLeft);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadMaxMag(managedDecQuad left, managedDecQuad right)
+_export managedDecQuad nativeDecQuadMaxMag(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -354,8 +335,7 @@ managedDecQuad nativeDecQuadMaxMag(managedDecQuad left, managedDecQuad right)
     return decQuadToManaged(nativeLeft);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadMin(managedDecQuad left, managedDecQuad right)
+_export managedDecQuad nativeDecQuadMin(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -372,8 +352,7 @@ managedDecQuad nativeDecQuadMin(managedDecQuad left, managedDecQuad right)
     return decQuadToManaged(nativeLeft);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadMinMag(managedDecQuad left, managedDecQuad right)
+_export managedDecQuad nativeDecQuadMinMag(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -390,8 +369,7 @@ managedDecQuad nativeDecQuadMinMag(managedDecQuad left, managedDecQuad right)
     return decQuadToManaged(nativeLeft);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadPow(managedDecQuad left, managedDecQuad right)
+_export managedDecQuad nativeDecQuadPow(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -416,8 +394,7 @@ managedDecQuad nativeDecQuadPow(managedDecQuad left, managedDecQuad right)
     return decQuadToManaged(nativeLeft);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadFMA(managedDecQuad leftMul, managedDecQuad rightMul, managedDecQuad valueAdd)
+_export managedDecQuad nativeDecQuadFMA(managedDecQuad leftMul, managedDecQuad rightMul, managedDecQuad valueAdd)
 {
     decQuad nativeLeftMul;
     decQuad nativeRightMul;
@@ -438,8 +415,7 @@ managedDecQuad nativeDecQuadFMA(managedDecQuad leftMul, managedDecQuad rightMul,
 
 
 /* decQuad Comparisons */
-DLLEXPORT
-int32_t nativeDecQuadCompare(managedDecQuad left, managedDecQuad right)
+_export int32_t nativeDecQuadCompare(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -459,8 +435,7 @@ int32_t nativeDecQuadCompare(managedDecQuad left, managedDecQuad right)
     return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
 }
 
-DLLEXPORT
-int32_t nativeDecQuadCompareSignal(managedDecQuad left, managedDecQuad right)
+_export int32_t nativeDecQuadCompareSignal(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -477,8 +452,7 @@ int32_t nativeDecQuadCompareSignal(managedDecQuad left, managedDecQuad right)
     return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
 }
 
-DLLEXPORT
-int32_t nativeDecQuadCompareTotal(managedDecQuad left, managedDecQuad right)
+_export int32_t nativeDecQuadCompareTotal(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -495,8 +469,7 @@ int32_t nativeDecQuadCompareTotal(managedDecQuad left, managedDecQuad right)
     return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
 }
 
-DLLEXPORT
-int32_t nativeDecQuadCompareTotalMag(managedDecQuad left, managedDecQuad right)
+_export int32_t nativeDecQuadCompareTotalMag(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -514,8 +487,7 @@ int32_t nativeDecQuadCompareTotalMag(managedDecQuad left, managedDecQuad right)
 }
 
 /* Non-computational comparisons */
-DLLEXPORT
-uint32_t nativeDecQuadIsCanonical(managedDecQuad value)
+_export uint32_t nativeDecQuadIsCanonical(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -527,8 +499,7 @@ uint32_t nativeDecQuadIsCanonical(managedDecQuad value)
     return decQuadIsCanonical(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadIsFinite(managedDecQuad value)
+_export uint32_t nativeDecQuadIsFinite(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -540,8 +511,7 @@ uint32_t nativeDecQuadIsFinite(managedDecQuad value)
     return decQuadIsFinite(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadIsInfinite(managedDecQuad value)
+_export uint32_t nativeDecQuadIsInfinite(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -553,8 +523,7 @@ uint32_t nativeDecQuadIsInfinite(managedDecQuad value)
     return decQuadIsInfinite(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadIsInteger(managedDecQuad value)
+_export uint32_t nativeDecQuadIsInteger(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -566,8 +535,7 @@ uint32_t nativeDecQuadIsInteger(managedDecQuad value)
     return decQuadIsInteger(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadIsNaN(managedDecQuad value)
+_export uint32_t nativeDecQuadIsNaN(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -579,8 +547,7 @@ uint32_t nativeDecQuadIsNaN(managedDecQuad value)
     return decQuadIsNaN(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadIsNegative(managedDecQuad value)
+_export uint32_t nativeDecQuadIsNegative(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -592,8 +559,7 @@ uint32_t nativeDecQuadIsNegative(managedDecQuad value)
     return decQuadIsNegative(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadIsNormal(managedDecQuad value)
+_export uint32_t nativeDecQuadIsNormal(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -605,8 +571,7 @@ uint32_t nativeDecQuadIsNormal(managedDecQuad value)
     return decQuadIsNormal(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadIsSubnormal(managedDecQuad value)
+_export uint32_t nativeDecQuadIsSubnormal(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -618,8 +583,7 @@ uint32_t nativeDecQuadIsSubnormal(managedDecQuad value)
     return decQuadIsSubnormal(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadIsPositive(managedDecQuad value)
+_export uint32_t nativeDecQuadIsPositive(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -631,8 +595,7 @@ uint32_t nativeDecQuadIsPositive(managedDecQuad value)
     return decQuadIsPositive(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadIsSignaling(managedDecQuad value)
+_export uint32_t nativeDecQuadIsSignaling(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -644,8 +607,7 @@ uint32_t nativeDecQuadIsSignaling(managedDecQuad value)
     return decQuadIsSignaling(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadIsSigned(managedDecQuad value)
+_export uint32_t nativeDecQuadIsSigned(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -657,8 +619,7 @@ uint32_t nativeDecQuadIsSigned(managedDecQuad value)
     return decQuadIsSigned(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadIsZero(managedDecQuad value)
+_export uint32_t nativeDecQuadIsZero(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -670,8 +631,7 @@ uint32_t nativeDecQuadIsZero(managedDecQuad value)
     return decQuadIsZero(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadRadix(managedDecQuad value)
+_export uint32_t nativeDecQuadRadix(managedDecQuad value)
 {
     decQuad nativeValue;
     decContext context;
@@ -683,8 +643,7 @@ uint32_t nativeDecQuadRadix(managedDecQuad value)
     return decQuadRadix(&nativeValue);
 }
 
-DLLEXPORT
-uint32_t nativeDecQuadSameQuantum(managedDecQuad left, managedDecQuad right)
+_export uint32_t nativeDecQuadSameQuantum(managedDecQuad left, managedDecQuad right)
 {
     decQuad nativeLeft;
     decQuad nativeRight;
@@ -700,8 +659,7 @@ uint32_t nativeDecQuadSameQuantum(managedDecQuad left, managedDecQuad right)
 }
 
 /* Utilities and conversions */
-DLLEXPORT
-char *nativeDecQuadToString(managedDecQuad value)
+_export char *nativeDecQuadToString(managedDecQuad value)
 {
     char *string = malloc(DECQUAD_String);
     decQuad nativeQuad;
@@ -716,8 +674,7 @@ char *nativeDecQuadToString(managedDecQuad value)
     return string;
 }
 
-DLLEXPORT
-char *nativeDecQuadToEngString(managedDecQuad value)
+_export char *nativeDecQuadToEngString(managedDecQuad value)
 {
     char *string = malloc(DECQUAD_String);
     decQuad nativeQuad;
@@ -732,8 +689,7 @@ char *nativeDecQuadToEngString(managedDecQuad value)
     return string;
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadFromString(char *value)
+_export managedDecQuad nativeDecQuadFromString(char *value)
 {
     decQuad nativeQuad;
     decContext context;
@@ -745,8 +701,7 @@ managedDecQuad nativeDecQuadFromString(char *value)
     return decQuadToManaged(nativeQuad);
 }
 
-DLLEXPORT
-managedDecQuad nativeDecQuadFromInt32(int32_t value)
+_export managedDecQuad nativeDecQuadFromInt32(int32_t value)
 {
     decQuad nativeQuad;
 

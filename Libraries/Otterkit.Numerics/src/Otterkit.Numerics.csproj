@@ -37,12 +37,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="decQuadBindings.*">
+    <Content Include="../build/decQuadBindings.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
 
-    <Content Include="decDoubleBindings.*">
+    <Content Include="../build/decDoubleBindings.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>

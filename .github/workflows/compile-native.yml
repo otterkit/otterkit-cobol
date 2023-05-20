@@ -22,14 +22,14 @@ jobs:
         cd ../../Otterkit.Native/native
         clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o ../build/nativelib.so stackalloc.c
         
-#     - name: GIT Commit Build Files
-#       run: |
-#         git config --global user.name "${{ env.COMMIT_AUTHOR }}"
-#         git config --global user.email "KTSnowy@users.noreply.github.com"
-#         git pull
-#         git add --all
-#         git commit -m "${{ env.COMMIT_MESSAGE }}"
-#         git push
+    - name: GIT Commit Build Files
+      run: |
+        git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+        git config --global user.email "KTSnowy@users.noreply.github.com"
+        git pull
+        git add --all
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git push
 
   compile-macos-x64:
     runs-on: macos-latest
@@ -50,14 +50,14 @@ jobs:
         cd ../../Otterkit.Native/native
         clang -dynamiclib -O2 -Wall -W -o ../build/nativelib.dylib stackalloc.c
         
-#     - name: GIT Commit Build Files
-#       run: |
-#         git config --global user.name "${{ env.COMMIT_AUTHOR }}"
-#         git config --global user.email "KTSnowy@users.noreply.github.com"
-#         git pull
-#         git add --all
-#         git commit -m "${{ env.COMMIT_MESSAGE }}"
-#         git push
+    - name: GIT Commit Build Files
+      run: |
+        git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+        git config --global user.email "KTSnowy@users.noreply.github.com"
+        git pull
+        git add --all
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git push
   
   compile-windows-x64:
     runs-on: windows-latest
@@ -81,10 +81,10 @@ jobs:
         cd ..\..\Otterkit.Native\native
         cl.exe /O2 /LD /OUT:..\build\nativelib.dll stackalloc.c
         
-#     - name: GIT Commit Build Files
-#       run: |
-#         git config --global user.name "${{ env.COMMIT_AUTHOR }}"
-#         git config --global user.email "KTSnowy@users.noreply.github.com"
-#         git add --all
-#         git commit -m "${{ env.COMMIT_MESSAGE }}"
-#         git push
+    - name: GIT Commit Build Files
+      run: |
+        git config --global user.name "${{ env.COMMIT_AUTHOR }}"
+        git config --global user.email "KTSnowy@users.noreply.github.com"
+        git add --all
+        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git push

@@ -18,7 +18,7 @@ public static partial class External
 
         if (Unsafe.IsNullRef(ref signature))
         {
-            ExceptionRegistry.ActivateException("EC-PROGRAM-NOT-FOUND");
+            ExceptionRegistry.ActivateException("EC-PROGRAM-NOT-FOUND"u8);
             return null;
         }
 
@@ -29,7 +29,7 @@ public static partial class External
     {
         var invoke = pointer(out var ret, args);
 
-        if (invoke is false) ExceptionRegistry.ActivateException("EC-PROGRAM-ARG-MISMATCH");
+        if (invoke is false) ExceptionRegistry.ActivateException("EC-PROGRAM-ARG-MISMATCH"u8);
 
         returning = ret;
     }

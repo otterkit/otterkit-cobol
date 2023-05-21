@@ -19,7 +19,7 @@ public static partial class External
             return Resolver(dataItemName, bytes);
         }
 
-        ExceptionRegistry.ActivateException("EC-EXTERNAL-FORMAT-CONFLICT");
+        ExceptionRegistry.ActivateException("EC-EXTERNAL-FORMAT-CONFLICT"u8);
 
         // We should probably crash here...
         return Array.Empty<byte>();

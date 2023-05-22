@@ -1,26 +1,21 @@
 namespace Otterkit.Runtime;
 
-public static class Base
+public class BaseFactory : IUniversal, IBaseFactoryInterface
 {
-    public class Factory : IUniversal, IBaseFactoryInterface
+    public static TActiveClass New<TActiveClass>() where TActiveClass : BaseObject, new()
     {
-        public static TActiveClass New<TActiveClass>()
-            where TActiveClass : Object, new()
-        {
-            var outObject = new TActiveClass();
+        var outObject = new TActiveClass();
 
-            return outObject;
-        }
+        return outObject;
     }
+}
 
-    public class Object : IUniversal, IBaseObjectInterface
+public class BaseObject : IUniversal, IBaseObjectInterface
+{
+    public TActiveClass FactoryObject<TActiveClass>() where TActiveClass: BaseFactory, new()
     {
-        public TActiveClass FactoryObject<TActiveClass>()
-            where TActiveClass: Factory, new()
-        {
-            var outFactory = new TActiveClass();
+        var outFactory = new TActiveClass();
 
-            return outFactory;
-        }
+        return outFactory;
     }
 }

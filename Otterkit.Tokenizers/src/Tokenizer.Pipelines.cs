@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.IO.Pipelines;
+using System.Text;
 using Otterkit.Types;
 
 namespace Otterkit.Tokenizers;
@@ -10,13 +11,20 @@ public static partial class Tokenizer
 
     private static async ValueTask<List<Token>> ReadSourceFile(string sourceFile)
     {
-        using var sourceStream = File.OpenRead(sourceFile);
+        using var stream = File.OpenRead(sourceFile);
 
-        var pipeReader = PipeReader.Create(sourceStream);
+        var reader = PipeReader.Create(stream);
 
-        var readAsync = await pipeReader.ReadAsync();
+        var read = await reader.ReadAsync();
 
-        var buffer = readAsync.Buffer;
+        while (!read.IsCompleted)
+        {
+            read = await reader.ReadAsync();
+
+            reader.AdvanceTo(read.Buffer.Start, read.Buffer.End);
+        }
+
+        var buffer = read.Buffer;
 
         var lineIndex = 1;
 
@@ -31,14 +39,14 @@ public static partial class Tokenizer
 
             ProcessLinebreak(array, length);
 
-            TokenizeLine(tokens, array.AsSpan(0, length), lineIndex);
+            TokenizeLine(tokens, array.AsSpan(0, length + 1), lineIndex);
 
             ArrayPool.Return(array);
 
             lineIndex++;
         }
 
-        pipeReader.AdvanceTo(buffer.End);
+        reader.AdvanceTo(buffer.End);
 
         tokens.Add(new Token("EOF", TokenType.EOF, -5, -5) { Context = TokenContext.IsEOF });
 
@@ -47,13 +55,20 @@ public static partial class Tokenizer
 
     private static async ValueTask<List<Token>> ReadCopybook(string copybookFile)
     {
-        using var copybookStream = File.OpenRead(copybookFile);
+        using var stream = File.OpenRead(copybookFile);
 
-        var pipeReader = PipeReader.Create(copybookStream);
+        var reader = PipeReader.Create(stream);
 
-        var readAsync = await pipeReader.ReadAsync();
+        var read = await reader.ReadAsync();
 
-        var buffer = readAsync.Buffer;
+        while (!read.IsCompleted)
+        {
+            read = await reader.ReadAsync();
+
+            reader.AdvanceTo(read.Buffer.Start, read.Buffer.End);
+        }
+
+        var buffer = read.Buffer;
 
         var lineIndex = 1;
 
@@ -68,14 +83,14 @@ public static partial class Tokenizer
 
             ProcessLinebreak(array, length);
 
-            TokenizeLine(tokens, array.AsSpan(0, length), lineIndex);
+            TokenizeLine(tokens, array.AsSpan(0, length + 1), lineIndex);
 
             ArrayPool.Return(array);
 
             lineIndex++;
         }
 
-        pipeReader.AdvanceTo(buffer.End);
+        reader.AdvanceTo(buffer.End);
 
         return tokens;
     }
@@ -87,9 +102,11 @@ public static partial class Tokenizer
 
         if (lineFeed is not null)
         {
-            line = buffer.Slice(0, lineFeed.Value);
+            var length = lineFeed.Value;
 
-            buffer = buffer.Slice(buffer.GetPosition(1, lineFeed.Value));
+            line = buffer.Slice(0, length);
+
+            buffer = buffer.Slice(buffer.GetPosition(1, length));
 
             return true;
         }
@@ -110,17 +127,17 @@ public static partial class Tokenizer
 
     private static void ProcessLinebreak(Span<byte> line, int length)
     {
-        // We want to remove the CARRIAGE RETURN (CR) and LINE FEED (LF) characters.
-        var carriageReturn = line[length - 2];
-        var lineFeed = line[length - 1];
+        if (length == 0) return;
+        
+        // We want to remove the CARRIAGE RETURN (CR) if present.
+        var carriageReturn = line[length - 1];
 
-        // We'll replace both with spaces.
+        // We'll replace it with a space.
         // UTF-8 SPACE has value 32 (0x20).
 
         // UTF-8 CARRIAGE RETURN (CR) has value 13 (0x0D).
-        if (carriageReturn == 13) carriageReturn = 32;
+        if (carriageReturn == 13) line[length - 1] = 32;
 
-        // UTF-8 LINE FEED (LF) has value 10 (0x0A).
-        if (lineFeed == 10) lineFeed = 32;
+        line[length] = 32;
     }
 }

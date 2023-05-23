@@ -382,11 +382,25 @@ public static partial class EnvironmentDivision
             Optional("TO");
             fileControl = new(fileToken, EntryKind.FileControl);
 
-            Common.IdentifierOrLiteral(TokenType.String);
+            if (CurrentEquals(TokenType.Identifier))
+            {
+                References.LocalName();
+            }
+            else
+            {
+                Literals.String();
+            }
 
             while (CurrentEquals(TokenType.Identifier | TokenType.String))
             {
-                Common.IdentifierOrLiteral(TokenType.String);
+                if (CurrentEquals(TokenType.Identifier))
+                {
+                    References.LocalName();
+                }
+                else
+                {
+                    Literals.String();
+                }
             }
         }
 

@@ -11,7 +11,7 @@ public static partial class Tokenizer
     private static async ValueTask<List<Token>> ReadSourceFile(string sourceFile)
     {
         using var sourceStream = File.OpenRead(sourceFile);
-        
+
         var pipeReader = PipeReader.Create(sourceStream);
 
         var readAsync = await pipeReader.ReadAsync();
@@ -20,31 +20,35 @@ public static partial class Tokenizer
 
         var lineIndex = 1;
 
+        var tokens = CompilerContext.SourceTokens;
+
         while (SourceLineExists(ref buffer, out ReadOnlySequence<byte> line))
         {
-            var lineLength = (int)line.Length;
-            var sharedArray = ArrayPool.Rent(lineLength);
-        
-            line.CopyTo(sharedArray);
-       
-            TokenizeLine(CompilerContext.SourceTokens, sharedArray.AsSpan().Slice(0, lineLength), lineIndex);
-        
-            ArrayPool.Return(sharedArray);
-            
+            var length = (int)line.Length;
+            var array = ArrayPool.Rent(length + 1);
+
+            line.CopyTo(array);
+
+            ProcessLinebreak(array, length);
+
+            TokenizeLine(tokens, array.AsSpan(0, length), lineIndex);
+
+            ArrayPool.Return(array);
+
             lineIndex++;
         }
 
         pipeReader.AdvanceTo(buffer.End);
 
-        CompilerContext.SourceTokens.Add(new Token("EOF", TokenType.EOF, -5, -5){ Context = TokenContext.IsEOF });
+        tokens.Add(new Token("EOF", TokenType.EOF, -5, -5) { Context = TokenContext.IsEOF });
 
-        return CompilerContext.SourceTokens;
+        return tokens;
     }
 
     private static async ValueTask<List<Token>> ReadCopybook(string copybookFile)
     {
         using var copybookStream = File.OpenRead(copybookFile);
-        
+
         var pipeReader = PipeReader.Create(copybookStream);
 
         var readAsync = await pipeReader.ReadAsync();
@@ -53,35 +57,39 @@ public static partial class Tokenizer
 
         var lineIndex = 1;
 
-        List<Token> copybookTokens = new();
+        List<Token> tokens = new();
 
         while (SourceLineExists(ref buffer, out ReadOnlySequence<byte> line))
         {
-            var lineLength = (int)line.Length;
-            var sharedArray = ArrayPool.Rent(lineLength);
-        
-            line.CopyTo(sharedArray);
-        
-            TokenizeLine(copybookTokens, sharedArray.AsSpan().Slice(0, lineLength), lineIndex);
-        
-            ArrayPool.Return(sharedArray);
+            var length = (int)line.Length;
+            var array = ArrayPool.Rent(length + 1);
+
+            line.CopyTo(array);
+
+            ProcessLinebreak(array, length);
+
+            TokenizeLine(tokens, array.AsSpan(0, length), lineIndex);
+
+            ArrayPool.Return(array);
 
             lineIndex++;
         }
 
         pipeReader.AdvanceTo(buffer.End);
 
-        return copybookTokens;
+        return tokens;
     }
 
     private static bool SourceLineExists(ref ReadOnlySequence<byte> buffer, out ReadOnlySequence<byte> line)
     {
-        var positionOfNewLine = buffer.PositionOf((byte)'\n');
+        // UTF-8 LINE FEED (LF) has value 10 (0x0A).
+        var lineFeed = buffer.PositionOf<byte>(10);
 
-        if (positionOfNewLine is not null)
+        if (lineFeed is not null)
         {
-            line = buffer.Slice(0, positionOfNewLine.Value);
-            buffer = buffer.Slice(buffer.GetPosition(1, positionOfNewLine.Value));
+            line = buffer.Slice(0, lineFeed.Value);
+
+            buffer = buffer.Slice(buffer.GetPosition(1, lineFeed.Value));
 
             return true;
         }
@@ -89,13 +97,30 @@ public static partial class Tokenizer
         if (!buffer.IsEmpty)
         {
             line = buffer.Slice(0, buffer.Length);
+
             buffer = buffer.Slice(buffer.End);
 
             return true;
         }
 
         line = ReadOnlySequence<byte>.Empty;
-        
+
         return false;
+    }
+
+    private static void ProcessLinebreak(Span<byte> line, int length)
+    {
+        // We want to remove the CARRIAGE RETURN (CR) and LINE FEED (LF) characters.
+        var carriageReturn = line[length - 2];
+        var lineFeed = line[length - 1];
+
+        // We'll replace both with spaces.
+        // UTF-8 SPACE has value 32 (0x20).
+
+        // UTF-8 CARRIAGE RETURN (CR) has value 13 (0x0D).
+        if (carriageReturn == 13) carriageReturn = 32;
+
+        // UTF-8 LINE FEED (LF) has value 10 (0x0A).
+        if (lineFeed == 10) lineFeed = 32;
     }
 }

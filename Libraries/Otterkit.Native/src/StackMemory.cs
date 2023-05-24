@@ -13,16 +13,6 @@ public unsafe readonly struct StackMemory
     /// <summary>Returns true if the stack pointer is not null</summary>
     public readonly bool Allocated => Pointer is not null;
 
-    public static StackMemory Alloc(ulong length)
-    {
-        return StackAllocator.Alloc(length);
-    }
-
-    public static void Dealloc(StackMemory memory)
-    {
-        StackAllocator.Dealloc(memory);
-    }
-
     public Span<byte> Span
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

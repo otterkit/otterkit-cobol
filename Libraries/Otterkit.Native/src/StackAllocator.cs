@@ -5,8 +5,8 @@ namespace Otterkit.Native;
 public static partial class StackAllocator
 {
     [LibraryImport("nativelib", EntryPoint = "alloc")]
-    internal static partial StackMemory Alloc(ulong length);
+    public static partial StackMemory Alloc(ulong length);
 
     [LibraryImport("nativelib", EntryPoint = "dealloc")]
-    internal static partial void Dealloc(StackMemory memory);
+    public static partial void Dealloc(StackMemory memory);
 }

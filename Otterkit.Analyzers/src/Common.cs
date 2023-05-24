@@ -137,6 +137,8 @@ public static partial class Common
 
     public static void RetryPhrase()
     {
+        if (!CurrentEquals("RETRY")) return;
+        
         var hasFor = false;
 
         Expected("RETRY");
@@ -1919,7 +1921,7 @@ public static partial class Common
 
     public static bool IdentifierOrLiteral()
     {
-        return CurrentEquals(TokenType.Identifier | TokenType.Numeric | TokenType.String | TokenType.HexString | TokenType.Boolean | TokenType.HexBoolean | TokenType.National | TokenType.HexNational);
+        return CurrentEquals(TokenType.Identifier | TokenType.Numeric | TokenType.String | TokenType.HexString | TokenType.Boolean | TokenType.HexBoolean | TokenType.National | TokenType.HexNational | TokenType.Figurative);
     }
 
     public static bool IdentifierOrLiteral(TokenType literalType)

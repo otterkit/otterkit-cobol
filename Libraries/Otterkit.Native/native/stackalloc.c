@@ -20,11 +20,11 @@ typedef struct
     // Byte pointer to the allocated stack memory.
     uint8_t *pointer;
     // Length of the stack memory.
-    size_t length;
+    int32_t length;
     
 } ottrstack_t;
 
-_export ottrstack_t alloc(size_t length)
+_export ottrstack_t alloc(int32_t length)
 {
     // alloc(0) to use default length.
     // We don't want to allocate less than 512KB of stack memory.

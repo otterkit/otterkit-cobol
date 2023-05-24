@@ -1,14 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
-#include <malloc.h>
 
-#ifdef _WIN32
-    #define _export __declspec(dllexport)
-
-#else
-    #define _export
-
-#endif
+#include "common.h"
 
 // compile win-x64: cl.exe /O2 /LD /Fe:..\build\nativelib.dll stackalloc.c
 

@@ -61,6 +61,8 @@ public static class Statements
 
             ScopeTerminator(false);
 
+            if (PeekEquals(-1, ".") && CurrentEquals(TokenType.Identifier) && PeekEquals(1, ".")) continue;
+
             if (!CurrentEquals(TokenContext.IsStatement)) break;
 
             if (CurrentEquals(TokenType.Identifier) && PeekEquals(1, "SECTION")) break;
@@ -1374,11 +1376,8 @@ public static class Statements
         if (Current().Type == TokenType.Identifier)
             References.Identifier();
 
-        else if (Current().Type == TokenType.Numeric)
-            Literals.Numeric();
-
-        else if (Current().Type == TokenType.String)
-            Literals.String();
+        else if (Literals.IsAny())
+            Literals.Any();
 
         Expected("TO");
         if (Current().Type != TokenType.Identifier)
@@ -1815,13 +1814,16 @@ public static class Statements
     {
         Expected("GO");
         Optional("TO");
+
         References.Identifier();
+
         if (CurrentEquals("DEPENDING") || Current().Type == TokenType.Identifier)
         {
             while (CurrentEquals(TokenType.Identifier)) References.Identifier();
 
             Expected("DEPENDING");
             Optional("ON");
+
             References.Identifier();
         }
     }

@@ -1,5 +1,6 @@
 using static Otterkit.Types.TokenHandling;
 using Otterkit.Types;
+using System.Text;
 
 namespace Otterkit.Analyzers;
 
@@ -82,9 +83,14 @@ public static class Literals
             return null;
         }
 
+        var literal = Current();
+
+        // TODO: Also need to handle fixed continuation lines:
+        while (FloatingContinuationLine(Current().Value)) Continue();
+
         Continue();
 
-        return Peek(-1);
+        return literal;
     }
 
     public static Option<Token> Boolean()
@@ -154,5 +160,14 @@ public static class Literals
         Continue();
 
         return Peek(-1);
+    }
+
+    private static bool FloatingContinuationLine(ReadOnlySpan<char> literal)
+    {
+        return literal switch
+        {
+            [.. _, '"' or '\'', '-'] => true,
+            [..] => false
+        };
     }
 }

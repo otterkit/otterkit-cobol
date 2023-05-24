@@ -23,7 +23,7 @@ public static partial class Tokenizer
     **  < numberPattern > : Matches signed and unsigned number literals, including
     **                      decimal numbers that might start with 0. or just .
     */
-    private const string StringPattern = "(X|B|BX|N|NX)*(\"|\')(.*?)(\"|\'|$)";
+    private const string StringPattern = "(X|B|BX|N|NX)*(\"|\')(.*?)(\"-?|\'-?|$)";
     private const string WordsPattern = @"|[a-zA-Z]+([-|_]*[\w0-9]+)*|[0-9]+([-|_][\w0-9]+)+";
     private const string NumberPattern = @"|(\+|-)?\.?[0-9]\d*(\.\d+)?";
     private const string DirectivesPattern = "|^.*(>>[A-Z]*(-[A-Z0-9]*)*).*$";
@@ -49,17 +49,17 @@ public static partial class Tokenizer
 
         foreach (var token in LexerRegex().EnumerateMatches(sourceChars))
         {
-            ReadOnlySpan<char> currentMatch = sourceChars.Slice(token.Index, token.Length);
+            ReadOnlySpan<char> current = sourceChars.Slice(token.Index, token.Length);
 
             if (token.Index < pictureEndIndex) continue;
 
-            if (currentMatch.Contains(">>", StringComparison.OrdinalIgnoreCase))
+            if (current.Contains(">>", StringComparison.OrdinalIgnoreCase))
             {
-                PreprocessDirective(currentMatch, lineIndex);
+                PreprocessDirective(current, lineIndex);
                 continue;
             }
 
-            if (IsPictureNext && !currentMatch.Equals("IS", StringComparison.OrdinalIgnoreCase))
+            if (IsPictureNext && !current.Equals("IS", StringComparison.OrdinalIgnoreCase))
             {
                 var temporary = sourceChars.Slice(token.Index, sourceChars.Length - token.Index);
 
@@ -88,29 +88,40 @@ public static partial class Tokenizer
                 pictureEndIndex = pictureChars.Length + token.Index;
 
                 IsPictureNext = false;
+
                 continue;
             }
 
-            IsPictureNext = currentMatch[0] is 'P' or 'p' 
-                && (currentMatch.Equals("PIC", StringComparison.OrdinalIgnoreCase)
-                || currentMatch.Equals("PICTURE", StringComparison.OrdinalIgnoreCase));
+            IsPictureNext = IsPictureNext || current[0] is 'P' or 'p' && (CurrentEquals(current, "PIC") || CurrentEquals(current, "PICTURE"));
 
-            TokenType type = currentMatch switch
+            TokenType type = current switch
             {
-                ['"' or '\'', .. _, '"' or '\'',] => TokenType.String,
-                ['X' or 'x', '"' or '\'', .. _, '"' or '\'',] => TokenType.HexString,
-                ['B' or 'b', '"' or '\'', .. _, '"' or '\'',] => TokenType.Boolean,
-                ['B' or 'B', 'X' or 'x', '"' or '\'', .. _, '"' or '\'',] => TokenType.HexBoolean,
+                ['"' or '\'', .. _, '"' or '\'', '-'] or
+                ['"' or '\'', .. _, '"' or '\''] or
+                ['"' or '\'', .. _] => TokenType.String,
+
+                ['X' or 'x', '"' or '\'', .. _, '"' or '\'', '-'] or
+                ['X' or 'x', '"' or '\'', .. _, '"' or '\''] or
+                ['X' or 'x', '"' or '\'', .. _] => TokenType.HexString,
+
+                ['B' or 'b', '"' or '\'', .. _, '"' or '\'', '-'] or
+                ['B' or 'b', '"' or '\'', .. _, '"' or '\''] or
+                ['B' or 'b', '"' or '\'', .. _] => TokenType.Boolean,
+
+                ['B' or 'B', 'X' or 'x', '"' or '\'', .. _, '"' or '\'', '-'] or
+                ['B' or 'B', 'X' or 'x', '"' or '\'', .. _, '"' or '\''] or
+                ['B' or 'B', 'X' or 'x', '"' or '\'', .. _] => TokenType.HexBoolean,
+
                 ['N' or 'n', '"' or '\'', .. _, '"' or '\'',] => TokenType.National,
+                
                 ['N' or 'n', 'X' or 'x', '"' or '\'', .. _, '"' or '\'',] => TokenType.HexNational,
+
                 [..] => TokenType.None
             };
 
             if (type is not TokenType.None)
             {
-                PreprocessStringLiteral(type, currentMatch, out var preprocessed);
-
-                Token stringLiteral = new(new string(preprocessed), type)
+                Token stringLiteral = new(new string(current), type)
                 {
                     Line = lineIndex,
                     Column = token.Index + 1,
@@ -118,10 +129,11 @@ public static partial class Tokenizer
                 };
 
                 sourceTokens.Add(stringLiteral);
+
                 continue;
             }
 
-            Token tokenized = new(new string(currentMatch), type)
+            Token tokenized = new(new string(current), type)
             {
                 Line = lineIndex,
                 Column = token.Index + 1,
@@ -132,45 +144,9 @@ public static partial class Tokenizer
         }
     }
 
-    private static void PreprocessStringLiteral(TokenType type, ReadOnlySpan<char> chars, out ReadOnlySpan<char> preprocessed)
+    private static bool CurrentEquals(ReadOnlySpan<char> match, ReadOnlySpan<char> value)
     {
-        if (type is TokenType.String)
-        {
-            preprocessed = chars.Slice(1, chars.Length - 2);
-            return;
-        }
-
-        if (type is TokenType.HexString)
-        {
-            preprocessed = chars.Slice(2, chars.Length - 3);
-            return;
-        }
-
-        if (type is TokenType.Boolean)
-        {
-            preprocessed = chars.Slice(2, chars.Length - 3);
-            return;
-        }
-
-        if (type is TokenType.HexBoolean)
-        {
-            preprocessed = chars.Slice(3, chars.Length - 4);
-            return;
-        }
-
-        if (type is TokenType.National)
-        {
-            preprocessed = chars.Slice(2, chars.Length - 3);
-            return;
-        }
-
-        if (type is TokenType.HexNational)
-        {
-            preprocessed = chars.Slice(3, chars.Length - 4);
-            return;
-        }
-
-        preprocessed = new ReadOnlySpan<char>();
+        return match.Equals(value, StringComparison.OrdinalIgnoreCase);
     }
 
     [GeneratedRegex(AllPatterns, RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]

@@ -5,10 +5,12 @@ namespace Otterkit.Analyzers;
 
 public static partial class DataDivision
 {
-    private static HashSet<char> SymbolsUsed = new();
+    private static readonly HashSet<char> SymbolsUsed = new();
 
     public static bool ParsePictureString(ReadOnlySpan<char> picture)
     {
+        const string invalidPictureMessage = "Invalid picture clause character string.";
+        
         var isAfterDecimalPoint = false;
 
         var validPicture = true;
@@ -20,9 +22,7 @@ public static partial class DataDivision
             if (character is 'S' && !SymbolsUsed.IsEmpty())
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
-                    Invalid picture clause character string.
-                    """)
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, invalidPictureMessage)
                 .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbol 'S' must be the first symbol of the picture string.
@@ -35,9 +35,7 @@ public static partial class DataDivision
             if(character is 'N' && SymbolsUsed.ContainsAny("9AXSVP1E"))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
-                    Invalid picture clause character string.
-                    """)
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, invalidPictureMessage)
                 .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbol 'N' must not follow any symbols other than 'N'.
@@ -50,9 +48,7 @@ public static partial class DataDivision
             if(character is '1' && SymbolsUsed.ContainsAny("9AXSVPNE"))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
-                    Invalid picture clause character string.
-                    """)
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, invalidPictureMessage)
                 .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbol '1' must not follow any symbols other than '1'.
@@ -65,9 +61,7 @@ public static partial class DataDivision
             if(character is 'A' or 'X' && SymbolsUsed.ContainsAny("SVP1NE"))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
-                    Invalid picture clause character string.
-                    """)
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, invalidPictureMessage)
                 .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbols 'A' and 'X' may only follow the symbols '9A' or 'X'.
@@ -80,9 +74,7 @@ public static partial class DataDivision
             if (character is 'V' && SymbolsUsed.Contains('V'))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
-                    Invalid picture clause character string.
-                    """)
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, invalidPictureMessage)
                 .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbol 'V' may only appear once in the same picture string.
@@ -95,9 +87,7 @@ public static partial class DataDivision
             if (character is 'V' or 'P' && SymbolsUsed.ContainsAny("AX1NE"))
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
-                    Invalid picture clause character string.
-                    """)
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, invalidPictureMessage)
                 .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbols 'V' and 'P' must not follow the symbols 'AX1N' or 'E'.
@@ -112,9 +102,7 @@ public static partial class DataDivision
             if (character is 'P' && SymbolsUsed.ContainsAny("9P") && isAfterDecimalPoint)
             {
                 ErrorHandler
-                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, """
-                    Invalid picture clause character string.
-                    """)
+                .Build(ErrorType.Analyzer, ConsoleColor.Red, 20, invalidPictureMessage)
                 .WithSourceLine(Peek(-1))
                 .WithNote("""
                     Symbol 'P' or a string of 'P' may only appear once in a picture clause.

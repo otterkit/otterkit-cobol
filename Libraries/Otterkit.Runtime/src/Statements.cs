@@ -227,7 +227,7 @@ public static class Statement
     public static void CONTINUE(int milliseconds)
     {
         if (milliseconds <= 0) return;
-        
+
         Thread.Sleep(milliseconds);
     }
 
@@ -362,7 +362,7 @@ public static class Statement
         else
         {
             compute = d128Into / d128Value;
-        }	
+        }
 
         using (var temporary = Functions.HIGHEST_ALGEBRAIC(giving))
         {
@@ -418,10 +418,8 @@ public static class Statement
         // GOBACK is equivalent to C#'s return statement with additional features
     }
 
-    public static void IF()
-    {
-        // TODO: Implement IF
-    }
+    // Implemented in the COBOL code generator
+    public static void IF() { }
 
     public static void INITIALIZE()
     {
@@ -452,8 +450,8 @@ public static class Statement
         // TODO: Implement MERGE
     }
 
-    public static void MOVE<TFrom, TTo>(TFrom variable, TTo to) 
-        where TFrom : ICOBOLType 
+    public static void MOVE<TFrom, TTo>(TFrom variable, TTo to)
+        where TFrom : ICOBOLType
         where TTo : ICOBOLType
     {
         to.Bytes = variable.Bytes;
@@ -628,7 +626,7 @@ public static class Statement
         }
 
         u8Console.Write(u8Text.Green, "Normal termination with status: "u8);
-        
+
         u8Console.WriteLine(status);
 
         Environment.Exit(0);

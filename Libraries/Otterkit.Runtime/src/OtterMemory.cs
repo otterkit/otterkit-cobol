@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 
 namespace Otterkit.Runtime;
 
-public readonly struct OtterMemory
+public class OtterMemory
 {
-    internal readonly byte[] Memory;
+    private readonly byte[] Memory;
     public readonly int Length;
 
     public OtterMemory()

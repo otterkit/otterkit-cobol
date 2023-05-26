@@ -5,7 +5,7 @@ using Otterkit.Native;
 
 namespace Otterkit.Runtime;
 
-public static class Statements
+public static class Statement
 {
     private static readonly ArrayPool<byte> Buffer = ArrayPool<byte>.Shared;
     private static readonly Encoding Encoding = Encoding.UTF8;

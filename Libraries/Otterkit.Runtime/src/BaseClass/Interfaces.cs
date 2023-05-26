@@ -1,11 +1,11 @@
 namespace Otterkit.Runtime;
 
-public interface IBaseFactoryInterface
+public interface IBaseFactory
 {
-    static abstract TActiveClass New<TActiveClass>() where TActiveClass : BaseObject, new();
+    static abstract T New<T>() where T : BaseObject, new();
 }
 
-public interface IBaseObjectInterface
+public interface IBaseObject
 {
-    TActiveClass FactoryObject<TActiveClass>() where TActiveClass: BaseFactory, new();
+    T FactoryObject<T>() where T: BaseFactory, new();
 }

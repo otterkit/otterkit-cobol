@@ -13,33 +13,17 @@ public static class Literals
 
     public static Option<Token> Any()
     {
-        if (CurrentEquals(TokenType.String | TokenType.HexString))
+        return Current().Type switch
         {
-            return Literals.String();
-        }
-
-        if (CurrentEquals(TokenType.National | TokenType.HexNational))
-        {
-            return Literals.National();
-        }
-
-        if (CurrentEquals(TokenType.Boolean | TokenType.HexBoolean))
-        {
-            return Literals.Boolean();
-        }
-
-        if (CurrentEquals(TokenType.Numeric))
-        {
-            return Literals.Numeric();
-        }
-
-        if (CurrentEquals(TokenType.Figurative))
-        {
-            return Literals.Figurative();
-        }
-
-        // Return empty Option<Token> if no literal is found.
-        return null;
+            TokenType.String or TokenType.HexString => String(),
+            TokenType.National or TokenType.HexNational => National(),
+            TokenType.Boolean or TokenType.HexBoolean => Boolean(),
+            TokenType.Numeric => Numeric(),
+            TokenType.Figurative => Figurative(),
+            
+            // Return empty Option<Token> if no literal is found.
+            _ => null
+        };
     }
 
     public static Option<Token> Numeric()

@@ -1,5 +1,7 @@
 ## compile win-x64: 
 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+
 cl.exe /O2 /LD /Fe:..\build\nativelib.dll stackalloc.c u8console.c
 
 ## compile linux-x64: 

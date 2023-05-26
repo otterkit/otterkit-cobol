@@ -17,3 +17,8 @@ _export void writeln(const char *string)
 
     fputs(RESET_LF, stdout);
 }
+
+_export void readln(char *buffer, int length)
+{
+    fgets(buffer, length, stdin);
+}

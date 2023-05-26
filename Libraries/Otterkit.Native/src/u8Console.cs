@@ -54,9 +54,20 @@ public static unsafe partial class u8Console
         }
     }
 
+    public static void ReadLine(Span<byte> destination)
+    {
+        fixed (byte* pointer = destination)
+        {
+            Readln(pointer, 4096);
+        }
+    }
+
     [LibraryImport("nativelib", EntryPoint = "write")]
     private static partial void Write(byte* _string);
 
     [LibraryImport("nativelib", EntryPoint = "writeln")]
     private static partial void Writeln(byte* _string);
+
+    [LibraryImport("nativelib", EntryPoint = "writeln")]
+    private static partial void Readln(byte* buffer, int length);
 }

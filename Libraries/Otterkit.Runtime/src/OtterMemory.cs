@@ -3,10 +3,10 @@ using System.Runtime.InteropServices;
 
 namespace Otterkit.Runtime;
 
-public readonly struct OtterMemory : IDisposable
+public readonly struct OtterMemory
 {
     internal readonly byte[] Memory;
-    public int Length { get; init; }
+    public readonly int Length;
 
     public OtterMemory()
     {
@@ -18,7 +18,7 @@ public readonly struct OtterMemory : IDisposable
     {
         if (length < 0) throw new ArgumentOutOfRangeException(nameof(length), "Cannot allocate less than 0 bytes.");
 
-        Memory = OtterPool.Rent(length);
+        Memory = new byte[length];
         Length = length;
     }
 
@@ -54,9 +54,4 @@ public readonly struct OtterMemory : IDisposable
     public bool TryCopyTo(Span<byte> destination) => Span.TryCopyTo(destination);
 
     public byte[] FetchArray() => Memory;
-
-    public void Dispose()
-    {
-        OtterPool.Return(Memory);
-    }
 }

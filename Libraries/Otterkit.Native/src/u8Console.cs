@@ -68,6 +68,6 @@ public static unsafe partial class u8Console
     [LibraryImport("nativelib", EntryPoint = "writeln")]
     private static partial void Writeln(byte* _string);
 
-    [LibraryImport("nativelib", EntryPoint = "writeln")]
+    [LibraryImport("nativelib", EntryPoint = "readln")]
     private static partial void Readln(byte* buffer, int length);
 }

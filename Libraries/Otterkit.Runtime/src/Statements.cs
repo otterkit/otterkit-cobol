@@ -452,10 +452,11 @@ public static class Statement
         // TODO: Implement MERGE
     }
 
-    public static void MOVE()
+    public static void MOVE<TFrom, TTo>(TFrom variable, TTo to) 
+        where TFrom : ICOBOLType 
+        where TTo : ICOBOLType
     {
-        // TODO: Implement MOVE
-        // Move data between variables and assign values to variables
+        to.Bytes = variable.Bytes;
     }
 
     public static bool MULTIPLY(Numeric value, Span<Numeric> returning)

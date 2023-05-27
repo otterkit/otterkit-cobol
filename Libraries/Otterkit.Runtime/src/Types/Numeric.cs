@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text;
 using Otterkit.Numerics;
 
@@ -5,39 +6,29 @@ namespace Otterkit.Runtime;
 
 public readonly struct Numeric : ICOBOLType, INumeric, IComparable<Numeric>
 {
-    public readonly Memory<byte> Memory;
+    public readonly OtterMemory Memory;
     public readonly int Offset;
 
-    public readonly (int Integer, int Fractional) Length { get; init; }
-
+    public readonly byte Extra { get; init; }
+    public readonly byte Integer { get; init; }
+    public readonly byte Fractional { get; init; }
     public readonly bool IsInteger { get; init; }
     public readonly bool IsSigned { get; init; }
-    public readonly bool IsNegative
-    {
-        get => Memory.Span[0] is 45;
-    }
+    public readonly bool IsNegative => Memory.Span[0] is 45;
 
-    public Numeric(ReadOnlySpan<byte> value, Memory<byte> memory, int offset, int integer, int fractional)
+    public Numeric(ReadOnlySpan<byte> value, OtterMemory memory, int offset, byte integer, byte fractional)
     {
         Offset = offset;
-        Length = (integer, fractional);
+
+        Integer = integer;
+        Fractional = fractional;
 
         IsInteger = fractional == 0;
         IsSigned = value[0] is 43 or 45;
 
-        if (fractional == 0)
-        {
-            int signedSpace = IsSigned ? 1 : 0;
-            Memory = memory.Slice(offset, integer + signedSpace);
-        }
+        Extra = SignBytes();
 
-        if (fractional > 0)
-        {
-            int signedSpace = IsSigned ? 2 : 1;
-            Memory = memory.Slice(offset, integer + fractional + signedSpace);
-        }
-
-        Memory.Span.Fill(48);
+        Memory = memory;
 
         if (IsSigned)
         {
@@ -48,95 +39,122 @@ public readonly struct Numeric : ICOBOLType, INumeric, IComparable<Numeric>
         Format(value);
     }
 
-    public Numeric(Memory<byte> memory, int offset, int integer, int fractional, bool isSigned)
+    public Numeric(OtterMemory memory, int offset, byte integer, byte fractional, bool isSigned)
     {
         Offset = offset;
-        Length = (integer, fractional);
+
+        Integer = integer;
+        Fractional = fractional;
 
         IsSigned = isSigned;
         IsInteger = fractional == 0;
 
-        if (fractional == 0)
-        {
-            int signedSpace = isSigned ? 1 : 0;
-            Memory = memory.Slice(offset, integer + signedSpace);
-        }
+        Extra = SignBytes();
 
-        if (fractional > 0)
-        {
-            int signedSpace = isSigned ? 2 : 1;
-            Memory = memory.Slice(offset, integer + fractional + signedSpace);
-        }
+        Memory = memory;
+    }
+
+    private Span<byte> Span => Memory.Span[Offset..(Extra + Integer + Fractional)];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private byte SignBytes()
+    {
+        if (Fractional == 0 && IsSigned) return 1;
+
+        if (Fractional == 0 && !IsSigned) return 0;
+
+        if (IsSigned) return 2;
+
+        return 1;
     }
 
     private void Format(ReadOnlySpan<byte> bytes, bool isSigned = false)
     {
-        var (integer, fractional) = Length;
+        var integer = Integer;
+        var fractional = Fractional;
 
-        Span<byte> formatted = stackalloc byte[Memory.Length];
+        var memoryLength = Span.Length;
+
+        Span<byte> formatted = stackalloc byte[memoryLength];
+
         formatted.Fill(48);
 
-        int indexOfDecimal = bytes.IndexOf("."u8);
+        var indexOfDecimal = bytes.IndexOf("."u8);
+
+        var length = bytes.Length;
 
         if (!IsInteger && indexOfDecimal < 0)
         {
-            indexOfDecimal = bytes.Length;
+            indexOfDecimal = length;
+
             formatted[integer + (IsSigned ? 1 : 0)] = 46;
         }
 
-        int startIndex;
+        int start;
+
         if (!IsInteger || indexOfDecimal > -1)
         {
-            startIndex = Math.Max(0, indexOfDecimal - integer);
+            var value = indexOfDecimal - integer;
+
+            start = 0 >= value ? 0 : value;
         }
         else
         {
-            startIndex = Math.Max(0, bytes.Length - integer);
+            var value = length - integer;
+
+            start = 0 >= value ? 0 : value;
         }
 
-        int endIndex;
+        int end;
+
         if (!IsInteger)
         {
-            endIndex = Math.Min(bytes.Length - startIndex, integer + fractional + 1);
+            var left = length - start;
+            var right = integer + fractional + 1;
+
+            end = left <= right ? left : right;
         }
         else
         {
-            endIndex = indexOfDecimal < 0
-            ? Math.Min(integer, bytes.Length)
-            : Math.Min(integer, indexOfDecimal);
+            end = indexOfDecimal < 0
+            ? integer <= length 
+                ? integer 
+                : length
+            : integer <= indexOfDecimal 
+                ? integer 
+                : indexOfDecimal;
         }
 
         int offset;
 
         if (indexOfDecimal < 0)
         {
-            offset = Math.Max(0, Memory.Length - bytes.Length);
+            var value = memoryLength - length;
+
+            offset = 0 >= value ? 0 : value;
         }
         else
         {
-            offset = Math.Max(0, integer - indexOfDecimal);
+            var value = integer - indexOfDecimal;
+
+            offset = 0 >= value ? 0 : value;
         }
 
-        if (isSigned)
-        {
-            offset++;
-        }
+        if (isSigned) offset++;
 
-        endIndex += startIndex;
+        end += start;
 
-        bytes[startIndex..endIndex].CopyTo(formatted[offset..]);
+        bytes[start..end].CopyTo(formatted[offset..]);
 
-        int indexOfSign = formatted.IndexOfAny("+-"u8);
-        if (indexOfSign > -1) formatted[indexOfSign] = 48;
+        int sign = formatted.IndexOfAny("+-"u8);
 
-        if (!isSigned)
-        {
-            formatted.CopyTo(Memory.Span);
-            return;
-        }
+        if (sign > -1) formatted[sign] = 48;
 
-        formatted.CopyTo(Memory.Span);
-        Memory.Span[0] = (byte)(IsNegative ? 45 : 43);
+        formatted.CopyTo(Span);
+
+        if (!isSigned) return;
+
+        Memory.Span[0] = bytes[0];
     }
 
     private void FormatSigned(ReadOnlySpan<byte> bytes)
@@ -244,7 +262,7 @@ public readonly struct Numeric : ICOBOLType, INumeric, IComparable<Numeric>
     {
         get
         {
-            return Memory.Span;
+            return Span;
         }
         set
         {
@@ -262,7 +280,7 @@ public readonly struct Numeric : ICOBOLType, INumeric, IComparable<Numeric>
     {
         get
         {
-            return Encoding.UTF8.GetString(Memory.Span);
+            return Encoding.UTF8.GetString(Span);
         }
     }
 }

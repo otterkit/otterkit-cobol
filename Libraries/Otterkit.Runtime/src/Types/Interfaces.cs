@@ -8,7 +8,9 @@ public interface ICOBOLType
 
 public interface INumeric
 {
-    (int Integer, int Fractional) Length { get; init; }
+    byte Extra { get; init; }
+    byte Integer { get; init; }
+    byte Fractional { get; init; }
 
     bool IsInteger { get; init; }
     bool IsSigned { get; init; }

@@ -240,7 +240,7 @@ public static class Functions
 
         String date_stamp = date_object.ToString("yyyyMMdd");
 
-        Numeric output = new(Encoding.UTF8.GetBytes(date_stamp), new byte[8], 8, 0, 0);
+        Numeric output = new(Encoding.UTF8.GetBytes(date_stamp), new(8), 8, 0, 0);
 
         return output;
     }
@@ -272,7 +272,7 @@ public static class Functions
 
         String date_stamp = date_object.ToString("yyyy" + day_of_year);
 
-        Numeric output = new(Encoding.UTF8.GetBytes(date_stamp), new byte[7], 7, 0, 0);
+        Numeric output = new(Encoding.UTF8.GetBytes(date_stamp), new(7), 7, 0, 0);
 
         return output;
     }
@@ -458,7 +458,7 @@ public static class Functions
 
     public static Temporary FRACTION_PART<T>(T argument) where T : ICOBOLType, INumeric
     {
-        var (integer, fraction) = argument.Length;
+        var (integer, fraction) = (argument.Integer, argument.Fractional);
 
         Span<byte> FractionPart = stackalloc byte[2 + fraction];
 
@@ -477,7 +477,7 @@ public static class Functions
 
     public static Temporary HIGHEST_ALGEBRAIC<T>(T argument) where T : ICOBOLType, INumeric
     {
-        var (integer, fraction) = argument.Length;
+        var (integer, fraction) = (argument.Integer, argument.Fractional);
 
         Span<byte> HighestAlgebraic = stackalloc byte[integer + fraction + 2];
 
@@ -595,7 +595,7 @@ public static class Functions
 
     public static Temporary LOWEST_ALGEBRAIC<T>(T argument) where T : ICOBOLType, INumeric
     {
-        var (integer, fraction) = argument.Length;
+        var (integer, fraction) = (argument.Integer, argument.Fractional);
 
         Span<byte> LowestAlgebraic = stackalloc byte[integer + fraction + 2];
 
@@ -620,7 +620,7 @@ public static class Functions
 
     public static Numeric MAX(Numeric[] argument)
     {
-        Numeric max = new Numeric("-9999999999999999999999999999999999"u8, new byte[35], 34, 0, 0);
+        Numeric max = new Numeric("-9999999999999999999999999999999999"u8, new(35), 34, 0, 0);
 
         foreach (Numeric element in argument)
         {
@@ -652,7 +652,7 @@ public static class Functions
     public static void MEDIAN(Numeric[] argument)
     {
         Numeric[] copy = new Numeric[argument.Length];
-        Numeric two = new Numeric("2"u8, new byte[1], 1, 0, 0);
+        Numeric two = new Numeric("2"u8, new(1), 1, 0, 0);
         // Numeric result;
         Array.Copy(argument, copy, argument.Length);
         Array.Sort(copy);
@@ -677,7 +677,7 @@ public static class Functions
 
     public static void MIDRANGE(Numeric[] argument)
     {
-        Numeric two = new Numeric("2"u8, new byte[1], 1, 0, 0);
+        Numeric two = new Numeric("2"u8, new(1), 1, 0, 0);
         Numeric min = MIN(argument);
         Numeric max = MAX(argument);
 
@@ -687,7 +687,7 @@ public static class Functions
 
     public static Numeric MIN(Numeric[] argument)
     {
-        Numeric min = new Numeric("9999999999999999999999999999999999"u8, new byte[34], 34, 0, 0);
+        Numeric min = new Numeric("9999999999999999999999999999999999"u8, new(34), 34, 0, 0);
         foreach (Numeric element in argument)
         {
             if (element < min)

@@ -1,34 +1,45 @@
+using static Otterkit.Types.TokenHandling;
 using Otterkit.Types;
 
 namespace Otterkit.CodeGenerators;
 
 public static class CodeGenerator
 {
-    private static string ProgramEntryPoint = string.Empty;
+    private static string Main = string.Empty;
+    private static bool HasHeader = false;
 
     public static void Generate(List<Token> tokens, string fileName)
     {
         ProgramBuilder compiled = new();
-        int index = 0;
+        
+        if (!HasHeader)
+        {
+            compiled.AppendHeader();
 
+            HasHeader = true;
+        }
+        
         while (Current().Scope is not TokenScope.EnvironmentDivision and not TokenScope.DataDivision and not TokenScope.ProcedureDivision)
         {
             if (CurrentEquals("PROGRAM-ID"))
             {
-                compiled.DefineIdentification(Lookahead(2).Value);
-                if (ProgramEntryPoint == string.Empty)
-                {
-                    ProgramEntryPoint = compiled.Identification;
-                }
+                compiled.FormatIdentification(Peek(2));
+
+                if (Main == string.Empty) Main = compiled.Identification.Unwrap();
             }
 
             if (CurrentEquals("FUNCTION-ID"))
-                compiled.DefineIdentification(Lookahead(2).Value);
+            {
+                compiled.FormatIdentification(Peek(2));
+            }
 
             Continue();
         }
 
+        compiled.AppendIdentification();
+
         SourceScope scope = SourceScope.WorkingStorage;
+        
         while (Current().Scope is not TokenScope.ProcedureDivision)
         {
             if (CurrentEquals("WORKING-STORAGE"))
@@ -37,39 +48,43 @@ public static class CodeGenerator
             if (CurrentEquals("LOCAL-STORAGE"))
                 scope = SourceScope.LocalStorage;
 
-            if (Current().Type == TokenType.Numeric && (CurrentEquals("01") || CurrentEquals("1")) && !LookaheadEquals(2, "CONSTANT"))
+            if (Current().Type == TokenType.Numeric && (CurrentEquals("01") || CurrentEquals("1")) && !PeekEquals(2, "CONSTANT"))
             {
-                DataItemBuilder Record = new(compiled, Continue, Current, Lookahead);
-                Record.BuildDataItem(scope);
+                VariableBuilder variable = new(compiled);
+
+                variable.BuildVariable(scope);
             }
 
-            if (Current().Type == TokenType.Numeric && LookaheadEquals(2, "CONSTANT"))
+            if (Current().Type == TokenType.Numeric && PeekEquals(2, "CONSTANT"))
             {
-                DataItemBuilder Constant = new(compiled, Continue, Current, Lookahead);
-                Constant.BuildDataItem(scope);
+                VariableBuilder Constant = new(compiled);
+                Constant.BuildVariable(scope);
             }
 
             if (Current().Type == TokenType.Numeric && Current().Value.Equals("77"))
             {
-                DataItemBuilder SevenSeven = new(compiled, Continue, Current, Lookahead);
-                SevenSeven.BuildDataItem(scope);
+                VariableBuilder SevenSeven = new(compiled);
+                SevenSeven.BuildVariable(scope);
             }
 
             Continue();
         }
 
+        compiled.InitializeProcedure();
+
         while (!CurrentEquals("EOF"))
         {
-            StatementBuilder statement = new(compiled, Continue, Current, Lookahead);
+            StatementBuilder statement = new(compiled);
+
             statement.BuildStatement();
 
             if (!CurrentEquals("EOF"))
             {
-                if (CurrentEquals("END") && (LookaheadEquals(1, "PROGRAM") || LookaheadEquals(1, "FUNCTION")) && !LookaheadEquals(4, "EOF"))
+                if (CurrentEquals("END") && (PeekEquals(1, "PROGRAM") || PeekEquals(1, "FUNCTION")) && !PeekEquals(4, "EOF"))
                 {
                     Continue(2);
-                    List<Token> NextProgram = tokens.GetRange(index, tokens.Count - index - 1);
-                    Generate(NextProgram, fileName);
+
+                    Generate(tokens, fileName);
                     break;
                 }
             }
@@ -77,49 +92,13 @@ public static class CodeGenerator
             Continue();
         }
 
-        compiled.CompileHeader();
-        compiled.CompileIdentification();
-        compiled.CompileData();
-        compiled.CompileProcedure();
+        compiled.FinalizeProcedure();
 
-        Directory.CreateDirectory(".otterkit");
-        File.WriteAllText($".otterkit/OtterkitExport/{compiled.UnformattedID}.cs", compiled.ExportCompiled());
-        string startupCode = $"""
-        using OtterkitLibrary;
-        using OtterkitExport;
+        File.WriteAllText($".otterkit/Artifacts/Source.cs", compiled.ExportCompiled());
 
-        {ProgramEntryPoint} startup = new();
-        startup.Procedure();
-        """;
+        string startupCode = $"using Otterkit.Runtime;using OtterkitExport;{Main}.Procedure();";
 
-        File.WriteAllText(".otterkit/OtterkitExport/Startup.cs", startupCode);
-
-        // Generator helper methods.
-        Token Lookahead(int amount)
-        {
-            return tokens[index + amount];
-        }
-
-        bool LookaheadEquals(int lookahead, string stringToCompare)
-        {
-            return Lookahead(lookahead).Value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
-        }
-
-        Token Current()
-        {
-            return tokens[index];
-        }
-
-        bool CurrentEquals(string stringToCompare)
-        {
-            return Current().Value.Equals(stringToCompare, StringComparison.OrdinalIgnoreCase);
-        }
-
-        void Continue(int amount = 1)
-        {
-            index += amount;
-            return;
-        }
+        File.WriteAllText(".otterkit/Artifacts/Main.cs", startupCode);
     }
 
 }

@@ -136,7 +136,7 @@ public static partial class DataDivision
 
             if (character is '(')
             {
-                // var start = index;
+                index++;
 
                 while (picture[index] != ')')
                 {

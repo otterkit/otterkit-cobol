@@ -163,6 +163,25 @@ public partial class DataEntry : AbstractEntry
         return picture;
     }
 
+    public Token FetchValue()
+    {
+        var storedIndex = SetupClauseFetch(DataClause.Value);
+
+        while (!CurrentEquals("VALUE VALUES"))
+        {
+            Continue();
+        }
+
+        Continue();
+        Optional("IS");
+
+        var value = Current();
+
+        TokenHandling.Index = storedIndex;
+
+        return value;
+    }
+
     private int SetupClauseFetch(DataClause clauseType)
     {
         if (!this[clauseType])

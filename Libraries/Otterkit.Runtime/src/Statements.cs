@@ -236,7 +236,7 @@ public static class Statement
         // TODO: Implement DELETE
     }
 
-    public static void DISPLAY(string upon, bool advancing, ReadOnlySpan<byte> bytes)
+    public static void DISPLAY(ReadOnlySpan<byte> bytes, string upon, bool advancing)
     {
         switch (upon)
         {

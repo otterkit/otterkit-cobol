@@ -18,6 +18,7 @@ public enum BuildType
     PrintSymbols,
     BuildOnly,
     BuildAndRun,
+    GenerateOnly,
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]

@@ -95,6 +95,11 @@ public static class Otterkit
                         CompilerOptions.Mode = BuildType.PrintTokens;
                         break;
 
+                    case "-g":
+                    case "--generate":
+                        CompilerOptions.Mode = BuildType.GenerateOnly;
+                        break;
+
                     case "-r":
                     case "--run":
                         CompilerOptions.Mode = BuildType.BuildAndRun;
@@ -164,6 +169,13 @@ public static class Otterkit
             }
 
             if (!ErrorHandler.HasOccurred) ErrorHandler.SuccessfulParse();
+        }
+
+        TokenHandling.Index = 0;
+
+        if (CompilerOptions.Mode is BuildType.GenerateOnly)
+        {
+            CodeGenerator.Generate(analized, CompilerOptions.Main);
         }
 
         if (CompilerOptions.Mode is BuildType.BuildOnly)

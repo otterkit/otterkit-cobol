@@ -445,39 +445,40 @@ public static partial class DataDivision
         sourceUnit.DataNames.Add(itemToken, fileLocal);
     }
 
-    private static void GroupEntry()
+    private static void GroupEntryKind()
     {
         if (CompilerContext.ActiveScope is SourceScope.ScreenSection)
         {
             ScreenEntry();
+            return;
         }
-        else if (CompilerContext.ActiveScope is SourceScope.ReportSection)
+
+        if (CompilerContext.ActiveScope is SourceScope.ReportSection)
         {
             ReportGroupEntry();
-        }
-        else
-        {
-            DataEntry();
+            return;
         }
 
-        _ = int.TryParse(Current().Value, out int outInt);
+        DataEntry();
+    }
+
+    private static void GroupEntry()
+    {
+        GroupEntryKind();
+
+        _ = int.TryParse(Current().Value, out int level);
         
-        while (outInt > 1 && outInt < 50)
+        while (level > 1 && level < 50)
         {
-            if (CompilerContext.ActiveScope is SourceScope.ScreenSection)
-            {
-                ScreenEntry();
-            }
-            else if (CompilerContext.ActiveScope is SourceScope.ReportSection)
-            {
-                ReportGroupEntry();
-            }
-            else
-            {
-                DataEntry();
-            }
+            GroupEntryKind();
 
-            _ = int.TryParse(Current().Value, out outInt);
+            _ = int.TryParse(Current().Value, out level);
+        }
+
+        if (!CompilerContext.IsResolutionPass)
+        foreach (var entry in GroupStack)
+        {
+            Console.WriteLine(entry.Identifier.Unwrap().Value);
         }
 
         LevelStack.Clear();

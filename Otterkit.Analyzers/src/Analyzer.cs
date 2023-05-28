@@ -58,12 +58,9 @@ public static class Analyzer
             _ => false
         };
 
-        if (!isClassOrInterface)
+        if (!isClassOrInterface && CurrentEquals("PROCEDURE"))
         {
-            if (CurrentEquals("PROCEDURE")) 
-            {
-                ProcedureDivision.ParseProcedural();
-            }
+            ProcedureDivision.ParseProcedural();   
         }
         else if (sourceTypes.Peek() == UnitKind.Class)
         {

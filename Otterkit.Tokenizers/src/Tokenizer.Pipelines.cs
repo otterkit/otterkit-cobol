@@ -127,7 +127,11 @@ public static partial class Tokenizer
 
     private static void ProcessLinebreak(Span<byte> line, int length)
     {
-        if (length == 0) return;
+        if (length == 0)
+        {
+            line[length] = 32;
+            return;
+        }
         
         // We want to remove the CARRIAGE RETURN (CR) if present.
         var carriageReturn = line[length - 1];

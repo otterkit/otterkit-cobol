@@ -11,6 +11,11 @@ public static class Literals
         return CurrentEquals(TokenType.Numeric | TokenType.String | TokenType.HexString | TokenType.Boolean | TokenType.HexBoolean | TokenType.National | TokenType.HexNational | TokenType.Figurative);
     }
 
+    public static bool PeekAny(int amount)
+    {
+        return PeekEquals(amount, TokenType.Numeric | TokenType.String | TokenType.HexString | TokenType.Boolean | TokenType.HexBoolean | TokenType.National | TokenType.HexNational | TokenType.Figurative);
+    }
+
     public static Option<Token> Any()
     {
         return Current().Type switch

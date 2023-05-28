@@ -56,12 +56,11 @@ public readonly struct StatementBuilder
 
         Continue(1);
 
-        while (Current().Type is TokenType.Identifier or TokenType.Numeric or TokenType.String)
+        while (Literals.IsAny() || CurrentEquals(TokenType.Identifier))
         {
-            string identifier;
             if (Current().Type == TokenType.Identifier)
             {
-                identifier = FormatIdentifier(Current().Value);
+                var identifier = FormatIdentifier(Current().Value);
                 Compiled.Append($"{identifier}.Bytes, ");
             }
 

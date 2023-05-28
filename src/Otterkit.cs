@@ -85,6 +85,11 @@ public static class Otterkit
                         CompilerOptions.Columns = int.Parse(args[index]);
                         break;
 
+                    case "-t":
+                    case "--tokenize":
+                        CompilerOptions.Mode = BuildType.LexOnly;
+                        break;
+
                     case "-p":
                     case "--parse":
                         CompilerOptions.Mode = BuildType.ParseOnly;
@@ -117,6 +122,10 @@ public static class Otterkit
                     case "--enable-extensions":
                         CompilerContext.ExtensionsEnabled = true;
                         break;
+
+                    case "--crash-on-error":
+                        ErrorHandler.CrashOnError = true;
+                        break;
                 }
             }
 
@@ -142,6 +151,12 @@ public static class Otterkit
 
         var classified = Token.ClassifyTokens(tokenizedLines);
 
+        if (CompilerOptions.Mode is BuildType.LexOnly)
+        {
+            PrintTokens();
+            return;
+        }
+
         var analized = Analyzer.Analyze(classified);
 
         if (CompilerOptions.Mode is BuildType.ParseOnly)
@@ -151,24 +166,7 @@ public static class Otterkit
 
         if (CompilerOptions.Mode is BuildType.PrintTokens)
         {
-            var colorToggle = true;
-
-            foreach (var token in analized)
-            {
-                if (colorToggle)
-                {
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                }
-                else
-                {
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
-                }
-
-                colorToggle = !colorToggle;
-                Console.WriteLine(token);
-            }
-
-            if (!ErrorHandler.HasOccurred) ErrorHandler.SuccessfulParse();
+            PrintTokens();
         }
 
         TokenHandling.Index = 0;
@@ -285,6 +283,31 @@ public static class Otterkit
 
             dotnet.WaitForExit();
         }
+    }
+
+    private static void PrintTokens()
+    {
+        var colorToggle = true;
+
+        foreach (var token in CompilerContext.SourceTokens)
+        {
+            if (colorToggle)
+            {
+                Console.ForegroundColor = ConsoleColor.Gray;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+            }
+
+            colorToggle = !colorToggle;
+
+            Console.WriteLine(token);
+        }
+
+        Console.ResetColor();
+
+        if (!ErrorHandler.HasOccurred) ErrorHandler.SuccessfulParse();
     }
 
     private static void DisplayHelpMessage()

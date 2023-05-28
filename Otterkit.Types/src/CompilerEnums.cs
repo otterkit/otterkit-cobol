@@ -13,6 +13,7 @@ public enum SourceFormat
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum BuildType
 {
+    LexOnly,
     ParseOnly,
     PrintTokens,
     PrintSymbols,

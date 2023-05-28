@@ -15,6 +15,8 @@ public static partial class DataDivision
 
         var validPicture = true;
 
+        var pictureLength = 0;
+
         for (var index = 0; index < picture.Length; index++)
         {
             var character = char.ToUpperInvariant(picture[index]);
@@ -138,6 +140,8 @@ public static partial class DataDivision
             {
                 index++;
 
+                var start = index;
+
                 while (picture[index] != ')')
                 {
                     if (!picture[index].IsOneOf("0123456789"))
@@ -148,13 +152,20 @@ public static partial class DataDivision
                     index++;
                 }
 
-                // var end = index;
+                var end = index;
 
-                // var count = int.Parse(picture.Slice(start + 1, end - start - 1));
+                var count = int.Parse(picture.Slice(start, end - start - 1));
 
-                // pictureSize += count - 1;
+                Console.WriteLine(count);
+
+                pictureLength += count - 1;
 
                 continue;
+            }
+
+            if (character.IsOneOf("9AXSVP1N"))
+            {
+                pictureLength++;
             }
 
             SymbolsUsed.Add(character);

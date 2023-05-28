@@ -9,6 +9,7 @@ public partial class DataEntry : AbstractEntry
 
     public SourceScope Section;
     public int LevelNumber;
+    public int Length;
 
     public Classes Class;
     public Categories Category;

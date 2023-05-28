@@ -48,23 +48,11 @@ public static class CodeGenerator
             if (CurrentEquals("LOCAL-STORAGE"))
                 scope = SourceScope.LocalStorage;
 
-            if (Current().Type == TokenType.Numeric && (CurrentEquals("01") || CurrentEquals("1")) && !PeekEquals(2, "CONSTANT"))
+            if (Current().Type == TokenType.Numeric)
             {
                 VariableBuilder variable = new(compiled);
 
                 variable.BuildVariable(scope);
-            }
-
-            if (Current().Type == TokenType.Numeric && PeekEquals(2, "CONSTANT"))
-            {
-                VariableBuilder Constant = new(compiled);
-                Constant.BuildVariable(scope);
-            }
-
-            if (Current().Type == TokenType.Numeric && Current().Value.Equals("77"))
-            {
-                VariableBuilder SevenSeven = new(compiled);
-                SevenSeven.BuildVariable(scope);
             }
 
             Continue();
@@ -72,21 +60,13 @@ public static class CodeGenerator
 
         compiled.InitializeProcedure();
 
-        while (!CurrentEquals("EOF"))
+        while (Current().Scope == TokenScope.ProcedureDivision && !CurrentEquals(TokenContext.IsEOF))
         {
-            StatementBuilder statement = new(compiled);
-
-            statement.BuildStatement();
-
-            if (!CurrentEquals("EOF"))
+            if (CurrentEquals(TokenContext.IsStatement))
             {
-                if (CurrentEquals("END") && (PeekEquals(1, "PROGRAM") || PeekEquals(1, "FUNCTION")) && !PeekEquals(4, "EOF"))
-                {
-                    Continue(2);
+                StatementBuilder statement = new(compiled);
 
-                    Generate(tokens, fileName);
-                    break;
-                }
+                statement.BuildStatement();
             }
 
             Continue();

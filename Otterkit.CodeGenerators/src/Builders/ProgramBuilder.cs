@@ -42,7 +42,7 @@ public class ProgramBuilder
 
     public void AppendHeader()
     {
-        Compiled.Append("using System.Text;using Otterkit.Runtime;namespace OtterkitExport;");
+        Compiled.Append("using Otterkit.Runtime;namespace OtterkitExport;");
     }
 
     public void AppendIdentification()

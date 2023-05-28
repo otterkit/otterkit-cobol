@@ -98,6 +98,7 @@ public readonly struct StatementBuilder
 
         if (!CurrentEquals("WITH") && !CurrentEquals("NO"))
             Compiled.Append("true);");
+            
         ExportStatement();
     }
 
@@ -116,13 +117,13 @@ public readonly struct StatementBuilder
     private void ACCEPT()
     {
         Compiled.Append("Statement.ACCEPT(");
-        // Statements.ACCEPT(dataItem, from, format)
+        // Statement.ACCEPT(dataItem, from, format)
         Continue(1);
         Compiled.Append($"{FormatIdentifier(Current().Value)}, ");
         Continue(1);
 
         if (!CurrentEquals("FROM"))
-            Compiled.Append("\"STANDARD-INPUT\");");
+            Compiled.Append("\"STANDARD-INPUT\", \"\");");
 
         if (CurrentEquals("FROM"))
         {
@@ -132,7 +133,7 @@ public readonly struct StatementBuilder
             {
                 case "STANDARD-INPUT":
                 case "COMMAND-LINE":
-                    Compiled.Append($"\"{Current().Value}\");");
+                    Compiled.Append($"\"{Current().Value}\", \"\");");
                     break;
 
                 case "DATE":
@@ -141,7 +142,7 @@ public readonly struct StatementBuilder
                         Compiled.Append($", \"{Peek(1).Value}\");");
 
                     if (!PeekEquals(1, "YYYYMMDD"))
-                        Compiled.Append(");");
+                        Compiled.Append(", \"\");");
                     break;
 
                 case "DAY":
@@ -150,15 +151,15 @@ public readonly struct StatementBuilder
                         Compiled.Append($", \"{Peek(1).Value}\");");
 
                     if (!PeekEquals(1, "YYYYDDD"))
-                        Compiled.Append(");");
+                        Compiled.Append(", \"\");");
                     break;
 
                 case "DAY-OF-WEEK":
-                    Compiled.Append($"\"{Current().Value}\");");
+                    Compiled.Append($"\"{Current().Value}\", \"\"););");
                     break;
 
                 case "TIME":
-                    Compiled.Append($"\"{Current().Value}\");");
+                    Compiled.Append($"\"{Current().Value}\", \"\"););");
                     break;
             }
         }

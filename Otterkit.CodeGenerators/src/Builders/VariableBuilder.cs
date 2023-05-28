@@ -9,13 +9,10 @@ namespace Otterkit.CodeGenerators;
 public class VariableBuilder
 {
     private readonly StringBuilder Compiled = new();
-    private string LevelNumber = string.Empty;
     private string Identifier = string.Empty;
-    private string ExternalName = string.Empty;
     private string DataType = string.Empty;
     private int Length = 0;
     private int FractionalLength = 0;
-    private string DataValue = string.Empty;
     private SourceScope Section;
     private readonly ProgramBuilder Builder;
 
@@ -45,7 +42,7 @@ public class VariableBuilder
 
         var variable = callable.DataNames.FetchUnique(token);
 
-        if (variable.LevelNumber is 77 or 1)
+        if (variable.LevelNumber is 77 or > 0 and < 50)
         {
             BuildVariable(variable, token);
             ExportVariable();
@@ -105,6 +102,9 @@ public class VariableBuilder
 
     }
 
+    private static int Offset = 0;
+    private static string GroupName = string.Empty;
+
     private void BuildVariable(DataEntry variable, Token token)
     {
         bool isSigned = false;
@@ -120,12 +120,23 @@ public class VariableBuilder
             Classes.Numeric => "Numeric",
             Classes.Object => "ObjectReference",
             Classes.Pointer => "Pointer",
-            _ => throw new ArgumentException("Invalid Type"),
+            _ => "Alphanumeric",
         };
 
         while (!CurrentEquals(".")) Continue();
 
+        var length = variable.Length;
+
         var formatted = FormatIdentifier(token.Value);
+
+        if (variable.LevelNumber is 1) Offset = 0;
+
+        if (variable.LevelNumber is 1 && variable.IsGroup)
+        {
+            Compiled.Append($"public static OtterMemory _{formatted} = new({length});");
+
+            GroupName = formatted;
+        }
 
         if (Section == SourceScope.WorkingStorage)
         {
@@ -143,9 +154,19 @@ public class VariableBuilder
         {
             ReadOnlySpan<char> value = variable.FetchValue().Value;
 
-            if (type is "Alphabetic" or "Alphanumeric" or "National" or "Bit")
+            if (type is "Alphabetic" or "Alphanumeric" or "National" or "Bit" && !variable.IsGroup)
             {
-                Compiled.Append($"new({value}u8, new(20), 0, 20);");
+                Compiled.Append($"new({value}u8, new({length}), {Offset}, {length});");
+
+                Offset += length;
+
+                return;
+            }
+
+            if (type is "Alphanumeric" or "National" or "Bit" && variable.IsGroup)
+            {
+                Compiled.Append($"new(_{formatted}, {Offset}, {length});");
+
                 return;
             }
 
@@ -193,9 +214,25 @@ public class VariableBuilder
         }
         else
         {
-            if (type is "Alphabetic" or "Alphanumeric" or "National" or "Bit")
+            if (type is "Alphabetic" or "Alphanumeric" or "National" or "Bit" && !variable.IsGroup && variable.LevelNumber is 1)
             {
-                Compiled.Append($"new(\" \"u8, new({Length}), 0, {Length});");
+                Compiled.Append($"new(\" \"u8, new({length}), {Offset}, {length});");
+                return;
+            }
+
+            if (type is "Alphabetic" or "Alphanumeric" or "National" or "Bit" && !variable.IsGroup)
+            {
+                Compiled.Append($"new(\" \"u8, _{GroupName}, {Offset}, {length});");
+
+                Offset += length;
+
+                return;
+            }
+
+            if (type is "Alphanumeric" or "National" or "Bit" && variable.IsGroup)
+            {
+                Compiled.Append($"new(_{GroupName}, {Offset}, {length});");
+
                 return;
             }
 

@@ -475,14 +475,24 @@ public static partial class DataDivision
             _ = int.TryParse(Current().Value, out level);
         }
 
-        if (!CompilerContext.IsResolutionPass)
-        foreach (var entry in GroupStack)
+        if (CompilerContext.IsResolutionPass)
         {
-            Console.WriteLine(entry.Identifier.Unwrap().Value);
+            CalculateGroupLengths();
         }
 
         LevelStack.Clear();
         GroupStack.Clear();
+    }
+
+    private static void CalculateGroupLengths()
+    {
+        foreach (var entry in GroupStack)
+        {
+            if (entry.Parent.Exists)
+            {
+                entry.Parent.Unwrap().Length += entry.Length;
+            }
+        }
     }
 
     private static void DataEntry()
@@ -511,11 +521,6 @@ public static partial class DataDivision
         dataLocal.LevelNumber = levelNumber;
 
         dataLocal.Section = CompilerContext.ActiveScope;
-
-        if (GroupStack.Count is not 0)
-        {
-            dataLocal.Parent = GroupStack.Peek();
-        }
 
         if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
         {
@@ -565,6 +570,15 @@ public static partial class DataDivision
 
         // We're returning during a resolution pass
         if (CompilerContext.IsResolutionPass) return;
+
+        if (GroupStack.Count is not 0)
+        {
+            var parent = GroupStack.Peek();
+
+            dataLocal.Parent = parent;
+
+            parent.Length += dataLocal.Length;
+        }
 
         if (dataName is "FILLER") return;
 

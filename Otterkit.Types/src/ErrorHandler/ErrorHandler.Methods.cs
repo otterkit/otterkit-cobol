@@ -32,6 +32,12 @@ public readonly ref partial struct ErrorHandler
         ColoredWrite(ResetColor(), $": {errorMessage}\n");
 
         ErrorHandler.HasOccurred = true;
+
+        if (CrashOnError)
+        {
+            throw new Exception($"{errorType} Error [COB{errorCode:D4}]: {errorMessage}");
+        }
+
         return new(errorType, consoleColor);
     }
 

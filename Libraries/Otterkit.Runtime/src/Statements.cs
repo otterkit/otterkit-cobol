@@ -245,7 +245,7 @@ public static class Statement
                 break;
 
             case "STANDARD-ERROR":
-                u8Console.Write(u8Text.Red, bytes);
+                u8Console.Write(bytes);
                 break;
 
             default:

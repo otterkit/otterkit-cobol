@@ -7,7 +7,7 @@ public static partial class DataDivision
 {
     private static readonly HashSet<char> SymbolsUsed = new();
 
-    public static bool ParsePictureString(ReadOnlySpan<char> picture)
+    public static int ParsePictureString(ReadOnlySpan<char> picture)
     {
         const string invalidPictureMessage = "Invalid picture clause character string.";
         
@@ -154,9 +154,7 @@ public static partial class DataDivision
 
                 var end = index;
 
-                var count = int.Parse(picture.Slice(start, end - start - 1));
-
-                Console.WriteLine(count);
+                var count = int.Parse(picture.Slice(start, end - start));
 
                 pictureLength += count - 1;
 
@@ -171,7 +169,9 @@ public static partial class DataDivision
             SymbolsUsed.Add(character);
         }
         
-        return validPicture;
+        if (validPicture) return pictureLength;
+
+        return -1;
     }
 
     private static (Classes, Categories) PictureType(bool validPicture)

@@ -1359,9 +1359,13 @@ public static partial class DataDivision
 
         entry[DataClause.Picture] = true;
 
-        var valid = ParsePictureString(Current().Value);
+        var length = ParsePictureString(Current().Value);
+
+        var valid = length != -1;
 
         (entry.Class, entry.Category) = PictureType(valid);
+
+        entry.Length = valid ? length : 0;
 
         ResetSymbols();
 

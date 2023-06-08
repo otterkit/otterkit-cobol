@@ -17,7 +17,7 @@ jobs:
       run: |
         cd Libraries/Otterkit.Native/nativelib
 
-        clang -shared -Wl,-rpath -fPIC -O3 -Wall -W -o ../build/nativelib.dylib allocator.c u8console.c decimals.c ../decNumber/decDouble.c  ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+        clang -shared -Wl,-rpath -fPIC -O3 -Wall -W -o ../build/nativelib.so allocator.c u8console.c decimals.c ../decNumber/decContext.c ../decNumber/decDouble.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
         
     - name: GIT Commit Build Files
       run: |
@@ -42,7 +42,7 @@ jobs:
       run: |
         cd Libraries/Otterkit.Native/nativelib
 
-        clang -dynamiclib -O3 -Wall -W -o ../build/nativelib.dylib allocator.c u8console.c decimals.c ../decNumber/decDouble.c  ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+        clang -dynamiclib -O3 -Wall -W -o ../build/nativelib.dylib allocator.c u8console.c decimals.c ../decNumber/decContext.c ../decNumber/decDouble.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
         
     - name: GIT Commit Build Files
       run: |
@@ -69,7 +69,7 @@ jobs:
         cd Libraries\Otterkit.Native\nativelib
         "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         
-        cl.exe /O2 /LD /Fe:..\build\nativelib.dll allocator.c u8console.c decimals.c ..\decNumber\decDouble.c  ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
+        cl.exe /O2 /LD /Fe:..\build\nativelib.dll allocator.c u8console.c decimals.c  ..\decNumber\decContext.c ..\decNumber\decDouble.c ..\decNumber\decQuad.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
         
     - name: GIT Commit Build Files
       run: |

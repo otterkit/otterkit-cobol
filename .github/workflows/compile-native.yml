@@ -16,8 +16,8 @@ jobs:
     - name: Compile Native Bindings
       run: |
         cd Libraries/Otterkit.Native/nativelib
-        
-        clang -shared -Wl,-rpath -O3 -Wall -W -o ../build/nativelib.dylib allocator.c u8console.c decimals.c ../decNumber/decDouble.c  ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+
+        clang -shared -Wl,-rpath -fPIC -O3 -Wall -W -o ../build/nativelib.dylib allocator.c u8console.c decimals.c ../decNumber/decDouble.c  ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
         
     - name: GIT Commit Build Files
       run: |

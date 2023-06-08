@@ -5,129 +5,129 @@ namespace Otterkit.Numerics;
 internal static partial class DecQuadBindings
 {
     /* Computational operations */
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadSqrt")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadSqrt")]
     internal static partial Decimal128 Sqrt(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadLn")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadLn")]
     internal static partial Decimal128 Ln(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadExp")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadExp")]
     internal static partial Decimal128 Exp(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadLogB")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadLogB")]
     internal static partial Decimal128 LogB(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadLog10")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadLog10")]
     internal static partial Decimal128 Log10(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadToIntegralValue")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadToIntegralValue")]
     internal static partial Decimal128 ToIntegralValue(Decimal128 value, RoundingMode mode);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadAbs")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadAbs")]
     internal static partial Decimal128 Abs(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadPlus")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadPlus")]
     internal static partial Decimal128 Plus(Decimal128 value);
     
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMinus")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadMinus")]
     internal static partial Decimal128 Minus(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadAdd")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadAdd")]
     internal static partial Decimal128 Add(Decimal128 left, Decimal128 right);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadSub")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadSub")]
     internal static partial Decimal128 Subtract(Decimal128 left, Decimal128 right);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadDiv")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadDiv")]
     internal static partial Decimal128 Divide(Decimal128 left, Decimal128 right);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadRem")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadRem")]
     internal static partial Decimal128 Remainder(Decimal128 left, Decimal128 right);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadRemNear")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadRemNear")]
     internal static partial Decimal128 RemainderNear(Decimal128 left, Decimal128 right);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMul")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadMul")]
     internal static partial Decimal128 Multiply(Decimal128 left, Decimal128 right);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadFMA")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadFMA")]
     internal static partial Decimal128 FusedMultiplyAdd(Decimal128 leftMultiply, Decimal128 rightMultiply, Decimal128 valueAdd);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMax")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadMax")]
     internal static partial Decimal128 Max(Decimal128 left, Decimal128 right);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMaxMag")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadMaxMag")]
     internal static partial Decimal128 MaxMag(Decimal128 left, Decimal128 right);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMin")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadMin")]
     internal static partial Decimal128 Min(Decimal128 left, Decimal128 right);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadMinMag")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadMinMag")]
     internal static partial Decimal128 MinMag(Decimal128 left, Decimal128 right);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadPow")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadPow")]
     internal static partial Decimal128 Pow(Decimal128 left, Decimal128 right);
 
 
     /* decQuad Comparisons */
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadCompare")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadCompare")]
     internal static partial int Compare(Decimal128 left, Decimal128 right);
     
 
     /* Non-computational comparisons */
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsCanonical")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsCanonical")]
     internal static partial uint IsCanonical(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsInfinite")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsInfinite")]
     internal static partial uint IsInfinite(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsFinite")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsFinite")]
     internal static partial uint IsFinite(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsInteger")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsInteger")]
     internal static partial uint IsInteger(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsNaN")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsNaN")]
     internal static partial uint IsNaN(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsNegative")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsNegative")]
     internal static partial uint IsNegative(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsSubnormal")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsSubnormal")]
     internal static partial uint IsSubnormal(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsNormal")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsNormal")]
     internal static partial uint IsNormal(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsPositive")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsPositive")]
     internal static partial uint IsPositive(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsSignaling")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsSignaling")]
     internal static partial uint IsSignaling(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsSigned")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsSigned")]
     internal static partial uint IsSigned(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadIsZero")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadIsZero")]
     internal static partial uint IsZero(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadRadix")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadRadix")]
     internal static partial uint Radix(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecSameQuantum")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecSameQuantum")]
     internal static partial uint SameQuantum(Decimal128 left, Decimal128 right);
 
 
     /* Utilities and conversions */
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadFromString")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadFromString")]
     internal static partial Decimal128 FromString(in byte value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadFromInt32")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadFromInt32")]
     internal static partial Decimal128 FromInt32(int value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadToString")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadToString")]
     internal static unsafe partial byte* ToString(Decimal128 value);
 
-    [LibraryImport("decQuadBindings", EntryPoint = "nativeDecQuadToEngString")]
+    [LibraryImport("nativelib", EntryPoint = "nativeDecQuadToEngString")]
     internal static unsafe partial byte* ToEngineeringString(Decimal128 value);
 }

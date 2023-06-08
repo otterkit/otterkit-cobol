@@ -15,12 +15,9 @@ jobs:
     
     - name: Compile Native Bindings
       run: |
-        cd Libraries/Otterkit.Numerics/bindings
-        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o ../build/decDoubleBindings.so decDoubleBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decDouble.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
-        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o ../build/decQuadBindings.so decQuadBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
-
-        cd ../../Otterkit.Native/native
-        clang -shared -Wl,-rpath -O2 -fPIC -Wall -W -o ../build/nativelib.so stackalloc.c
+        cd Libraries/Otterkit.Native/nativelib
+        
+        clang -shared -Wl,-rpath -O3 -Wall -W -o ../build/nativelib.dylib allocator.c u8console.c decimals.c ../decNumber/decDouble.c  ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
         
     - name: GIT Commit Build Files
       run: |
@@ -43,12 +40,9 @@ jobs:
     
     - name: Compile Native Bindings
       run: |
-        cd Libraries/Otterkit.Numerics/bindings
-        clang -dynamiclib -O2 -Wall -W -o ../build/decDoubleBindings.dylib decDoubleBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decDouble.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
-        clang -dynamiclib -O2 -Wall -W -o ../build/decQuadBindings.dylib decQuadBindings.c ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
+        cd Libraries/Otterkit.Native/nativelib
 
-        cd ../../Otterkit.Native/native
-        clang -dynamiclib -O2 -Wall -W -o ../build/nativelib.dylib stackalloc.c
+        clang -dynamiclib -O3 -Wall -W -o ../build/nativelib.dylib allocator.c u8console.c decimals.c ../decNumber/decDouble.c  ../decNumber/decContext.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c
         
     - name: GIT Commit Build Files
       run: |
@@ -72,14 +66,10 @@ jobs:
     - name: Compile Native Bindings
       shell: cmd
       run: |
-        cd Libraries\Otterkit.Numerics\bindings
+        cd Libraries\Otterkit.Native\nativelib
         "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         
-        cl.exe /O2 /LD /OUT:..\build\decDoubleBindings.dll decDoubleBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decDouble.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
-        cl.exe /O2 /LD /OUT:..\build\decQuadBindings.dll decQuadBindings.c ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
-        
-        cd ..\..\Otterkit.Native\native
-        cl.exe /O2 /LD /OUT:..\build\nativelib.dll stackalloc.c
+        cl.exe /O2 /LD /Fe:..\build\nativelib.dll allocator.c u8console.c decimals.c ..\decNumber\decDouble.c  ..\decNumber\decContext.c ..\decNumber\decQuad.c ..\decNumber\decNumber.c ..\decNumber\decimal128.c ..\decNumber\decimal64.c
         
     - name: GIT Commit Build Files
       run: |

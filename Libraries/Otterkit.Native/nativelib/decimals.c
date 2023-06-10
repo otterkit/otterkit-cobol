@@ -14,694 +14,509 @@
     #include "../decNumber/decQuad.h" // decQuad library
 #endif
 
-/* Same as the C# type definition */
-typedef struct
-{
-    uint64_t _upperBits;
-    uint64_t _lowerBits;
-} managedDecQuad;
-
-/* Marshalling helper functions */
-decQuad decQuadFromManaged(managedDecQuad value)
-{
-    decQuad nativeQuad;
-
-    nativeQuad.longs[0] = value._upperBits;
-    nativeQuad.longs[1] = value._lowerBits;
-
-    return nativeQuad;
-}
-
-managedDecQuad decQuadToManaged(decQuad value)
-{
-    managedDecQuad managedQuad;
-
-    managedQuad._upperBits = value.longs[0];
-    managedQuad._lowerBits = value.longs[1];
-
-    return managedQuad;
-}
-
 /* Computational operations */
-_export managedDecQuad nativeDecQuadToIntegralValue(managedDecQuad value, enum rounding mode)
+_export decQuad d128ToIntegralValue(decQuad value, enum rounding mode)
 {
-    decQuad nativeValue;
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
+    decQuadToIntegralValue(&result, &value, &context, mode);
 
-    decQuadToIntegralValue(&nativeValue, &nativeValue, &context, mode);
-
-    return decQuadToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadSqrt(managedDecQuad value)
+_export decQuad d128Sqrt(decQuad value)
 {
-    decQuad nativeValue;
-    decNumber decNumValue;
+    decNumber temporary;
+    decQuad result;
 
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
+    decQuadToNumber(&result, &temporary);
 
-    decQuadToNumber(&nativeValue, &decNumValue);
+    decNumberSquareRoot(&temporary, &temporary, &context);
 
-    decNumberSquareRoot(&decNumValue, &decNumValue, &context);
+    decQuadFromNumber(&result, &temporary, &context);
 
-    decQuadFromNumber(&nativeValue, &decNumValue, &context);
-
-    return decQuadToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadLn(managedDecQuad value)
+_export decQuad d128Ln(decQuad value)
 {
-    decQuad nativeValue;
-    decNumber decNumValue;
+    decNumber temporary;
+    decQuad result;
 
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
+    decQuadToNumber(&result, &temporary);
 
-    decQuadToNumber(&nativeValue, &decNumValue);
+    decNumberLn(&temporary, &temporary, &context);
 
-    decNumberLn(&decNumValue, &decNumValue, &context);
+    decQuadFromNumber(&result, &temporary, &context);
 
-    decQuadFromNumber(&nativeValue, &decNumValue, &context);
-
-    return decQuadToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadExp(managedDecQuad value)
+_export decQuad d128Exp(decQuad value)
 {
-    decQuad nativeValue;
-    decNumber decNumValue;
+    decNumber temporary;
+    decQuad result;
 
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
+    decQuadToNumber(&result, &temporary);
 
-    decQuadToNumber(&nativeValue, &decNumValue);
+    decNumberExp(&temporary, &temporary, &context);
 
-    decNumberExp(&decNumValue, &decNumValue, &context);
+    decQuadFromNumber(&result, &temporary, &context);
 
-    decQuadFromNumber(&nativeValue, &decNumValue, &context);
-
-    return decQuadToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadLogB(managedDecQuad value)
+_export decQuad d128LogB(decQuad value)
 {
-    decQuad nativeValue;
+    decQuad result;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
+    decQuadLogB(&result, &value, &context);
 
-    decQuadLogB(&nativeValue, &nativeValue, &context);
-
-    return decQuadToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadLog10(managedDecQuad value)
+_export decQuad d128Log10(decQuad value)
 {
-    decQuad nativeValue;
-    decNumber decNumValue;
+    decNumber temporary;
+    decQuad result;
 
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
+    decQuadToNumber(&result, &temporary);
 
-    decQuadToNumber(&nativeValue, &decNumValue);
+    decNumberLog10(&temporary, &temporary, &context);
 
-    decNumberLog10(&decNumValue, &decNumValue, &context);
+    decQuadFromNumber(&result, &temporary, &context);
 
-    decQuadFromNumber(&nativeValue, &decNumValue, &context);
-
-    return decQuadToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadAbs(managedDecQuad value)
+_export decQuad d128Abs(decQuad value)
 {
-    decQuad nativeValue;
+    decQuad result;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
+    decQuadAbs(&result, &value, &context);
 
-    decQuadAbs(&nativeValue, &nativeValue, &context);
-
-    return decQuadToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadPlus(managedDecQuad value)
+_export decQuad d128Plus(decQuad value)
 {
-    decQuad nativeValue;
+    decQuad result;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
+    decQuadPlus(&result, &value, &context);
 
-    decQuadPlus(&nativeValue, &nativeValue, &context);
-
-    return decQuadToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadMinus(managedDecQuad value)
+_export decQuad d128Minus(decQuad value)
 {
-    decQuad nativeValue;
+    decQuad result;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
+    decQuadMinus(&result, &value, &context);
 
-    decQuadMinus(&nativeValue, &nativeValue, &context);
-
-    return decQuadToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadAdd(managedDecQuad left, managedDecQuad right)
+_export decQuad d128Add(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadAdd(&result, &left, &right, &context);
 
-    decQuadAdd(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decQuadToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadSub(managedDecQuad left, managedDecQuad right)
+_export decQuad d128Sub(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadSubtract(&result, &left, &right, &context);
 
-    decQuadSubtract(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decQuadToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadMul(managedDecQuad left, managedDecQuad right)
+_export decQuad d128Mul(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadMultiply(&result, &left, &right, &context);
 
-    decQuadMultiply(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decQuadToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadDiv(managedDecQuad left, managedDecQuad right)
+_export decQuad d128Div(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadDivide(&result, &left, &right, &context);
 
-    decQuadDivide(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decQuadToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadRem(managedDecQuad left, managedDecQuad right)
+_export decQuad d128Rem(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadRemainder(&result, &left, &right, &context);
 
-    decQuadRemainder(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decQuadToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadRemNear(managedDecQuad left, managedDecQuad right)
+_export decQuad d128RemNear(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadRemainderNear(&result, &left, &right, &context);
 
-    decQuadRemainderNear(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decQuadToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadMax(managedDecQuad left, managedDecQuad right)
+_export decQuad d128Max(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadMax(&result, &left, &right, &context);
 
-    decQuadMax(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decQuadToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadMaxMag(managedDecQuad left, managedDecQuad right)
+_export decQuad d128MaxMag(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadMaxMag(&result, &left, &right, &context);
 
-    decQuadMaxMag(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decQuadToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadMin(managedDecQuad left, managedDecQuad right)
+_export decQuad d128Min(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadMin(&result, &left, &right, &context);
 
-    decQuadMin(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decQuadToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadMinMag(managedDecQuad left, managedDecQuad right)
+_export decQuad d128MinMag(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadMinMag(&result, &left, &right, &context);
 
-    decQuadMinMag(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decQuadToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadPow(managedDecQuad left, managedDecQuad right)
+_export decQuad d128Pow(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
+    decQuad result;
 
-    decNumber decNumLeft;
-    decNumber decNumRight;
+    decNumber tempLeft;
+    decNumber tempRight;
 
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadToNumber(&left, &tempLeft);
+    decQuadToNumber(&right, &tempRight);
 
-    decQuadToNumber(&nativeLeft, &decNumLeft);
-    decQuadToNumber(&nativeRight, &decNumRight);
+    decNumberPower(&tempLeft, &tempLeft, &tempRight, &context);
 
-    decNumberPower(&decNumLeft, &decNumLeft, &decNumRight, &context);
+    decQuadFromNumber(&result, &tempLeft, &context);
 
-    decQuadFromNumber(&nativeLeft, &decNumLeft, &context);
-
-    return decQuadToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadFMA(managedDecQuad leftMul, managedDecQuad rightMul, managedDecQuad valueAdd)
+_export decQuad d128FMA(decQuad leftMul, decQuad rightMul, decQuad valueAdd)
 {
-    decQuad nativeLeftMul;
-    decQuad nativeRightMul;
-    decQuad nativeValueAdd;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeftMul = decQuadFromManaged(leftMul);
-    nativeRightMul = decQuadFromManaged(rightMul);
-    nativeValueAdd = decQuadFromManaged(valueAdd);
+    decQuadFMA(&result, &leftMul, &rightMul, &valueAdd, &context);
 
-    decQuadFMA(&nativeLeftMul, &nativeLeftMul, &nativeRightMul, &nativeValueAdd, &context);
-
-    return decQuadToManaged(nativeLeftMul);
+    return result;
 }
 
 
 /* decQuad Comparisons */
-_export int32_t nativeDecQuadCompare(managedDecQuad left, managedDecQuad right)
+_export int32_t d128Compare(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadCompare(&result, &left, &right, &context);
 
-    decQuadCompare(&nativeLeft, &nativeLeft, &nativeRight, &context);
+    if (decQuadIsNaN(&result)) return -5;
 
-    if (decQuadIsNaN(&nativeLeft))
-        return -5;
-
-    return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
+    return decQuadToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t nativeDecQuadCompareSignal(managedDecQuad left, managedDecQuad right)
+_export int32_t d128CompareSignal(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadCompareSignal(&result, &left, &right, &context);
 
-    decQuadCompareSignal(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
+    return decQuadToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t nativeDecQuadCompareTotal(managedDecQuad left, managedDecQuad right)
+_export int32_t d128CompareTotal(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadCompareTotal(&result, &left, &right);
 
-    decQuadCompareTotal(&nativeLeft, &nativeLeft, &nativeRight);
-
-    return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
+    return decQuadToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t nativeDecQuadCompareTotalMag(managedDecQuad left, managedDecQuad right)
+_export int32_t d128CompareTotalMag(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
+    decQuadCompareTotalMag(&result, &left, &right);
 
-    decQuadCompareTotalMag(&nativeLeft, &nativeLeft, &nativeRight);
-
-    return decQuadToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
+    return decQuadToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
 /* Non-computational comparisons */
-_export uint32_t nativeDecQuadIsCanonical(managedDecQuad value)
+_export uint32_t d128IsCanonical(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsCanonical(&nativeValue);
+    return decQuadIsCanonical(&value);
 }
 
-_export uint32_t nativeDecQuadIsFinite(managedDecQuad value)
+_export uint32_t d128IsFinite(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsFinite(&nativeValue);
+    return decQuadIsFinite(&value);
 }
 
-_export uint32_t nativeDecQuadIsInfinite(managedDecQuad value)
+_export uint32_t d128IsInfinite(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsInfinite(&nativeValue);
+    return decQuadIsInfinite(&value);
 }
 
-_export uint32_t nativeDecQuadIsInteger(managedDecQuad value)
+_export uint32_t d128IsInteger(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsInteger(&nativeValue);
+    return decQuadIsInteger(&value);
 }
 
-_export uint32_t nativeDecQuadIsNaN(managedDecQuad value)
+_export uint32_t d128IsNaN(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsNaN(&nativeValue);
+    return decQuadIsNaN(&value);
 }
 
-_export uint32_t nativeDecQuadIsNegative(managedDecQuad value)
+_export uint32_t d128IsNegative(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsNegative(&nativeValue);
+    return decQuadIsNegative(&value);
 }
 
-_export uint32_t nativeDecQuadIsNormal(managedDecQuad value)
+_export uint32_t d128IsNormal(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsNormal(&nativeValue);
+    return decQuadIsNormal(&value);
 }
 
-_export uint32_t nativeDecQuadIsSubnormal(managedDecQuad value)
+_export uint32_t d128IsSubnormal(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsSubnormal(&nativeValue);
+    return decQuadIsSubnormal(&value);
 }
 
-_export uint32_t nativeDecQuadIsPositive(managedDecQuad value)
+_export uint32_t d128IsPositive(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsPositive(&nativeValue);
+    return decQuadIsPositive(&value);
 }
 
-_export uint32_t nativeDecQuadIsSignaling(managedDecQuad value)
+_export uint32_t d128IsSignaling(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsSignaling(&nativeValue);
+    return decQuadIsSignaling(&value);
 }
 
-_export uint32_t nativeDecQuadIsSigned(managedDecQuad value)
+_export uint32_t d128IsSigned(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsSigned(&nativeValue);
+    return decQuadIsSigned(&value);
 }
 
-_export uint32_t nativeDecQuadIsZero(managedDecQuad value)
+_export uint32_t d128IsZero(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadIsZero(&nativeValue);
+    return decQuadIsZero(&value);
 }
 
-_export uint32_t nativeDecQuadRadix(managedDecQuad value)
+_export uint32_t d128Radix(decQuad value)
 {
-    decQuad nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeValue = decQuadFromManaged(value);
-
-    return decQuadRadix(&nativeValue);
+    return decQuadRadix(&value);
 }
 
-_export uint32_t nativeDecQuadSameQuantum(managedDecQuad left, managedDecQuad right)
+_export uint32_t d128SameQuantum(decQuad left, decQuad right)
 {
-    decQuad nativeLeft;
-    decQuad nativeRight;
-
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    nativeLeft = decQuadFromManaged(left);
-    nativeRight = decQuadFromManaged(right);
-
-    return decQuadSameQuantum(&nativeLeft, &nativeRight);
+    return decQuadSameQuantum(&left, &right);
 }
 
 /* Utilities and conversions */
-_export char *nativeDecQuadToString(managedDecQuad value)
+_export char *d128ToString(decQuad value)
 {
     char *string = malloc(DECQUAD_String);
-    decQuad nativeQuad;
-    decContext context;
 
-    decContextDefault(&context, DEC_INIT_DECQUAD);
-
-    nativeQuad = decQuadFromManaged(value);
-
-    decQuadToString(&nativeQuad, string);
+    decQuadToString(&value, string);
 
     return string;
 }
 
-_export char *nativeDecQuadToEngString(managedDecQuad value)
+_export char *d128ToEngString(decQuad value)
 {
     char *string = malloc(DECQUAD_String);
-    decQuad nativeQuad;
-    decContext context;
 
-    decContextDefault(&context, DEC_INIT_DECQUAD);
-
-    nativeQuad = decQuadFromManaged(value);
-
-    decQuadToEngString(&nativeQuad, string);
+    decQuadToEngString(&value, string);
 
     return string;
 }
 
-_export managedDecQuad nativeDecQuadFromString(char *value)
+_export decQuad d128FromString(char *value)
 {
-    decQuad nativeQuad;
     decContext context;
+    decQuad result;
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    decQuadFromString(&nativeQuad, value, &context);
+    decQuadFromString(&result, value, &context);
 
-    return decQuadToManaged(nativeQuad);
+    return result;
 }
 
-_export managedDecQuad nativeDecQuadFromInt32(int32_t value)
+_export decQuad d128FromInt32(int32_t value)
 {
-    decQuad nativeQuad;
+    decQuad result;
 
-    decQuadFromInt32(&nativeQuad, value);
+    decQuadFromInt32(&result, value);
 
-    return decQuadToManaged(nativeQuad);
+    return result;
 }
 
 #ifdef _WIN32

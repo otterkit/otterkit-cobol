@@ -36,7 +36,7 @@ _export decQuad d128Sqrt(decQuad value)
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    decQuadToNumber(&result, &temporary);
+    decQuadToNumber(&value, &temporary);
 
     decNumberSquareRoot(&temporary, &temporary, &context);
 
@@ -54,7 +54,7 @@ _export decQuad d128Ln(decQuad value)
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    decQuadToNumber(&result, &temporary);
+    decQuadToNumber(&value, &temporary);
 
     decNumberLn(&temporary, &temporary, &context);
 
@@ -72,7 +72,7 @@ _export decQuad d128Exp(decQuad value)
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    decQuadToNumber(&result, &temporary);
+    decQuadToNumber(&value, &temporary);
 
     decNumberExp(&temporary, &temporary, &context);
 
@@ -102,7 +102,7 @@ _export decQuad d128Log10(decQuad value)
 
     decContextDefault(&context, DEC_INIT_DECQUAD);
 
-    decQuadToNumber(&result, &temporary);
+    decQuadToNumber(&value, &temporary);
 
     decNumberLog10(&temporary, &temporary, &context);
 
@@ -531,689 +531,507 @@ _export decQuad d128FromInt32(int32_t value)
     #include "../decNumber/decDouble.h" // decDouble library
 #endif
 
-/* Same as the C# type definition */
-typedef struct
-{
-    uint64_t _Bits;
-} managedDecDouble;
-
-/* Marshalling helper functions */
-decDouble decDoubleFromManaged(managedDecDouble value)
-{
-    decDouble nativeDouble;
-
-    nativeDouble.longs[0] = value._Bits;
-
-    return nativeDouble;
-}
-
-managedDecDouble decDoubleToManaged(decDouble value)
-{
-    managedDecDouble managedDouble;
-
-    managedDouble._Bits = value.longs[0];
-
-    return managedDouble;
-}
-
 /* Computational operations */
-_export managedDecDouble nativeDecDoubleToIntegralValue(managedDecDouble value, enum rounding mode)
+_export decDouble d64ToIntegralValue(decDouble value, enum rounding mode)
 {
-    decDouble nativeValue;
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
+    decDoubleToIntegralValue(&result, &value, &context, mode);
 
-    decDoubleToIntegralValue(&nativeValue, &nativeValue, &context, mode);
-
-    return decDoubleToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleSqrt(managedDecDouble value)
+_export decDouble d64Sqrt(decDouble value)
 {
-    decDouble nativeValue;
-    decNumber decNumValue;
+    decNumber temporary;
+    decDouble result;
 
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
+    decDoubleToNumber(&value, &temporary);
 
-    decDoubleToNumber(&nativeValue, &decNumValue);
+    decNumberSquareRoot(&temporary, &temporary, &context);
 
-    decNumberSquareRoot(&decNumValue, &decNumValue, &context);
+    decDoubleFromNumber(&result, &temporary, &context);
 
-    decDoubleFromNumber(&nativeValue, &decNumValue, &context);
-
-    return decDoubleToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleLn(managedDecDouble value)
+_export decDouble d64Ln(decDouble value)
 {
-    decDouble nativeValue;
-    decNumber decNumValue;
+    decNumber temporary;
+    decDouble result;
 
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
+    decDoubleToNumber(&value, &temporary);
 
-    decDoubleToNumber(&nativeValue, &decNumValue);
+    decNumberLn(&temporary, &temporary, &context);
 
-    decNumberLn(&decNumValue, &decNumValue, &context);
+    decDoubleFromNumber(&result, &temporary, &context);
 
-    decDoubleFromNumber(&nativeValue, &decNumValue, &context);
-
-    return decDoubleToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleExp(managedDecDouble value)
+_export decDouble d64Exp(decDouble value)
 {
-    decDouble nativeValue;
-    decNumber decNumValue;
+    decNumber temporary;
+    decDouble result;
 
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
+    decDoubleToNumber(&value, &temporary);
 
-    decDoubleToNumber(&nativeValue, &decNumValue);
+    decNumberExp(&temporary, &temporary, &context);
 
-    decNumberExp(&decNumValue, &decNumValue, &context);
+    decDoubleFromNumber(&result, &temporary, &context);
 
-    decDoubleFromNumber(&nativeValue, &decNumValue, &context);
-
-    return decDoubleToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleLogB(managedDecDouble value)
+_export decDouble d64LogB(decDouble value)
 {
-    decDouble nativeValue;
+    decDouble result;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
+    decDoubleLogB(&result, &value, &context);
 
-    decDoubleLogB(&nativeValue, &nativeValue, &context);
-
-    return decDoubleToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleLog10(managedDecDouble value)
+_export decDouble d64Log10(decDouble value)
 {
-    decDouble nativeValue;
-    decNumber decNumValue;
+    decNumber temporary;
+    decDouble result;
 
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
+    decDoubleToNumber(&value, &temporary);
 
-    decDoubleToNumber(&nativeValue, &decNumValue);
+    decNumberLog10(&temporary, &temporary, &context);
 
-    decNumberLog10(&decNumValue, &decNumValue, &context);
+    decDoubleFromNumber(&result, &temporary, &context);
 
-    decDoubleFromNumber(&nativeValue, &decNumValue, &context);
-
-    return decDoubleToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleAbs(managedDecDouble value)
+_export decDouble d64Abs(decDouble value)
 {
-    decDouble nativeValue;
+    decDouble result;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
+    decDoubleAbs(&result, &value, &context);
 
-    decDoubleAbs(&nativeValue, &nativeValue, &context);
-
-    return decDoubleToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoublePlus(managedDecDouble value)
+_export decDouble d64Plus(decDouble value)
 {
-    decDouble nativeValue;
+    decDouble result;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
+    decDoublePlus(&result, &value, &context);
 
-    decDoublePlus(&nativeValue, &nativeValue, &context);
-
-    return decDoubleToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleMinus(managedDecDouble value)
+_export decDouble d64Minus(decDouble value)
 {
-    decDouble nativeValue;
+    decDouble result;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
+    decDoubleMinus(&result, &value, &context);
 
-    decDoubleMinus(&nativeValue, &nativeValue, &context);
-
-    return decDoubleToManaged(nativeValue);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleAdd(managedDecDouble left, managedDecDouble right)
+_export decDouble d64Add(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleAdd(&result, &left, &right, &context);
 
-    decDoubleAdd(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decDoubleToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleSub(managedDecDouble left, managedDecDouble right)
+_export decDouble d64Sub(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleSubtract(&result, &left, &right, &context);
 
-    decDoubleSubtract(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decDoubleToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleMul(managedDecDouble left, managedDecDouble right)
+_export decDouble d64Mul(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleMultiply(&result, &left, &right, &context);
 
-    decDoubleMultiply(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decDoubleToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleDiv(managedDecDouble left, managedDecDouble right)
+_export decDouble d64Div(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleDivide(&result, &left, &right, &context);
 
-    decDoubleDivide(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decDoubleToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleRem(managedDecDouble left, managedDecDouble right)
+_export decDouble d64Rem(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleRemainder(&result, &left, &right, &context);
 
-    decDoubleRemainder(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decDoubleToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleRemNear(managedDecDouble left, managedDecDouble right)
+_export decDouble d64RemNear(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleRemainderNear(&result, &left, &right, &context);
 
-    decDoubleRemainderNear(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decDoubleToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleMax(managedDecDouble left, managedDecDouble right)
+_export decDouble d64Max(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleMax(&result, &left, &right, &context);
 
-    decDoubleMax(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decDoubleToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleMaxMag(managedDecDouble left, managedDecDouble right)
+_export decDouble d64MaxMag(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleMaxMag(&result, &left, &right, &context);
 
-    decDoubleMaxMag(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decDoubleToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleMin(managedDecDouble left, managedDecDouble right)
+_export decDouble d64Min(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleMin(&result, &left, &right, &context);
 
-    decDoubleMin(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decDoubleToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleMinMag(managedDecDouble left, managedDecDouble right)
+_export decDouble d64MinMag(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleMinMag(&result, &left, &right, &context);
 
-    decDoubleMinMag(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decDoubleToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoublePow(managedDecDouble left, managedDecDouble right)
+_export decDouble d64Pow(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
+    decDouble result;
 
-    decNumber decNumLeft;
-    decNumber decNumRight;
+    decNumber tempLeft;
+    decNumber tempRight;
 
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleToNumber(&left, &tempLeft);
+    decDoubleToNumber(&right, &tempRight);
 
-    decDoubleToNumber(&nativeLeft, &decNumLeft);
-    decDoubleToNumber(&nativeRight, &decNumRight);
+    decNumberPower(&tempLeft, &tempLeft, &tempRight, &context);
 
-    decNumberPower(&decNumLeft, &decNumLeft, &decNumRight, &context);
+    decDoubleFromNumber(&result, &tempLeft, &context);
 
-    decDoubleFromNumber(&nativeLeft, &decNumLeft, &context);
-
-    return decDoubleToManaged(nativeLeft);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleFMA(managedDecDouble leftMul, managedDecDouble rightMul, managedDecDouble valueAdd)
+_export decDouble d64FMA(decDouble leftMul, decDouble rightMul, decDouble valueAdd)
 {
-    decDouble nativeLeftMul;
-    decDouble nativeRightMul;
-    decDouble nativeValueAdd;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeftMul = decDoubleFromManaged(leftMul);
-    nativeRightMul = decDoubleFromManaged(rightMul);
-    nativeValueAdd = decDoubleFromManaged(valueAdd);
+    decDoubleFMA(&result, &leftMul, &rightMul, &valueAdd, &context);
 
-    decDoubleFMA(&nativeLeftMul, &nativeLeftMul, &nativeRightMul, &nativeValueAdd, &context);
-
-    return decDoubleToManaged(nativeLeftMul);
+    return result;
 }
 
 
 /* decDouble Comparisons */
-_export int32_t nativeDecDoubleCompare(managedDecDouble left, managedDecDouble right)
+_export int32_t d64Compare(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleCompare(&result, &left, &right, &context);
 
-    decDoubleCompare(&nativeLeft, &nativeLeft, &nativeRight, &context);
+    if (decDoubleIsNaN(&result)) return -5;
 
-    if (decDoubleIsNaN(&nativeLeft))
-        return -5;
-
-    return decDoubleToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
+    return decDoubleToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t nativeDecDoubleCompareSignal(managedDecDouble left, managedDecDouble right)
+_export int32_t d64CompareSignal(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleCompareSignal(&result, &left, &right, &context);
 
-    decDoubleCompareSignal(&nativeLeft, &nativeLeft, &nativeRight, &context);
-
-    return decDoubleToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
+    return decDoubleToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t nativeDecDoubleCompareTotal(managedDecDouble left, managedDecDouble right)
+_export int32_t d64CompareTotal(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleCompareTotal(&result, &left, &right);
 
-    decDoubleCompareTotal(&nativeLeft, &nativeLeft, &nativeRight);
-
-    return decDoubleToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
+    return decDoubleToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t nativeDecDoubleCompareTotalMag(managedDecDouble left, managedDecDouble right)
+_export int32_t d64CompareTotalMag(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
+    decDoubleCompareTotalMag(&result, &left, &right);
 
-    decDoubleCompareTotalMag(&nativeLeft, &nativeLeft, &nativeRight);
-
-    return decDoubleToInt32(&nativeLeft, &context, DEC_ROUND_HALF_EVEN);
+    return decDoubleToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
 /* Non-computational comparisons */
-_export uint32_t nativeDecDoubleIsCanonical(managedDecDouble value)
+_export uint32_t d64IsCanonical(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsCanonical(&nativeValue);
+    return decDoubleIsCanonical(&value);
 }
 
-_export uint32_t nativeDecDoubleIsFinite(managedDecDouble value)
+_export uint32_t d64IsFinite(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsFinite(&nativeValue);
+    return decDoubleIsFinite(&value);
 }
 
-_export uint32_t nativeDecDoubleIsInfinite(managedDecDouble value)
+_export uint32_t d64IsInfinite(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsInfinite(&nativeValue);
+    return decDoubleIsInfinite(&value);
 }
 
-_export uint32_t nativeDecDoubleIsInteger(managedDecDouble value)
+_export uint32_t d64IsInteger(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsInteger(&nativeValue);
+    return decDoubleIsInteger(&value);
 }
 
-_export uint32_t nativeDecDoubleIsNaN(managedDecDouble value)
+_export uint32_t d64IsNaN(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsNaN(&nativeValue);
+    return decDoubleIsNaN(&value);
 }
 
-_export uint32_t nativeDecDoubleIsNegative(managedDecDouble value)
+_export uint32_t d64IsNegative(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsNegative(&nativeValue);
+    return decDoubleIsNegative(&value);
 }
 
-_export uint32_t nativeDecDoubleIsNormal(managedDecDouble value)
+_export uint32_t d64IsNormal(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsNormal(&nativeValue);
+    return decDoubleIsNormal(&value);
 }
 
-_export uint32_t nativeDecDoubleIsSubnormal(managedDecDouble value)
+_export uint32_t d64IsSubnormal(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsSubnormal(&nativeValue);
+    return decDoubleIsSubnormal(&value);
 }
 
-_export uint32_t nativeDecDoubleIsPositive(managedDecDouble value)
+_export uint32_t d64IsPositive(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsPositive(&nativeValue);
+    return decDoubleIsPositive(&value);
 }
 
-_export uint32_t nativeDecDoubleIsSignaling(managedDecDouble value)
+_export uint32_t d64IsSignaling(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsSignaling(&nativeValue);
+    return decDoubleIsSignaling(&value);
 }
 
-_export uint32_t nativeDecDoubleIsSigned(managedDecDouble value)
+_export uint32_t d64IsSigned(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsSigned(&nativeValue);
+    return decDoubleIsSigned(&value);
 }
 
-_export uint32_t nativeDecDoubleIsZero(managedDecDouble value)
+_export uint32_t d64IsZero(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleIsZero(&nativeValue);
+    return decDoubleIsZero(&value);
 }
 
-_export uint32_t nativeDecDoubleRadix(managedDecDouble value)
+_export uint32_t d64Radix(decDouble value)
 {
-    decDouble nativeValue;
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeValue = decDoubleFromManaged(value);
-
-    return decDoubleRadix(&nativeValue);
+    return decDoubleRadix(&value);
 }
 
-_export uint32_t nativeDecDoubleSameQuantum(managedDecDouble left, managedDecDouble right)
+_export uint32_t d64SameQuantum(decDouble left, decDouble right)
 {
-    decDouble nativeLeft;
-    decDouble nativeRight;
-
     decContext context;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    nativeLeft = decDoubleFromManaged(left);
-    nativeRight = decDoubleFromManaged(right);
-
-    return decDoubleSameQuantum(&nativeLeft, &nativeRight);
+    return decDoubleSameQuantum(&left, &right);
 }
 
 /* Utilities and conversions */
-_export char *nativeDecDoubleToString(managedDecDouble value)
+_export char *d64ToString(decDouble value)
 {
     char *string = malloc(DECDOUBLE_String);
-    decDouble nativeDouble;
-    decContext context;
 
-    decContextDefault(&context, DEC_INIT_DECDOUBLE);
-
-    nativeDouble = decDoubleFromManaged(value);
-
-    decDoubleToString(&nativeDouble, string);
+    decDoubleToString(&value, string);
 
     return string;
 }
 
-_export char *nativeDecDoubleToEngString(managedDecDouble value)
+_export char *d64ToEngString(decDouble value)
 {
     char *string = malloc(DECDOUBLE_String);
-    decDouble nativeDouble;
-    decContext context;
 
-    decContextDefault(&context, DEC_INIT_DECDOUBLE);
-
-    nativeDouble = decDoubleFromManaged(value);
-
-    decDoubleToEngString(&nativeDouble, string);
+    decDoubleToEngString(&value, string);
 
     return string;
 }
 
-_export managedDecDouble nativeDecDoubleFromString(char *value)
+_export decDouble d64FromString(char *value)
 {
-    decDouble nativeDouble;
     decContext context;
+    decDouble result;
 
     decContextDefault(&context, DEC_INIT_DECDOUBLE);
 
-    decDoubleFromString(&nativeDouble, value, &context);
+    decDoubleFromString(&result, value, &context);
 
-    return decDoubleToManaged(nativeDouble);
+    return result;
 }
 
-_export managedDecDouble nativeDecDoubleFromInt32(int32_t value)
+_export decDouble d64FromInt32(int32_t value)
 {
-    decDouble nativeDouble;
+    decDouble result;
 
-    decDoubleFromInt32(&nativeDouble, value);
+    decDoubleFromInt32(&result, value);
 
-    return decDoubleToManaged(nativeDouble);
+    return result;
 }

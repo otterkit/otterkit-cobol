@@ -2,31 +2,45 @@ using System.Runtime.CompilerServices;
 
 namespace Otterkit.Native;
 
-public unsafe readonly struct u8Memory
+public unsafe struct u8Memory : IDisposable
 {
-    /// <summary>Pointer to the allocated stack memory.</summary>
-    public readonly byte* Pointer;
+    private Pointer Pointer;
 
-    /// <summary>Length of the allocated stack memory.</summary>
-    public readonly int Length;
+    public int Length => Pointer.Length;
+    public bool Allocated => Pointer.Allocated;
 
-    /// <summary>Returns true if the stack pointer is not null</summary>
-    public readonly bool Allocated => Pointer is not null;
+    public u8Memory(int length)
+    {
+        Pointer.Alloc(length);
+    }
 
     public Span<byte> Span
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if (!Allocated) throw new NullReferenceException("Null memory used.");
+            if (!Pointer.Allocated) throw new NullReferenceException("Null pointer used.");
 
-            return new Span<byte>(Pointer, Length);
+            return new Span<byte>(Pointer.Value, Pointer.Length);
         }
     }
+    
+    public ref byte this[int index] => ref Span[index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> Slice(int start) => Span.Slice(start);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> Slice(int start, int length) => Span.Slice(start, length);
+
+    public void CopyTo(Span<byte> destination) => Span.CopyTo(destination);
+
+    public bool TryCopyTo(Span<byte> destination) => Span.TryCopyTo(destination);
+
+    public Ref<u8Memory> AsRef() => new Ref<u8Memory>(ref Unsafe.AsRef(this));
+
+    public void Dispose()
+    {
+        if (Pointer.Allocated) Pointer.Dealloc();
+    }
 }

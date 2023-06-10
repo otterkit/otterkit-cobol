@@ -1,35 +1,35 @@
 namespace Otterkit.Numerics;
 
-public readonly partial struct Decimal64
+public partial struct Decimal64
 {
     public static Decimal64 Pow(Decimal64 left, Decimal64 right)
     {
-        return DecDoubleBindings.Pow(left, right);
+        return Decimal64Bindings.Pow(left, right);
     }
 
     public static Decimal64 Sqrt(Decimal64 value)
     {
-        return DecDoubleBindings.Sqrt(value);
+        return Decimal64Bindings.Sqrt(value);
     }
 
     public static Decimal64 Ln(Decimal64 value)
     {
-        return DecDoubleBindings.Ln(value);
+        return Decimal64Bindings.Ln(value);
     }
 
     public static Decimal64 Exp(Decimal64 value)
     {
-        return DecDoubleBindings.Exp(value);
+        return Decimal64Bindings.Exp(value);
     }
 
     public static Decimal64 LogB(Decimal64 value)
     {
-        return DecDoubleBindings.LogB(value);
+        return Decimal64Bindings.LogB(value);
     }
 
     public static Decimal64 Log10(Decimal64 value)
     {
-        return DecDoubleBindings.Log10(value);
+        return Decimal64Bindings.Log10(value);
     }
 
     public static Decimal64 Tan(Decimal64 radians)

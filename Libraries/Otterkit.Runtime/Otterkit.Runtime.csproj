@@ -38,7 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Otterkit.Numerics/src/Otterkit.Numerics.csproj" />
     <ProjectReference Include="../Otterkit.Native/src/Otterkit.Native.csproj" />
   </ItemGroup>
   

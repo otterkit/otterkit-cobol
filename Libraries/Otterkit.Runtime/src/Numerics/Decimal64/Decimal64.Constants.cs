@@ -1,7 +1,7 @@
 namespace Otterkit.Numerics;
 
 
-public readonly partial struct Decimal64
+public partial struct Decimal64
 {
     // NOTE: Decimal constants should be initialized using the IEEE 754 bits constructor.
     // This avoids a call to the decimal encoder, which would make these considerably slower to use.

@@ -4,20 +4,31 @@ using System.Text;
 
 namespace Otterkit.Numerics;
 
-[StructLayout(LayoutKind.Sequential)]
-public readonly partial struct Decimal64 :
-    IStandardDecimal<Decimal64>
+[StructLayout(LayoutKind.Explicit)]
+public unsafe partial struct Decimal64 : IStandardDecimal<Decimal64>
 {
-    internal readonly ulong _Bits;
+    private const int d64Bytes = 8;
+
+    [FieldOffset(0)]
+    private fixed byte bytes[d64Bytes];
+    
+    [FieldOffset(0)]
+    private fixed ushort shorts[d64Bytes/2];
+
+    [FieldOffset(0)]
+    private fixed uint words[d64Bytes/4];
+
+    [FieldOffset(0)]
+    private fixed ulong longs[d64Bytes/8];
 
     public Decimal64(ulong bits)
     {
-        _Bits = bits;
+        longs[0] = bits;
     }
 
     public Decimal64(ReadOnlySpan<byte> utf8String)
     {
-        this = DecDoubleBindings.FromString(MemoryMarshal.GetReference(utf8String));
+        this = Decimal64Bindings.FromString(MemoryMarshal.GetReference(utf8String));
     }
 
     public Decimal64(ReadOnlySpan<char> characters)
@@ -28,7 +39,7 @@ public readonly partial struct Decimal64 :
 
         Encoding.UTF8.GetBytes(characters, utf8String);
         
-        this = DecDoubleBindings.FromString(MemoryMarshal.GetReference(utf8String));
+        this = Decimal64Bindings.FromString(MemoryMarshal.GetReference(utf8String));
     }
 
     public override bool Equals([NotNullWhen(true)] object? obj)
@@ -48,7 +59,7 @@ public readonly partial struct Decimal64 :
 
     public bool Equals(Decimal64 decQuad)
     {
-        return DecDoubleBindings.Compare(this, decQuad) == 0;
+        return Decimal64Bindings.Compare(this, decQuad) == 0;
     }
     
     public int CompareTo(object? obj)
@@ -66,7 +77,7 @@ public readonly partial struct Decimal64 :
     public int CompareTo(Decimal64 other)
     {
         // Call decQuad compare function.
-        var compare = DecDoubleBindings.Compare(this, other);
+        var compare = Decimal64Bindings.Compare(this, other);
 
         // decQuad bindings will only return -5 if one
         // of the arguments is NaN.
@@ -79,12 +90,12 @@ public readonly partial struct Decimal64 :
     public override int GetHashCode()
     {
         // Does this work with this encoding?
-        return _Bits.GetHashCode();
+        return longs[0].GetHashCode();
     }
 
     public static ulong Encode(Decimal64 value)
     {
-        return value._Bits;
+        return value.longs[0];
     }
 
     public static Decimal64 Decode(ulong bits)

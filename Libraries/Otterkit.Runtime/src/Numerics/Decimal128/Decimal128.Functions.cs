@@ -1,35 +1,35 @@
 namespace Otterkit.Numerics;
 
-public readonly partial struct Decimal128
+public partial struct Decimal128
 {
     public static Decimal128 Pow(Decimal128 left, Decimal128 right)
     {
-        return DecQuadBindings.Pow(left, right);
+        return Decimal128Bindings.Pow(left, right);
     }
 
     public static Decimal128 Sqrt(Decimal128 value)
     {
-        return DecQuadBindings.Sqrt(value);
+        return Decimal128Bindings.Sqrt(value);
     }
 
     public static Decimal128 Ln(Decimal128 value)
     {
-        return DecQuadBindings.Ln(value);
+        return Decimal128Bindings.Ln(value);
     }
 
     public static Decimal128 Exp(Decimal128 value)
     {
-        return DecQuadBindings.Exp(value);
+        return Decimal128Bindings.Exp(value);
     }
 
     public static Decimal128 LogB(Decimal128 value)
     {
-        return DecQuadBindings.LogB(value);
+        return Decimal128Bindings.LogB(value);
     }
 
     public static Decimal128 Log10(Decimal128 value)
     {
-        return DecQuadBindings.Log10(value);
+        return Decimal128Bindings.Log10(value);
     }
 
     public static Decimal128 Tan(Decimal128 radians)

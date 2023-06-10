@@ -3,14 +3,14 @@ using System.Text;
 
 namespace Otterkit.Numerics;
 
-public readonly partial struct Decimal64
+public partial struct Decimal128
 {
-    public static Decimal64 Parse(ReadOnlySpan<byte> utf8String)
+    public static Decimal128 Parse(ReadOnlySpan<byte> utf8String)
     {
-        return DecDoubleBindings.FromString(MemoryMarshal.GetReference(utf8String));
+        return Decimal128Bindings.FromString(MemoryMarshal.GetReference(utf8String));
     }
     
-    public static Decimal64 Parse(ReadOnlySpan<char> stringValue)
+    public static Decimal128 Parse(ReadOnlySpan<char> stringValue)
     {
         var length = Encoding.UTF8.GetByteCount(stringValue);
         
@@ -18,13 +18,13 @@ public readonly partial struct Decimal64
 
         Encoding.UTF8.GetBytes(stringValue, span);
         
-        return DecDoubleBindings.FromString(MemoryMarshal.GetReference(span));
+        return Decimal128Bindings.FromString(MemoryMarshal.GetReference(span));
     }
     
     public unsafe ReadOnlyMemory<byte> ToUtf8Memory()
     {
         // This is a C string (char*), becomes a byte* in C#.
-        var pointer = DecDoubleBindings.ToString(this);
+        var pointer = Decimal128Bindings.ToString(this);
 
         // Because C strings are null terminated.
         var span = MemoryMarshal.CreateReadOnlySpanFromNullTerminated(pointer);
@@ -48,7 +48,7 @@ public readonly partial struct Decimal64
     public unsafe int AsSpan(Span<byte> destination)
     {
         // This is a C string (char*), becomes a byte* in C#.
-        var pointer = DecDoubleBindings.ToString(this);
+        var pointer = Decimal128Bindings.ToString(this);
         
         // Because C strings are null terminated.
         var span = MemoryMarshal.CreateReadOnlySpanFromNullTerminated(pointer);
@@ -69,7 +69,7 @@ public readonly partial struct Decimal64
     public unsafe byte* AsNullTerminatedPointer()
     {
         // This is a C string (char*), becomes a byte* in C#.
-        var pointer = DecDoubleBindings.ToString(this);
+        var pointer = Decimal128Bindings.ToString(this);
 
         // Return the C string directly
         // WARNING: This pointer needs to be freed after
@@ -80,7 +80,7 @@ public readonly partial struct Decimal64
     public override unsafe string ToString()
     {
         // This is a C string (char*), becomes a byte* in C#.
-        var pointer = DecDoubleBindings.ToString(this);
+        var pointer = Decimal128Bindings.ToString(this);
 
         // Because C strings are null terminated.
         var span = MemoryMarshal.CreateReadOnlySpanFromNullTerminated(pointer);
@@ -99,7 +99,7 @@ public readonly partial struct Decimal64
     public unsafe string ToEngineeringString()
     {
         // This is a C string (char*), becomes a byte* in C#.
-        var pointer = DecDoubleBindings.ToString(this);
+        var pointer = Decimal128Bindings.ToString(this);
 
         // Because C strings are null terminated.
         var span = MemoryMarshal.CreateReadOnlySpanFromNullTerminated(pointer);

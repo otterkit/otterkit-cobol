@@ -4,22 +4,32 @@ using System.Text;
 
 namespace Otterkit.Numerics;
 
-[StructLayout(LayoutKind.Sequential)]
-public readonly partial struct Decimal128 :
-    IStandardDecimal<Decimal128>
+[StructLayout(LayoutKind.Explicit)]
+public unsafe partial struct Decimal128 : IStandardDecimal<Decimal128>
 {
-    internal readonly ulong _upperBits;
-    internal readonly ulong _lowerBits;
+    private const int d128Bytes = 16;
+
+    [FieldOffset(0)]
+    private fixed byte bytes[d128Bytes];
+    
+    [FieldOffset(0)]
+    private fixed ushort shorts[d128Bytes/2];
+
+    [FieldOffset(0)]
+    private fixed uint words[d128Bytes/4];
+
+    [FieldOffset(0)]
+    private fixed ulong longs[d128Bytes/8];
 
     public Decimal128(ulong upperBits, ulong lowerBits)
     {
-        _upperBits = upperBits;
-        _lowerBits = lowerBits;
+        longs[0] = upperBits;
+        longs[1] = lowerBits;
     }
 
     public Decimal128(ReadOnlySpan<byte> utf8String)
     {
-        this = DecQuadBindings.FromString(MemoryMarshal.GetReference(utf8String));
+        this = Decimal128Bindings.FromString(MemoryMarshal.GetReference(utf8String));
     }
 
     public Decimal128(ReadOnlySpan<char> characters)
@@ -30,7 +40,7 @@ public readonly partial struct Decimal128 :
 
         Encoding.UTF8.GetBytes(characters, utf8String);
         
-        this = DecQuadBindings.FromString(MemoryMarshal.GetReference(utf8String));
+        this = Decimal128Bindings.FromString(MemoryMarshal.GetReference(utf8String));
     }
 
     public override bool Equals([NotNullWhen(true)] object? obj)
@@ -50,7 +60,7 @@ public readonly partial struct Decimal128 :
 
     public bool Equals(Decimal128 decQuad)
     {
-        return DecQuadBindings.Compare(this, decQuad) == 0;
+        return Decimal128Bindings.Compare(this, decQuad) == 0;
     }
     
     public int CompareTo(object? obj)
@@ -68,7 +78,7 @@ public readonly partial struct Decimal128 :
     public int CompareTo(Decimal128 other)
     {
         // Call decQuad compare function.
-        var compare = DecQuadBindings.Compare(this, other);
+        var compare = Decimal128Bindings.Compare(this, other);
 
         // decQuad bindings will only return -5 if one
         // of the arguments is NaN.
@@ -81,12 +91,12 @@ public readonly partial struct Decimal128 :
     public override int GetHashCode()
     {
         // Does this work with this encoding?
-        return HashCode.Combine(_upperBits, _lowerBits);
+        return HashCode.Combine(longs[0], longs[1]);
     }
 
     public static (ulong UpperBits, ulong LowerBits) Encode(Decimal128 value)
     {
-        return (value._upperBits, value._lowerBits);
+        return (value.longs[0], value.longs[1]);
     }
 
     public static Decimal128 Decode(ulong upperBits, ulong lowerBits)

@@ -1,6 +1,6 @@
 namespace Otterkit.Native;
 
-public static class u8Text
+public static class u8Color
 {
     public static ReadOnlySpan<byte> Black => "\x1B[30m"u8;
     public static ReadOnlySpan<byte> Red => "\x1B[31m"u8;

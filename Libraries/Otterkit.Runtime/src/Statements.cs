@@ -618,14 +618,14 @@ public static class Statement
     {
         if (error)
         {
-            u8Console.Write(u8Text.Red, "Error termination with status: "u8);
+            u8Console.Write(u8Color.Red, "Error termination with status: "u8);
 
             u8Console.WriteLine(status);
 
             Environment.Exit(1);
         }
 
-        u8Console.Write(u8Text.Green, "Normal termination with status: "u8);
+        u8Console.Write(u8Color.Green, "Normal termination with status: "u8);
 
         u8Console.WriteLine(status);
 

@@ -4,7 +4,7 @@ namespace Otterkit;
 
 public static partial class Tools
 {
-    private const string Path = "../Libraries/Otterkit.Runtime/src/Generated/ExceptionIndex.cs";
+    private const string ExceptionIndexPath = "../Libraries/Otterkit.Runtime/src/Generated/ExceptionIndex.cs";
 
     public static void GenerateExceptionIndex()
     {
@@ -191,6 +191,6 @@ public static partial class Tools
         builder.AppendLine("    }");
         builder.AppendLine("}");
 
-        File.WriteAllText(Path, builder.ToString());
+        File.WriteAllText(ExceptionIndexPath, builder.ToString());
     }
 }

@@ -17,7 +17,7 @@ public static class Otterkit
             return;
         }
 
-        if (args[0] is "new" or "build")
+        if (args[0] is "new" or "build" or "tools")
         {
             TryLoadProject();
             
@@ -130,6 +130,21 @@ public static class Otterkit
             }
 
             OtterkitMain();
+        }
+    
+        if (args[0].Equals("tools"))
+        {
+            var index = 0;
+            foreach (string argument in args)
+            {
+                index++;
+                switch (argument)
+                {
+                    case "--generate-exception-index":
+                        Tools.GenerateExceptionIndex();
+                        break;
+                }
+            }
         }
     }
 

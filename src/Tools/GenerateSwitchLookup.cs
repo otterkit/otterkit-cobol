@@ -16,6 +16,7 @@ public static partial class Tools
 
             var length = Encoding.UTF8.GetBytes(name, span);
 
+            builder.AppendLine($"            // {name}");
             builder.Append("            [");
 
             for (int j = 0; j < length; j++)
@@ -24,7 +25,11 @@ public static partial class Tools
 
                 if (_byte == 0) break;
 
-                if (_byte > 96 && _byte < 123) span[j] ^= 0x20;
+                if (_byte > 64 && _byte < 91)
+                {
+                    builder.Append($"{_byte + 32} or {_byte},");
+                    continue;
+                }
 
                 if (j == length - 1)
                 {

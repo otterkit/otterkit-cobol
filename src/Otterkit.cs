@@ -143,6 +143,10 @@ public static class Otterkit
                     case "--generate-exception-index":
                         Tools.GenerateExceptionIndex();
                         break;
+
+                    case "--generate-unicode-data":
+                        Tools.GenerateUnicodeData();
+                        break;
                 }
             }
         }

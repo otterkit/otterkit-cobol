@@ -20,7 +20,7 @@ public static class Otterkit
         if (args[0] is "new" or "build" or "tools")
         {
             TryLoadProject();
-            
+
             CommandLineArguments(args);
             return;
         }
@@ -50,7 +50,7 @@ public static class Otterkit
                     case "library":
                         CompilerOptions.Output = OutputType.Library;
                         break;
-                    
+
                     case "-n":
                     case "--name":
                         CompilerOptions.Name = args[index];
@@ -131,7 +131,7 @@ public static class Otterkit
 
             OtterkitMain();
         }
-    
+
         if (args[0].Equals("tools"))
         {
             var index = 0;
@@ -202,7 +202,7 @@ public static class Otterkit
             Directory.CreateDirectory(".otterkit/Build");
             CallDotnetCompiler("build");
         }
-        
+
         if (CompilerOptions.Mode is BuildType.BuildAndRun)
         {
             CodeGenerator.Generate(CompilerContext.SourceTokens, CompilerOptions.Main);

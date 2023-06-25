@@ -106,4 +106,3 @@ _export int32_t u8CharToCodepoint(const uint8_t* source, uint32_t* destination)
 
     return length;
 }
-

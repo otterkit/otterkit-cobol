@@ -1,7 +1,6 @@
 // Adapted from: https://github.com/simdutf/simdutf/
 // License: MIT or Apache-2.0 (See NOTICE in root directory)
 
-#include <string.h>
 #include "u8simd.h"
 #include "common.h"
 

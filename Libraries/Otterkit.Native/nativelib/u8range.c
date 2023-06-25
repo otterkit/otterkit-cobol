@@ -1,7 +1,6 @@
 // Adapted from: https://github.com/cyb70289/utf8
 // License: MIT (See NOTICE in root directory)
 
-#include <stdio.h>
 #include "u8simd.h"
 #include "common.h"
 

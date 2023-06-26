@@ -155,7 +155,7 @@ public static class Otterkit
 
                     Console.WriteLine("Generating Unicode Data...");
 
-                    if (index > args.Length || args[index].StartsWith("--"))
+                    if (index > args.Length - 1 || args[index].StartsWith("--"))
                     {
                         Console.WriteLine("No path specified.");
                         goto default;
@@ -172,7 +172,6 @@ public static class Otterkit
 
                 default:
                     Console.WriteLine($"Invalid command: {argument}");
-                    DisplayHelpMessage();
                     return;
             }
         }

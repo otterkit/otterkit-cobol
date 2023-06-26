@@ -69,9 +69,11 @@ public static partial class Tools
 
         foreach (var casefold in casefoldLines)
         {
-            var data = casefold.Split(";");
+            if (casefold.Length < 3) continue;
 
-            if (data.Length < 3) continue;
+            if (casefold[0] is '#') continue;
+
+            var data = casefold.Split(";");
 
             if (data[1][1..] is "C" or "S")
             {

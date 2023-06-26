@@ -39,8 +39,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- <ProjectReference Include="../Libraries/Otterkit.Runtime/Otterkit.Runtime.csproj" /> -->
-    <!-- <ProjectReference Include="../Libraries/Otterkit.Native/src/Otterkit.Native.csproj" /> -->
+    <ProjectReference Include="../Libraries/Otterkit.Runtime/Otterkit.Runtime.csproj" />
+    <ProjectReference Include="../Libraries/Otterkit.Native/src/Otterkit.Native.csproj" />
     <!-- <PackageReference Include="BenchmarkDotNet" Version="0.13.5" /> -->
   </ItemGroup>
 

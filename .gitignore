@@ -24,6 +24,7 @@ nativeBindings/*.so
 # Unicode data files
 CaseFolding.txt
 UnicodeData.txt
+*.txt
 
 # macOS DS_Store
 .DS_Store

@@ -145,7 +145,7 @@ public static class Otterkit
                         break;
 
                     case "--generate-unicode-data":
-                        Tools.GenerateUnicodeData();
+                        Tools.GenerateBasicMultilingualPlane();
                         break;
                 }
             }

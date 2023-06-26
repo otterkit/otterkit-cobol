@@ -155,7 +155,7 @@ public static class Otterkit
 
                     Console.WriteLine("Generating Unicode Data...");
 
-                    if (index > args.Length)
+                    if (index > args.Length || args[index].StartsWith("--"))
                     {
                         Console.WriteLine("No path specified.");
                         goto default;

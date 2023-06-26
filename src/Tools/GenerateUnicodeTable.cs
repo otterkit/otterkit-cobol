@@ -52,9 +52,9 @@ public unsafe struct u8Char
 
 public static partial class Tools
 {
-    public static Dictionary<uint, (uint Uppercase, uint Casefolded)> FetchUnicodeData()
+    public static Dictionary<uint, (uint Uppercase, uint Casefolded)> FetchUnicodeData(string toolsPath)
     {
-        Directory.SetCurrentDirectory("/Users/ktlsf/Documents/GitHub/otterkit/src/Tools");
+        Directory.SetCurrentDirectory(toolsPath);
 
         var lines = File.ReadAllText("UnicodeData.txt").Split("\n");
 
@@ -121,9 +121,9 @@ public static partial class Tools
         return unicodeData;
     }
 
-    public static void GenerateBasicMultilingualPlane()
+    public static void GenerateBasicMultilingualPlane(string toolsPath)
     {
-        var unicodeData = FetchUnicodeData();
+        var unicodeData = FetchUnicodeData(toolsPath);
 
         StringBuilder builder = new();
 
@@ -136,7 +136,7 @@ public static partial class Tools
         builder.AppendLine("#include \"u8unicode.h\"\n");
 
         builder.AppendLine("// Unicode Basic Multilingual Plane (U+0000 ... U+FFFF)");
-        builder.AppendLine("const UnicodeTableEntry u32BMP[0x10000] =");
+        builder.AppendLine("const UnicodeTableEntry u32BMP[0x110000] =");
         builder.AppendLine("{");
 
         for (uint index = 0x0000; index <= 0xFFFF; index++)

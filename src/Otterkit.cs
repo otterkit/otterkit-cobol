@@ -134,20 +134,46 @@ public static class Otterkit
 
         if (args[0].Equals("tools"))
         {
-            var index = 0;
-            foreach (string argument in args)
-            {
-                index++;
-                switch (argument)
-                {
-                    case "--generate-exception-index":
-                        Tools.GenerateExceptionIndex();
-                        break;
+            HandleToolsCommands(args);
+        }
+    }
 
-                    case "--generate-unicode-data":
-                        Tools.GenerateBasicMultilingualPlane();
-                        break;
-                }
+    private static void HandleToolsCommands(string[] args)
+    {
+        for (var i = 1; i < args.Length; i++)
+        {
+            var argument = args[i];
+
+            var index = i + 1;
+            switch (argument)
+            {
+                case "--generate-exception-index":
+                    Tools.GenerateExceptionIndex();
+                    break;
+
+                case "--generate-unicode-data":
+
+                    Console.WriteLine("Generating Unicode Data...");
+
+                    if (index > args.Length)
+                    {
+                        Console.WriteLine("No path specified.");
+                        goto default;
+                    }
+
+                    Console.WriteLine($"Tools path: {args[index]}");
+
+                    var path = args[index];
+
+                    i++;
+
+                    Tools.GenerateBasicMultilingualPlane(path);
+                    break;
+
+                default:
+                    Console.WriteLine($"Invalid command: {argument}");
+                    DisplayHelpMessage();
+                    return;
             }
         }
     }

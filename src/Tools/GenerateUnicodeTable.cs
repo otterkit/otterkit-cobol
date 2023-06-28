@@ -3,8 +3,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Otterkit.Runtime;
 
-using System.IO.Hashing;
-
 namespace Otterkit;
 
 [StructLayout(LayoutKind.Explicit)]
@@ -70,6 +68,13 @@ public static partial class Tools
             unicodeData.Add(i, (i, i));
         }
 
+        var casefoldData = File.CreateText("u8CaseFolding.txt");
+
+        casefoldData.AutoFlush = true;
+
+        Span<byte> bytes = stackalloc byte[4];
+        Span<byte> casefoldBytes = stackalloc byte[4];
+
         foreach (var casefold in casefoldLines)
         {
             if (casefold.Length < 3) continue;
@@ -89,6 +94,12 @@ public static partial class Tools
                 if (casefolded > 0x10FFFF) continue;
 
                 unicodeData[codepoint] = (unicodeData[codepoint].Uppercase, casefolded);
+
+                u8Strings.FromCodepoint(codepoint, bytes);
+
+                u8Strings.FromCodepoint(uint.Parse(data[12], NumberStyles.HexNumber), casefoldBytes);
+
+                casefoldData.WriteLine($"{bytes[0]:X2} {bytes[1]:X2} {bytes[2]:X2} {bytes[3]:X2}; {data[1]}; {casefoldBytes[0]:X2} {casefoldBytes[1]:X2} {casefoldBytes[2]:X2} {casefoldBytes[3]:X2}; # {data[3]}");
             }
             else
             {
@@ -102,7 +113,6 @@ public static partial class Tools
 
         uppercaseData.AutoFlush = true;
 
-        Span<byte> bytes = stackalloc byte[4];
         Span<byte> uppercase = stackalloc byte[4];
 
         foreach (var line in lines)

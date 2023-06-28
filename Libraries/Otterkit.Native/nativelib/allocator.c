@@ -10,11 +10,11 @@
 // Convert kilobytes to bytes.
 #define KB(x) (x * 1024)
 
-// Stack memory, default size: 128 KB.
-static const uint8_t Stack[KB(128)];
+// Stack memory, default size: 2 MB.
+static uint8_t Stack[MB(2)];
 
 // Stack pointer, points to the next available memory address.
-static uint8_t *StackPointer = (uint8_t *)Stack;
+static uint8_t *StackPointer = Stack;
 
 // Might be useful for debugging or profiling.
 _export int32_t GetStackUsage()

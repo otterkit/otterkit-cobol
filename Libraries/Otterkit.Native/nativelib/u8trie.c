@@ -16,15 +16,18 @@ typedef struct u8TrieNode
     u8tdata_t data;
 } u8tnode_t;
 
-#define U8SET(byte) | 1ULL << (byte & 0b00111111)
+// Set a bit in a 64-bit bitmap, using the byte as the index.
+#define I(byte) | 1UL << (byte & 0b00111111)
 
+// Static compressed trie for UTF-8 casefolding, more compact than a hash table
+// and faster than a binary search tree.
 const u8tnode_t u8UpperTrie[] = 
 {
-    { /* root */ .offset = 1, .data = { .bitmap = 0UL U8SET(0xF0) } },
-    { /* 0xF0 */ .offset = 2, .data = { .bitmap = 0UL U8SET(0x9E) } },
-    { /* 0x9E */ .offset = 3, .data = { .bitmap = 0UL U8SET(0xA4) U8SET(0xA5) } },
-    { /* 0xA4 */ .offset = 5, .data = { .bitmap = 0UL U8SET(0xA2) U8SET(0xA3) U8SET(0xA4) U8SET(0xA5) U8SET(0xA6) U8SET(0xA7) U8SET(0xA8) U8SET(0xA9) U8SET(0xAA) U8SET(0xAB) U8SET(0xAC) U8SET(0xAD) U8SET(0xAE) U8SET(0xAF) U8SET(0xB0) U8SET(0xB1) U8SET(0xB2) U8SET(0xB3) U8SET(0xB4) U8SET(0xB5) U8SET(0xB6) U8SET(0xB7) U8SET(0xB8) U8SET(0xB9) U8SET(0xBA) U8SET(0xBB) U8SET(0xBC) U8SET(0xBD) U8SET(0xBE) U8SET(0xBF) } },
-    { /* 0xA5 */ .offset = 35, .data = { .bitmap = 0UL U8SET(0x80) U8SET(0x81) U8SET(0x82) U8SET(0x83) } },
+    { /* root */ .offset = 1, .data = { .bitmap = 0UL I(0xF0) } },
+    { /* 0xF0 */ .offset = 2, .data = { .bitmap = 0UL I(0x9E) } },
+    { /* 0x9E */ .offset = 3, .data = { .bitmap = 0UL I(0xA4) I(0xA5) } },
+    { /* 0xA4 */ .offset = 5, .data = { .bitmap = 0UL I(0xA2) I(0xA3) I(0xA4) I(0xA5) I(0xA6) I(0xA7) I(0xA8) I(0xA9) I(0xAA) I(0xAB) I(0xAC) I(0xAD) I(0xAE) I(0xAF) I(0xB0) I(0xB1) I(0xB2) I(0xB3) I(0xB4) I(0xB5) I(0xB6) I(0xB7) I(0xB8) I(0xB9) I(0xBA) I(0xBB) I(0xBC) I(0xBD) I(0xBE) I(0xBF) } },
+    { /* 0xA5 */ .offset = 35, .data = { .bitmap = 0UL I(0x80) I(0x81) I(0x82) I(0x83) } },
     { /* 0xA2 */ .offset = 0, .data = { .bytes = { 0xF0, 0x9E, 0xA4, 0x80, 0x00, 0x00, 0x00, 0x04 } } },
     { /* 0xA3 */ .offset = 0, .data = { .bytes = { 0xF0, 0x9E, 0xA4, 0x81, 0x00, 0x00, 0x00, 0x04 } } },
     { /* 0xA4 */ .offset = 0, .data = { .bytes = { 0xF0, 0x9E, 0xA4, 0x82, 0x00, 0x00, 0x00, 0x04 } } },
@@ -61,31 +64,53 @@ const u8tnode_t u8UpperTrie[] =
     { /* 0x83 */ .offset = 0, .data = { .bytes = { 0xF0, 0x9E, 0xA4, 0xA1, 0x00, 0x00, 0x00, 0x04 } } },
 };
 
+// Memory and thread safety notes:
+// The trie is static and read-only, so it should be safe to read from multiple threads.
+// The algorithm assumes that the data is null-terminated, and only contains a single valid UTF-8 codepoint.
+// It assumes that the destination buffer is large enough to hold the result (at least 6 bytes).
 _export int32_t u8TrieSearch(const uint8_t *data, uint8_t *destination)
 {
-    const u8tnode_t *root = u8UpperTrie;
+    // The trie is a prefix tree, ours is stored as a static array to avoid dynamic allocation.
+    // Each node has a bitmap of the possible next bytes and the offset of its first child node.
 
+    // Fetch the root node.
+    const u8tnode_t *root = u8UpperTrie;
+        
     const u8tnode_t *node = root;
 
+    // Walk the trie until we reach a leaf node or run out of data.
+    // Data needs to be null-terminated, loop will break when it reaches it.
     while (*data)
     {
+        // The trie is designed to be used with non-ASCII UTF-8 data, so we only need to look at the last 6 bits.
+        // The first two bits are always either 10xx.. or 11xx.., so we can toggle them off.
         uint8_t byte = *data++ & 0b00111111;
 
+        // The above operation will leave us with a compressed byte with maximum value of 64.
+        // This is a huge space optimization, since we can use a single uint64_t to store the bitmap.
+        // The bitmap is a 64-bit integer with each bit representing a possible next byte.
         uint64_t bitmap = node->data.bitmap;
 
-        if (!((bitmap >> byte) & 1ULL)) break;
+        // If the byte is not in the current node's bitmap, we can stop searching.
+        // The byte sequence is not in the trie.
+        // We return 0 to indicate that the search failed and no data was copied.
+        if (!((bitmap >> byte) & 1UL)) return 0;
 
-        uint64_t count = _mm_popcnt_u64(bitmap & ((1ULL << byte) - 1));
+        // Count the number of bits set before the current byte.
+        // This plus the offset of the current node's first child node is the index of the next node.
+        uint64_t count = _mm_popcnt_u64(bitmap & ((1UL << byte) - 1));
 
+        // Fetch the next node.
         node = &root[node->offset + count];
+
+        // If the node has a 0 offset, it's a leaf node.
+        // We can stop searching, we found the byte sequence in the trie.
+        if (!node->offset) break;
     }
 
-    if (!node->offset)
-    {
-        memcpy(destination, node->data.bytes, 4);
+    // Copy the data from the leaf node to the destination buffer.
+    memcpy(destination, node->data.bytes, 6);
 
-        return (int32_t)node->data.bytes[7];
-    }
-
-    return 0;
+    // Return the length of the copied data.
+    return (int32_t)node->data.bytes[7];
 }

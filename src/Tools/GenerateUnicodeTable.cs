@@ -1,6 +1,9 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
+using Otterkit.Runtime;
+
+using System.IO.Hashing;
 
 namespace Otterkit;
 
@@ -95,6 +98,13 @@ public static partial class Tools
             }
         }
 
+        var uppercaseData = File.CreateText("UpperCase.txt");
+
+        uppercaseData.AutoFlush = true;
+
+        Span<byte> bytes = stackalloc byte[4];
+        Span<byte> uppercase = stackalloc byte[4];
+
         foreach (var line in lines)
         {
             var data = line.Split(";");
@@ -105,22 +115,55 @@ public static partial class Tools
 
             if (codepoint > 0x10FFFF) continue;
 
-            uint uppercase = 0;
+            if (data[12] is not "")
+            {
+                u8Strings.FromCodepoint(codepoint, bytes);
 
-            if (data[12] is "")
-            {
-                uppercase = codepoint;
-            }
-            else
-            {
-                uppercase = uint.Parse(data[12], NumberStyles.HexNumber);
+                u8Strings.FromCodepoint(uint.Parse(data[12], NumberStyles.HexNumber), uppercase);
+
+                uppercaseData.WriteLine($"{bytes[0]:X2} {bytes[1]:X2} {bytes[2]:X2} {bytes[3]:X2}; U; {uppercase[0]:X2} {uppercase[1]:X2} {uppercase[2]:X2} {uppercase[3]:X2}; # {data[1]}");
             }
 
+            bytes.Clear();
+            uppercase.Clear();
 
-            unicodeData[codepoint] = (uppercase, unicodeData[codepoint].Casefolded);
+            // unicodeData[codepoint] = (uppercase, unicodeData[codepoint].Casefolded);
         }
 
         return unicodeData;
+    }
+
+    public static Dictionary<uint, uint> FetchCaseFoldData(string toolsPath)
+    {
+        Directory.SetCurrentDirectory(toolsPath);
+
+        var casefoldLines = File.ReadAllText("CaseFolding.txt").Split("\n");
+
+        var casefoldData = new Dictionary<uint, uint>();
+
+        foreach (var casefold in casefoldLines)
+        {
+            if (casefold.Length < 3) continue;
+
+            if (casefold[0] is '#') continue;
+
+            var data = casefold.Split(";");
+
+            if (data[1][1..] is "C" or "S")
+            {
+                var codepoint = uint.Parse(data[0], NumberStyles.HexNumber);
+
+                if (codepoint > 0x10FFFF) continue;
+
+                var casefolded = uint.Parse(data[2][1..], NumberStyles.HexNumber);
+
+                if (casefolded > 0x10FFFF) continue;
+
+                casefoldData[codepoint] = casefolded;
+            }
+        }
+
+        return casefoldData;
     }
 
     public static void GenerateBasicMultilingualPlane(string toolsPath)
@@ -137,8 +180,8 @@ public static partial class Tools
 
         builder.AppendLine("#include \"u8unicode.h\"\n");
 
-        builder.AppendLine("// Unicode Basic Multilingual Plane (U+0000 ... U+FFFF)");
-        builder.AppendLine("const UnicodeTableEntry u32BMP[0x110000] =");
+        builder.AppendLine("// Unicode Codepoint Database (U+0000 ... U+FFFF)");
+        builder.AppendLine("const UnicodeTableEntry u8Unicode[0x10000] =");
         builder.AppendLine("{");
 
         for (uint index = 0x0000; index <= 0xFFFF; index++)
@@ -155,7 +198,7 @@ public static partial class Tools
             Directory.CreateDirectory("Unicode");
         }
 
-        File.WriteAllText("Unicode/u8BMP.c", builder.ToString());
+        File.WriteAllText("Unicode/u8unicode.c", builder.ToString());
     }
 
     private static void AppendCodepoint(StringBuilder builder, string codepoint, uint index, bool isEnd = false)
@@ -168,29 +211,5 @@ public static partial class Tools
         {
             builder.AppendLine($"    {codepoint}, // [{index}]");
         }
-    }
-
-    private static string RangeStart = "";
-
-    private static void AppendUnicodeRange(StringBuilder builder, string start, string end, uint index, uint length)
-    {
-        var startCodepoint = uint.Parse(start[2..], NumberStyles.HexNumber);
-        var endCodepoint = uint.Parse(end[2..], NumberStyles.HexNumber);
-
-        while (startCodepoint <= endCodepoint)
-        {
-            var codepoint = $"0x{startCodepoint:X4}";
-
-            AppendCodepoint(builder, codepoint, index, index == length);
-
-            startCodepoint++;
-        }
-
-        if (RangeStart == "")
-        {
-            RangeStart = start;
-        }
-
-        RangeStart = "";
     }
 }

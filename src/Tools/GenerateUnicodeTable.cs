@@ -68,12 +68,14 @@ public static partial class Tools
             unicodeData.Add(i, (i, i));
         }
 
-        var casefoldData = File.CreateText("u8CaseFolding.txt");
+        var casefoldData = File.CreateText("u8CaseFolding.h");
 
         casefoldData.AutoFlush = true;
 
         Span<byte> bytes = stackalloc byte[4];
         Span<byte> casefoldBytes = stackalloc byte[4];
+
+        var differences = new HashSet<int>();
 
         foreach (var casefold in casefoldLines)
         {
@@ -97,9 +99,13 @@ public static partial class Tools
 
                 u8Strings.FromCodepoint(codepoint, bytes);
 
-                u8Strings.FromCodepoint(uint.Parse(data[12], NumberStyles.HexNumber), casefoldBytes);
+                u8Strings.FromCodepoint(casefolded, casefoldBytes);
 
-                casefoldData.WriteLine($"{bytes[0]:X2} {bytes[1]:X2} {bytes[2]:X2} {bytes[3]:X2}; {data[1]}; {casefoldBytes[0]:X2} {casefoldBytes[1]:X2} {casefoldBytes[2]:X2} {casefoldBytes[3]:X2}; # {data[3]}");
+                differences.Add((int)casefolded - (int)codepoint);
+
+                var bytesDiff = $"{casefoldBytes[0]-bytes[0]:X2} {casefoldBytes[1]-bytes[1]:X2} {casefoldBytes[2]-bytes[2]:X2} {casefoldBytes[3]-bytes[3]:X2}";
+
+                casefoldData.WriteLine($"// 0x{codepoint:X4}; {data[1][1..]}; 0x{casefolded:X4}; DIFF[{bytesDiff}] ;{data[3]}");
             }
             else
             {
@@ -108,6 +114,8 @@ public static partial class Tools
                 unicodeData[codepoint] = (unicodeData[codepoint].Uppercase, codepoint);
             }
         }
+
+        Console.WriteLine($"Differences: {differences.Count}");
 
         var uppercaseData = File.CreateText("UpperCase.txt");
 
@@ -163,11 +171,7 @@ public static partial class Tools
             {
                 var codepoint = uint.Parse(data[0], NumberStyles.HexNumber);
 
-                if (codepoint > 0x10FFFF) continue;
-
                 var casefolded = uint.Parse(data[2][1..], NumberStyles.HexNumber);
-
-                if (casefolded > 0x10FFFF) continue;
 
                 casefoldData[codepoint] = casefolded;
             }

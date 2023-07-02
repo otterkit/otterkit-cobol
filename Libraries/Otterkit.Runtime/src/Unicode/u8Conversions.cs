@@ -11,7 +11,7 @@ public static unsafe partial class u8Strings
     private static partial int ToCodepoint(byte* source, uint* destination);
 
     [LibraryImport("nativelib", EntryPoint = "u8TrieSearch")]
-    public static partial int ToUpper(byte* source, byte* destination);
+    public static partial byte* CaseFold(byte* source);
 
     public static int FromCodepoint(uint codepoint, Span<byte> destination)
     {

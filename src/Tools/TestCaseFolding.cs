@@ -9,9 +9,9 @@ public static unsafe partial class Tools
     {
         var data = Tools.FetchCaseFoldData(toolsPath);
 
-        var _string = stackalloc byte[4] { 0x00, 0x00, 0x00, 0x00 };
+        var _string = stackalloc byte[5] { 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-        var _string2 = stackalloc byte[4] { 0x00, 0x00, 0x00, 0x00 };
+        var _string2 = stackalloc byte[5] { 0x00, 0x00, 0x00, 0x00, 0x00 };
 
         foreach (var casefold in data)
         {

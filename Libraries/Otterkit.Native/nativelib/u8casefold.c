@@ -1758,7 +1758,7 @@ static const uint8_t *u8MappingSearch(const uint8_t *data)
     const uint8_t *index = data;
 
     // Fetch the root node.
-    const u8tnode_t *root = u8RootNodes[u8RuneLength(*index) - 1];
+    const u8tnode_t *root = u8RootNodes[u8RuneLength(*index) - 2];
         
     const u8tnode_t *node = root;
 

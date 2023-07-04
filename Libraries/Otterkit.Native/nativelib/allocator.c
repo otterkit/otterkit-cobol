@@ -50,9 +50,6 @@ _export void *Alloc(uint32_t length)
 
     // Get a pointer to the next available memory address.
     void *memory = StackPointer;
-
-    // Zero out the memory.
-    memset(memory, 0, length);
     
     // Increment stack pointer.
     StackPointer += length;

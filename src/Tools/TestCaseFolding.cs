@@ -1,4 +1,5 @@
 using Otterkit.Runtime;
+using Otterkit.Native;
 
 namespace Otterkit;
 
@@ -14,13 +15,11 @@ public static unsafe partial class Tools
 
         foreach (var casefold in data)
         {
-            if (casefold.Key < 0x80) continue;
-
             u8Strings.FromCodepoint(casefold.Key, new(_string, 4));
 
             u8Strings.FromCodepoint(casefold.Value, new(_string2, 4));
 
-            var result = u8Strings.CaseFold(_string);
+            var result = u8Strings.CaseFold(_string, 4);
 
             Console.WriteLine($"Testing: {casefold.Key:X4} -> {casefold.Value:X4}");
 
@@ -32,8 +31,12 @@ public static unsafe partial class Tools
                 Console.WriteLine($"Got: {result[0]:X2} {result[1]:X2} {result[2]:X2} {result[3]:X2}");
                 Console.WriteLine();
 
+                Allocator.Dealloc(result);
+
                 return;
             }
+
+            Allocator.Dealloc(result);
             
             _string[0] = 0x00;
             _string[1] = 0x00;

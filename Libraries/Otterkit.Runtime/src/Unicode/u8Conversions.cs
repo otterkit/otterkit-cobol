@@ -10,9 +10,9 @@ public static unsafe partial class u8Strings
     [LibraryImport("nativelib", EntryPoint = "u8CharToCodepoint")]
     private static partial int ToCodepoint(byte* source, uint* destination);
 
-    [LibraryImport("nativelib", EntryPoint = "u8TrieSearch")]
-    public static partial byte* CaseFold(byte* source);
-
+    [LibraryImport("nativelib", EntryPoint = "u8CaseFold")]
+    public static partial byte* CaseFold(byte* source, int length);
+    
     public static int FromCodepoint(uint codepoint, Span<byte> destination)
     {
         fixed (byte* ptr = destination)

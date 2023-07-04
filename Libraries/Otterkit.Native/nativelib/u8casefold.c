@@ -1,7 +1,9 @@
 #include <stdint.h>
+#include <string.h>
 #include <x86intrin.h>
 
 #include "common.h"
+#include "allocator.h"
 
 // UTF-8 trie node.
 typedef struct u8TrieNode
@@ -16,15 +18,6 @@ typedef struct u8TrieNode
 
 // Set a bit in a 64-bit bitmap, using the byte as the index.
 #define X(byte) | 1UL << (byte & 0b00111111)
-
-// Static compressed trie for UTF-8 1-byte sequence casefolding.
-// Note: This trie is only used to gracefully handle the case where
-// ASCII sequences are passed directly to the search function. 
-// It is not used for casefolding, we're handling ASCII separately.
-static const u8tnode_t u8AsciiTrie[1] =
-{
-    { 0, { .bitmap = 0x00, } }
-};
 
 // Static compressed trie for UTF-8 2-byte sequence casefolding.
 static const u8tnode_t u8TwoByteTrie[471] =
@@ -761,16 +754,16 @@ static const u8tnode_t u8ThreeByteTrie[750] =
 
     // OFFSET 167
 
-    { /* 0x80 */ 0, { .bytes = { 0xE1, 0xB9, 0x81, 0x00, 0x00, 0x00, 0x00, 0x02 } } },
-    { /* 0x82 */ 0, { .bytes = { 0xE1, 0xB9, 0x83, 0x00, 0x00, 0x00, 0x00, 0x02 } } },
-    { /* 0x84 */ 0, { .bytes = { 0xE1, 0xB9, 0x85, 0x00, 0x00, 0x00, 0x00, 0x02 } } },
-    { /* 0x86 */ 0, { .bytes = { 0xE1, 0xB9, 0x87, 0x00, 0x00, 0x00, 0x00, 0x02 } } },
-    { /* 0x88 */ 0, { .bytes = { 0xE1, 0xB9, 0x89, 0x00, 0x00, 0x00, 0x00, 0x02 } } },
-    { /* 0x8A */ 0, { .bytes = { 0xE1, 0xB9, 0x8B, 0x00, 0x00, 0x00, 0x00, 0x02 } } },
-    { /* 0x8C */ 0, { .bytes = { 0xE1, 0xB9, 0x8D, 0x00, 0x00, 0x00, 0x00, 0x02 } } },
-    { /* 0x8E */ 0, { .bytes = { 0xE1, 0xB9, 0x8F, 0x00, 0x00, 0x00, 0x00, 0x02 } } },
-    { /* 0x90 */ 0, { .bytes = { 0xE1, 0xB9, 0x91, 0x00, 0x00, 0x00, 0x00, 0x02 } } },
-    { /* 0x92 */ 0, { .bytes = { 0xE1, 0xB9, 0x93, 0x00, 0x00, 0x00, 0x00, 0x02 } } },
+    { /* 0x80 */ 0, { .bytes = { 0xE1, 0xB9, 0x81, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
+    { /* 0x82 */ 0, { .bytes = { 0xE1, 0xB9, 0x83, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
+    { /* 0x84 */ 0, { .bytes = { 0xE1, 0xB9, 0x85, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
+    { /* 0x86 */ 0, { .bytes = { 0xE1, 0xB9, 0x87, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
+    { /* 0x88 */ 0, { .bytes = { 0xE1, 0xB9, 0x89, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
+    { /* 0x8A */ 0, { .bytes = { 0xE1, 0xB9, 0x8B, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
+    { /* 0x8C */ 0, { .bytes = { 0xE1, 0xB9, 0x8D, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
+    { /* 0x8E */ 0, { .bytes = { 0xE1, 0xB9, 0x8F, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
+    { /* 0x90 */ 0, { .bytes = { 0xE1, 0xB9, 0x91, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
+    { /* 0x92 */ 0, { .bytes = { 0xE1, 0xB9, 0x93, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
     { /* 0x94 */ 0, { .bytes = { 0xE1, 0xB9, 0x95, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
     { /* 0x96 */ 0, { .bytes = { 0xE1, 0xB9, 0x97, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
     { /* 0x98 */ 0, { .bytes = { 0xE1, 0xB9, 0x99, 0x00, 0x00, 0x00, 0x00, 0x03 } } },
@@ -1734,59 +1727,48 @@ static const u8tnode_t u8FourByteTrie[275] =
     { /* 0xA1 */ 0, { .bytes = { 0xF0, 0x9E, 0xA5, 0x83, 0x00, 0x00, 0x00, 0x04 } } },
 };
 
-static const u8tnode_t *u8RootLookup[4] =
+static const u8tnode_t *u8RootNodes[3] = 
 {
-    u8AsciiTrie, u8TwoByteTrie, u8ThreeByteTrie, u8FourByteTrie
+    u8TwoByteTrie, u8ThreeByteTrie, u8FourByteTrie
 };
 
-static const uint8_t u8NullError[8] =
+static inline uint8_t u8RuneLength(uint8_t byte)
 {
-    // UTF-8 null error data, 0x80 0x08 indicates a NULL pointer error.
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x08
-};
+    if (byte < 0b10000000) return 1;
 
-static const uint8_t u8NoMatch[8] =
-{
-    // UTF-8 no match data, 0x40 0x04 indicates a no match error.
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x04
-};
+    if ((byte & 0b11100000) == 0b11000000) return 2;
 
-// Branchless UTF-8 character length calculation,
-// no branching means no branch mispredictions.
-_export int32_t u8RuneLength(const uint8_t* source)
-{
-    return (
-        1 * (source[0] < 0b10000000) + 
-        2 * ((source[0] & 0b11100000) == 0b11000000) + 
-        3 * ((source[0] & 0b11110000) == 0b11100000) + 
-        4 * ((source[0] & 0b11111000) == 0b11110000)
-    );
+    if ((byte & 0b11110000) == 0b11100000) return 3;
+
+    if ((byte & 0b11111000) == 0b11110000) return 4;
+
+    return 0;
 }
 
 // Memory and thread safety notes:
 // The trie is static and read-only, so it should be safe to use from multiple threads.
 // The algorithm assumes that the data is null-terminated, and only contains valid UTF-8 sequences.
 // It assumes that the caller will correctly handle the returned error data.
-_export const uint8_t *u8TrieSearch(const uint8_t *data)
+static const uint8_t *u8MappingSearch(const uint8_t *data)
 {
     // Our trie is stored as a static const array to avoid having to load it from a file or initialize it at runtime.
     // Each node has a bitmap of the possible next bytes and the offset of its first child node.
 
-    // If the data is null, return a null error.
-    if (!data) return u8NullError;
+    // Avoid modifying the original pointer's position.
+    const uint8_t *index = data;
 
     // Fetch the root node.
-    const u8tnode_t *root = u8RootLookup[u8RuneLength(data) - 1];
+    const u8tnode_t *root = u8RootNodes[u8RuneLength(*index) - 1];
         
     const u8tnode_t *node = root;
 
     // Walk the trie until we reach a leaf node or run out of data.
     // Data needs to be null-terminated, loop will break when it reaches it.
-    while (*data)
+    while (*index)
     {
         // The trie is designed to be used with non-ASCII UTF-8 data, so we only need to look at the last 6 bits.
         // The first two bits are always either 10xx.. or 11xx.., so we can toggle them off.
-        uint8_t byte = *data++ & 0b00111111;
+        uint8_t byte = *index++ & 0b00111111;
 
         // The above operation will leave us with a compressed byte with maximum value of 64.
         // This is a huge space optimization, we can then use a single uint64_t to store the bitmap.
@@ -1795,7 +1777,7 @@ _export const uint8_t *u8TrieSearch(const uint8_t *data)
 
         // If the byte is not in the current node's bitmap, we can stop searching.
         // The byte sequence is not in the trie, so we return a no match error.
-        if (!((bitmap >> byte) & 1UL)) return u8NoMatch;
+        if (!((bitmap >> byte) & 1UL)) return data;
 
         // Count the number of bits set before the current byte.
         // This plus the offset of the current node's first child node is the index of the next node.
@@ -1811,4 +1793,44 @@ _export const uint8_t *u8TrieSearch(const uint8_t *data)
 
     // Return the result data.
     return node->data.bytes;
+}
+
+_export uint8_t *u8CaseFold(const uint8_t *source, int32_t length)
+{
+    uint8_t *stackalloc = Alloc((length << 1) + 1);
+
+    uint8_t *buffer = stackalloc;
+
+    while (*source)
+    {
+        // Fetch the length of the current rune.
+        uint8_t runeLength = u8RuneLength(*source);
+
+        if (runeLength == 1)
+        {
+            // If the rune is ASCII, we can just copy and case fold it.
+            // Branchless ASCII to lowercase conversion.
+            *buffer = *source + 32 * (*source >= 65 && *source <= 90);
+
+            source++; buffer++;
+
+            continue;
+        }
+
+        // Fetch the mapping data for the current Unicode rune.
+        const uint8_t *mapping = u8MappingSearch(source);
+
+        uint8_t mappingLength = mapping[7];
+
+        memcpy(buffer, mapping, mappingLength);
+
+        source += runeLength;
+
+        buffer += mappingLength;
+    }
+
+    // Null-terminate the buffer.
+    buffer[0] = 0;
+
+    return stackalloc;
 }

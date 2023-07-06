@@ -13,3 +13,11 @@ public readonly struct CobolException
         Severity = severity;
     }
 }
+
+public class RuntimeException : Exception
+{
+    public RuntimeException(string message) : base(message)
+    {
+
+    }
+}

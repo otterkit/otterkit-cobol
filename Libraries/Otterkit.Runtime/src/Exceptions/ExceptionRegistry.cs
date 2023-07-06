@@ -1,4 +1,5 @@
 namespace Otterkit.Runtime;
+using System.Text;
 
 // Implementing COBOL default/regular exceptions as a singleton containing a dictionary of exception status indicators
 public static class ExceptionRegistry
@@ -57,6 +58,18 @@ public static class ExceptionRegistry
         lastName.Fill(0);
 
         name.CopyTo(lastName);
+
+        StringBuilder message = new StringBuilder("Name: ");
+
+        string nameString = Encoding.UTF8.GetString(name);
+
+        message.Append(nameString);
+
+        int level = nameString.Split('-').Length - 1;
+        
+        message.AppendFormat(" Level: {0}", level);
+
+        throw new RuntimeException(message.ToString());
     }
 
     public static void DeactivateException(ReadOnlySpan<byte> name)

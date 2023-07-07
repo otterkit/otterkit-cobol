@@ -119,6 +119,12 @@ internal static partial class Decimal128Bindings
 
 
     /* Utilities and conversions */
+    [LibraryImport("nativelib", EntryPoint = "d128ToPacked")]
+    internal static partial int ToPacked(Decimal128 value, ref int exponent, ref byte buffer);
+
+    [LibraryImport("nativelib", EntryPoint = "d128FromPacked")]
+    internal static partial Decimal128 FromPacked(int exponent, in byte buffer);
+
     [LibraryImport("nativelib", EntryPoint = "d128FromString")]
     internal static partial Decimal128 FromString(in byte value);
 

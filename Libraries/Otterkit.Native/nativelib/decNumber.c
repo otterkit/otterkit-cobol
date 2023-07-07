@@ -478,6 +478,20 @@ _export uint32_t d128SameQuantum(decQuad left, decQuad right)
 }
 
 /* Utilities and conversions */
+_export int32_t d128ToPacked(decQuad value, int32_t *exponent, uint8_t *packed)
+{
+    return decQuadToPacked(&value, exponent, packed);
+}
+
+_export decQuad d128FromPacked(int32_t exponent, const uint8_t *packed)
+{
+    decQuad result;
+
+    decQuadFromPacked(&result, exponent, packed);
+
+    return result;
+}
+
 _export char *d128ToString(decQuad value)
 {
     char *string = malloc(DECQUAD_String);

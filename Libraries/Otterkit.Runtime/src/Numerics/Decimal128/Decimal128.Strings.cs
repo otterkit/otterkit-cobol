@@ -45,6 +45,16 @@ public partial struct Decimal128
         return copy; 
     }
 
+    public static int ToPacked(Decimal128 value, ref int exponent, ref byte packed)
+    {
+        return Decimal128Bindings.ToPacked(value, ref exponent, ref packed);
+    }
+
+    public static Decimal128 FromPacked(int exponent, in byte packed)
+    {
+        return Decimal128Bindings.FromPacked(exponent, packed);
+    }
+
     public unsafe int AsSpan(Span<byte> destination)
     {
         // This is a C string (char*), becomes a byte* in C#.

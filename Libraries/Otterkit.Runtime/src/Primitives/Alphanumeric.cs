@@ -2,20 +2,22 @@ using System.Text;
 
 namespace Otterkit.Runtime;
 
-public readonly struct Alphanumeric : ICOBOLType
+public unsafe struct Alphanumeric : ICOBOLType, IDisposable
 {
-    public readonly OtterMemory Memory { get; init; }
-    public readonly int Length;
-    private readonly int Offset;
+    private byte* Memory;
+    private int Combined;
 
-    public Alphanumeric(ReadOnlySpan<byte> value, OtterMemory memory, int offset, int length)
+    public int Length => (Combined + (Combined >> 31)) ^ (Combined >> 31);
+    public int Dynamic => Combined >> 31;
+
+    private Span<byte> Span => new(Memory, Length);
+
+    public Alphanumeric(ReadOnlySpan<byte> value, byte* memory, int length)
     {
-        Length = length;
-        Offset = offset;
-
         Memory = memory;
+        Combined = length;
 
-        var span = Memory.Slice(offset, length);
+        var span = Span;
  
         span.Fill(32);
 
@@ -26,21 +28,10 @@ public readonly struct Alphanumeric : ICOBOLType
         value[..byteLength].CopyTo(span);
     }
 
-    public Alphanumeric(OtterMemory memory, int offset, int length)
+    public Alphanumeric(byte* memory, int length)
     {
-        Length = length;
-        Offset = offset;
-
         Memory = memory;
-    }
-
-    public Alphanumeric(ReadOnlySpan<byte> alphanumeric)
-    {
-        Length = alphanumeric.Length;
-        
-        Memory = new OtterMemory(Length);
-
-        alphanumeric.CopyTo(Memory.Span);
+        Combined = length;
     }
 
     public static bool operator >(Alphanumeric left, Alphanumeric right)
@@ -87,15 +78,18 @@ public readonly struct Alphanumeric : ICOBOLType
         throw new NotSupportedException();
     }
 
+    public void Dispose()
+    {
+        throw new NotImplementedException();
+    }
+
     public ReadOnlySpan<byte> Bytes
     {
-        get
-        {
-            return Memory.Slice(Offset, Length);
-        }
+        get => Span;
+        
         set
         {
-            var span = Memory.Slice(Offset, Length);
+            var span = Span;
 
             span.Fill(32);
 
@@ -107,13 +101,5 @@ public readonly struct Alphanumeric : ICOBOLType
         }
     }
 
-    public string Display
-    {
-        get
-        {
-            var span = Memory.Slice(Offset, Length);
-
-            return Encoding.UTF8.GetString(span);
-        }
-    }
+    public string Display => Encoding.UTF8.GetString(Span);
 }

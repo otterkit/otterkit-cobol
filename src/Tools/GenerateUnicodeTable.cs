@@ -97,9 +97,9 @@ public static partial class Tools
 
                 unicodeData[codepoint] = (unicodeData[codepoint].Uppercase, casefolded);
 
-                u8Strings.FromCodepoint(codepoint, bytes);
+                Unicode.FromCodepoint(codepoint, bytes);
 
-                u8Strings.FromCodepoint(casefolded, casefoldBytes);
+                Unicode.FromCodepoint(casefolded, casefoldBytes);
 
                 differences.Add((int)casefolded - (int)codepoint);
 
@@ -135,9 +135,9 @@ public static partial class Tools
 
             if (data[12] is not "")
             {
-                u8Strings.FromCodepoint(codepoint, bytes);
+                Unicode.FromCodepoint(codepoint, bytes);
 
-                u8Strings.FromCodepoint(uint.Parse(data[12], NumberStyles.HexNumber), uppercase);
+                Unicode.FromCodepoint(uint.Parse(data[12], NumberStyles.HexNumber), uppercase);
 
                 uppercaseData.WriteLine($"{bytes[0]:X2} {bytes[1]:X2} {bytes[2]:X2} {bytes[3]:X2}; U; {uppercase[0]:X2} {uppercase[1]:X2} {uppercase[2]:X2} {uppercase[3]:X2}; # {data[1]}");
             }

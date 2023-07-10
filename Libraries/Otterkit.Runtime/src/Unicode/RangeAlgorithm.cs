@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace Otterkit.Runtime;
 
-public static unsafe partial class u8Strings
+public static unsafe partial class Unicode
 {
     [LibraryImport("nativelib", EntryPoint = "u8ScalarAlgorithm")]
     private static partial int ScalarAlgorithm(byte* input, int length);

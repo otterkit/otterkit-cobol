@@ -1,6 +1,9 @@
 using Otterkit.Runtime;
 using Otterkit.Native;
 
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
+
 namespace Otterkit;
 
 public static unsafe partial class Tools
@@ -15,11 +18,11 @@ public static unsafe partial class Tools
 
         foreach (var casefold in data)
         {
-            u8Strings.FromCodepoint(casefold.Key, new(_string, 4));
+            Unicode.FromCodepoint(casefold.Key, new(_string, 4));
 
-            u8Strings.FromCodepoint(casefold.Value, new(_string2, 4));
+            Unicode.FromCodepoint(casefold.Value, new(_string2, 4));
 
-            var result = u8Strings.CaseFold(_string, 4);
+            var result = Unicode.Casefold(_string, 4);
 
             Console.WriteLine($"Testing: {casefold.Key:X4} -> {casefold.Value:X4}");
 

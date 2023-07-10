@@ -62,12 +62,12 @@ public static unsafe partial class u8Console
         }
     }
 
-    [LibraryImport("nativelib", EntryPoint = "write")]
+    [LibraryImport("nativelib", EntryPoint = "Write")]
     private static partial void Write(byte* _string);
 
-    [LibraryImport("nativelib", EntryPoint = "writeln")]
+    [LibraryImport("nativelib", EntryPoint = "WriteLn")]
     private static partial void Writeln(byte* _string);
 
-    [LibraryImport("nativelib", EntryPoint = "readln")]
+    [LibraryImport("nativelib", EntryPoint = "ReadLn")]
     private static partial void Readln(byte* buffer, int length);
 }

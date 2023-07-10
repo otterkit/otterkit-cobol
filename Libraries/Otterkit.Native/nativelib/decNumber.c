@@ -13,7 +13,7 @@
 #endif
 
 /* Computational operations */
-_export decQuad d128ToIntegralValue(decQuad value, enum rounding mode)
+public decQuad d128ToIntegralValue(decQuad value, enum rounding mode)
 {
     decContext context;
     decQuad result;
@@ -25,7 +25,7 @@ _export decQuad d128ToIntegralValue(decQuad value, enum rounding mode)
     return result;
 }
 
-_export decQuad d128Sqrt(decQuad value)
+public decQuad d128Sqrt(decQuad value)
 {
     decNumber temporary;
     decQuad result;
@@ -43,7 +43,7 @@ _export decQuad d128Sqrt(decQuad value)
     return result;
 }
 
-_export decQuad d128Ln(decQuad value)
+public decQuad d128Ln(decQuad value)
 {
     decNumber temporary;
     decQuad result;
@@ -61,7 +61,7 @@ _export decQuad d128Ln(decQuad value)
     return result;
 }
 
-_export decQuad d128Exp(decQuad value)
+public decQuad d128Exp(decQuad value)
 {
     decNumber temporary;
     decQuad result;
@@ -79,7 +79,7 @@ _export decQuad d128Exp(decQuad value)
     return result;
 }
 
-_export decQuad d128LogB(decQuad value)
+public decQuad d128LogB(decQuad value)
 {
     decQuad result;
     decContext context;
@@ -91,7 +91,7 @@ _export decQuad d128LogB(decQuad value)
     return result;
 }
 
-_export decQuad d128Log10(decQuad value)
+public decQuad d128Log10(decQuad value)
 {
     decNumber temporary;
     decQuad result;
@@ -109,7 +109,7 @@ _export decQuad d128Log10(decQuad value)
     return result;
 }
 
-_export decQuad d128Abs(decQuad value)
+public decQuad d128Abs(decQuad value)
 {
     decQuad result;
     decContext context;
@@ -121,7 +121,7 @@ _export decQuad d128Abs(decQuad value)
     return result;
 }
 
-_export decQuad d128Plus(decQuad value)
+public decQuad d128Plus(decQuad value)
 {
     decQuad result;
     decContext context;
@@ -133,7 +133,7 @@ _export decQuad d128Plus(decQuad value)
     return result;
 }
 
-_export decQuad d128Minus(decQuad value)
+public decQuad d128Minus(decQuad value)
 {
     decQuad result;
     decContext context;
@@ -145,7 +145,7 @@ _export decQuad d128Minus(decQuad value)
     return result;
 }
 
-_export decQuad d128Add(decQuad left, decQuad right)
+public decQuad d128Add(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -157,7 +157,7 @@ _export decQuad d128Add(decQuad left, decQuad right)
     return result;
 }
 
-_export decQuad d128Sub(decQuad left, decQuad right)
+public decQuad d128Sub(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -169,7 +169,7 @@ _export decQuad d128Sub(decQuad left, decQuad right)
     return result;
 }
 
-_export decQuad d128Mul(decQuad left, decQuad right)
+public decQuad d128Mul(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -181,7 +181,7 @@ _export decQuad d128Mul(decQuad left, decQuad right)
     return result;
 }
 
-_export decQuad d128Div(decQuad left, decQuad right)
+public decQuad d128Div(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -193,7 +193,7 @@ _export decQuad d128Div(decQuad left, decQuad right)
     return result;
 }
 
-_export decQuad d128Rem(decQuad left, decQuad right)
+public decQuad d128Rem(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -205,7 +205,7 @@ _export decQuad d128Rem(decQuad left, decQuad right)
     return result;
 }
 
-_export decQuad d128RemNear(decQuad left, decQuad right)
+public decQuad d128RemNear(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -217,7 +217,7 @@ _export decQuad d128RemNear(decQuad left, decQuad right)
     return result;
 }
 
-_export decQuad d128Max(decQuad left, decQuad right)
+public decQuad d128Max(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -229,7 +229,7 @@ _export decQuad d128Max(decQuad left, decQuad right)
     return result;
 }
 
-_export decQuad d128MaxMag(decQuad left, decQuad right)
+public decQuad d128MaxMag(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -241,7 +241,7 @@ _export decQuad d128MaxMag(decQuad left, decQuad right)
     return result;
 }
 
-_export decQuad d128Min(decQuad left, decQuad right)
+public decQuad d128Min(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -253,7 +253,7 @@ _export decQuad d128Min(decQuad left, decQuad right)
     return result;
 }
 
-_export decQuad d128MinMag(decQuad left, decQuad right)
+public decQuad d128MinMag(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -265,7 +265,7 @@ _export decQuad d128MinMag(decQuad left, decQuad right)
     return result;
 }
 
-_export decQuad d128Pow(decQuad left, decQuad right)
+public decQuad d128Pow(decQuad left, decQuad right)
 {
     decQuad result;
 
@@ -286,7 +286,7 @@ _export decQuad d128Pow(decQuad left, decQuad right)
     return result;
 }
 
-_export decQuad d128FMA(decQuad leftMul, decQuad rightMul, decQuad valueAdd)
+public decQuad d128FMA(decQuad leftMul, decQuad rightMul, decQuad valueAdd)
 {
     decContext context;
     decQuad result;
@@ -300,7 +300,7 @@ _export decQuad d128FMA(decQuad leftMul, decQuad rightMul, decQuad valueAdd)
 
 
 /* decQuad Comparisons */
-_export int32_t d128Compare(decQuad left, decQuad right)
+public int32_t d128Compare(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -314,7 +314,7 @@ _export int32_t d128Compare(decQuad left, decQuad right)
     return decQuadToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t d128CompareSignal(decQuad left, decQuad right)
+public int32_t d128CompareSignal(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -326,7 +326,7 @@ _export int32_t d128CompareSignal(decQuad left, decQuad right)
     return decQuadToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t d128CompareTotal(decQuad left, decQuad right)
+public int32_t d128CompareTotal(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -338,7 +338,7 @@ _export int32_t d128CompareTotal(decQuad left, decQuad right)
     return decQuadToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t d128CompareTotalMag(decQuad left, decQuad right)
+public int32_t d128CompareTotalMag(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -351,7 +351,7 @@ _export int32_t d128CompareTotalMag(decQuad left, decQuad right)
 }
 
 /* Non-computational comparisons */
-_export uint32_t d128IsCanonical(decQuad value)
+public uint32_t d128IsCanonical(decQuad value)
 {
     decContext context;
 
@@ -360,7 +360,7 @@ _export uint32_t d128IsCanonical(decQuad value)
     return decQuadIsCanonical(&value);
 }
 
-_export uint32_t d128IsFinite(decQuad value)
+public uint32_t d128IsFinite(decQuad value)
 {
     decContext context;
 
@@ -369,7 +369,7 @@ _export uint32_t d128IsFinite(decQuad value)
     return decQuadIsFinite(&value);
 }
 
-_export uint32_t d128IsInfinite(decQuad value)
+public uint32_t d128IsInfinite(decQuad value)
 {
     decContext context;
 
@@ -378,7 +378,7 @@ _export uint32_t d128IsInfinite(decQuad value)
     return decQuadIsInfinite(&value);
 }
 
-_export uint32_t d128IsInteger(decQuad value)
+public uint32_t d128IsInteger(decQuad value)
 {
     decContext context;
 
@@ -387,7 +387,7 @@ _export uint32_t d128IsInteger(decQuad value)
     return decQuadIsInteger(&value);
 }
 
-_export uint32_t d128IsNaN(decQuad value)
+public uint32_t d128IsNaN(decQuad value)
 {
     decContext context;
 
@@ -396,7 +396,7 @@ _export uint32_t d128IsNaN(decQuad value)
     return decQuadIsNaN(&value);
 }
 
-_export uint32_t d128IsNegative(decQuad value)
+public uint32_t d128IsNegative(decQuad value)
 {
     decContext context;
 
@@ -405,7 +405,7 @@ _export uint32_t d128IsNegative(decQuad value)
     return decQuadIsNegative(&value);
 }
 
-_export uint32_t d128IsNormal(decQuad value)
+public uint32_t d128IsNormal(decQuad value)
 {
     decContext context;
 
@@ -414,7 +414,7 @@ _export uint32_t d128IsNormal(decQuad value)
     return decQuadIsNormal(&value);
 }
 
-_export uint32_t d128IsSubnormal(decQuad value)
+public uint32_t d128IsSubnormal(decQuad value)
 {
     decContext context;
 
@@ -423,7 +423,7 @@ _export uint32_t d128IsSubnormal(decQuad value)
     return decQuadIsSubnormal(&value);
 }
 
-_export uint32_t d128IsPositive(decQuad value)
+public uint32_t d128IsPositive(decQuad value)
 {
     decContext context;
 
@@ -432,7 +432,7 @@ _export uint32_t d128IsPositive(decQuad value)
     return decQuadIsPositive(&value);
 }
 
-_export uint32_t d128IsSignaling(decQuad value)
+public uint32_t d128IsSignaling(decQuad value)
 {
     decContext context;
 
@@ -441,7 +441,7 @@ _export uint32_t d128IsSignaling(decQuad value)
     return decQuadIsSignaling(&value);
 }
 
-_export uint32_t d128IsSigned(decQuad value)
+public uint32_t d128IsSigned(decQuad value)
 {
     decContext context;
 
@@ -450,7 +450,7 @@ _export uint32_t d128IsSigned(decQuad value)
     return decQuadIsSigned(&value);
 }
 
-_export uint32_t d128IsZero(decQuad value)
+public uint32_t d128IsZero(decQuad value)
 {
     decContext context;
 
@@ -459,7 +459,7 @@ _export uint32_t d128IsZero(decQuad value)
     return decQuadIsZero(&value);
 }
 
-_export uint32_t d128Radix(decQuad value)
+public uint32_t d128Radix(decQuad value)
 {
     decContext context;
 
@@ -468,7 +468,7 @@ _export uint32_t d128Radix(decQuad value)
     return decQuadRadix(&value);
 }
 
-_export uint32_t d128SameQuantum(decQuad left, decQuad right)
+public uint32_t d128SameQuantum(decQuad left, decQuad right)
 {
     decContext context;
 
@@ -478,12 +478,12 @@ _export uint32_t d128SameQuantum(decQuad left, decQuad right)
 }
 
 /* Utilities and conversions */
-_export int32_t d128ToPacked(decQuad value, int32_t *exponent, uint8_t *packed)
+public int32_t d128ToPacked(decQuad value, int32_t *exponent, uint8_t *packed)
 {
     return decQuadToPacked(&value, exponent, packed);
 }
 
-_export decQuad d128FromPacked(int32_t exponent, const uint8_t *packed)
+public decQuad d128FromPacked(int32_t exponent, const uint8_t *packed)
 {
     decQuad result;
 
@@ -492,7 +492,7 @@ _export decQuad d128FromPacked(int32_t exponent, const uint8_t *packed)
     return result;
 }
 
-_export char *d128ToString(decQuad value)
+public char *d128ToString(decQuad value)
 {
     char *string = malloc(DECQUAD_String);
 
@@ -501,7 +501,7 @@ _export char *d128ToString(decQuad value)
     return string;
 }
 
-_export char *d128ToEngString(decQuad value)
+public char *d128ToEngString(decQuad value)
 {
     char *string = malloc(DECQUAD_String);
 
@@ -510,7 +510,7 @@ _export char *d128ToEngString(decQuad value)
     return string;
 }
 
-_export decQuad d128FromString(char *value)
+public decQuad d128FromString(char *value)
 {
     decContext context;
     decQuad result;
@@ -522,7 +522,7 @@ _export decQuad d128FromString(char *value)
     return result;
 }
 
-_export decQuad d128FromInt32(int32_t value)
+public decQuad d128FromInt32(int32_t value)
 {
     decQuad result;
 
@@ -540,7 +540,7 @@ _export decQuad d128FromInt32(int32_t value)
 #endif
 
 /* Computational operations */
-_export decDouble d64ToIntegralValue(decDouble value, enum rounding mode)
+public decDouble d64ToIntegralValue(decDouble value, enum rounding mode)
 {
     decContext context;
     decDouble result;
@@ -552,7 +552,7 @@ _export decDouble d64ToIntegralValue(decDouble value, enum rounding mode)
     return result;
 }
 
-_export decDouble d64Sqrt(decDouble value)
+public decDouble d64Sqrt(decDouble value)
 {
     decNumber temporary;
     decDouble result;
@@ -570,7 +570,7 @@ _export decDouble d64Sqrt(decDouble value)
     return result;
 }
 
-_export decDouble d64Ln(decDouble value)
+public decDouble d64Ln(decDouble value)
 {
     decNumber temporary;
     decDouble result;
@@ -588,7 +588,7 @@ _export decDouble d64Ln(decDouble value)
     return result;
 }
 
-_export decDouble d64Exp(decDouble value)
+public decDouble d64Exp(decDouble value)
 {
     decNumber temporary;
     decDouble result;
@@ -606,7 +606,7 @@ _export decDouble d64Exp(decDouble value)
     return result;
 }
 
-_export decDouble d64LogB(decDouble value)
+public decDouble d64LogB(decDouble value)
 {
     decDouble result;
     decContext context;
@@ -618,7 +618,7 @@ _export decDouble d64LogB(decDouble value)
     return result;
 }
 
-_export decDouble d64Log10(decDouble value)
+public decDouble d64Log10(decDouble value)
 {
     decNumber temporary;
     decDouble result;
@@ -636,7 +636,7 @@ _export decDouble d64Log10(decDouble value)
     return result;
 }
 
-_export decDouble d64Abs(decDouble value)
+public decDouble d64Abs(decDouble value)
 {
     decDouble result;
     decContext context;
@@ -648,7 +648,7 @@ _export decDouble d64Abs(decDouble value)
     return result;
 }
 
-_export decDouble d64Plus(decDouble value)
+public decDouble d64Plus(decDouble value)
 {
     decDouble result;
     decContext context;
@@ -660,7 +660,7 @@ _export decDouble d64Plus(decDouble value)
     return result;
 }
 
-_export decDouble d64Minus(decDouble value)
+public decDouble d64Minus(decDouble value)
 {
     decDouble result;
     decContext context;
@@ -672,7 +672,7 @@ _export decDouble d64Minus(decDouble value)
     return result;
 }
 
-_export decDouble d64Add(decDouble left, decDouble right)
+public decDouble d64Add(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -684,7 +684,7 @@ _export decDouble d64Add(decDouble left, decDouble right)
     return result;
 }
 
-_export decDouble d64Sub(decDouble left, decDouble right)
+public decDouble d64Sub(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -696,7 +696,7 @@ _export decDouble d64Sub(decDouble left, decDouble right)
     return result;
 }
 
-_export decDouble d64Mul(decDouble left, decDouble right)
+public decDouble d64Mul(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -708,7 +708,7 @@ _export decDouble d64Mul(decDouble left, decDouble right)
     return result;
 }
 
-_export decDouble d64Div(decDouble left, decDouble right)
+public decDouble d64Div(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -720,7 +720,7 @@ _export decDouble d64Div(decDouble left, decDouble right)
     return result;
 }
 
-_export decDouble d64Rem(decDouble left, decDouble right)
+public decDouble d64Rem(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -732,7 +732,7 @@ _export decDouble d64Rem(decDouble left, decDouble right)
     return result;
 }
 
-_export decDouble d64RemNear(decDouble left, decDouble right)
+public decDouble d64RemNear(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -744,7 +744,7 @@ _export decDouble d64RemNear(decDouble left, decDouble right)
     return result;
 }
 
-_export decDouble d64Max(decDouble left, decDouble right)
+public decDouble d64Max(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -756,7 +756,7 @@ _export decDouble d64Max(decDouble left, decDouble right)
     return result;
 }
 
-_export decDouble d64MaxMag(decDouble left, decDouble right)
+public decDouble d64MaxMag(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -768,7 +768,7 @@ _export decDouble d64MaxMag(decDouble left, decDouble right)
     return result;
 }
 
-_export decDouble d64Min(decDouble left, decDouble right)
+public decDouble d64Min(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -780,7 +780,7 @@ _export decDouble d64Min(decDouble left, decDouble right)
     return result;
 }
 
-_export decDouble d64MinMag(decDouble left, decDouble right)
+public decDouble d64MinMag(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -792,7 +792,7 @@ _export decDouble d64MinMag(decDouble left, decDouble right)
     return result;
 }
 
-_export decDouble d64Pow(decDouble left, decDouble right)
+public decDouble d64Pow(decDouble left, decDouble right)
 {
     decDouble result;
 
@@ -813,7 +813,7 @@ _export decDouble d64Pow(decDouble left, decDouble right)
     return result;
 }
 
-_export decDouble d64FMA(decDouble leftMul, decDouble rightMul, decDouble valueAdd)
+public decDouble d64FMA(decDouble leftMul, decDouble rightMul, decDouble valueAdd)
 {
     decContext context;
     decDouble result;
@@ -827,7 +827,7 @@ _export decDouble d64FMA(decDouble leftMul, decDouble rightMul, decDouble valueA
 
 
 /* decDouble Comparisons */
-_export int32_t d64Compare(decDouble left, decDouble right)
+public int32_t d64Compare(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -841,7 +841,7 @@ _export int32_t d64Compare(decDouble left, decDouble right)
     return decDoubleToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t d64CompareSignal(decDouble left, decDouble right)
+public int32_t d64CompareSignal(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -853,7 +853,7 @@ _export int32_t d64CompareSignal(decDouble left, decDouble right)
     return decDoubleToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t d64CompareTotal(decDouble left, decDouble right)
+public int32_t d64CompareTotal(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -865,7 +865,7 @@ _export int32_t d64CompareTotal(decDouble left, decDouble right)
     return decDoubleToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-_export int32_t d64CompareTotalMag(decDouble left, decDouble right)
+public int32_t d64CompareTotalMag(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -878,7 +878,7 @@ _export int32_t d64CompareTotalMag(decDouble left, decDouble right)
 }
 
 /* Non-computational comparisons */
-_export uint32_t d64IsCanonical(decDouble value)
+public uint32_t d64IsCanonical(decDouble value)
 {
     decContext context;
 
@@ -887,7 +887,7 @@ _export uint32_t d64IsCanonical(decDouble value)
     return decDoubleIsCanonical(&value);
 }
 
-_export uint32_t d64IsFinite(decDouble value)
+public uint32_t d64IsFinite(decDouble value)
 {
     decContext context;
 
@@ -896,7 +896,7 @@ _export uint32_t d64IsFinite(decDouble value)
     return decDoubleIsFinite(&value);
 }
 
-_export uint32_t d64IsInfinite(decDouble value)
+public uint32_t d64IsInfinite(decDouble value)
 {
     decContext context;
 
@@ -905,7 +905,7 @@ _export uint32_t d64IsInfinite(decDouble value)
     return decDoubleIsInfinite(&value);
 }
 
-_export uint32_t d64IsInteger(decDouble value)
+public uint32_t d64IsInteger(decDouble value)
 {
     decContext context;
 
@@ -914,7 +914,7 @@ _export uint32_t d64IsInteger(decDouble value)
     return decDoubleIsInteger(&value);
 }
 
-_export uint32_t d64IsNaN(decDouble value)
+public uint32_t d64IsNaN(decDouble value)
 {
     decContext context;
 
@@ -923,7 +923,7 @@ _export uint32_t d64IsNaN(decDouble value)
     return decDoubleIsNaN(&value);
 }
 
-_export uint32_t d64IsNegative(decDouble value)
+public uint32_t d64IsNegative(decDouble value)
 {
     decContext context;
 
@@ -932,7 +932,7 @@ _export uint32_t d64IsNegative(decDouble value)
     return decDoubleIsNegative(&value);
 }
 
-_export uint32_t d64IsNormal(decDouble value)
+public uint32_t d64IsNormal(decDouble value)
 {
     decContext context;
 
@@ -941,7 +941,7 @@ _export uint32_t d64IsNormal(decDouble value)
     return decDoubleIsNormal(&value);
 }
 
-_export uint32_t d64IsSubnormal(decDouble value)
+public uint32_t d64IsSubnormal(decDouble value)
 {
     decContext context;
 
@@ -950,7 +950,7 @@ _export uint32_t d64IsSubnormal(decDouble value)
     return decDoubleIsSubnormal(&value);
 }
 
-_export uint32_t d64IsPositive(decDouble value)
+public uint32_t d64IsPositive(decDouble value)
 {
     decContext context;
 
@@ -959,7 +959,7 @@ _export uint32_t d64IsPositive(decDouble value)
     return decDoubleIsPositive(&value);
 }
 
-_export uint32_t d64IsSignaling(decDouble value)
+public uint32_t d64IsSignaling(decDouble value)
 {
     decContext context;
 
@@ -968,7 +968,7 @@ _export uint32_t d64IsSignaling(decDouble value)
     return decDoubleIsSignaling(&value);
 }
 
-_export uint32_t d64IsSigned(decDouble value)
+public uint32_t d64IsSigned(decDouble value)
 {
     decContext context;
 
@@ -977,7 +977,7 @@ _export uint32_t d64IsSigned(decDouble value)
     return decDoubleIsSigned(&value);
 }
 
-_export uint32_t d64IsZero(decDouble value)
+public uint32_t d64IsZero(decDouble value)
 {
     decContext context;
 
@@ -986,7 +986,7 @@ _export uint32_t d64IsZero(decDouble value)
     return decDoubleIsZero(&value);
 }
 
-_export uint32_t d64Radix(decDouble value)
+public uint32_t d64Radix(decDouble value)
 {
     decContext context;
 
@@ -995,7 +995,7 @@ _export uint32_t d64Radix(decDouble value)
     return decDoubleRadix(&value);
 }
 
-_export uint32_t d64SameQuantum(decDouble left, decDouble right)
+public uint32_t d64SameQuantum(decDouble left, decDouble right)
 {
     decContext context;
 
@@ -1005,7 +1005,7 @@ _export uint32_t d64SameQuantum(decDouble left, decDouble right)
 }
 
 /* Utilities and conversions */
-_export char *d64ToString(decDouble value)
+public char *d64ToString(decDouble value)
 {
     char *string = malloc(DECDOUBLE_String);
 
@@ -1014,7 +1014,7 @@ _export char *d64ToString(decDouble value)
     return string;
 }
 
-_export char *d64ToEngString(decDouble value)
+public char *d64ToEngString(decDouble value)
 {
     char *string = malloc(DECDOUBLE_String);
 
@@ -1023,7 +1023,7 @@ _export char *d64ToEngString(decDouble value)
     return string;
 }
 
-_export decDouble d64FromString(char *value)
+public decDouble d64FromString(char *value)
 {
     decContext context;
     decDouble result;
@@ -1035,7 +1035,7 @@ _export decDouble d64FromString(char *value)
     return result;
 }
 
-_export decDouble d64FromInt32(int32_t value)
+public decDouble d64FromInt32(int32_t value)
 {
     decDouble result;
 

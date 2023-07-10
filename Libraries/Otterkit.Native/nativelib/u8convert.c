@@ -4,7 +4,7 @@
 #include "u8simd.h"
 #include "common.h"
 
-_export int32_t u8CharFromCodepoint(uint32_t codepoint, uint8_t* destination) 
+public int32_t u8CharFromCodepoint(uint32_t codepoint, uint8_t* destination) 
 {
     int32_t length = 0;
 
@@ -49,7 +49,7 @@ _export int32_t u8CharFromCodepoint(uint32_t codepoint, uint8_t* destination)
     return length;
 }
 
-_export int32_t u8CharToCodepoint(const uint8_t* source, uint32_t* destination) 
+public int32_t u8CharToCodepoint(const uint8_t* source, uint32_t* destination) 
 {
     uint8_t leadingByte = source[0];
     int32_t length = 0;

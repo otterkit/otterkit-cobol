@@ -4,21 +4,21 @@
 #define RESET "\x1B[0m"
 #define RESET_LF "\x1B[0m\n"
 
-_export void write(const char *string)
+public void Write(const char ref string)
 {
     fputs(string, stdout);
 
     fputs(RESET, stdout);
 }
 
-_export void writeln(const char *string)
+public void WriteLn(const char ref string)
 {
     fputs(string, stdout);
 
     fputs(RESET_LF, stdout);
 }
 
-_export void readln(char *buffer, int length)
+public void ReadLn(char ref buffer, i32 length)
 {
     fgets(buffer, length, stdin);
 }

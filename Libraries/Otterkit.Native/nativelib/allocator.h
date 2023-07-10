@@ -1,5 +1,5 @@
-#if !defined(__OTTERKIT_ALLOCATOR_H__)
-#define __OTTERKIT_ALLOCATOR_H__
+#if !defined(OTTERKIT_ALLOCATOR_H)
+#define OTTERKIT_ALLOCATOR_H
 
 #include <stdint.h>
 
@@ -21,4 +21,4 @@ void *Alloc(uint32_t length);
 // Deallocate memory on the stack.
 void Dealloc(void *memory);
 
-#endif // __OTTERKIT_ALLOCATOR_H__
+#endif // OTTERKIT_ALLOCATOR_H

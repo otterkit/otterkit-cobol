@@ -1,10 +1,10 @@
 #include <string.h>
 #include <stdint.h>
 
-#if !defined(__OTTERKIT_U8SIMD_H__)
-#define __OTTERKIT_U8SIMD_H__
+#if !defined(OTTERKIT_U8SIMD_H)
+#define OTTERKIT_U8SIMD_H
 
-#if defined(AVX2) || defined(__x86_64__)
+#if defined(__AVX2__) || defined(__SSE4_1__)
     #if defined(_MSC_VER)
         #include <intrin.h>
     #else
@@ -12,8 +12,8 @@
     #endif
 #endif
 
-#if defined(NEON)
+#if defined(__NEON__)
     #include <arm_neon.h>
 #endif
 
-#endif // __OTTERKIT_U8SIMD_H__
+#endif // OTTERKIT_U8SIMD_H

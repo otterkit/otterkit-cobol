@@ -57,7 +57,7 @@ static inline int32_t IsValidFourByteSequence(int32_t secondValid, int32_t third
 }
 
 // Return 0 on success or 1-based index of first error char
-_export int32_t u8ScalarAlgorithm(const uint8_t *source, int32_t len)
+public int32_t u8ScalarAlgorithm(const uint8_t *source, int32_t len)
 {
     int32_t err_pos = 1;
 
@@ -130,7 +130,7 @@ _export int32_t u8ScalarAlgorithm(const uint8_t *source, int32_t len)
 #ifdef __x86_64__
 
 // Return 0 on success or -1 on error
-_export int u8RangeAlgorithm(const uint8_t *source, int32_t length)
+public int u8RangeAlgorithm(const uint8_t *source, int32_t length)
 {
     if (length >= 16) {
         __m128i prevInput = _mm_setzero_si128();
@@ -347,7 +347,7 @@ _export int u8RangeAlgorithm(const uint8_t *source, int32_t length)
 #define PushLastThreeBytes(of, to) _mm256_alignr_epi8(to, _mm256_permute2x128_si256(of, to, 0x21), 13)
 
 // Return 0 on success or -1 on error
-_export int u8RangeAlgorithmAvx2(const uint8_t *source, int32_t length)
+public int u8RangeAlgorithmAvx2(const uint8_t *source, int32_t length)
 {
     if (length >= 32) 
     {

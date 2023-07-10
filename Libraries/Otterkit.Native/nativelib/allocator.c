@@ -4,30 +4,30 @@
 #include "common.h"
 
 // Convert megabytes to bytes.
-#define MB(x) ((uint32_t)(x) * 1024 * 1024)
+#define MB(x) ((u32)(x) * 1024 * 1024)
 
 // Convert kilobytes to bytes.
-#define KB(x) ((uint32_t)(x) * 1024)
+#define KB(x) ((u32)(x) * 1024)
 
 // Memory alignment, default: 8 bytes.
 #define ALIGNMENT 8
 
 // Stack memory, default: 2 MB.
-static uint8_t Stack[MB(2)];
+private u8 Stack[MB(2)];
 
 // Stack pointer, points to the next available memory address.
-static uint8_t *StackPointer = Stack;
+private u8 ref StackPointer = Stack;
 
 // Returns the amount of stack memory being used.
 // Might be useful for debugging or profiling.
-_export int32_t StackUsage()
+public i32 StackUsage()
 {
     return StackPointer - Stack;
 }
 
 // Returns the amount of available stack memory.
 // Might also be useful for debugging or profiling.
-_export int32_t StackAvailable()
+public i32 StackAvailable()
 {
     return sizeof(Stack) - StackUsage();
 }
@@ -37,7 +37,7 @@ _export int32_t StackAvailable()
 // A pointer to the allocated memory,
 // A NULL pointer if out of memory,
 // The current stack pointer if length is zero.
-_export void *Alloc(uint32_t length)
+public void ref Alloc(u32 length)
 {
     // Return current stack pointer, if length is zero.
     if (length == 0) return StackPointer;
@@ -49,7 +49,7 @@ _export void *Alloc(uint32_t length)
     length = ((length + ALIGNMENT) & -ALIGNMENT);
 
     // Get a pointer to the next available memory address.
-    void *memory = StackPointer;
+    void ref memory = StackPointer;
     
     // Increment stack pointer.
     StackPointer += length;
@@ -58,11 +58,11 @@ _export void *Alloc(uint32_t length)
 }
 
 // Deallocate memory on the stack.
-_export void Dealloc(void *memory)
+public void Dealloc(void ref memory)
 {
-    // Return, if memory is null.
+    // Return if memory is null.
     // Double free is not a good idea :)
-    if (memory == NULL) return;
+    if (memory is null) return;
 
     // Reset stack pointer.
     // We don't need to zero out the memory, because it will be overwritten

@@ -5,16 +5,17 @@ namespace Otterkit.Runtime;
 public unsafe struct Alphanumeric : ICOBOLType, IDisposable
 {
     private byte* Memory;
-    private int Combined;
+    private uint Combined;
 
-    public int Length => (Combined + (Combined >> 31)) ^ (Combined >> 31);
-    public int Dynamic => Combined >> 31;
+    public uint Length => Combined.ClearBit(31);
+    public uint Dynamic => Combined.FetchBit(31);
 
-    private Span<byte> Span => new(Memory, Length);
+    private Span<byte> Span => new(Memory, (int)Length);
 
-    public Alphanumeric(ReadOnlySpan<byte> value, byte* memory, int length)
+    public Alphanumeric(ReadOnlySpan<byte> value, byte* memory, uint length)
     {
         Memory = memory;
+        
         Combined = length;
 
         var span = Span;
@@ -22,13 +23,13 @@ public unsafe struct Alphanumeric : ICOBOLType, IDisposable
         span.Fill(32);
 
         int byteLength = Length < value.Length
-            ? Length
+            ? (int)Length
             : value.Length;
 
         value[..byteLength].CopyTo(span);
     }
 
-    public Alphanumeric(byte* memory, int length)
+    public Alphanumeric(byte* memory, uint length)
     {
         Memory = memory;
         Combined = length;
@@ -94,7 +95,7 @@ public unsafe struct Alphanumeric : ICOBOLType, IDisposable
             span.Fill(32);
 
             int length = Length < value.Length
-            ? Length
+            ? (int)Length
             : value.Length;
 
             value[..length].CopyTo(span);

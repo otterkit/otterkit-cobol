@@ -1,9 +1,6 @@
 using Otterkit.Runtime;
 using Otterkit.Native;
 
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Running;
-
 namespace Otterkit;
 
 public static unsafe partial class Tools

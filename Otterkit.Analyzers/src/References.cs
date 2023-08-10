@@ -93,7 +93,7 @@ public static partial class References
         return qualified;
     }
 
-    public static Unique<Token> LocalName(bool shouldResolve = true)
+    public static Option<Token> LocalDefinition()
     {
         if (CurrentEquals(TokenType.EOF))
         {
@@ -125,7 +125,44 @@ public static partial class References
             return null;
         }
 
-        var nameToken = Current();
+        var definition = Current();
+
+        Continue();
+
+        return definition;
+    }
+
+    public static Name<Token> LocalName(bool shouldResolve = true)
+    {
+        if (CurrentEquals(TokenType.EOF))
+        {
+            ErrorHandler
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 0, """
+                Unexpected end of file.
+                """)
+            .WithSourceLine(Peek(-1), $"""
+                Expected an identifier after this token.
+                """)
+            .CloseError();
+
+            return null;
+        }
+
+        if (!CurrentEquals(TokenType.Identifier))
+        {
+            ErrorHandler
+            .Build(ErrorType.Analyzer, ConsoleColor.Red, 1, """
+                Unexpected token type.
+                """)
+            .WithSourceLine(Current(), $"""
+                Expected a user-defined word (an identifier).
+                """)
+            .CloseError();
+
+            Continue();
+
+            return null;
+        }
 
         if (!IsResolutionPass || !shouldResolve)
         {
@@ -133,7 +170,9 @@ public static partial class References
             return null;
         }
 
-        var (exists, isUnique) = ActiveData.HasUnique(nameToken);
+        var nameToken = Current();
+
+        var (exists, unique) = ActiveData.HasUnique(nameToken);
 
         if (!exists)
         {
@@ -153,10 +192,10 @@ public static partial class References
 
         Continue();
 
-        return (nameToken, isUnique);
+        return (nameToken, unique);
     }
 
-    public static Unique<Token> Qualified(TokenContext anchorPoint = TokenContext.IsStatement)
+    public static Name<Token> Qualified(TokenContext anchorPoint = TokenContext.IsStatement)
     {
         if (!IsResolutionPass)
         {
@@ -183,7 +222,7 @@ public static partial class References
 
         var nameToken = name.Unwrap();
 
-        if (!name.IsUnique && !CurrentEquals("IN OF"))
+        if (!name.Unique && !CurrentEquals("IN OF"))
         {
             ErrorHandler
             .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """
@@ -223,7 +262,7 @@ public static partial class References
                 .CloseError();
             }
 
-            if (!parent.IsUnique && !CurrentEquals("IN OF"))
+            if (!parent.Unique && !CurrentEquals("IN OF"))
             {
                 ErrorHandler
                 .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """

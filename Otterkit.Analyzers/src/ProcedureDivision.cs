@@ -204,7 +204,7 @@ public static class ProcedureDivision
 
         // Uniqueness has not been handled above, 
         // so we handle it here.
-        if (!dataName.IsUnique && !CurrentEquals("IN OF"))
+        if (!dataName.Unique && !CurrentEquals("IN OF"))
         {
             ErrorHandler
             .Build(ErrorType.Resolution, ConsoleColor.Red, 15, """

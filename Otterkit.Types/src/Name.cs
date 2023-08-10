@@ -2,22 +2,27 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Otterkit.Types;
 
-public readonly struct Option<TValue> : 
-    IEquatable<Option<TValue>>
+public readonly struct Name<TValue> : 
+    IEquatable<Name<TValue>>
     where TValue : notnull
 {
     internal readonly TValue Value;
     public readonly bool Exists;
+    public readonly bool Unique;
 
-    public static Option<TValue> Null
-    {
-        get => new Option<TValue>();
-    }
+    public static Name<TValue> Null => new();
 
-    public Option(TValue value)
+    public Name(TValue value)
     {
         Value = value;
         Exists = true;
+    }
+
+    public Name(TValue value, bool unique)
+    {
+        Value = value;
+        Exists = true;
+        Unique = unique;
     }
 
     public void Deconstruct(out TValue? value, out bool exists)
@@ -42,44 +47,51 @@ public readonly struct Option<TValue> :
     {
         if (Exists) return Value;
 
-        throw new NullReferenceException("Instance of Option did not have a value");
+        throw new NullReferenceException("Instance of Name did not have a value");
     }
 
-    public static implicit operator Option<TValue>(TValue? value)
+    public static implicit operator Name<TValue>(TValue? value)
     {
         if (value is null) return Null;
 
-        return new Option<TValue>(value);
+        return new(value);
     }
 
-    public static explicit operator TValue(Option<TValue> option)
+    public static explicit operator TValue(Name<TValue> option)
     {
         if (option.Exists) return option.Value;
 
-        throw new NullReferenceException("Instance of Option did not have a value");
+        throw new NullReferenceException("Instance of Name did not have a value");
     }
 
-    public static implicit operator bool(Option<TValue> option)
+    public static implicit operator bool(Name<TValue> option)
     {
         return option.Exists;
     }
 
-    public static bool operator ==(Option<TValue> left, Option<TValue> right)
+    public static implicit operator Name<TValue>((TValue value, bool unique) tuple)
+    {
+        if (tuple.value is null) return Null;
+
+        return new(tuple.value, tuple.unique);
+    }
+
+    public static bool operator ==(Name<TValue> left, Name<TValue> right)
     {
         return left.Equals(right);
     }
 
-    public static bool operator !=(Option<TValue> left, Option<TValue> right)
+    public static bool operator !=(Name<TValue> left, Name<TValue> right)
     {
         return !left.Equals(right);
     }
 
     public override bool Equals([NotNullWhen(true)] object? obj)
     {
-        return obj is Option<TValue> value && Equals(value);
+        return obj is Name<TValue> value && Equals(value);
     }
 
-    public bool Equals(Option<TValue> other)
+    public bool Equals(Name<TValue> other)
     {
         if (Exists && other.Exists)
         {
@@ -98,6 +110,6 @@ public readonly struct Option<TValue> :
     {
         if (!Exists) return 0;
 
-        return HashCode.Combine(Value, Exists);
+        return HashCode.Combine(Value, Exists, Unique);
     }
 }

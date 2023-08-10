@@ -1,24 +1,24 @@
-#include "common.h"
+#include "CASPAL.h"
 #include <stdio.h>
 
 #define RESET "\x1B[0m"
 #define RESET_LF "\x1B[0m\n"
 
-public void Write(const char ref string)
+public void Write(const uint8* string)
 {
-    fputs(string, stdout);
+    fputs((char *)string, stdout);
 
     fputs(RESET, stdout);
 }
 
-public void WriteLn(const char ref string)
+public void WriteLn(const uint8* string)
 {
-    fputs(string, stdout);
+    fputs((char *)string, stdout);
 
     fputs(RESET_LF, stdout);
 }
 
-public void ReadLn(char ref buffer, i32 length)
+public void ReadLn(uint8* buffer, int32 length)
 {
-    fgets(buffer, length, stdin);
+    fgets((char *)buffer, length, stdin);
 }

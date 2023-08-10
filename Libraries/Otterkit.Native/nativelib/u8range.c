@@ -1,8 +1,7 @@
 // Adapted from: https://github.com/cyb70289/utf8
 // License: MIT (See NOTICE in root directory)
 
-#include "u8simd.h"
-#include "common.h"
+#include "CASPAL.h"
 
 //
 // http://www.unicode.org/versions/Unicode15.0.0/ch03.pdf - page 125
@@ -34,12 +33,12 @@
 
 #define IsAscii(first) ((first) <= 0x7F)
 
-static inline int32_t IsValidTwoByteSequence(int32_t length, uint8_t first, uint8_t second)
+private inline int32 IsValidTwoByteSequence(int32 length, uint8 first, uint8 second)
 {
-    return length >= 2 && first >= 0xC2 && first <= 0xDF && (int8_t)second <= (int8_t)0xBF;
+    return length >= 2 && first >= 0xC2 && first <= 0xDF && (int8)second <= (int8)0xBF;
 }
 
-static inline int32_t IsValidThreeByteSequence(int32_t secondValid, int32_t thirdValid, uint8_t first, uint8_t second)
+private inline int32 IsValidThreeByteSequence(int32 secondValid, int32 thirdValid, uint8 first, uint8 second)
 {
     return (secondValid && thirdValid)
         && ((first == 0xE0 && second >= 0xA0)
@@ -48,7 +47,7 @@ static inline int32_t IsValidThreeByteSequence(int32_t secondValid, int32_t thir
         || (first >= 0xEE && first <= 0xEF));
 }
 
-static inline int32_t IsValidFourByteSequence(int32_t secondValid, int32_t thirdValid, int32_t fourthValid, uint8_t first, uint8_t second)
+private inline int32 IsValidFourByteSequence(int32 secondValid, int32 thirdValid, int32 fourthValid, uint8 first, uint8 second)
 {
     return (secondValid && thirdValid && fourthValid)
         && ((first == 0xF0 && second >= 0x90)
@@ -57,14 +56,14 @@ static inline int32_t IsValidFourByteSequence(int32_t secondValid, int32_t third
 }
 
 // Return 0 on success or 1-based index of first error char
-public int32_t u8ScalarAlgorithm(const uint8_t *source, int32_t len)
+public int32 u8ScalarAlgorithm(const uint8 *source, int32 len)
 {
-    int32_t err_pos = 1;
+    int32 err_pos = 1;
 
     while (len) 
     {
-        const uint8_t first = source[0];
-        int32_t bytes;
+        const uint8 first = source[0];
+        int32 bytes;
 
         // 00..7F
         if (IsAscii(first)) 
@@ -78,11 +77,11 @@ public int32_t u8ScalarAlgorithm(const uint8_t *source, int32_t len)
         } 
         else if (len >= 3) 
         {
-            const uint8_t second = source[1];
+            const uint8 second = source[1];
 
             // Is second, third between 0x80 ~ 0xBF
-            const int secondValid = (int8_t)second <= (int8_t)0xBF;
-            const int thirdValid = (int8_t)source[2] <= (int8_t)0xBF;
+            const int secondValid = (int8)second <= (int8)0xBF;
+            const int thirdValid = (int8)source[2] <= (int8)0xBF;
 
             // E0, A0..BF, 80..BF 
             // E1..EC, 80..BF, 80..BF 
@@ -95,7 +94,7 @@ public int32_t u8ScalarAlgorithm(const uint8_t *source, int32_t len)
             else if (len >= 4)
             {
                 // Is fourth between 0x80 ~ 0xBF
-                const int fourthValid = (int8_t)source[3] <= (int8_t)0xBF;
+                const int fourthValid = (int8)source[3] <= (int8)0xBF;
 
                 // F0, 90..BF, 80..BF, 80..BF
                 // F1..F3, 80..BF, 80..BF, 80..BF
@@ -127,14 +126,14 @@ public int32_t u8ScalarAlgorithm(const uint8_t *source, int32_t len)
     return 0;
 }
 
-#ifdef __x86_64__
+#if defined(AMD64)
 
 // Return 0 on success or -1 on error
-public int u8RangeAlgorithm(const uint8_t *source, int32_t length)
+public int u8RangeAlgorithm(const uint8 *source, int32 length)
 {
     if (length >= 16) {
-        __m128i prevInput = _mm_setzero_si128();
-        __m128i prevFirstLength = _mm_setzero_si128();
+        vec128i prevInput = _mm_setzero_si128();
+        vec128i prevFirstLength = _mm_setzero_si128();
 
         // 
         // Map high nibble of "First Byte" to legal character length minus 1
@@ -143,12 +142,12 @@ public int u8RangeAlgorithm(const uint8_t *source, int32_t length)
         // 0xE0 ~ 0xEF --> 2
         // 0xF0 ~ 0xFF --> 3
         // 
-        const __m128i firstLengthTable = _mm_setr_epi8(
+        const vec128i firstLengthTable = _mm_setr_epi8(
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 3
         );
 
         // Map "First Byte" to 8-th item of range table (0xC2 ~ 0xF4)
-        const __m128i firstRangeTable = _mm_setr_epi8(
+        const vec128i firstRangeTable = _mm_setr_epi8(
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 8, 8
         );
 
@@ -163,12 +162,12 @@ public int u8RangeAlgorithm(const uint8_t *source, int32_t length)
         // Index 8    : C2 ~ F4 (First Byte, non ascii)
         // Index 9~15 : illegal: i >= 127 && i <= -128
         // 
-        const __m128i rangeMinTable = _mm_setr_epi8(
+        const vec128i rangeMinTable = _mm_setr_epi8(
             0x00, 0x80, 0x80, 0x80, 0xA0, 0x80, 0x90, 0x80,
             0xC2, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F
         );
 
-        const __m128i rangeMaxTable = _mm_setr_epi8(
+        const vec128i rangeMaxTable = _mm_setr_epi8(
             0x7F, 0xBF, 0xBF, 0xBF, 0xBF, 0x9F, 0xBF, 0x8F,
             0xF4, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80
         );
@@ -190,34 +189,34 @@ public int u8RangeAlgorithm(const uint8_t *source, int32_t length)
         //
 
         // index1 -> E0, index14 -> ED
-        const __m128i xDfxEeTable = _mm_setr_epi8(
+        const vec128i xDfxEeTable = _mm_setr_epi8(
             0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0
         );
 
         // index1 -> F0, index5 -> F4
-        const __m128i xEfxFeTable = _mm_setr_epi8(
+        const vec128i xEfxFeTable = _mm_setr_epi8(
             0, 3, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         );
 
-        __m128i error = _mm_setzero_si128();
+        vec128i error = _mm_setzero_si128();
 
         while (length >= 16) 
         {
-            const __m128i input = _mm_loadu_si128((const __m128i *)source);
+            const vec128i input = _mm_loadu_si128((const vec128i *)source);
 
             // highNibbles = input >> 4
-            const __m128i highNibbles = _mm_and_si128(
+            const vec128i highNibbles = _mm_and_si128(
                 _mm_srli_epi16(input, 4), _mm_set1_epi8(0x0F)
             );
 
             // firstLength = legal character length minus 1
             // 0 for 00~7F, 1 for C0~DF, 2 for E0~EF, 3 for F0~FF
             // firstLength = firstLengthTable[highNibbles]
-            __m128i firstLength = _mm_shuffle_epi8(firstLengthTable, highNibbles);
+            vec128i firstLength = _mm_shuffle_epi8(firstLengthTable, highNibbles);
 
             // First Byte: set range index to 8 for bytes within 0xC0 ~ 0xFF
             // range = firstRangeTable[highNibbles]
-            __m128i range = _mm_shuffle_epi8(firstRangeTable, highNibbles);
+            vec128i range = _mm_shuffle_epi8(firstRangeTable, highNibbles);
 
             // Second Byte: set range index to firstLength
             // 0 for 00~7F, 1 for C0~DF, 2 for E0~EF, 3 for F0~FF
@@ -229,7 +228,7 @@ public int u8RangeAlgorithm(const uint8_t *source, int32_t length)
             // Third Byte: set range index to saturate_sub(firstLength, 1)
             // 0 for 00~7F, 0 for C0~DF, 1 for E0~EF, 2 for F0~FF
             // tmp = (firstLength, prevFirstLength) << 2 bytes
-            __m128i tmp = _mm_alignr_epi8(firstLength, prevFirstLength, 14);
+            vec128i tmp = _mm_alignr_epi8(firstLength, prevFirstLength, 14);
 
             // tmp = saturate_sub(tmp, 1)
             tmp = _mm_subs_epu8(tmp, _mm_set1_epi8(1));
@@ -264,7 +263,7 @@ public int u8RangeAlgorithm(const uint8_t *source, int32_t length)
 
             // Adjust Second Byte range for special First Bytes(E0,ED,F0,F4)
             // Overlaps lead to index 9~15, which are illegal in range table
-            __m128i shift1, pos, range2;
+            vec128i shift1, pos, range2;
 
             // shift1 = (input, prevInput) << 1 byte 
             shift1 = _mm_alignr_epi8(input, prevInput, 15);
@@ -284,8 +283,8 @@ public int u8RangeAlgorithm(const uint8_t *source, int32_t length)
             range = _mm_add_epi8(range, range2);
 
             // Load min and max values per calculated range index
-            __m128i minv = _mm_shuffle_epi8(rangeMinTable, range);
-            __m128i maxv = _mm_shuffle_epi8(rangeMaxTable, range);
+            vec128i minv = _mm_shuffle_epi8(rangeMinTable, range);
+            vec128i maxv = _mm_shuffle_epi8(rangeMaxTable, range);
 
             // Check value range
             // error |= (input < minv) | (input > maxv)
@@ -306,22 +305,22 @@ public int u8RangeAlgorithm(const uint8_t *source, int32_t length)
         if (!_mm_testz_si128(error, error)) return -1;
 
         // Find previous token (not 80~BF)
-        int32_t token = _mm_extract_epi32(prevInput, 3);
+        int32 token = _mm_extract_epi32(prevInput, 3);
         
-        // Split an int32_t into 4 int8_t
-        const int8_t *tokens = (const int8_t *)&token;
+        // Split an int32 into 4 int8
+        const int8 *tokens = (const int8 *)&token;
 
         int lookahead = 0;
 
-        if (tokens[3] > (int8_t)0xBF)
+        if (tokens[3] > (int8)0xBF)
         {
             lookahead = 1;
         }
-        else if (tokens[2] > (int8_t)0xBF)
+        else if (tokens[2] > (int8)0xBF)
         {
             lookahead = 2;
         }
-        else if (tokens[1] > (int8_t)0xBF)
+        else if (tokens[1] > (int8)0xBF)
         {
             lookahead = 3;
         }
@@ -347,12 +346,12 @@ public int u8RangeAlgorithm(const uint8_t *source, int32_t length)
 #define PushLastThreeBytes(of, to) _mm256_alignr_epi8(to, _mm256_permute2x128_si256(of, to, 0x21), 13)
 
 // Return 0 on success or -1 on error
-public int u8RangeAlgorithmAvx2(const uint8_t *source, int32_t length)
+public int u8RangeAlgorithmAvx2(const uint8 *source, int32 length)
 {
     if (length >= 32) 
     {
-        __m256i prevInput = _mm256_setzero_si256();
-        __m256i prevFirstLength = _mm256_setzero_si256();
+        vec256i prevInput = _mm256_setzero_si256();
+        vec256i prevFirstLength = _mm256_setzero_si256();
 
         // 
         // Map high nibble of "First Byte" to legal character length minus 1
@@ -361,12 +360,12 @@ public int u8RangeAlgorithmAvx2(const uint8_t *source, int32_t length)
         // 0xE0 ~ 0xEF --> 2
         // 0xF0 ~ 0xFF --> 3
         // 
-        const __m256i firstLengthTable = _mm256_setr_epi8(
+        const vec256i firstLengthTable = _mm256_setr_epi8(
             Repeat16(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 3 )
         );
 
         // Map "First Byte" to 8-th item of range table (0xC2 ~ 0xF4)
-        const __m256i firstRangeTable = _mm256_setr_epi8(
+        const vec256i firstRangeTable = _mm256_setr_epi8(
             Repeat16(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 8, 8)
         );
 
@@ -381,13 +380,13 @@ public int u8RangeAlgorithmAvx2(const uint8_t *source, int32_t length)
         // Index 8    : C2 ~ F4 (First Byte, non ascii)
         // Index 9~15 : illegal: i >= 127 && i <= -128
         // 
-        const __m256i rangeMinTable = _mm256_setr_epi8(
+        const vec256i rangeMinTable = _mm256_setr_epi8(
             Repeat16(0x00, 0x80, 0x80, 0x80, 0xA0, 0x80, 0x90, 0x80,
                 0xC2, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F
             )
         );
 
-        const __m256i rangeMaxTable = _mm256_setr_epi8(
+        const vec256i rangeMaxTable = _mm256_setr_epi8(
             Repeat16(0x7F, 0xBF, 0xBF, 0xBF, 0xBF, 0x9F, 0xBF, 0x8F,
                 0xF4, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80
             )
@@ -410,35 +409,35 @@ public int u8RangeAlgorithmAvx2(const uint8_t *source, int32_t length)
         // 
 
         // index1 -> E0, index14 -> ED 
-        const __m256i xDfxEeTable = _mm256_setr_epi8(
+        const vec256i xDfxEeTable = _mm256_setr_epi8(
             Repeat16(0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0)
         );
 
         // index1 -> F0, index5 -> F4 
-        const __m256i xEfxFeTable = _mm256_setr_epi8(
+        const vec256i xEfxFeTable = _mm256_setr_epi8(
             Repeat16(0, 3, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         );
 
-        __m256i error1 = _mm256_setzero_si256();
-        __m256i error2 = _mm256_setzero_si256();
+        vec256i error1 = _mm256_setzero_si256();
+        vec256i error2 = _mm256_setzero_si256();
 
         while (length >= 32) 
         {
-            const __m256i input = _mm256_loadu_si256((const __m256i *)source);
+            const vec256i input = _mm256_loadu_si256((const vec256i *)source);
 
             // highNibbles = input >> 4
-            const __m256i highNibbles = _mm256_and_si256(
+            const vec256i highNibbles = _mm256_and_si256(
                 _mm256_srli_epi16(input, 4), _mm256_set1_epi8(0x0F)
             );
 
             // firstLength = legal character length minus 1
             // 0 for 00~7F, 1 for C0~DF, 2 for E0~EF, 3 for F0~FF
             // firstLength = firstLengthTable[highNibbles]
-            __m256i firstLength = _mm256_shuffle_epi8(firstLengthTable, highNibbles);
+            vec256i firstLength = _mm256_shuffle_epi8(firstLengthTable, highNibbles);
 
             // First Byte: set range index to 8 for bytes within 0xC0 ~ 0xFF
             // range = firstRangeTable[highNibbles]
-            __m256i range = _mm256_shuffle_epi8(firstRangeTable, highNibbles);
+            vec256i range = _mm256_shuffle_epi8(firstRangeTable, highNibbles);
 
             // Second Byte: set range index to firstLength
             // 0 for 00~7F, 1 for C0~DF, 2 for E0~EF, 3 for F0~FF
@@ -451,10 +450,10 @@ public int u8RangeAlgorithmAvx2(const uint8_t *source, int32_t length)
             // 0 for 00~7F, 0 for C0~DF, 1 for E0~EF, 2 for F0~FF
 
             // tmp1 = (firstLength, prevFirstLength) << 2 bytes
-            __m256i tmp1 = PushLastTwoBytes(prevFirstLength, firstLength);
+            vec256i tmp1 = PushLastTwoBytes(prevFirstLength, firstLength);
 
             // tmp2 = saturate_sub(tmp1, 1)
-            __m256i tmp2 = _mm256_subs_epu8(tmp1, _mm256_set1_epi8(1));
+            vec256i tmp2 = _mm256_subs_epu8(tmp1, _mm256_set1_epi8(1));
 
             // range |= tmp2
             range = _mm256_or_si256(range, tmp2);
@@ -486,7 +485,7 @@ public int u8RangeAlgorithmAvx2(const uint8_t *source, int32_t length)
 
             // Adjust Second Byte range for special First Bytes (E0,ED,F0,F4)
             // Overlaps lead to index 9~15, which are illegal in range table
-            __m256i shift1, pos, range2;
+            vec256i shift1, pos, range2;
 
             // shift1 = (input, prevInput) << 1 byte 
             shift1 = PushLastByte(prevInput, input);
@@ -506,8 +505,8 @@ public int u8RangeAlgorithmAvx2(const uint8_t *source, int32_t length)
             range = _mm256_add_epi8(range, range2);
 
             // Load min and max values per calculated range index 
-            __m256i minv = _mm256_shuffle_epi8(rangeMinTable, range);
-            __m256i maxv = _mm256_shuffle_epi8(rangeMaxTable, range);
+            vec256i minv = _mm256_shuffle_epi8(rangeMinTable, range);
+            vec256i maxv = _mm256_shuffle_epi8(rangeMaxTable, range);
 
             // Check value range
             error1 = _mm256_or_si256(error1, _mm256_cmpgt_epi8(minv, input));
@@ -520,27 +519,27 @@ public int u8RangeAlgorithmAvx2(const uint8_t *source, int32_t length)
             length -= 32;
         }
 
-        __m256i error = _mm256_or_si256(error1, error2);
+        vec256i error = _mm256_or_si256(error1, error2);
 
         if (!_mm256_testz_si256(error, error)) return -1;
 
         // Find previous token (not 80~BF)
-        int32_t token = _mm256_extract_epi32(prevInput, 7);
+        int32 token = _mm256_extract_epi32(prevInput, 7);
 
-        // Split an int32_t into 4 int8_t
-        const int8_t *tokens = (const int8_t *)&token;
+        // Split an int32 into 4 int8
+        const int8 *tokens = (const int8 *)&token;
 
         int lookahead = 0;
 
-        if (tokens[3] > (int8_t)0xBF)
+        if (tokens[3] > (int8)0xBF)
         {
             lookahead = 1;
         }
-        else if (tokens[2] > (int8_t)0xBF)
+        else if (tokens[2] > (int8)0xBF)
         {
             lookahead = 2;
         }
-        else if (tokens[1] > (int8_t)0xBF)
+        else if (tokens[1] > (int8)0xBF)
         {
             lookahead = 3;
         }

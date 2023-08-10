@@ -1,33 +1,27 @@
-#include <string.h>
-
 #include "allocator.h"
-#include "common.h"
 
 // Convert megabytes to bytes.
-#define MB(x) ((u32)(x) * 1024 * 1024)
+#define MB(x) ((uint32)(x) * 1024 * 1024)
 
 // Convert kilobytes to bytes.
-#define KB(x) ((u32)(x) * 1024)
-
-// Memory alignment, default: 8 bytes.
-#define ALIGNMENT 8
+#define KB(x) ((uint32)(x) * 1024)
 
 // Stack memory, default: 2 MB.
-private u8 Stack[MB(2)];
+private uint8 Stack[MB(2)];
 
 // Stack pointer, points to the next available memory address.
-private u8 ref StackPointer = Stack;
+private uint8 ref StackPointer = Stack;
 
 // Returns the amount of stack memory being used.
 // Might be useful for debugging or profiling.
-public i32 StackUsage()
+public int32 StackUsage()
 {
     return StackPointer - Stack;
 }
 
 // Returns the amount of available stack memory.
 // Might also be useful for debugging or profiling.
-public i32 StackAvailable()
+public int32 StackAvailable()
 {
     return sizeof(Stack) - StackUsage();
 }
@@ -37,7 +31,7 @@ public i32 StackAvailable()
 // A pointer to the allocated memory,
 // A NULL pointer if out of memory,
 // The current stack pointer if length is zero.
-public void ref Alloc(u32 length)
+public void ref Alloc(uint32 length)
 {
     // Return current stack pointer, if length is zero.
     if (length == 0) return StackPointer;
@@ -62,7 +56,7 @@ public void Dealloc(void ref memory)
 {
     // Return if memory is null.
     // Double free is not a good idea :)
-    if (memory is null) return;
+    if (memory == null) return;
 
     // Reset stack pointer.
     // We don't need to zero out the memory, because it will be overwritten

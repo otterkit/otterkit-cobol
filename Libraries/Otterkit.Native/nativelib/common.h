@@ -3,7 +3,7 @@
     #ifdef _WIN32
         #define public __declspec(dllexport)
     #else
-        #define public
+        #define public __attribute__((visibility("default")))
     #endif
 
     #define internal static inline
@@ -14,24 +14,32 @@
     #define addr &
     #define null NULL
 
-    #define is ==
-    #define not !
-    #define and &&
-    #define or ||
+    typedef unsigned char uint8;
+    typedef unsigned short uint16;
+    typedef unsigned int uint32;
+    typedef unsigned long long uint64;
 
-    #include <stdint.h>
+    typedef signed char int8;
+    typedef signed short int16;
+    typedef signed int int32;
+    typedef signed long long int64;
 
-    typedef uint8_t u8;
-    typedef uint16_t u16;
-    typedef uint32_t u32;
-    typedef uint64_t u64;
+    #if defined(__amd64__)
+        #if defined(_MSC_VER)
+            #include <intrin.h>
+        #else
+            #include <x86intrin.h>
+        #endif
+    #endif
 
-    typedef int8_t i8;
-    typedef int16_t i16;
-    typedef int32_t i32;
-    typedef int64_t i64;
+    #if defined(__aarch64__)
+        #include <arm_neon.h>
+    #endif
 
-    typedef float f32;
-    typedef double f64;
-    
+    typedef __m128i vec128i;
+    typedef __m256i vec256i;
+
+    // Memory alignment: 16 bytes.
+    #define ALIGNMENT 16
+
 #endif

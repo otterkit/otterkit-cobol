@@ -300,7 +300,7 @@ public decQuad d128FMA(decQuad leftMul, decQuad rightMul, decQuad valueAdd)
 
 
 /* decQuad Comparisons */
-public int32_t d128Compare(decQuad left, decQuad right)
+public int32 d128Compare(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -314,7 +314,7 @@ public int32_t d128Compare(decQuad left, decQuad right)
     return decQuadToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-public int32_t d128CompareSignal(decQuad left, decQuad right)
+public int32 d128CompareSignal(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -326,7 +326,7 @@ public int32_t d128CompareSignal(decQuad left, decQuad right)
     return decQuadToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-public int32_t d128CompareTotal(decQuad left, decQuad right)
+public int32 d128CompareTotal(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -338,7 +338,7 @@ public int32_t d128CompareTotal(decQuad left, decQuad right)
     return decQuadToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-public int32_t d128CompareTotalMag(decQuad left, decQuad right)
+public int32 d128CompareTotalMag(decQuad left, decQuad right)
 {
     decContext context;
     decQuad result;
@@ -351,7 +351,7 @@ public int32_t d128CompareTotalMag(decQuad left, decQuad right)
 }
 
 /* Non-computational comparisons */
-public uint32_t d128IsCanonical(decQuad value)
+public uint32 d128IsCanonical(decQuad value)
 {
     decContext context;
 
@@ -360,7 +360,7 @@ public uint32_t d128IsCanonical(decQuad value)
     return decQuadIsCanonical(&value);
 }
 
-public uint32_t d128IsFinite(decQuad value)
+public uint32 d128IsFinite(decQuad value)
 {
     decContext context;
 
@@ -369,7 +369,7 @@ public uint32_t d128IsFinite(decQuad value)
     return decQuadIsFinite(&value);
 }
 
-public uint32_t d128IsInfinite(decQuad value)
+public uint32 d128IsInfinite(decQuad value)
 {
     decContext context;
 
@@ -378,7 +378,7 @@ public uint32_t d128IsInfinite(decQuad value)
     return decQuadIsInfinite(&value);
 }
 
-public uint32_t d128IsInteger(decQuad value)
+public uint32 d128IsInteger(decQuad value)
 {
     decContext context;
 
@@ -387,7 +387,7 @@ public uint32_t d128IsInteger(decQuad value)
     return decQuadIsInteger(&value);
 }
 
-public uint32_t d128IsNaN(decQuad value)
+public uint32 d128IsNaN(decQuad value)
 {
     decContext context;
 
@@ -396,7 +396,7 @@ public uint32_t d128IsNaN(decQuad value)
     return decQuadIsNaN(&value);
 }
 
-public uint32_t d128IsNegative(decQuad value)
+public uint32 d128IsNegative(decQuad value)
 {
     decContext context;
 
@@ -405,7 +405,7 @@ public uint32_t d128IsNegative(decQuad value)
     return decQuadIsNegative(&value);
 }
 
-public uint32_t d128IsNormal(decQuad value)
+public uint32 d128IsNormal(decQuad value)
 {
     decContext context;
 
@@ -414,7 +414,7 @@ public uint32_t d128IsNormal(decQuad value)
     return decQuadIsNormal(&value);
 }
 
-public uint32_t d128IsSubnormal(decQuad value)
+public uint32 d128IsSubnormal(decQuad value)
 {
     decContext context;
 
@@ -423,7 +423,7 @@ public uint32_t d128IsSubnormal(decQuad value)
     return decQuadIsSubnormal(&value);
 }
 
-public uint32_t d128IsPositive(decQuad value)
+public uint32 d128IsPositive(decQuad value)
 {
     decContext context;
 
@@ -432,7 +432,7 @@ public uint32_t d128IsPositive(decQuad value)
     return decQuadIsPositive(&value);
 }
 
-public uint32_t d128IsSignaling(decQuad value)
+public uint32 d128IsSignaling(decQuad value)
 {
     decContext context;
 
@@ -441,7 +441,7 @@ public uint32_t d128IsSignaling(decQuad value)
     return decQuadIsSignaling(&value);
 }
 
-public uint32_t d128IsSigned(decQuad value)
+public uint32 d128IsSigned(decQuad value)
 {
     decContext context;
 
@@ -450,7 +450,7 @@ public uint32_t d128IsSigned(decQuad value)
     return decQuadIsSigned(&value);
 }
 
-public uint32_t d128IsZero(decQuad value)
+public uint32 d128IsZero(decQuad value)
 {
     decContext context;
 
@@ -459,7 +459,7 @@ public uint32_t d128IsZero(decQuad value)
     return decQuadIsZero(&value);
 }
 
-public uint32_t d128Radix(decQuad value)
+public uint32 d128Radix(decQuad value)
 {
     decContext context;
 
@@ -468,7 +468,7 @@ public uint32_t d128Radix(decQuad value)
     return decQuadRadix(&value);
 }
 
-public uint32_t d128SameQuantum(decQuad left, decQuad right)
+public uint32 d128SameQuantum(decQuad left, decQuad right)
 {
     decContext context;
 
@@ -478,12 +478,12 @@ public uint32_t d128SameQuantum(decQuad left, decQuad right)
 }
 
 /* Utilities and conversions */
-public int32_t d128ToPacked(decQuad value, int32_t *exponent, uint8_t *packed)
+public int32 d128ToPacked(decQuad value, int32 *exponent, uint8 *packed)
 {
     return decQuadToPacked(&value, exponent, packed);
 }
 
-public decQuad d128FromPacked(int32_t exponent, const uint8_t *packed)
+public decQuad d128FromPacked(int32 exponent, const uint8 *packed)
 {
     decQuad result;
 
@@ -522,7 +522,7 @@ public decQuad d128FromString(char *value)
     return result;
 }
 
-public decQuad d128FromInt32(int32_t value)
+public decQuad d128FromInt32(int32 value)
 {
     decQuad result;
 
@@ -827,7 +827,7 @@ public decDouble d64FMA(decDouble leftMul, decDouble rightMul, decDouble valueAd
 
 
 /* decDouble Comparisons */
-public int32_t d64Compare(decDouble left, decDouble right)
+public int32 d64Compare(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -841,7 +841,7 @@ public int32_t d64Compare(decDouble left, decDouble right)
     return decDoubleToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-public int32_t d64CompareSignal(decDouble left, decDouble right)
+public int32 d64CompareSignal(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -853,7 +853,7 @@ public int32_t d64CompareSignal(decDouble left, decDouble right)
     return decDoubleToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-public int32_t d64CompareTotal(decDouble left, decDouble right)
+public int32 d64CompareTotal(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -865,7 +865,7 @@ public int32_t d64CompareTotal(decDouble left, decDouble right)
     return decDoubleToInt32(&result, &context, DEC_ROUND_HALF_EVEN);
 }
 
-public int32_t d64CompareTotalMag(decDouble left, decDouble right)
+public int32 d64CompareTotalMag(decDouble left, decDouble right)
 {
     decContext context;
     decDouble result;
@@ -878,7 +878,7 @@ public int32_t d64CompareTotalMag(decDouble left, decDouble right)
 }
 
 /* Non-computational comparisons */
-public uint32_t d64IsCanonical(decDouble value)
+public uint32 d64IsCanonical(decDouble value)
 {
     decContext context;
 
@@ -887,7 +887,7 @@ public uint32_t d64IsCanonical(decDouble value)
     return decDoubleIsCanonical(&value);
 }
 
-public uint32_t d64IsFinite(decDouble value)
+public uint32 d64IsFinite(decDouble value)
 {
     decContext context;
 
@@ -896,7 +896,7 @@ public uint32_t d64IsFinite(decDouble value)
     return decDoubleIsFinite(&value);
 }
 
-public uint32_t d64IsInfinite(decDouble value)
+public uint32 d64IsInfinite(decDouble value)
 {
     decContext context;
 
@@ -905,7 +905,7 @@ public uint32_t d64IsInfinite(decDouble value)
     return decDoubleIsInfinite(&value);
 }
 
-public uint32_t d64IsInteger(decDouble value)
+public uint32 d64IsInteger(decDouble value)
 {
     decContext context;
 
@@ -914,7 +914,7 @@ public uint32_t d64IsInteger(decDouble value)
     return decDoubleIsInteger(&value);
 }
 
-public uint32_t d64IsNaN(decDouble value)
+public uint32 d64IsNaN(decDouble value)
 {
     decContext context;
 
@@ -923,7 +923,7 @@ public uint32_t d64IsNaN(decDouble value)
     return decDoubleIsNaN(&value);
 }
 
-public uint32_t d64IsNegative(decDouble value)
+public uint32 d64IsNegative(decDouble value)
 {
     decContext context;
 
@@ -932,7 +932,7 @@ public uint32_t d64IsNegative(decDouble value)
     return decDoubleIsNegative(&value);
 }
 
-public uint32_t d64IsNormal(decDouble value)
+public uint32 d64IsNormal(decDouble value)
 {
     decContext context;
 
@@ -941,7 +941,7 @@ public uint32_t d64IsNormal(decDouble value)
     return decDoubleIsNormal(&value);
 }
 
-public uint32_t d64IsSubnormal(decDouble value)
+public uint32 d64IsSubnormal(decDouble value)
 {
     decContext context;
 
@@ -950,7 +950,7 @@ public uint32_t d64IsSubnormal(decDouble value)
     return decDoubleIsSubnormal(&value);
 }
 
-public uint32_t d64IsPositive(decDouble value)
+public uint32 d64IsPositive(decDouble value)
 {
     decContext context;
 
@@ -959,7 +959,7 @@ public uint32_t d64IsPositive(decDouble value)
     return decDoubleIsPositive(&value);
 }
 
-public uint32_t d64IsSignaling(decDouble value)
+public uint32 d64IsSignaling(decDouble value)
 {
     decContext context;
 
@@ -968,7 +968,7 @@ public uint32_t d64IsSignaling(decDouble value)
     return decDoubleIsSignaling(&value);
 }
 
-public uint32_t d64IsSigned(decDouble value)
+public uint32 d64IsSigned(decDouble value)
 {
     decContext context;
 
@@ -977,7 +977,7 @@ public uint32_t d64IsSigned(decDouble value)
     return decDoubleIsSigned(&value);
 }
 
-public uint32_t d64IsZero(decDouble value)
+public uint32 d64IsZero(decDouble value)
 {
     decContext context;
 
@@ -986,7 +986,7 @@ public uint32_t d64IsZero(decDouble value)
     return decDoubleIsZero(&value);
 }
 
-public uint32_t d64Radix(decDouble value)
+public uint32 d64Radix(decDouble value)
 {
     decContext context;
 
@@ -995,7 +995,7 @@ public uint32_t d64Radix(decDouble value)
     return decDoubleRadix(&value);
 }
 
-public uint32_t d64SameQuantum(decDouble left, decDouble right)
+public uint32 d64SameQuantum(decDouble left, decDouble right)
 {
     decContext context;
 
@@ -1035,7 +1035,7 @@ public decDouble d64FromString(char *value)
     return result;
 }
 
-public decDouble d64FromInt32(int32_t value)
+public decDouble d64FromInt32(int32 value)
 {
     decDouble result;
 

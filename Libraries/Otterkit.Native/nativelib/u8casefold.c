@@ -1,18 +1,14 @@
-#include <stdint.h>
-#include <string.h>
-#include <x86intrin.h>
-
 #include "common.h"
 #include "allocator.h"
 
 // UTF-8 trie node.
-typedef struct TrieNode
+typedef struct TrieNode 
 {
-    u32 offset;
-    union
+    uint32_t offset;
+    union 
     {
-        u64 bitmap;
-        u8 bytes[8];
+        uint64 bitmap;
+        uint8 bytes[8];
     };
 } trienode;
 
@@ -1732,12 +1728,12 @@ private const trienode ref RootNodes[3] =
     TwoByteTrie, ThreeByteTrie, FourByteTrie
 };
 
-internal u64 PopulationCount(u64 value)
+internal uint64 PopulationCount(uint64 value)
 {
     return _mm_popcnt_u64(value);
 }
 
-internal u8 RuneLength(u8 byte)
+internal uint8 RuneLength(uint8 byte)
 {
     if (byte < 0b10000000) return 1;
 
@@ -1750,7 +1746,7 @@ internal u8 RuneLength(u8 byte)
     return 0;
 }
 
-internal void AsciiCasefold(const u8 ref source, u8 ref buffer)
+internal void AsciiCasefold(const uint8 ref source, uint8 ref buffer)
 {
     // Branchless ASCII to lowercase conversion.
     deref buffer = deref source + 32 * (deref source >= 65 && deref source <= 90);   
@@ -1760,13 +1756,13 @@ internal void AsciiCasefold(const u8 ref source, u8 ref buffer)
 // The trie is static and read-only, so it should be safe to use from multiple threads.
 // The algorithm assumes that the data is null-terminated, and only contains valid UTF-8 sequences.
 // It assumes that the caller will correctly handle the returned error data.
-internal const u8 ref MappingSearch(const u8 ref data)
+internal const uint8 ref MappingSearch(const uint8 ref data)
 {
     // Our trie is stored as a static const array to avoid having to load it from a file or initialize it at runtime.
     // Each node has a bitmap of the possible next bytes and the offset of its first child node.
 
     // Avoid modifying the original pointer's position.
-    const u8 ref index = data;
+    const uint8 ref index = data;
 
     // Fetch the root node.
     const trienode ref root = RootNodes[RuneLength(deref index) - 2];
@@ -1779,43 +1775,43 @@ internal const u8 ref MappingSearch(const u8 ref data)
     {
         // The trie is designed to be used with non-ASCII UTF-8 data, so we only need to look at the last 6 bits.
         // The first two bits are always either 10xx.. or 11xx.., so we can toggle them off.
-        u8 byte = deref index++ & 0b00111111;
+        uint8 byte = deref index++ & 0b00111111;
 
         // The above operation will leave us with a compressed byte with maximum value of 64.
-        // This is a huge space optimization, we can then use a single uint64_t to store the bitmap.
+        // This is a huge space optimization, we can then use a single uint64 to store the bitmap.
         // The bitmap is a 64-bit integer with each bit representing a possible next byte.
-        u64 bitmap = node->bitmap;
+        uint8 bitmap = node->bitmap;
 
         // If the byte is not in the current node's bitmap, we can stop searching.
         // The byte sequence is not in the trie, so we return a no match error.
-        if (((bitmap >> byte) & 1UL) is 0) return data;
+        if (((bitmap >> byte) & 1UL) == 0) return data;
 
         // Count the number of bits set before the current byte.
         // This plus the offset of the current node's first child node is the index of the next node.
-        u64 count = PopulationCount(bitmap & ((1UL << byte) - 1));
+        uint8 count = PopulationCount(bitmap & ((1UL << byte) - 1));
 
         // Fetch the next node.
         node = addr root[node->offset + count];
 
         // If the node has a 0 offset, it's a leaf node.
         // We can stop searching, we found the byte sequence in the trie.
-        if (node->offset is 0) break;
+        if (node->offset == 0) break;
     }
 
     // Return the result data.
     return node->bytes;
 }
 
-public u8 ref Casefold(const u8 ref source, u32 length)
+public uint8 ref Casefold(const uint8 ref source, uint8 length)
 {
-    u8 ref stackalloc = Alloc((length << 1) + 1);
+    uint8 ref stackalloc = Alloc((length << 1) + 1);
 
-    u8 ref buffer = stackalloc;
+    uint8 ref buffer = stackalloc;
 
     while (deref source)
     {
         // Fetch the length of the current rune.
-        uint8_t runeLength = RuneLength(deref source);
+        uint8 runeLength = RuneLength(deref source);
 
         if (runeLength == 1)
         {
@@ -1829,9 +1825,9 @@ public u8 ref Casefold(const u8 ref source, u32 length)
         }
 
         // Fetch the mapping data for the current Unicode rune.
-        const u8 ref mapping = MappingSearch(source);
+        const uint8 ref mapping = MappingSearch(source);
 
-        u8 mappingLength = mapping[7];
+        uint8 mappingLength = mapping[7];
 
         buffer[0] = mapping[0];
         buffer[1] = mapping[1];

@@ -69,6 +69,21 @@ public static class TokenHandling
         }
     }
 
+    public static int CurrentLine()
+    {
+        return Current().Line;
+    }
+
+    public static int CurrentColumn()
+    {
+        return Current().Column;
+    }
+
+    public static int CurrentFile()
+    {
+        return Current().FileIndex;
+    }
+
     public static Token Peek(int amount)
     {
         if (Index + amount >= Source.Count) return Source[^1];

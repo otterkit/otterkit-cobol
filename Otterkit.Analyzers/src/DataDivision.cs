@@ -497,30 +497,39 @@ public static partial class DataDivision
 
     private static void DataEntry()
     {
-        int levelNumber = int.Parse(Current().Value);
+        var levelNumber = int.Parse(Current().Value);
 
         Literals.Numeric();
 
-        Token itemToken = Current();
-
-        string dataName = itemToken.Value;
-
         CheckLevelNumber(levelNumber);
+
+        Token variable;
 
         if (CurrentEquals(TokenType.Identifier))
         {
-            References.LocalName(false);
+            variable = References.LocalDefinition().Unwrap();
+        }
+        else if (CurrentEquals("FILLER"))
+        {
+            variable = Current();
+
+            Optional("FILLER");
         }
         else
         {
-            Optional("FILLER");
+            variable = new("[FILLER]", TokenType.ReservedKeyword)
+            {
+                Line = CurrentLine(),
+                Column = CurrentColumn(),
+                FileIndex = CurrentFile()
+            };
         }
 
-        DataEntry dataLocal = new(itemToken, EntryKind.DataDescription);
+        var entry = new DataEntry(variable, EntryKind.DataDescription);
 
-        dataLocal.LevelNumber = levelNumber;
+        entry.LevelNumber = levelNumber;
 
-        dataLocal.Section = CompilerContext.ActiveScope;
+        entry.Section = CompilerContext.ActiveScope;
 
         if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
         {
@@ -534,15 +543,15 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        dataLocal.DeclarationIndex = TokenHandling.Index;
+        entry.DeclarationIndex = TokenHandling.Index;
 
         // COBOL standard requirement
         // Usage display is the default unless specified otherwise
-        dataLocal.Usage = Usages.Display;
+        entry.Usage = Usages.Display;
 
         while (CurrentEquals(TokenContext.IsClause))
         {
-            DataEntryClauses(dataLocal);
+            DataEntryClauses(entry);
         }
 
         if (!Expected(".", false))
@@ -560,38 +569,39 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        HandleLevelStack(dataLocal);
+        HandleLevelStack(entry);
 
-        if (dataLocal.IsGroup) GroupStack.Push(dataLocal);
+        if (entry.IsGroup) GroupStack.Push(entry);
 
-        CheckClauseCompatibility(dataLocal, itemToken);
+        CheckClauseCompatibility(entry, variable);
 
-        CheckConditionNames(dataLocal);
-
-        // We're returning during a resolution pass
-        if (CompilerContext.IsResolutionPass) return;
+        CheckConditionNames(entry);
 
         if (GroupStack.Count is not 0)
         {
             var parent = GroupStack.Peek();
 
-            dataLocal.Parent = parent;
+            entry.Parent = parent;
 
-            parent.Length += dataLocal.Length;
+            parent.Length += entry.Length;
         }
 
-        if (dataName is "FILLER") return;
+        // We're returning during a resolution pass
+        if (CompilerContext.IsResolutionPass) return;
+
+        // We're also returning for filler items, they shouldn't be added to the symbol table
+        if (variable.Value is "FILLER" or "[FILLER]") return;
 
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataNames.Exists(itemToken) && levelNumber is 1 or 77)
+        if (sourceUnit.DataNames.Exists(variable) && levelNumber is 1 or 77)
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
                 Duplicate root level definition.
                 """)
-            .WithSourceLine(itemToken, """
+            .WithSourceLine(variable, """
                 A 01 or 77 level variable already exists with this name.
                 """)
             .WithNote("""
@@ -600,7 +610,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataNames.Add(itemToken, dataLocal);
+        sourceUnit.DataNames.Add(variable, entry);
     }
 
     private static void ConstantEntry()
@@ -719,33 +729,40 @@ public static partial class DataDivision
 
     private static void ScreenEntry()
     {
-        int levelNumber = int.Parse(Current().Value);
+        var levelNumber = int.Parse(Current().Value);
+
         Literals.Numeric();
 
-        Token itemToken = Current();
-        string screenName = itemToken.Value;
-
         CheckLevelNumber(levelNumber);
-        
+
+        Token variable;
+
         if (CurrentEquals(TokenType.Identifier))
         {
-            References.LocalName(false);
+            variable = References.LocalDefinition().Unwrap();
+        }
+        else if (CurrentEquals("FILLER"))
+        {
+            variable = Current();
+
+            Optional("FILLER");
         }
         else
         {
-            Optional("FILLER");
+            variable = new("[FILLER]", TokenType.ReservedKeyword)
+            {
+                Line = CurrentLine(),
+                Column = CurrentColumn(),
+                FileIndex = CurrentFile()
+            };
         }
 
-        DataEntry screenLocal = new(itemToken, EntryKind.ScreenDescription);
+        var entry = new DataEntry(variable, EntryKind.ScreenDescription);
 
-        screenLocal.LevelNumber = levelNumber;
-        screenLocal.Section = CompilerContext.ActiveScope;
+        entry.LevelNumber = levelNumber;
 
-        if (GroupStack.Count is not 0)
-        {
-            screenLocal.Parent = GroupStack.Peek();
-        }
-        
+        entry.Section = CompilerContext.ActiveScope;
+
         if (!CurrentEquals(TokenContext.IsClause) && !CurrentEquals("."))
         {
             ErrorHandler
@@ -758,9 +775,15 @@ public static partial class DataDivision
             .CloseError();
         }
 
+        entry.DeclarationIndex = TokenHandling.Index;
+
+        // COBOL standard requirement
+        // Usage display is the default unless specified otherwise
+        entry.Usage = Usages.Display;
+
         while (CurrentEquals(TokenContext.IsClause))
         {
-            ScreenEntryClauses(screenLocal);
+            ScreenEntryClauses(entry);
         }
 
         if (!Expected(".", false))
@@ -778,25 +801,39 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        HandleLevelStack(screenLocal);
+        HandleLevelStack(entry);
 
-        if (screenLocal.IsGroup) GroupStack.Push(screenLocal);
+        if (entry.IsGroup) GroupStack.Push(entry);
 
-        CheckConditionNames(screenLocal);
+        CheckClauseCompatibility(entry, variable);
+
+        CheckConditionNames(entry);
+
+        if (GroupStack.Count is not 0)
+        {
+            var parent = GroupStack.Peek();
+
+            entry.Parent = parent;
+
+            parent.Length += entry.Length;
+        }
 
         // We're returning during a resolution pass
         if (CompilerContext.IsResolutionPass) return;
 
+        // We're also returning for filler items, they shouldn't be added to the symbol table
+        if (variable.Value is "FILLER" or "[FILLER]") return;
+
         // Because we don't want to run this again during it
         var sourceUnit = CompilerContext.ActiveCallable;
 
-        if (sourceUnit.DataNames.Exists(itemToken) && levelNumber is 1 or 77)
+        if (sourceUnit.DataNames.Exists(variable) && levelNumber is 1 or 77)
         {
             ErrorHandler
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 30,"""
                 Duplicate root level definition.
                 """)
-            .WithSourceLine(itemToken, """
+            .WithSourceLine(variable, """
                 A 01 or 77 level variable already exists with this name.
                 """)
             .WithNote("""
@@ -805,7 +842,7 @@ public static partial class DataDivision
             .CloseError();
         }
 
-        sourceUnit.DataNames.Add(itemToken, screenLocal);
+        sourceUnit.DataNames.Add(variable, entry);
     }
 
     private static void HandleLevelStack(DataEntry entryLocal)
@@ -868,10 +905,8 @@ public static partial class DataDivision
         }
     }
 
-    private static void CheckClauseCompatibility(DataEntry localReference, Token itemToken)
+    private static void CheckClauseCompatibility(DataEntry dataItem, Token itemToken)
     {
-        var dataItem = localReference;
-
         bool usageCannotHavePicture = dataItem.Usage switch
         {
             Usages.BinaryChar => true,
@@ -896,7 +931,7 @@ public static partial class DataDivision
             .Build(ErrorType.Analyzer, ConsoleColor.Red, 45,"""
                 Invalid clause combination.
                 """)
-            .WithSourceLine(Current(), $"""
+            .WithSourceLine(itemToken, $"""
                 Items with USAGE {dataItem.Usage.Display()} must not contain a PICTURE clause.
                 """)
             .CloseError();

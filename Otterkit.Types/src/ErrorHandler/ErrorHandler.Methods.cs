@@ -54,6 +54,12 @@ public readonly ref partial struct ErrorHandler
         //   │ 
         Separator();
 
+        if (token.Value is "[FILLER]")
+        {
+            // 7 |  01 [FILLER] PIC X(10).
+            line = line.Insert(token.Column - 1, "[FILLER] ");
+        }
+
         // 7 │  END PROGRAM HELLO.  
         ShowSourceLine(token.Line, line);
 

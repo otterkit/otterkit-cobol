@@ -149,9 +149,9 @@ public static partial class Tokenizer
         return match.Equals(value, StringComparison.OrdinalIgnoreCase);
     }
 
-    [GeneratedRegex(AllPatterns, RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(AllPatterns, RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex LexerRegex();
 
-    [GeneratedRegex("""(\s|\.\s)""", RegexOptions.ExplicitCapture | RegexOptions.NonBacktracking | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex("""(\s|\.\s)""", RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex PictureEndRegex();
 }

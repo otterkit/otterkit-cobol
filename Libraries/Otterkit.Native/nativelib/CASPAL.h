@@ -42,6 +42,7 @@
 // Platform detection and abstraction
 #if defined(_WIN64)
     #define PlatformWindows
+    #include <windows.h>
 #elif defined(__linux__)
     #define PlatformLinux
 #elif defined(__APPLE__)
@@ -85,7 +86,7 @@
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned int uint32;
-typedef unsigned long uint64;
+typedef unsigned long long uint64;
 
 // ...and make sure they are actually the correct size.
 StaticAssert(sizeof(uint8) == 1, InvalidUint8Size);
@@ -97,7 +98,7 @@ StaticAssert(sizeof(uint64) == 8, InvalidUint64Size);
 typedef signed char int8;
 typedef signed short int16;
 typedef signed int int32;
-typedef signed long int64;
+typedef signed long long int64;
 
 // ...and make sure they are actually the correct size.
 StaticAssert(sizeof(int8) == 1, InvalidInt8Size);
@@ -124,7 +125,6 @@ typedef int64 intptr;
 // Just to make things easier to read, double underscores everywhere is ugly and hard to read.
 typedef __m128i vec128i;
 typedef __m256i vec256i;
-typedef __m512i vec512i;
 
 // Shared library visibility, export all "public" symbols.
 #define public __attribute__((visibility("default")))

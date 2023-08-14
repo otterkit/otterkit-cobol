@@ -32,7 +32,7 @@ int main()
 
     printf("Address space reserved at %p\n", addressSpace);
 
-    if (addressSpace == nullptr || addressSpace == MAP_FAILED)
+    if (addressSpace == nullptr)
     {
         printf("Failed to reserve address space.\n");
         return 1;
@@ -42,17 +42,18 @@ int main()
     getchar();
 
     // Allocate 400 MB of memory on the reserved address space.
-    void* memory = sysVirtualAlloc(addressSpace, MB(400), memReadWrite, MAP_FIXED | MAP_ANONYMOUS | MAP_PRIVATE);
+    void* memory = sysVirtualAlloc(addressSpace, MB(400), memReadWrite, MEM_COMMIT);
 
     printf("Allocated memory at %p\n", memory);
 
     if (memory != addressSpace)
     {
         printf("Failed to allocate memory at the specified address.\n");
+        printf("Last error: %lu\n", GetLastError());
         return 1;
     }
 
-    if (memory == nullptr || memory == MAP_FAILED)
+    if (memory == nullptr)
     {
         printf("Failed to allocate memory.\n");
         return 1;

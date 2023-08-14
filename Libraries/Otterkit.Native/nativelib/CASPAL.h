@@ -16,6 +16,7 @@
 #elif __STDC_VERSION__ >= 199901L
     #define C99OrLater
 #else
+    // This includes MSVC, which still doesn't support any Standard C versions (Microsoft, please fix this!).
     #error "Standard C99 (or later) is required. Consider upgrading your compiler, or using a different one."
 #endif
 

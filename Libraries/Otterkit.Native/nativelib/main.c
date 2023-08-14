@@ -72,5 +72,5 @@ int main()
     getchar();
 
     // Deallocate the address space.
-    sysVirtualDealloc(addressSpace, TB(2), 0);
+    sysVirtualDealloc(addressSpace, TB(2), MEM_RELEASE);
 }

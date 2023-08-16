@@ -58,19 +58,23 @@
 
     #define sysVirtualAlloc(addr, size, prot, flags) VirtualAlloc(addr, size, flags, prot)
     #define sysVirtualDealloc(addr, size, flags) VirtualFree(addr, size, flags)
-    #define sysMemoryProtect(addr, size, flags) DWORD oldFlags ## __LINE__; VirtualProtect(addr, size, flags, &oldFlags ## __LINE__)
 
     #define memReadWrite PAGE_READWRITE
     #define memProtected PAGE_NOACCESS
+
+    #define memReserve MEM_RESERVE
+    #define memCommit MEM_COMMIT
 #elif defined(PlatformLinux) || defined(PlatformApple)
     #include <sys/mman.h>
 
     #define sysVirtualAlloc(addr, size, prot, flags) mmap(addr, size, prot, flags, -1, 0)
     #define sysVirtualDealloc(addr, size, flags) munmap(addr, size)
-    #define sysMemoryProtect(addr, size, flags) mprotect(addr, size, flags)
 
     #define memReadWrite PROT_READ | PROT_WRITE
     #define memProtected PROT_NONE
+
+    #define memReserve MAP_NORESERVE | MAP_PRIVATE | MAP_ANONYMOUS
+    #define memCommit MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS
 #endif
 
 // Architecture detection and abstraction

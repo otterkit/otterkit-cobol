@@ -13,13 +13,7 @@
 private inline void* ottrkReserveAddressSpace(const uint64 size)
 {
     // Reserve virtual address space, the default size should be 2 TB when calling this function.
-    #if defined(PlatformWindows)
-        return sysVirtualAlloc(nullptr, size, memProtected, MEM_RESERVE);
-
-    #elif defined(PlatformLinux) || defined(PlatformApple)
-        return sysVirtualAlloc(nullptr, size, memProtected, MAP_NORESERVE | MAP_ANONYMOUS | MAP_PRIVATE);
-
-    #endif
+    return sysVirtualAlloc(nullptr, size, memProtected, memReserve);
 }
 
 int main()
@@ -42,7 +36,7 @@ int main()
     getchar();
 
     // Allocate 400 MB of memory on the reserved address space.
-    void* memory = sysVirtualAlloc(addressSpace, MB(400), memReadWrite, MEM_COMMIT);
+    void* memory = sysVirtualAlloc(addressSpace, MB(400), memReadWrite, memCommit);
 
     printf("Allocated memory at %p\n", memory);
 
@@ -66,6 +60,18 @@ int main()
     for (uint32 i = 0; i < MB(400); i += 4096)
     {
         ((uint8*)memory)[i] = 0x90;
+    }
+
+    printf("Press enter to release 400MBs...");
+    getchar();
+
+    // Release the allocated memory.
+    memory = sysVirtualAlloc(memory, MB(400), memProtected, memCommit);
+
+    if (memory != addressSpace)
+    {
+        printf("Failed to release memory at the specified address.\n");
+        return 1;
     }
 
     printf("Press enter to exit...");

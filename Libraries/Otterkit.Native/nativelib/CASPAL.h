@@ -1,90 +1,84 @@
-// Compiler, Architecture, Standard, and Platform Abstraction Layer
-// for the Otterkit Runtime Library.
+//╭─────────────────────────────────────────────────────────────────────────────────╮
+//│   Otterkit's Compiler, Architecture, Standard, and Platform Abstraction Layer   │
+//│  ╭──────────╮ ╭──────────╮ ╭──────────╮ ╭──────────╮ ╭──────────╮ ╭─╮           │
+//│  │ ╭────────╯ │ ╭──────╮ │ │ ╭────────╯ │ ╭──────╮ │ │ ╭──────╮ │ │ │           │
+//│  │ │          │ │      │ │ │ │          │ │      │ │ │ │      │ │ │ │           │
+//│  │ │          │ ╰──────╯ │ │ ╰────────╮ │ ╰──────╯ │ │ ╰──────╯ │ │ │           │
+//│  │ │          │ ╭──────╮ │ ╰────────╮ │ │ ╭────────╯ │ ╭──────╮ │ │ │           │
+//│  │ │          │ │      │ │          │ │ │ │          │ │      │ │ │ │           │
+//│  │ ╰────────╮ │ │      │ │ ╭────────╯ │ │ │          │ │      │ │ │ ╰────────╮  │
+//│  ╰──────────╯ ╰─╯      ╰─╯ ╰──────────╯ ╰─╯          ╰─╯      ╰─╯ ╰──────────╯  │
+//╰─────────────────────────────────────────────────────────────────────────────────╯ 
 
 #ifndef CASPAL
-#define CASPAL 202300UL
+#define CASPAL 202300L
 
-#if defined(__cplusplus)
-    #error "This header is meant to be used in C source files only."
+#if defined(__cplusplus) // Just error out and give up if we're being included in a C++ file.
+    #error "CASPAL was designed to be used within (standard) C source files only."
 #endif
 
-// C Standard version detection and abstraction
+//╭──────────────────────────────────────────────────────────────────────────────────╮
+//│  Standard C detection and abstractions                                           │
+//╰──────────────────────────────────────────────────────────────────────────────────╯ 
+
 #if __STDC_VERSION__ >= 202311L
     #define C23OrLater
+
 #elif __STDC_VERSION__ >= 201112L
     #define C11OrLater
+
 #elif __STDC_VERSION__ >= 199901L
     #define C99OrLater
+
 #else
-    // This includes MSVC, which still doesn't support any Standard C versions (Microsoft, please fix this!).
-    #error "Standard C99 (or later) is required. Consider upgrading your compiler, or using a different one."
+    // Will error on MSVC! It still seems to be stuck on C89, it doesn't define __STDC_VERSION__, and only runs on Windows.
+    // (Not worth the preprocessor gymnastics and compiler-specific hacks to support it in my opinion!)
+    #error "Standard C99 (or later) support is required. Consider upgrading your compiler, or using GCC or Clang instead."
 #endif
 
 #if defined(C11OrLater)
-    // C11 has a built-in static assert, nice!
+    // Built-in Standard C11 static assert.
     #define StaticAssert(condition, error) _Static_assert(condition, #error);
+
 #else
     // C99 doesn't have a built-in static assert, so we have to use this neat trick.
     // If the condition is false, the compiler will complain that the array size is negative.
     #define StaticAssert(condition, error) typedef int assert_ ## __LINE__ ## error[(condition) ? 5 : -5];
+
 #endif
 
 #if defined(C23OrLater)
-    // C23 has a built-in alignas, nice!
+    // Built-in Standard C23 alignas.
     #define aligned(x) alignas(x)
+
 #elif defined(C11OrLater)
-    // C11 has a built-in alignas, but it's not as nice as C23's.
+    // Built-in Standard C11 alignas.
     #define aligned(x) _Alignas(x)
+
 #else
-    // C99 doesn't have a built-in alignas, so we have to use compiler-specific attributes.
+    // C99 doesn't have a built-in alignas, so we use compiler-specific attributes.
     #define aligned(x) __attribute__((aligned(x)))
+
 #endif
 
-// Platform detection and abstraction
-#if defined(_WIN64)
-    #define PlatformWindows
-    #include <windows.h>
-#elif defined(__linux__)
-    #define PlatformLinux
-#elif defined(__APPLE__)
-    #define PlatformApple
-#else
-    #error "Unsupported platform."
-#endif
+// As defined by the C11 standard:
+// "An integer constant expression with the value 0, or such an expression cast to type void *, is called a null pointer constant".
+// We're calling it nullptr for the sake of clarity, and also because uppercase NULL looks ugly (sorry, but it's true).
+#define nullptr ((void*)0)
 
-// Virtual memory management wrappers
-#if defined(PlatformWindows)
-    #include <memoryapi.h>
+//╭──────────────────────────────────────────────────────────────────────────────────╮
+//│  Architecture detection and abstractions                                         │
+//╰──────────────────────────────────────────────────────────────────────────────────╯ 
 
-    #define sysVirtualAlloc(addr, size, prot, flags) VirtualAlloc(addr, size, flags, prot)
-    #define sysVirtualDealloc(addr, size, flags) VirtualFree(addr, size, flags)
-
-    #define memReadWrite PAGE_READWRITE
-    #define memProtected PAGE_NOACCESS
-
-    #define memReserve MEM_RESERVE
-    #define memCommit MEM_COMMIT
-#elif defined(PlatformLinux) || defined(PlatformApple)
-    #include <sys/mman.h>
-
-    #define sysVirtualAlloc(addr, size, prot, flags) mmap(addr, size, prot, flags, -1, 0)
-    #define sysVirtualDealloc(addr, size, flags) munmap(addr, size)
-
-    #define memReadWrite PROT_READ | PROT_WRITE
-    #define memProtected PROT_NONE
-
-    #define memReserve MAP_NORESERVE | MAP_PRIVATE | MAP_ANONYMOUS
-    #define memCommit MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS
-#endif
-
-// Architecture detection and abstraction
-#if defined(__x86_64__) || defined(_M_X64)
+#if defined(__x86_64__) && defined(__LP64__)
     #define AMD64
-#elif defined(__aarch64__) || defined(_M_ARM64)
+
+#elif defined(__aarch64__) && defined(__LP64__)
     #define ARM64
+
 #else
-    // We don't support 32-bit architectures.
-    #error "Unsupported architecture."
+    // We don't support 32-bit architectures, would limit some optimizations too much.
+    #error "Unrecognized or unsupported architecture."
 #endif
 
 // Typedef unsigned integer types...
@@ -115,26 +109,111 @@ StaticAssert(sizeof(int64) == 8, InvalidInt64Size);
 typedef uint64 uintptr;
 typedef int64 intptr;
 
-// As defined in the C11 standard:
-// "An integer constant expression with the value 0, or such an expression cast to type void *, is called a null pointer constant".
-// We're calling it nullptr for the sake of clarity, and also because uppercase NULL looks ugly (sorry, but it's true).
-#define nullptr ((void*)0)
-
 // SIMD intrinsics for x86 and ARM.
 #if defined(AMD64)
     #include <immintrin.h>
+
 #elif defined(ARM64)
     #include <arm_neon.h>
+
 #endif
 
 // Just to make things easier to read, double underscores everywhere is ugly and hard to read.
 typedef __m128i vec128i;
 typedef __m256i vec256i;
 
-// Shared library visibility, export all "public" symbols.
+//╭──────────────────────────────────────────────────────────────────────────────────╮
+//│  Platform detection and abstractions                                             │
+//╰──────────────────────────────────────────────────────────────────────────────────╯ 
+
+#if defined(_WIN64)
+    #define PlatformWindows
+    // We need to include this, otherwise it won't compile.
+    #include <windows.h>
+
+#elif defined(__linux__)
+    #define PlatformLinux
+
+#elif defined(__APPLE__)
+    #define PlatformDarwin
+
+#else
+    #error "Unrecognized or unsupported platform."
+#endif
+
+//╭──────────────────────────────────────────────────────────────────────────────────╮
+//│  Platform dependent virtual memory wrappers and functions                        │
+//╰──────────────────────────────────────────────────────────────────────────────────╯ 
+
+#if defined(PlatformWindows)
+    #include <memoryapi.h>
+
+    // Windows virtual memory primitives.
+    #define sysVirtualAlloc(addr, size, prot, flags) VirtualAlloc(addr, size, flags, prot)
+    #define sysVirtualDealloc(addr, size, flags) VirtualFree(addr, size, flags)
+
+    #define memReadWrite PAGE_READWRITE
+    #define memProtected PAGE_NOACCESS
+
+    #define memReserve MEM_RESERVE
+    #define memCommit MEM_COMMIT
+
+    #define memDecommit MEM_DECOMMIT
+    #define memRelease MEM_RELEASE
+
+#elif defined(PlatformLinux) || defined(PlatformDarwin)
+    #include <sys/mman.h>
+
+    // Linux and macOS virtual memory primitives.
+    #define sysVirtualAlloc(addr, size, prot, flags) mmap(addr, size, prot, flags, -1, 0)
+    #define sysVirtualDealloc(addr, size, flags) munmap(addr, size)
+
+    #define memReadWrite PROT_READ | PROT_WRITE
+    #define memProtected PROT_NONE
+
+    // MAP_NORESERVE to avoid reserving swap space for reserved address space.
+    #define memReserve MAP_NORESERVE | MAP_PRIVATE | MAP_ANONYMOUS
+    #define memCommit MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS
+
+    // MAP_NORESERVE to avoid reserving swap space for decommitted pages.
+    #define memDecommit MAP_NORESERVE | MAP_PRIVATE | MAP_ANONYMOUS
+    // Not needed on Unix systems.
+    #define memRelease 0
+
+#endif
+
+//╭──────────────────────────────────────────────────────────────────────────────────╮
+//│  Additional virtual memory convenience wrappers                                  │
+//╰──────────────────────────────────────────────────────────────────────────────────╯ 
+
+// So we don't have to remember the order of the arguments and flags.
+#define sysReserveAddressSpace(size) sysVirtualAlloc(nullptr, size, memProtected, memReserve)
+#define sysReleaseAddressSpace(addr, size) sysVirtualDealloc(addr, size, memRelease)
+
+// Must be used with an address within a reserved address space (returned by sysReserveAddressSpace).
+#define sysCommitMemory(addr, size) sysVirtualAlloc(addr, size, memReadWrite, memCommit)
+
+#if defined(PlatformWindows)
+    // On Windows, we decommit (only release physical memory) by calling VirtualFree with MEM_DECOMMIT.
+    // (according to the documentation, this is the correct way to do it)
+    #define sysDecommitMemory(addr, size) sysVirtualDealloc(addr, size, memDecommit)
+
+#elif defined(PlatformLinux) || defined(PlatformDarwin)
+    // On Linux and macOS, we decommit (only release physical memory) by calling mmap with PROT_NONE.
+    // This will overwrite the existing mapping, and the pages will be physically released.
+    #define sysDecommitMemory(addr, size) sysVirtualAlloc(addr, size, memProtected, memDecommit)
+
+#endif
+
+//╭──────────────────────────────────────────────────────────────────────────────────╮
+//│  Additional convenience macros and wrappers                                      │
+//╰──────────────────────────────────────────────────────────────────────────────────╯ 
+
+// Shared library, set visibility to export all "public" symbols.
+// Should be used with `-fvisibility=hidden` compiler flag on GCC and Clang.
 #define public __attribute__((visibility("default")))
 
-// For the sake of readability, since static is used for multiple things.
+// For the sake of readability, since static is used for multiple different things.
 #define private static
 
 #endif // CASPAL

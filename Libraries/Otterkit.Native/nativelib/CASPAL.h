@@ -113,14 +113,16 @@ typedef int64 intptr;
 #if defined(AMD64)
     #include <immintrin.h>
 
+    // Just to make things easier to read, double underscores everywhere is ugly and hard to read.
+    typedef __m128i vec128i;
+
 #elif defined(ARM64)
     #include <arm_neon.h>
 
+    // Same as above, but for Aarch64 with NEON.
+    typedef int8x16_t vec128i;
+    
 #endif
-
-// Just to make things easier to read, double underscores everywhere is ugly and hard to read.
-typedef __m128i vec128i;
-typedef __m256i vec256i;
 
 //╭──────────────────────────────────────────────────────────────────────────────────╮
 //│  Platform detection and abstractions                                             │

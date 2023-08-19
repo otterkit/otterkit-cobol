@@ -6,19 +6,19 @@
 
 public void Write(const uint8* string)
 {
-    fputs((char *)string, stdout);
+    fputs((const char*)string, stdout);
 
     fputs(RESET, stdout);
 }
 
 public void WriteLn(const uint8* string)
 {
-    fputs((char *)string, stdout);
+    fputs((const char*)string, stdout);
 
     fputs(RESET_LF, stdout);
 }
 
 public void ReadLn(uint8* buffer, int32 length)
 {
-    fgets((char *)buffer, length, stdin);
+    fgets((const char*)buffer, length, stdin);
 }

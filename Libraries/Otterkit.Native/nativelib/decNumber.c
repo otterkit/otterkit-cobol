@@ -1,16 +1,8 @@
-#include <stdlib.h>
-
-#include "common.h"
+#include "CASPAL.h"
 
 #define DECUSE64 1
-
-#ifdef _WIN32
-    #include "..\decNumber\decimal128.h"
-    #include "..\decNumber\decQuad.h" // decQuad library
-#else
-    #include "../decNumber/decimal128.h"
-    #include "../decNumber/decQuad.h" // decQuad library
-#endif
+#include "../decNumber/decimal128.h"
+#include "../decNumber/decQuad.h" // decQuad library
 
 /* Computational operations */
 public decQuad d128ToIntegralValue(decQuad value, enum rounding mode)

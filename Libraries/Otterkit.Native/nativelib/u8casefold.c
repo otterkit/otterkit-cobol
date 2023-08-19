@@ -1,10 +1,10 @@
-#include "common.h"
+#include "CASPAL.h"
 #include "allocator.h"
 
 // UTF-8 trie node.
 typedef struct TrieNode 
 {
-    uint32_t offset;
+    uint32 offset;
     union 
     {
         uint64 bitmap;
@@ -1723,17 +1723,17 @@ private const trienode FourByteTrie[275] =
     { /* 0xA1 */ 0, .bytes = { 0xF0, 0x9E, 0xA5, 0x83, 0x00, 0x00, 0x00, 0x04 } },
 };
 
-private const trienode ref RootNodes[3] = 
+private const trienode* RootNodes[3] = 
 {
     TwoByteTrie, ThreeByteTrie, FourByteTrie
 };
 
-internal uint64 PopulationCount(uint64 value)
+private inline uint64 PopulationCount(uint64 value)
 {
     return _mm_popcnt_u64(value);
 }
 
-internal uint8 RuneLength(uint8 byte)
+private inline uint8 RuneLength(uint8 byte)
 {
     if (byte < 0b10000000) return 1;
 
@@ -1746,36 +1746,36 @@ internal uint8 RuneLength(uint8 byte)
     return 0;
 }
 
-internal void AsciiCasefold(const uint8 ref source, uint8 ref buffer)
+private inline void AsciiCasefold(const uint8* source, uint8* buffer)
 {
     // Branchless ASCII to lowercase conversion.
-    deref buffer = deref source + 32 * (deref source >= 65 && deref source <= 90);   
+    *buffer = *source + 32 * (*source >= 65 && *source <= 90);   
 }
 
 // Memory and thread safety notes:
 // The trie is static and read-only, so it should be safe to use from multiple threads.
 // The algorithm assumes that the data is null-terminated, and only contains valid UTF-8 sequences.
 // It assumes that the caller will correctly handle the returned error data.
-internal const uint8 ref MappingSearch(const uint8 ref data)
+private inline const uint8* MappingSearch(const uint8* data)
 {
     // Our trie is stored as a static const array to avoid having to load it from a file or initialize it at runtime.
     // Each node has a bitmap of the possible next bytes and the offset of its first child node.
 
     // Avoid modifying the original pointer's position.
-    const uint8 ref index = data;
+    const uint8* index = data;
 
     // Fetch the root node.
-    const trienode ref root = RootNodes[RuneLength(deref index) - 2];
+    const trienode* root = RootNodes[RuneLength(*index) - 2];
         
-    const trienode ref node = root;
+    const trienode* node = root;
 
     // Walk the trie until we reach a leaf node or run out of data.
     // Data needs to be null-terminated, loop will break when it reaches it.
-    while (deref index)
+    while (*index)
     {
         // The trie is designed to be used with non-ASCII UTF-8 data, so we only need to look at the last 6 bits.
         // The first two bits are always either 10xx.. or 11xx.., so we can toggle them off.
-        uint8 byte = deref index++ & 0b00111111;
+        uint8 byte = *index++ & 0b00111111;
 
         // The above operation will leave us with a compressed byte with maximum value of 64.
         // This is a huge space optimization, we can then use a single uint64 to store the bitmap.
@@ -1791,7 +1791,7 @@ internal const uint8 ref MappingSearch(const uint8 ref data)
         uint8 count = PopulationCount(bitmap & ((1UL << byte) - 1));
 
         // Fetch the next node.
-        node = addr root[node->offset + count];
+        node = &root[node->offset + count];
 
         // If the node has a 0 offset, it's a leaf node.
         // We can stop searching, we found the byte sequence in the trie.
@@ -1802,16 +1802,16 @@ internal const uint8 ref MappingSearch(const uint8 ref data)
     return node->bytes;
 }
 
-public uint8 ref Casefold(const uint8 ref source, uint8 length)
+public uint8* Casefold(const uint8* source, uint8 length)
 {
-    uint8 ref stackalloc = Alloc((length << 1) + 1);
+    uint8* stackalloc = Alloc((length << 1) + 1);
 
-    uint8 ref buffer = stackalloc;
+    uint8* buffer = stackalloc;
 
-    while (deref source)
+    while (*source)
     {
         // Fetch the length of the current rune.
-        uint8 runeLength = RuneLength(deref source);
+        uint8 runeLength = RuneLength(*source);
 
         if (runeLength == 1)
         {
@@ -1825,7 +1825,7 @@ public uint8 ref Casefold(const uint8 ref source, uint8 length)
         }
 
         // Fetch the mapping data for the current Unicode rune.
-        const uint8 ref mapping = MappingSearch(source);
+        const uint8* mapping = MappingSearch(source);
 
         uint8 mappingLength = mapping[7];
 

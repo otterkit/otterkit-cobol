@@ -1,7 +1,7 @@
 // Adapted from: https://github.com/simdutf/simdutf/
 // License: MIT or Apache-2.0 (See NOTICE in root directory)
 
-#include "common.h"
+#include "CASPAL.h"
 
 public int32 u8CharFromCodepoint(uint32 codepoint, uint8* destination) 
 {

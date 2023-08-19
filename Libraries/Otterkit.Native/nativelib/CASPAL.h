@@ -13,7 +13,7 @@
 #ifndef CASPAL
 #define CASPAL 202300L
 
-#if defined(__cplusplus) // Just error out and give up if we're being included in a C++ file.
+#if defined __cplusplus // Just error out and give up if we're being included in a C++ file.
     #error "CASPAL was designed to be used within (standard) C source files only."
 #endif
 
@@ -23,20 +23,23 @@
 
 #if __STDC_VERSION__ >= 202311L
     #define C23OrLater
+#endif
 
-#elif __STDC_VERSION__ >= 201112L
+#if __STDC_VERSION__ >= 201112L
     #define C11OrLater
+#endif
 
-#elif __STDC_VERSION__ >= 199901L
+#if __STDC_VERSION__ >= 199901L
     #define C99OrLater
+#endif
 
-#else
+#if !defined __STDC_VERSION__
     // Will error on MSVC! It still seems to be stuck on C89, it doesn't define __STDC_VERSION__, and only runs on Windows.
     // (Not worth the preprocessor gymnastics and compiler-specific hacks to support it in my opinion!)
     #error "Standard C99 (or later) support is required. Consider upgrading your compiler, or using GCC or Clang instead."
 #endif
 
-#if defined(C11OrLater)
+#if defined C11OrLater 
     // Built-in Standard C11 static assert.
     #define StaticAssert(condition, error) _Static_assert(condition, #error);
 
@@ -47,17 +50,20 @@
 
 #endif
 
-#if defined(C23OrLater)
+#if defined C23OrLater 
     // Built-in Standard C23 alignas.
     #define aligned(x) alignas(x)
 
-#elif defined(C11OrLater)
+#elif defined C11OrLater 
     // Built-in Standard C11 alignas.
     #define aligned(x) _Alignas(x)
 
-#else
+#elif defined C99OrLater && defined __GNUC__  || defined __clang__ 
     // C99 doesn't have a built-in alignas, so we use compiler-specific attributes.
     #define aligned(x) __attribute__((aligned(x)))
+
+#else
+    #define aligned(x) // No alignas support, just ignore it.
 
 #endif
 
@@ -70,10 +76,10 @@
 //│  Architecture detection and abstractions                                         │
 //╰──────────────────────────────────────────────────────────────────────────────────╯ 
 
-#if defined(__x86_64__) && defined(__LP64__)
+#if defined __x86_64__ || defined _M_X64
     #define AMD64
 
-#elif defined(__aarch64__) && defined(__LP64__)
+#elif defined __aarch64__ || defined _M_ARM64
     #define ARM64
 
 #else
@@ -110,13 +116,13 @@ typedef uint64 uintptr;
 typedef int64 intptr;
 
 // SIMD intrinsics for x86 and ARM.
-#if defined(AMD64)
+#if defined AMD64
     #include <immintrin.h>
 
     // Just to make things easier to read, double underscores everywhere is ugly and hard to read.
     typedef __m128i vec128i;
 
-#elif defined(ARM64)
+#elif defined ARM64
     #include <arm_neon.h>
 
     // Same as above, but for Aarch64 with NEON.
@@ -128,15 +134,15 @@ typedef int64 intptr;
 //│  Platform detection and abstractions                                             │
 //╰──────────────────────────────────────────────────────────────────────────────────╯ 
 
-#if defined(_WIN64)
+#if defined _WIN64
     #define PlatformWindows
     // We need to include this, otherwise it won't compile.
     #include <windows.h>
 
-#elif defined(__linux__)
+#elif defined __linux__
     #define PlatformLinux
 
-#elif defined(__APPLE__)
+#elif defined __APPLE__
     #define PlatformDarwin
 
 #else
@@ -147,7 +153,7 @@ typedef int64 intptr;
 //│  Platform dependent virtual memory wrappers and functions                        │
 //╰──────────────────────────────────────────────────────────────────────────────────╯ 
 
-#if defined(PlatformWindows)
+#if defined PlatformWindows
     #include <memoryapi.h>
 
     // Windows virtual memory primitives.
@@ -163,7 +169,7 @@ typedef int64 intptr;
     #define memDecommit MEM_DECOMMIT
     #define memRelease MEM_RELEASE
 
-#elif defined(PlatformLinux) || defined(PlatformDarwin)
+#elif defined PlatformLinux || defined PlatformDarwin
     #include <sys/mman.h>
 
     // Linux and macOS virtual memory primitives.
@@ -195,12 +201,12 @@ typedef int64 intptr;
 // Must be used with an address within a reserved address space (returned by sysReserveAddressSpace).
 #define sysCommitMemory(addr, size) sysVirtualAlloc(addr, size, memReadWrite, memCommit)
 
-#if defined(PlatformWindows)
+#if defined PlatformWindows
     // On Windows, we decommit (only release physical memory) by calling VirtualFree with MEM_DECOMMIT.
     // (according to the documentation, this is the correct way to do it)
     #define sysDecommitMemory(addr, size) sysVirtualDealloc(addr, size, memDecommit)
 
-#elif defined(PlatformLinux) || defined(PlatformDarwin)
+#elif defined PlatformLinux || defined PlatformDarwin
     // On Linux and macOS, we decommit (only release physical memory) by calling mmap with PROT_NONE.
     // This will overwrite the existing mapping, and the pages will be physically released.
     #define sysDecommitMemory(addr, size) sysVirtualAlloc(addr, size, memProtected, memDecommit)
@@ -213,7 +219,14 @@ typedef int64 intptr;
 
 // Shared library, set visibility to export all "public" symbols.
 // Should be used with `-fvisibility=hidden` compiler flag on GCC and Clang.
-#define public __attribute__((visibility("default")))
+#if defined __GNUC__ || defined __clang__
+    #define public __attribute__((visibility("default")))
+
+#else
+    // Not supported on other compilers, just ignore it.
+    #define public
+    
+#endif
 
 // For the sake of readability, since static is used for multiple different things.
 #define private static

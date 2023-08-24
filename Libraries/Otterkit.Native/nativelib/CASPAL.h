@@ -228,6 +228,18 @@ typedef int64 intptr;
     
 #endif
 
+// Shared library, initializer and finalizer attributes.
+#if defined __GNUC__ || defined __clang__
+    // Library initializer attribute, function will be called when the library is loaded.
+    #define initializer __attribute__((constructor))
+    // Library finalizer attribute, function will be called when the library is unloaded.
+    #define finalizer __attribute__((destructor))
+#else
+    // Not supported on other compilers, just ignore it.
+    #define initializer
+    #define finalizer
+#endif
+
 // For the sake of readability, since static is used for multiple different things.
 #define private static
 

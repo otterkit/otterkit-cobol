@@ -3,16 +3,12 @@
 
 typedef struct pool_t
 {
-    uint16 BlockLength;
-    uint16 Initialized;
-    uint16 Available;
-    uint16 Capacity;
-    uint8 Context[8];
+    uint64 BlockLength;
+    uint64 Initialized;
+    uint64 Available;
+    uint64 Capacity;
     uint8* NextBlock;
 } MemoryPool;
-
-// We want to make sure that the header in within 32 bytes in size.
-StaticAssert(sizeof(MemoryPool) <= 32, InvalidMemoryPoolHeaderSize);
 
 typedef struct vheap_t
 {
@@ -21,11 +17,13 @@ typedef struct vheap_t
     uint64 Available;
     uint64 Capacity;
 
-    // 384 size classes, 128 pools per heap class.
-    // First 128 pools are for multiples of 16 bytes, tiny object heap.
-    // Middle 128 pools are for multiples of 64 bytes, small object heap.
-    // Last 128 pools are for multiples of 256 bytes, medium object heap.
-    MemoryPool* ImmediatePools[384];
+    // The virtual heap has 16 size classes, split into 4 categories.
+    // Tiny: multiples of 16 bytes, from 16 to 128 bytes.
+    // Small: multiples of 128 bytes, from 128 to 512 bytes.
+    // Medium: start after 512 bytes, and double in size until 8KiB.
+    // Large: start after 8KiB, and can be any arbitrary size (Large Object Pool).
+    // [16, 32, 48, 64, 80, 96, 112, 128, 256, 384, 512, 1024, 2048, 4096, 8192, LOP]
+    MemoryPool* DynamicPools[16];
 
     // Bit tree of available memory.
     // 64 bits (1 bit per 32 GiB)
@@ -127,7 +125,7 @@ MemoryPool* ottrkPoolInitialize(uint16 blockLength)
     pool->NextBlock = (uint8*)pool + 32;
 
     // Set the pool in the global heap.
-    GlobalHeap->ImmediatePools[blockLength >> 4] = pool;
+    GlobalHeap->DynamicPools[blockLength >> 4] = pool;
 
     return pool;
 }
@@ -172,9 +170,9 @@ void ottrkPoolRelease(MemoryPool* pool)
 
     if (*levelOne == 0ull) *root &= ~(1ull << rootIndex);
 
-    if (GlobalHeap->ImmediatePools[pool->BlockLength >> 4] == pool)
+    if (GlobalHeap->DynamicPools[pool->BlockLength >> 4] == pool)
     {
-        GlobalHeap->ImmediatePools[pool->BlockLength >> 4] = nullptr;
+        GlobalHeap->DynamicPools[pool->BlockLength >> 4] = nullptr;
     }
 
     // Decommit the pool.
@@ -235,7 +233,7 @@ void* ottrkSmallAlloc(uint64 size)
     uint16 poolIndex = (size / 16) - 1;
 
     // Get the pool from the global heap.
-    MemoryPool* pool = GlobalHeap->ImmediatePools[poolIndex];
+    MemoryPool* pool = GlobalHeap->DynamicPools[poolIndex];
 
     // If the pool is not initialized, initialize it.
     if (!pool || !pool->Available) pool = ottrkPoolInitialize(size);

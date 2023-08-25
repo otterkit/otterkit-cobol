@@ -94,10 +94,10 @@ typedef unsigned int uint32;
 typedef unsigned long long uint64;
 
 // ...and make sure they are actually the correct size.
-StaticAssert(sizeof(uint8) == 1, InvalidUint8Size);
-StaticAssert(sizeof(uint16) == 2, InvalidUint16Size);
-StaticAssert(sizeof(uint32) == 4, InvalidUint32Size);
-StaticAssert(sizeof(uint64) == 8, InvalidUint64Size);
+StaticAssert(sizeof(uint8) == 1, InvalidUint8Size)
+StaticAssert(sizeof(uint16) == 2, InvalidUint16Size)
+StaticAssert(sizeof(uint32) == 4, InvalidUint32Size)
+StaticAssert(sizeof(uint64) == 8, InvalidUint64Size)
 
 // Typedef signed integer types...
 typedef signed char int8;
@@ -106,10 +106,10 @@ typedef signed int int32;
 typedef signed long long int64;
 
 // ...and make sure they are actually the correct size.
-StaticAssert(sizeof(int8) == 1, InvalidInt8Size);
-StaticAssert(sizeof(int16) == 2, InvalidInt16Size);
-StaticAssert(sizeof(int32) == 4, InvalidInt32Size);
-StaticAssert(sizeof(int64) == 8, InvalidInt64Size);
+StaticAssert(sizeof(int8) == 1, InvalidInt8Size)
+StaticAssert(sizeof(int16) == 2, InvalidInt16Size)
+StaticAssert(sizeof(int32) == 4, InvalidInt32Size)
+StaticAssert(sizeof(int64) == 8, InvalidInt64Size)
 
 // Sizes were already checked above.
 typedef uint64 uintptr;
@@ -129,6 +129,8 @@ typedef int64 intptr;
     typedef int8x16_t vec128i;
     
 #endif
+
+#define assembly __asm__
 
 //╭──────────────────────────────────────────────────────────────────────────────────╮
 //│  Platform detection and abstractions                                             │
@@ -166,6 +168,8 @@ typedef int64 intptr;
     #define memReserve MEM_RESERVE
     #define memCommit MEM_COMMIT
 
+    #define memAllocate MEM_COMMIT | MEM_RESERVE
+
     #define memDecommit MEM_DECOMMIT
     #define memRelease MEM_RELEASE
 
@@ -183,12 +187,19 @@ typedef int64 intptr;
     #define memReserve MAP_NORESERVE | MAP_PRIVATE | MAP_ANONYMOUS
     #define memCommit MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS
 
+    #define memAllocate MAP_PRIVATE | MAP_ANONYMOUS
+
     // MAP_NORESERVE to avoid reserving swap space for decommitted pages.
     #define memDecommit MAP_NORESERVE | MAP_PRIVATE | MAP_ANONYMOUS
     // Not needed on Unix systems.
     #define memRelease 0
 
 #endif
+
+
+#define assembly __asm__
+#define label(string) __asm__(string)
+#define UsingIntelSyntax ".intel_syntax\n"
 
 //╭──────────────────────────────────────────────────────────────────────────────────╮
 //│  Additional virtual memory convenience wrappers                                  │

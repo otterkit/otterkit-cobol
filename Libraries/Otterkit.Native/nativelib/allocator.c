@@ -210,10 +210,14 @@ void virtPoolRelease(VirtualSegment* segment, VirtualPool* pool)
 // uint64 AlignSizeClassC(uint64 size)
 // {
 //     if (size == 0) size++;
+
 //     uint64 class = size;
 
-//     class = 1ull << (64 - __builtin_clzll(size - 1));
-//     class = ((class >> 11) + 12) - (class == 8192);
+//     if (size <= 8192)
+//     {
+//         class = 1ull << (64 - __builtin_clzll(size - 1));
+//         class = ((class >> 11) + 12) - (class == 8192);
+//     }
     
 //     if (size <= 512)
 //     {
@@ -232,36 +236,48 @@ void virtPoolRelease(VirtualSegment* segment, VirtualPool* pool)
 
 // Apparently, GCC can't optimize this function properly, so we have to do it ourselves.
 // Clang can optimize it just fine into branchless assembly, but GCC still generates branchy code.
-uint64 AlignSizeToSegment(uint64 size) label ("AlignSizeToSegment");
+uint64 AlignLengthToSegment(uint64 length) label ("AlignLengthToSegment");
 #if defined AMD64
 assembly (
     UsingIntelSyntax
-    "AlignSizeToSegment:            \n"
-    "test    rdi, rdi               \n"
-    "mov     rax, 1                 \n"
-    "cmove   rdi, rax               \n"
-    "lea     rcx, [rdi - 1]         \n"
-    "lzcnt   rcx, rcx               \n"
-    "mov     rdx, rcx               \n"
-    "neg     dl                     \n"
-    "shlx    rax, rax, rdx          \n"
-    "shr     rax, 11                \n"
-    "xor     rdx, rdx               \n"
-    "cmp     rcx, 51                \n"
-    "sete    dl                     \n"
-    "sub     rax, rdx               \n"
-    "add     rax, 12                \n"
-    "lea     rcx, [rdi + 127]       \n"
-    "shr     rcx, 7                 \n"
-    "add     rcx, 7                 \n"
-    "cmp     rdi, 513               \n"
-    "cmovae  rcx, rax               \n"
-    "lea     rax, [rdi + 15]        \n"
-    "shr     rax, 4                 \n"
-    "cmp     rdi, 129               \n"
-    "cmovae  rax, rcx               \n"
-    "dec     rax                    \n"
-    "ret                            \n"
+    "AlignLengthToSegment:              \n"
+
+    "# If length is 0, set it to 1      \n"
+    "test    rdi, rdi                   \n"
+    "mov     rax, 1                     \n"
+    "cmove   rdi, rax                   \n"
+
+    "# Align to the next power of 2     \n"
+    "lea     rcx, [rdi - 1]             \n"
+    "lzcnt   rcx, rcx                   \n"
+    "mov     rdx, rcx                   \n"
+    "neg     dl                         \n"
+    "shlx    rax, rax, rdx              \n"
+
+    "# Align into [512 .. 8192] classes \n"
+    "shr     rax, 11                    \n"
+    "xor     rdx, rdx                   \n"
+    "cmp     rcx, 51                    \n"
+    "sete    dl                         \n"
+    "sub     rax, rdx                   \n"
+    "add     rax, 12                    \n"
+    
+    "# Align into [128 .. 512] classes  \n"
+    "lea     rcx, [rdi + 127]           \n"
+    "shr     rcx, 7                     \n"
+    "add     rcx, 7                     \n"
+    "cmp     rdi, 513                   \n"
+    "cmovae  rcx, rax                   \n"
+
+    "# Align into [16 .. 128] classes   \n"
+    "lea     rax, [rdi + 15]            \n"
+    "shr     rax, 4                     \n"
+    "cmp     rdi, 129                   \n"
+    "cmovae  rax, rcx                   \n"
+
+    "# Subtract 1 and return size class \n"
+    "dec     rax                        \n"
+    "ret                                \n"
 );
 #elif defined ARM64
 assembly (

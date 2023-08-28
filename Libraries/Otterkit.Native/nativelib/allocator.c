@@ -3,59 +3,65 @@
 
 typedef struct vpool_t
 {
-    uint16 BlockLength;
-    uint16 Initialized;
-    uint16 Available;
     uint16 Capacity;
+    uint16 Available;
+    uint16 Initialized;
+    uint16 BlockLength;
     uint8* NextBlock;
 } VirtualPool;
 
-typedef struct vsegment_t
+typedef struct vcache_t
 {
-    // Start of the segment address space.
-    uint8* Memory;
-    // Amount of available memory (in bytes).
-    uint32 Available;
-    // Amount of total memory (in bytes).
-    uint32 Capacity;
-    // Block length of all pools in this segment.
-    uint16 BlockLength;
-
-    // Immediate (directly available for allocation)
-    // Cached (used when present, instead of creating a new pool)
+    // Immediate: directly available for allocation.
     VirtualPool* Immediate;
-    VirtualPool* Cached;
 
-    // BitTree of available segment pools.
-    // 32 bits (1 bit per 4 GiB)
-    uint32 Root;
-    // 1024 bits (1 bit per 128 MiB)
-    uint32 Trunks[1 << 5];
-    // 32768 bits (1 bit per 4 MiB)
-    uint32 Branches[1 << 10];
-    // 1048576 bits (1 bit per 128KiB)
-    uint32 Leaves[1 << 15];
-} VirtualSegment;
+    // Cached: used when present, instead of creating a new pool.
+    VirtualPool* Cached;
+} VirtualCache;
+
+// Bit tree of available virtual pools.
+typedef struct vtree_t
+{
+    // 64 bits (1 bit per 2 TiB)
+    uint64 Root;
+    
+    // 4096 bits (1 bit per 32 GiB)
+    uint64 Trunks[1 << 6];
+
+    // 131072 bits (1 bit per 1 GiB)
+    uint64 Branches[1 << 12];
+
+    // 4194304 bits (1 bit per 32 MiB)
+    uint64 Twigs[1 << 18];
+
+    // 1073741824 bits (1 bit per 128 KiB)
+    uint64 Leaves[1 << 24];
+} VirtualTree;
 
 typedef struct vallocator_t
 {
-    // The virtual heap has 16 size classes, split into 4 categories.
-    // Tiny: multiples of 16 bytes, from 16 to 128 bytes.
-    // Small: multiples of 128 bytes, from 128 to 512 bytes.
-    // Medium: start after 512 bytes, and double in size until 8KiB.
-    // Large: start after 8KiB, and can be any arbitrary size (Large Object Pool).
-    // [16, 32, 48, 64, 80, 96, 112, 128, 256, 384, 512, 1024, 2048, 4096, 8192, LOP]
-    VirtualSegment* Segments[16];
+    // Allocator's base virtual address space.
+    uint8* BaseAddress;
 
-    // Start of the heap's reserved address space.
-    uint8* HeapAddress;
+    // This instance's capacity, in bytes (max 128 TiB).
+    uint64 Capacity;
+
+    // This instance's current usage, in bytes.
+    uint64 Usage;
+
+    // This instance's immediate pool lookup table and pool cache.
+    // At least one pool is always kept in the cache after initialization.
+    VirtualCache HeapCache[120];
+
+    // This instance's bit tree, used to track available virtual pools.
+    VirtualTree* BitTree;
 
     uint8 IsInitialized;
 } VirtualAllocator;
 
 static VirtualAllocator GlobalAllocator;
 
-void virtAllocatorInitialize(uint64 size)
+void VAllocInitialize(uint64 size)
 {
     // Avoid overwriting the allocator if it has already been initialized.
     if (GlobalAllocator.IsInitialized) return;
@@ -79,7 +85,7 @@ void virtAllocatorInitialize(uint64 size)
     // Align the heap to a 128KiB boundary (needed to make deallocation work properly)
     uintptr aligned = ((uintptr)heap + (131072 - 1)) & -131072;
 
-    GlobalAllocator.HeapAddress = (uint8*)aligned;
+    GlobalAllocator.BaseAddress = (uint8*)aligned;
 
     // Allocate 4MiB of memory for the virtual allocator header.
     uint8* headerAddress = sysVirtualAlloc(nullptr, 4194304, memReadWrite, memAllocate);
@@ -103,29 +109,39 @@ void virtAllocatorInitialize(uint64 size)
     }
 }
 
-initializer void virtAllocatorInitializeDefault() { virtAllocatorInitialize(0); }
+// initializer void virtAllocatorInitializeDefault() { virtAllocatorInitialize(0); }
 
-void virtPoolCreate(VirtualSegment* segment)
+VirtualAllocator* VAllocFetchGlobalInstance() { return &GlobalAllocator; }
+
+static void* FetchAvailableAddress(VirtualAllocator* instance)
 {
-    uint32* root = &segment->Root;
+    VirtualTree* tree = instance->BitTree;
 
-    uint32 rootIndex = __tzcnt_u32(~(*root)); // 32
+    uint64* root = &tree->Root;
 
-    uint32* trunk = &segment->Trunks[rootIndex];
+    uint64 rootIndex = __tzcnt_u64(~(*root)); // 64
 
-    uint32 trunkIndex = __tzcnt_u32(~(*trunk)); // 1024
+    uint64* trunk = &tree->Trunks[rootIndex];
 
-    uint32* branch = &segment->Branches[
-        (rootIndex << 5) + trunkIndex
+    uint64 trunkIndex = __tzcnt_u64(~(*trunk)); // 4096
+
+    uint64* branch = &tree->Branches[
+        (rootIndex << 6) + trunkIndex
     ];
 
-    uint32 branchIndex = __tzcnt_u32(~(*branch)); // 32768
+    uint64 branchIndex = __tzcnt_u64(~(*branch)); // 131072
 
-    uint32* leaf = &segment->Leaves[
-        (rootIndex << 10) + (trunkIndex << 5) + branchIndex
+    uint64* twig = &tree->Twigs[
+        (rootIndex << 12) + (trunkIndex << 6) + branchIndex
     ];
 
-    uint32 leafIndex = __tzcnt_u32(~(*leaf)); // 1048576
+    uint64 twigIndex = __tzcnt_u64(~(*twig)); // 4194304
+
+    uint64* leaf = &tree->Leaves[
+        (rootIndex << 18) + (trunkIndex << 12) + (branchIndex << 6) + twigIndex
+    ];
+
+    uint64 leafIndex = __tzcnt_u64(~(*leaf)); // 1073741824
 
     *leaf |= (1u << leafIndex);
 
@@ -138,178 +154,108 @@ void virtPoolCreate(VirtualSegment* segment)
     // If the root is full, then the entire segment is full (128GiB)
     // if (*root == ~0u) return nullptr;
 
-    void* poolAddress = (
-        segment->Memory
-        + (rootIndex << 15)
-        + (trunkIndex << 10)
-        + (branchIndex << 5)
+    return (
+        instance->BaseAddress
+        + (rootIndex << 24)
+        + (trunkIndex << 18)
+        + (branchIndex << 12)
+        + (twigIndex << 6)
         + leafIndex
     );
-    
-    VirtualPool* pool = sysCommitMemory(poolAddress, 128 * 1024);
-
-    // Pool is always 128KiB in size, header is 16 bytes.
-    uint16 capacity = (128 * 1024 - 16) / segment->BlockLength;
-
-    pool->BlockLength = segment->BlockLength;
-    pool->Available = capacity;
-    pool->Capacity = capacity;
-
-    // Set the next block pointer to the first available memory address.
-    // The first 16 bytes are reserved for the pool header.
-    pool->NextBlock = (uint8*)pool + 16;
-
-    // Set the pool in the segment's immediate pool pointer.
-    segment->Immediate = pool;
 }
 
-void virtPoolRelease(VirtualSegment* segment, VirtualPool* pool)
-{
-    uint32* root = &segment->Root;
-
-    uint32 rootIndex = (
-        ((uintptr)pool - (uintptr)segment->Memory) >> 15
-    );
-
-    uint32* trunk = &segment->Trunks[
-        rootIndex
-    ];
-
-    uint32 trunkIndex = (
-        ((uintptr)pool - (uintptr)segment->Memory) >> 10
-    ) & ((1 << 5) - 1);
-
-    uint32* branch = &segment->Branches[
-        (rootIndex << 5) + trunkIndex
-    ];
-
-    uint32 branchIndex = (
-        ((uintptr)pool - (uintptr)segment->Memory) >> 5
-    ) & ((1 << 10) - 1);
-
-    uint32* leaf = &segment->Leaves[
-        (rootIndex << 10) + (trunkIndex << 5) + branchIndex
-    ];
-
-    uint32 leafIndex = (
-        ((uintptr)pool - (uintptr)segment->Memory)
-    ) & ((1 << 15) - 1);
-
-    *leaf &= ~(1u << leafIndex);
-
-    if (*leaf == 0u) *branch &= ~(1u << branchIndex);
-
-    if (*branch == 0u) *trunk &= ~(1u << trunkIndex);
-
-    if (*trunk == 0u) *root &= ~(1u << rootIndex);
-
-    // Decommit the pool's pages (128KiB), still keep it reserved.
-    sysDecommitMemory(pool, 131072);
-}
-
-// uint64 AlignSizeClassC(uint64 size)
+// void virtPoolRelease(VirtualSegment* segment, VirtualPool* pool)
 // {
-//     if (size == 0) size++;
+//     uint32* root = &segment->Root;
 
-//     uint64 class = size;
+//     uint32 rootIndex = (
+//         ((uintptr)pool - (uintptr)segment->Memory) >> 15
+//     );
 
-//     if (size <= 8192)
-//     {
-//         class = 1ull << (64 - __builtin_clzll(size - 1));
-//         class = ((class >> 11) + 12) - (class == 8192);
-//     }
-    
-//     if (size <= 512)
-//     {
-//         class = (size + (128 - 1)) & -128;
-//         class = (class >> 7) + 7;
-//     }
+//     uint32* trunk = &segment->Trunks[
+//         rootIndex
+//     ];
 
-//     if (size <= 128)
-//     {
-//         class = (size + (16 - 1)) & -16;
-//         class = class >> 4;
-//     }
+//     uint32 trunkIndex = (
+//         ((uintptr)pool - (uintptr)segment->Memory) >> 10
+//     ) & ((1 << 5) - 1);
 
-//     return class - 1;
+//     uint32* branch = &segment->Branches[
+//         (rootIndex << 5) + trunkIndex
+//     ];
+
+//     uint32 branchIndex = (
+//         ((uintptr)pool - (uintptr)segment->Memory) >> 5
+//     ) & ((1 << 10) - 1);
+
+//     uint32* leaf = &segment->Leaves[
+//         (rootIndex << 10) + (trunkIndex << 5) + branchIndex
+//     ];
+
+//     uint32 leafIndex = (
+//         ((uintptr)pool - (uintptr)segment->Memory)
+//     ) & ((1 << 15) - 1);
+
+//     *leaf &= ~(1u << leafIndex);
+
+//     if (*leaf == 0u) *branch &= ~(1u << branchIndex);
+
+//     if (*branch == 0u) *trunk &= ~(1u << trunkIndex);
+
+//     if (*trunk == 0u) *root &= ~(1u << rootIndex);
+
+//     // Decommit the pool's pages (128KiB), still keep it reserved.
+//     sysDecommitMemory(pool, 131072);
 // }
 
-// Apparently, GCC can't optimize this function properly, so we have to do it ourselves.
-// Clang can optimize it just fine into branchless assembly, but GCC still generates branchy code.
-uint64 AlignLengthToSegment(uint64 length) label ("AlignLengthToSegment");
+// Apparently, GCC can't optimize this function properly and generates a bunch of branches.
+// This is a performance-critical function that is called every time a block is allocated.
+// We can't afford to have it be slow due to branch mispredictions.
+AssemblyFunction(uint64, AlignLengthToPool, uint64 length)
+
 #if defined AMD64
-assembly (
+Assembly (
     UsingIntelSyntax
-    "AlignLengthToSegment:              \n"
-
-    "# If length is 0, set it to 1      \n"
-    "test    rdi, rdi                   \n"
-    "mov     rax, 1                     \n"
-    "cmove   rdi, rax                   \n"
-
-    "# Align to the next power of 2     \n"
-    "lea     rcx, [rdi - 1]             \n"
-    "lzcnt   rcx, rcx                   \n"
-    "mov     rdx, rcx                   \n"
-    "neg     dl                         \n"
-    "shlx    rax, rax, rdx              \n"
-
-    "# Align into [512 .. 8192] classes \n"
-    "shr     rax, 11                    \n"
-    "xor     rdx, rdx                   \n"
-    "cmp     rcx, 51                    \n"
-    "sete    dl                         \n"
-    "sub     rax, rdx                   \n"
-    "add     rax, 12                    \n"
-    
-    "# Align into [128 .. 512] classes  \n"
-    "lea     rcx, [rdi + 127]           \n"
-    "shr     rcx, 7                     \n"
-    "add     rcx, 7                     \n"
-    "cmp     rdi, 513                   \n"
-    "cmovae  rcx, rax                   \n"
-
-    "# Align into [16 .. 128] classes   \n"
-    "lea     rax, [rdi + 15]            \n"
-    "shr     rax, 4                     \n"
-    "cmp     rdi, 129                   \n"
-    "cmovae  rax, rcx                   \n"
-
-    "# Subtract 1 and return size class \n"
-    "dec     rax                        \n"
-    "ret                                \n"
+    "AlignLengthToPool:         \n"
+    "test    rcx, rcx           \n"
+    "mov     rdx, 1             \n"
+    "cmovne  rdx, rcx           \n"
+    "lea     rcx, [rdx + 127]   \n"
+    "lea     rax, [rdx + 15]    \n"
+    "shr     rcx, 7             \n"
+    "shr     rax, 4             \n"
+    "add     rcx, 56            \n"
+    "cmp     rdx, 1025          \n"
+    "cmovae  rax, rcx           \n"
+    "dec     rax                \n"
+    "ret                        \n"
 );
 #elif defined ARM64
-assembly (
-    "AlignSizeToSegment:            \n"
-    "cmp     x0, #0                 \n"
-    "mov     w8, #1                 \n"
-    "csinc   x9, x0, xzr, ne        \n"
-    "sub     x10, x9, #1            \n"
-    "clz     x10, x10               \n"
-    "neg     x11, x10               \n"
-    "cmp     x10, #51               \n"
-    "add     x10, x9, #127          \n"
-    "lsr     x10, x10, #7           \n"
-    "lsl     x8, x8, x11            \n"
-    "mov     w11, #11               \n"
-    "cinc    x11, x11, ne           \n"
-    "add     x10, x10, #7           \n"
-    "cmp     x9, #513               \n"
-    "add     x8, x11, x8, lsr #11   \n"
-    "add     x11, x9, #15           \n"
-    "csel    x8, x10, x8, lo        \n"
-    "lsr     x10, x11, #4           \n"
-    "cmp     x9, #129               \n"
-    "csel    x8, x10, x8, lo        \n"
-    "sub     x0, x8, #1             \n"
-    "ret                            \n"
+Assembly (
+    "AlignLengthToPool:         \n"
+    "cmp    x0,  #0             \n"
+    "csinc  x8,  x0,  xzr, ne   \n"
+    "add    x9,  x8,  #127      \n"
+    "add    x10, x8,  #15       \n"
+    "lsr    x9,  x9,  #7        \n"
+    "lsr    x10, x10, #4        \n"
+    "add    x9,  x9,  #56       \n"
+    "cmp    x8,  #1025          \n"
+    "csel   x8,  x10, x9,  lo   \n"
+    "sub    x0,  x8,  #1        \n"
+    "ret                        \n"
 );
 #endif
 
-int main()
+int main(void)
 {
-    printf("Hello, world!\n");
+    for (uint64 i = 0; i < 8192; i += 16)
+    {
+        uint64 class = AlignLengthToClass(i);
+
+        printf("Size: %llu, Class: %llu\n", i, class);
+    }
+
     return 0;
 }
 

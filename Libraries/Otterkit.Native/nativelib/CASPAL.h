@@ -138,13 +138,15 @@ typedef int64 intptr;
 
 #if defined _WIN64
     #define PlatformWindows
-    // We need to include this, otherwise it won't compile.
+    // We need to include it, otherwise it won't compile (Why though?)
     #include <windows.h>
 
 #elif defined __linux__
+    // I hope we don't need to check for individual distributions, that would be a pain.
     #define PlatformLinux
 
 #elif defined __APPLE__
+    // Darwin is the name of the kernel used by both macOS and iOS (and others).
     #define PlatformDarwin
 
 #else
@@ -158,70 +160,66 @@ typedef int64 intptr;
 #if defined PlatformWindows
     #include <memoryapi.h>
 
-    // Windows virtual memory primitives.
-    #define sysVirtualAlloc(addr, size, prot, flags) VirtualAlloc(addr, size, flags, prot)
-    #define sysVirtualDealloc(addr, size, flags) VirtualFree(addr, size, flags)
+    #define SYS_READWRITE PAGE_READWRITE
+    #define SYS_PROTECTED PAGE_NOACCESS
 
-    #define memReadWrite PAGE_READWRITE
-    #define memProtected PAGE_NOACCESS
+    // On Windows, attempting to reserve an address that's already reserved will fail.
+    // This is contrary to mmap's behavior, which will just overwrite the existing mapping.
+    #define SYS_ALLOCATE MEM_COMMIT | MEM_RESERVE
+    #define SYS_RESERVE MEM_RESERVE
 
-    #define memReserve MEM_RESERVE
-    #define memCommit MEM_COMMIT
+    // Wish we had these on Unix, but we don't. Would make the intent clearer.
+    #define SYS_COMMIT MEM_COMMIT
+    #define SYS_DECOMMIT MEM_DECOMMIT
 
-    #define memAllocate MEM_COMMIT | MEM_RESERVE
+    // Only really needed on Windows, but we define it anyway for consistency.
+    #define SYS_RELEASE MEM_RELEASE
 
-    #define memDecommit MEM_DECOMMIT
-    #define memRelease MEM_RELEASE
+    // Requests more virtual memory from the operating system (Windows Edition).
+    #define SystemAlloc(addr, size, prot, flags) VirtualAlloc(addr, size, flags, prot)
+
+    // This also releases the address space, so it shouldn't be used to decommit virtual memory.
+    // Use both SystemCommit and SystemDecommit for that instead.
+    #define SystemDealloc(addr, size) VirtualFree(addr, size, SYS_RELEASE)
+
+    // Must be used with an address within a reserved address space (returned by SystemAlloc).
+    #define SystemCommit(addr, size) VirtualAlloc(addr, size, SYS_COMMIT, SYS_READWRITE)
+
+    // On Windows, we decommit (only release physical memory) by calling VirtualFree with MEM_DECOMMIT.
+    // (according to the documentation, this is the correct way to do it)
+    #define SystemDecommit(addr, size) VirtualFree(addr, size, SYS_DECOMMIT)
 
 #elif defined PlatformLinux || defined PlatformDarwin
     #include <sys/mman.h>
+    
+    #define SYS_READWRITE PROT_READ | PROT_WRITE
+    #define SYS_PROTECTED PROT_NONE
 
-    // Linux and macOS virtual memory primitives.
-    #define sysVirtualAlloc(addr, size, prot, flags) mmap(addr, size, prot, flags, -1, 0)
-    #define sysVirtualDealloc(addr, size, flags) munmap(addr, size)
+    // These 2 have duplicate flags, but it's easier to maintain this way.
+    // This makes the intent of the code using them clearer, and more portable.
+    #define SYS_ALLOCATE MAP_PRIVATE | MAP_ANONYMOUS
+    #define SYS_RESERVE MAP_PRIVATE | MAP_ANONYMOUS
 
-    #define memReadWrite PROT_READ | PROT_WRITE
-    #define memProtected PROT_NONE
+    // These 2 also have duplicate flags, same reason as above.
+    #define SYS_COMMIT MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS
+    #define SYS_DECOMMIT MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS
 
-    // MAP_NORESERVE to avoid reserving swap space for reserved address space.
-    #define memReserve MAP_NORESERVE | MAP_PRIVATE | MAP_ANONYMOUS
-    #define memCommit MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS
+    // Not needed on Linux and macOS, but we define it anyway for consistency.
+    #define SYS_RELEASE 0
 
-    #define memAllocate MAP_PRIVATE | MAP_ANONYMOUS
+    // Requests more virtual memory from the operating system (Unix Edition).
+    #define SystemAlloc(addr, size, prot, flags) mmap(addr, size, prot, flags, -1, 0)
 
-    // MAP_NORESERVE to avoid reserving swap space for decommitted pages.
-    #define memDecommit MAP_NORESERVE | MAP_PRIVATE | MAP_ANONYMOUS
-    // Not needed on Unix systems.
-    #define memRelease 0
+    // This also releases the address space, so it shouldn't be used to decommit virtual memory.
+    // Use both SystemCommit and SystemDecommit for that instead.
+    #define SystemDealloc(addr, size) munmap(addr, size)
 
-#endif
-
-
-#define Assembly __asm__
-#define UsingIntelSyntax ".intel_syntax\n"
-#define AssemblyFunction(ret, name, ...) ret name(__VA_ARGS__) __asm__(#name);
-
-//╭──────────────────────────────────────────────────────────────────────────────────╮
-//│  Additional virtual memory convenience wrappers                                  │
-//╰──────────────────────────────────────────────────────────────────────────────────╯ 
-
-// So we don't have to remember the order of the arguments and flags.
-#define sysReserveAddressSpace(size) sysVirtualAlloc(nullptr, size, memProtected, memReserve)
-#define sysReleaseAddressSpace(addr, size) sysVirtualDealloc(addr, size, memRelease)
-
-// Must be used with an address within a reserved address space (returned by sysReserveAddressSpace).
-#define sysCommitMemory(addr, size) sysVirtualAlloc(addr, size, memReadWrite, memCommit)
-
-#if defined PlatformWindows
-    // On Windows, we decommit (only release physical memory) by calling VirtualFree with MEM_DECOMMIT.
-    // (according to the documentation, this is the correct way to do it)
-    #define sysDecommitMemory(addr, size) sysVirtualDealloc(addr, size, memDecommit)
-
-#elif defined PlatformLinux || defined PlatformDarwin
+    // Must be used with an address within a reserved address space (returned by SystemAlloc).
+    #define SystemCommit(addr, size) mmap(addr, size, SYS_READWRITE, SYS_COMMIT, -1, 0)
+    
     // On Linux and macOS, we decommit (only release physical memory) by calling mmap with PROT_NONE.
     // This will overwrite the existing mapping, and the pages will be physically released.
-    #define sysDecommitMemory(addr, size) sysVirtualAlloc(addr, size, memProtected, memDecommit)
-
+    #define SystemDecommit(addr, size) mmap(addr, size, SYS_PROTECTED, SYS_DECOMMIT, -1, 0)
 #endif
 
 //╭──────────────────────────────────────────────────────────────────────────────────╮
@@ -253,5 +251,12 @@ typedef int64 intptr;
 
 // For the sake of readability, since static is used for multiple different things.
 #define private static
+
+// Just to make things easier to read, double underscores everywhere is ugly and hard to read.
+#define Assembly __asm__ 
+// Intel syntax is easier to read and write, in my opinion.
+#define UsingIntelSyntax ".intel_syntax\n"
+// Makes it easier to write assembly functions, and makes sure the compiler doesn't mess with the name.
+#define AssemblyFunction(ret, name, ...) ret name(__VA_ARGS__) __asm__(#name);
 
 #endif // CASPAL

@@ -197,9 +197,9 @@ typedef int64 intptr;
 #endif
 
 
-#define assembly __asm__
-#define label(string) __asm__(string)
+#define Assembly __asm__
 #define UsingIntelSyntax ".intel_syntax\n"
+#define AssemblyFunction(ret, name, ...) ret name(__VA_ARGS__) __asm__(#name);
 
 //╭──────────────────────────────────────────────────────────────────────────────────╮
 //│  Additional virtual memory convenience wrappers                                  │

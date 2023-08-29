@@ -31,12 +31,10 @@ initializer void VirtualHeapDefault(void) { VirtualHeapInitialize(&GlobalHeap, 0
 
 private inline void VirtualPoolInitialize(VirtualPool* pool, uint64 blockLength)
 {
-    // Initialize the pool. Pool capacity is 128KiB / blockLength.
+    // Initialize the pool. Size is always 128KiB.
     pool->Capacity = 131072 / blockLength;
     pool->Available = pool->Capacity;
-    pool->Initialized = 0;
     pool->BlockLength = blockLength;
-    pool->NextBlock = 0;
 }
 
 private inline VirtualPool* VirtualPoolCreate(VirtualHeap* allocator, uint64 blockLength)

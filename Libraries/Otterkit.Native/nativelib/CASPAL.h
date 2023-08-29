@@ -41,12 +41,12 @@
 
 #if defined C11OrLater 
     // Built-in Standard C11 static assert.
-    #define StaticAssert(condition, error) _Static_assert(condition, #error);
+    #define StaticAssert(condition, error) _Static_assert(condition, error);
 
 #else
     // C99 doesn't have a built-in static assert, so we have to use this neat trick.
     // If the condition is false, the compiler will complain that the array size is negative.
-    #define StaticAssert(condition, error) typedef int assert_ ## __LINE__ ## error[(condition) ? 5 : -5];
+    #define StaticAssert(condition, error) typedef int Assert ## __LINE__ ## Static[(condition) ? 5 : -5];
 
 #endif
 
@@ -94,10 +94,10 @@ typedef unsigned int uint32;
 typedef unsigned long long uint64;
 
 // ...and make sure they are actually the correct size.
-StaticAssert(sizeof(uint8) == 1, InvalidUint8Size)
-StaticAssert(sizeof(uint16) == 2, InvalidUint16Size)
-StaticAssert(sizeof(uint32) == 4, InvalidUint32Size)
-StaticAssert(sizeof(uint64) == 8, InvalidUint64Size)
+StaticAssert(sizeof(uint8) == 1, "Invalid uint8 size")
+StaticAssert(sizeof(uint16) == 2, "Invalid uint16 size")
+StaticAssert(sizeof(uint32) == 4, "Invalid uint32 size")
+StaticAssert(sizeof(uint64) == 8, "Invalid uint64 size")
 
 // Typedef signed integer types...
 typedef signed char int8;
@@ -106,10 +106,10 @@ typedef signed int int32;
 typedef signed long long int64;
 
 // ...and make sure they are actually the correct size.
-StaticAssert(sizeof(int8) == 1, InvalidInt8Size)
-StaticAssert(sizeof(int16) == 2, InvalidInt16Size)
-StaticAssert(sizeof(int32) == 4, InvalidInt32Size)
-StaticAssert(sizeof(int64) == 8, InvalidInt64Size)
+StaticAssert(sizeof(int8) == 1, "Invalid int8 size")
+StaticAssert(sizeof(int16) == 2, "Invalid int16 size")
+StaticAssert(sizeof(int32) == 4, "Invalid int32 size")
+StaticAssert(sizeof(int64) == 8, "Invalid int64 size")
 
 // Sizes were already checked above.
 typedef uint64 uintptr;

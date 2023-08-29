@@ -17,14 +17,6 @@ typedef struct vindex_t
     uint8 Leaf; // 0 .. 63 stored.
 } VirtualIndex;
 
-typedef struct vcache_t
-{
-    // Immediate pool, directly available for allocation.
-    VirtualPool* Immediate;
-    // Cached pool, available for allocation after initialization.
-    VirtualPool* Cached;
-} VirtualCache;
-
 typedef struct vpool_t
 {
     // The pool's total capacity, in blocks.

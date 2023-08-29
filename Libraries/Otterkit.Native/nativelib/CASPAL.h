@@ -249,6 +249,10 @@ typedef int64 intptr;
     #define finalizer
 #endif
 
+#if (defined __GNUC__ || defined __clang__) && !defined PlatformDarwin
+    #define alias(name) __attribute__((alias(#name), copy(name), visibility("default"), used));
+#endif
+
 // For the sake of readability, since static is used for multiple different things.
 #define private static
 

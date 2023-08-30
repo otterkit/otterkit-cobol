@@ -1,8 +1,10 @@
-#include "allocator.h"
+#include "allocator.h" // includes CASPAL.H
 
 private VirtualHeap GlobalHeap;
 
-VirtualHeap* VirtualHeapGetGlobalHeap(void) { return &GlobalHeap; }
+VirtualHeap* VirtualHeapGetGlobalHeap(void) { 
+    return &GlobalHeap; 
+}
 
 void VirtualHeapInitialize(VirtualHeap* instance, uint64 size)
 {
@@ -27,18 +29,11 @@ void VirtualHeapInitialize(VirtualHeap* instance, uint64 size)
     );
 }
 
-initializer void VirtualHeapDefault(void) { VirtualHeapInitialize(&GlobalHeap, 0); }
-
-private inline void VirtualPoolInitialize(VirtualPool* pool, uint64 blockLength)
-{
-    // Initialize the pool. Size is always 128KiB.
-    pool->Capacity = 131072 / blockLength;
-    pool->Available = pool->Capacity;
-    pool->BlockLength = blockLength;
+initializer void VirtualHeapDefault(void) { 
+    VirtualHeapInitialize(&GlobalHeap, 0); 
 }
 
-private inline VirtualPool* VirtualPoolCreate(VirtualHeap* allocator, uint64 blockLength)
-{
+private inline VirtualPool* VirtualPoolCreate(VirtualHeap* allocator, uint64 blockLength) {
     VirtualTree* tree = allocator->BitTree;
 
     uint64* root = &tree->Root;
@@ -74,29 +69,46 @@ private inline VirtualPool* VirtualPoolCreate(VirtualHeap* allocator, uint64 blo
     // If the root is full, then the entire heap is full (all 128TiB of it)
     if (*root == ~0ull) return nullptr;
 
-    VirtualPool* pool = ComputePoolAddress(
-        allocator->BaseAddress, indexRoot, indexTrunk, indexBranch, indexTwig, indexLeaf
+    VirtualPool* pool = (void*)(
+        allocator->BaseAddress 
+        + ((indexRoot << 24) 
+        + (indexTrunk << 18) 
+        + (indexBranch << 12) 
+        + (indexTwig << 6) 
+        + indexLeaf) * 131072 
     );
 
     // Commit the pool's address space.
     pool = SystemCommit(pool, 131072);
 
-    // Initialize the virtual pool.
-    VirtualPoolInitialize(pool, blockLength);
+    // Initialize the pool. Size is always 128KiB.
+    pool->Capacity = 131072 / blockLength;
+    pool->Available = pool->Capacity;
+    pool->BlockLength = blockLength;
 
-    // Store the pool's bit tree index.
-    pool->Index = PackVirtualIndex(
-        indexRoot, indexTrunk, indexBranch, indexTwig, indexLeaf
-    );
+    // Pack the index for later use during deallocation
+    VirtualIndex index = {
+        .Root   = (uint8)indexRoot, 
+        .Trunk  = (uint8)indexTrunk, 
+        .Branch = (uint8)indexBranch, 
+        .Twig   = (uint8)indexTwig, 
+        .Leaf   = (uint8)indexLeaf 
+    };
+
+    pool->Index = index;
 
     return pool;
 }
 
-private inline void VirtualPoolDecommit(VirtualHeap* allocator, VirtualPool* pool)
-{
+private inline void VirtualPoolDecommit(VirtualHeap* allocator, VirtualPool* pool) {
     VirtualIndex index = pool->Index;
 
-    UnpackVirtualIndex(index);
+    // Unpack the bit index back to uint64s.
+    uint64 indexRoot   = index.Root;
+    uint64 indexTrunk  = index.Trunk;
+    uint64 indexBranch = index.Branch;
+    uint64 indexTwig   = index.Twig;
+    uint64 indexLeaf   = index.Leaf;
 
     VirtualTree* tree = allocator->BitTree;
 
@@ -133,8 +145,7 @@ private inline void VirtualPoolDecommit(VirtualHeap* allocator, VirtualPool* poo
 // Apparently, GCC can't optimize this function properly and generates a bunch of branches.
 // This is a performance-critical function that is called every time a block is allocated.
 // We can't afford to have it be slow due to branch mispredictions, please compile with Clang.
-private inline uint64 AlignLengthToSizeClass(uint64 length)
-{
+private inline uint64 AlignLengthToSizeClass(uint64 length) {
     // rdi = length (sysv calling convention)
     uint64 aligned;
 
@@ -153,8 +164,7 @@ private inline uint64 AlignLengthToSizeClass(uint64 length)
     // shr     rax, 4
     // cmp     rcx, 1025
     // cmovae  rax, rdx
-    if (length <= 1024)
-    {
+    if (length <= 1024) {
         aligned = length + (16 - 1);
         aligned = aligned >> 4;
     }
@@ -164,13 +174,33 @@ private inline uint64 AlignLengthToSizeClass(uint64 length)
     return aligned - 1;
 }
 
-private inline void* VirtualPoolAllocate(VirtualPool* pool)
-{
+void* DynamicAlloc(uint64 length) {
+    // Get the global heap instance.
+    VirtualHeap* heap = &GlobalHeap;
+    // Align the length to one of the small size classes.
+    uint64 class = AlignLengthToSizeClass(length);
+    // Fetch the heap's cached pool for the size class.
+    VirtualPool* pool = heap->Cached[class];
+
+    // Go to the fast path, if a cached pool is available.
+    if (pool != nullptr) goto AllocFastPath;
+
+    // If it's not available, allocate a new one.
+    pool = VirtualPoolCreate(heap, length);
+
+    // If we failed to allocate a new pool, most likely the heap is full.
+    if (pool == nullptr) return nullptr;
+    
+    // If we successfully allocated a new pool:
+    // Set it as the cached pool for the size class.
+    heap->Cached[class] = pool;
+
+    AllocFastPath:/* empty */;
+    // Allocate a block from the pool.
     uint8* block = nullptr;
 
     // If there are any uninitialized blocks, initialize one.
-    if (pool->Initialized != pool->Capacity)
-    {
+    if (pool->Initialized != pool->Capacity) {
         // Get the index of the uninitialized block.
         uint16 index = pool->Initialized++;
         // Get the address of the uninitialized block.
@@ -179,96 +209,49 @@ private inline void* VirtualPoolAllocate(VirtualPool* pool)
         *(uint16*)block = index + 1;
     }
 
-    // If there are any available blocks, allocate one.
-    if (pool->Available != 0)
-    {
-        // Get the address of the next available block.
-        block = (uint8*)pool + 16 + pool->NextBlock * pool->BlockLength;
-        // Decrement the number of available blocks.
-        pool->Available--;
-        // If there are any available blocks left, set 
-        // the next block index to the next available block.
-        pool->NextBlock = pool->Available ? *(uint16*)block : 0;
-    }
+    // Get the address of the next available block.
+    block = (uint8*)pool + 16 + pool->NextBlock * pool->BlockLength;
+    // Decrement the number of available blocks.
+    pool->Available--;
+    // If there are any available blocks left, set 
+    // the next block index to the next available block.
+    pool->NextBlock = pool->Available ? *(uint16*)block : 0;
+    
+    // If the pool is now empty, set the cached pool to null.
+    if (pool->Available == 0) heap->Cached[class] = nullptr;
 
     return block;
 }
 
-private inline void VirtualPoolDeallocate(VirtualPool* pool, void* address)
-{
+void DynamicDealloc(void* address) {
+    // Get the global heap instance.
+    VirtualHeap* heap = &GlobalHeap;
+    // Get the pool that the deallocated block belongs to.
+    VirtualPool* pool = (VirtualPool*)((uintptr)address & -131072);
+
     // Set the deallocated block's next block index to 
     // the next available block.
     *(uint16*)address = pool->NextBlock;
     // Get the deallocated block's absolute index.
     uint16 index = (uint8*)address - (uint8*)pool - 16;
+
     // Set the next available block to the deallocated 
     // block's relative index.
     pool->NextBlock = index / pool->BlockLength;
     // Increment the number of available blocks.
     pool->Available++;
-}
-
-void* VirtualHeapAllocate(uint64 length)
-{
-    // Get the global heap instance.
-    VirtualHeap* heap = &GlobalHeap;
-    // Align the length to one of the small size classes.
-    uint64 class = AlignLengthToSizeClass(length);
-    // Fetch the heap's immediate pool for the size class.
-    VirtualPool* pool = heap->Immediate[class];
-
-    // Allocate a block from the pool if it's available.
-    if (pool != nullptr)
-    {
-        // Allocate a block from the pool.
-        void* block = VirtualPoolAllocate(pool);
-        // If the pool is now empty, set the immediate pool to null.
-        if (pool->Available == 0)
-        {
-            heap->Immediate[class] = nullptr;
-        }
-
-        return block;
-    }
-
-    // If an immediate pool is not available, allocate a new one.
-    pool = VirtualPoolCreate(heap, length);
-
-    // If a new pool was successfully allocated
-    if (pool != nullptr)
-    {
-        // Set it as the immediate pool for the size class.
-        heap->Immediate[class] = pool;
-        // Allocate a block from the new pool.
-        return VirtualPoolAllocate(pool);
-    }
-
-    // Most likely, the heap is full.
-    return nullptr;
-}
-
-void VirtualHeapDeallocate(void* address)
-{
-    // Get the global heap instance.
-    VirtualHeap* heap = &GlobalHeap;
-    
-    // Get the pool that the deallocated block belongs to.
-    VirtualPool* pool = (VirtualPool*)((uintptr)address & -131072);
-
-    // Deallocate the block from the pool.
-    VirtualPoolDeallocate(pool, address);
 
     uint64 class = AlignLengthToSizeClass(pool->BlockLength);
 
-    // Get the immediate pool for the size class.
-    VirtualPool** immediate = &heap->Immediate[class];
+    // Get the cached pool for the size class.
+    VirtualPool** cached = &heap->Cached[class];
+    // Set the pool as the cached pool for the size class, if there isn't one already.
+    if (*cached == nullptr) *cached = pool;
 
-    // Set the pool as the immediate pool for the size class, if there isn't one already.
-    if (*immediate == nullptr) *immediate = pool;
-
-    // Decommit the pool if it's empty and there's already an immediate pool for the size class.
-    if (*immediate != pool && pool->Available == pool->Capacity)
-    {
+    // Decommit the pool if it's empty and there's already a cached pool for the size class.
+    if (*cached != pool && pool->Available == pool->Capacity) {
         VirtualPoolDecommit(heap, pool);
     }
 }
+
+

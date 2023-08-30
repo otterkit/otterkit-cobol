@@ -33,7 +33,8 @@ typedef struct vpool_t
     VirtualIndex Index;
 } VirtualPool;
 
-StaticAssert(sizeof(VirtualPool) == 16, "VirtualPool size mismatch")
+// Trying to keep the pool bookkeeping header's memory usage to a minimum.
+StaticAssert(sizeof(VirtualPool) == 16, "VirtualPool size must be 16 bytes or less!")
 
 // Bit tree of available virtual pools.
 typedef struct vtree_t
@@ -50,44 +51,32 @@ typedef struct vtree_t
     uint64 Leaves[1 << 24];
 } VirtualTree;
 
+// Virtual heap for dynamic memory allocation
 typedef struct vheap_t
 {
-    // The base address of the virtual heap.
+    // The base address of the heap.
     uint8* BaseAddress;
-    // The total capacity of the virtual heap, in bytes.
+    // The total capacity of the heap, in bytes.
     uint64 Capacity;
-    // The immediate pool lookup table (indexed by size class).
-    VirtualPool* Immediate[120];
+    // The cached pool lookup table (indexed by size class).
+    VirtualPool* Cached[120];
     // The bit tree of available virtual pools.
     VirtualTree* BitTree;
     // Whether the heap has been initialized.
     uint8 IsInitialized;
-} VirtualHeap;
+} VirtualHeap;   
 
-#define ComputePoolAddress(base, root, trunk, branch, twig, leaf) \
-    (void*)(                \
-        (uint8*)base        \
-        + ((root << 24)     \
-        + (trunk << 18)     \
-        + (branch << 12)    \
-        + (twig << 6)       \
-        + leaf) * 131072    \
-    );
-
-#define PackVirtualIndex(root, trunk, branch, twig, leaf) \
-    ((VirtualIndex) {               \
-        .Root = (uint8)root,        \
-        .Trunk = (uint8)trunk,      \
-        .Branch = (uint8)branch,    \
-        .Twig = (uint8)twig,        \
-        .Leaf = (uint8)leaf         \
-    })             
-
-#define UnpackVirtualIndex(index) \
-    uint64 indexRoot = (uint64)index.Root;      \
-    uint64 indexTrunk = (uint64)index.Trunk;    \
-    uint64 indexBranch = (uint64)index.Branch;  \
-    uint64 indexTwig = (uint64)index.Twig;      \
-    uint64 indexLeaf = (uint64)index.Leaf;      
+// Virtual stack for static memory allocation
+typedef struct vstack_t
+{
+    // The base address of the stack
+    uint8* BaseAddress;
+    // Current stack pointer position
+    uint8* StackPointer;
+    // The total capacity of the stack, in bytes.
+    uint64 Capacity;
+    // Whether the stack has been initialized.
+    uint8 IsInitialized;
+} VirtualStack;
 
 #endif // VIRTUAL_ALLOCATOR_H

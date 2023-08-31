@@ -247,7 +247,7 @@ typedef int64 intptr;
 // Branch prediction hints for performance optimizations.
 #if defined __GNUC__ || defined __clang__
     // Double negation (!!) essentially casts the value of the expression to a bool (1 or 0).
-    #define likely(expression, value) __builtin_expect(!!(expression), value)
+    #define likely(expression, value) (__builtin_expect(!!(expression), !!(value)))
 #else
     // Not supported on other compilers, just ignore it.
     #define likely(expression, value) (expression)

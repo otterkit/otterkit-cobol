@@ -121,13 +121,11 @@ typedef int64 intptr;
 
     // Just to make things easier to read, double underscores everywhere is ugly and hard to read.
     typedef __m128i vec128i;
-
 #elif defined ARM64
     #include <arm_neon.h>
 
     // Same as above, but for Aarch64 with NEON.
     typedef int8x16_t vec128i;
-    
 #endif
 
 #define assembly __asm__
@@ -188,7 +186,6 @@ typedef int64 intptr;
     // On Windows, we decommit (only release physical memory) by calling VirtualFree with MEM_DECOMMIT.
     // (according to the documentation, this is the correct way to do it)
     #define SystemDecommit(addr, size) VirtualFree(addr, size, SYS_DECOMMIT)
-
 #elif defined PlatformLinux || defined PlatformDarwin
     #include <sys/mman.h>
     
@@ -230,14 +227,12 @@ typedef int64 intptr;
 // Should be used with `-fvisibility=hidden` compiler flag on GCC and Clang.
 #if defined __GNUC__ || defined __clang__
     #define public __attribute__((visibility("default")))
-
 #else
     // Not supported on other compilers, just ignore it.
     #define public
-    
 #endif
 
-// Shared library, initializer and finalizer attributes.
+// Shared library initializer and finalizer attributes.
 #if defined __GNUC__ || defined __clang__
     // Library initializer attribute, function will be called when the library is loaded.
     #define initializer __attribute__((constructor))
@@ -249,18 +244,20 @@ typedef int64 intptr;
     #define finalizer
 #endif
 
+// Branch prediction hints for performance optimizations.
+#if defined __GNUC__ || defined __clang__
+    // Double negation (!!) essentially casts the value of the expression to a bool (1 or 0).
+    #define likely(expression, value) __builtin_expect(!!(expression), value)
+#else
+    // Not supported on other compilers, just ignore it.
+    #define likely(expression, value) (expression)
+#endif
+
 #if (defined __GNUC__ || defined __clang__) && !defined PlatformDarwin
     #define alias(name) __attribute__((alias(#name), copy(name), visibility("default"), used));
 #endif
 
 // For the sake of readability, since static is used for multiple different things.
 #define private static
-
-// Just to make things easier to read, double underscores everywhere is ugly and hard to read.
-#define Assembly __asm__ 
-// Intel syntax is easier to read and write, in my opinion.
-#define UsingIntelSyntax ".intel_syntax\n"
-// Makes it easier to write assembly functions, and makes sure the compiler doesn't mess with the name.
-#define AssemblyFunction(ret, name, ...) ret name(__VA_ARGS__) __asm__(#name);
 
 #endif // CASPAL

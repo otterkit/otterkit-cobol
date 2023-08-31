@@ -39,10 +39,12 @@
     #error "Standard C99 (or later) support is required. Consider upgrading your compiler, or using GCC or Clang instead."
 #endif
 
-#if defined C11OrLater 
+#if defined C23OrLater 
+    // Built-in Standard C23 static assert.
+    #define StaticAssert(condition, error) static_assert(condition, error);
+#elif defined C11OrLater 
     // Built-in Standard C11 static assert.
     #define StaticAssert(condition, error) _Static_assert(condition, error);
-
 #else
     // C99 doesn't have a built-in static assert, so we have to use this neat trick.
     // If the condition is false, the compiler will complain that the array size is negative.
@@ -53,18 +55,29 @@
 #if defined C23OrLater 
     // Built-in Standard C23 alignas.
     #define aligned(x) alignas(x)
-
 #elif defined C11OrLater 
     // Built-in Standard C11 alignas.
     #define aligned(x) _Alignas(x)
-
-#elif defined C99OrLater && defined __GNUC__  || defined __clang__ 
+#elif defined C99OrLater && (defined __GNUC__  || defined __clang__) 
     // C99 doesn't have a built-in alignas, so we use compiler-specific attributes.
     #define aligned(x) __attribute__((aligned(x)))
-
 #else
-    #define aligned(x) // No alignas support, just ignore it.
+    // No alignas support, just ignore it.
+    #define aligned(x)
+#endif
 
+#if defined C23OrLater
+    // C23 already defines bool (equivalent to _Bool), true, and false as language keywords.
+    // There's (most likely) no need for us to do anything here.
+    // According to the C23 standard, when casting to a bool, the result is false if the 
+    // value is a zero (for arithmetic types) or null (for pointers), otherwise the result is true.
+#else
+    // C99 introducted _Bool, we'll typedef it as bool for the sake of readability.
+    // According to the C99 and C11 standards, when casting to a _Bool the result
+    // is 0 if the value compares equal to 0, otherwise the result is 1.
+    typedef _Bool bool;
+    #define true  ((bool)1)
+    #define false ((bool)0)
 #endif
 
 // As defined by the C11 standard:
@@ -246,11 +259,12 @@ typedef int64 intptr;
 
 // Branch prediction hints for performance optimizations.
 #if defined __GNUC__ || defined __clang__
-    // Double negation (!!) essentially casts the value of the expression to a bool (1 or 0).
-    #define likely(expression, value) (__builtin_expect(!!(expression), !!(value)))
+    // According to the C99, C11 and C23 standards, casting to a bool here should be safe.
+    // This is much more readable, and makes the intent clearer when compared to !!.
+    #define likely(value, expression) (__builtin_expect((bool)(expression), (bool)(value)))
 #else
     // Not supported on other compilers, just ignore it.
-    #define likely(expression, value) (expression)
+    #define likely(value, expression) (expression)
 #endif
 
 #if (defined __GNUC__ || defined __clang__) && !defined PlatformDarwin

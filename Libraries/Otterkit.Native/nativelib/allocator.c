@@ -183,13 +183,13 @@ void* DynamicAlloc(uint64 length) {
     VirtualPool* pool = heap->Cached[class];
 
     // Go to the fast path, if a cached pool is available.
-    if likely(true, pool != nullptr) goto AllocFastPath;
+    if likely(pool != nullptr) goto AllocFastPath;
 
     // If it's not available, allocate a new one.
     pool = VirtualPoolCreate(heap, length);
 
     // If we failed to allocate a new pool, most likely the heap is full.
-    if likely(false, pool == nullptr) return nullptr;
+    if unlikely(pool == nullptr) return nullptr;
     
     // If we successfully allocated a new pool:
     // Set it as the cached pool for the size class.

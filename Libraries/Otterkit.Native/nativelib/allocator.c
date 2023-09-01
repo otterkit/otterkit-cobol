@@ -1,15 +1,29 @@
-#include "allocator.h" // includes CASPAL.H
+//╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+//│          ╭─╮ Otterkit's Dynamic Memory Allocator ╭───╮       ╭───╮                               │
+//│          │ │  128 TiB Virtually Contiguous Heap  ╰─╮ │       ╰─╮ │                               │
+//│  ╭───────╯ │ ╭─╮     ╭─╮ ╭─────────╮ ╭─────────╮   │ │         │ │       ╭─────────╮ ╭─────────╮ │
+//│  │ ╭─────╮ │ │ │     │ │ │ ╭─────╮ │ ╰───────╮ │   │ │         │ │       │ ╭─────╮ │ │ ╭───────╯ │
+//│  │ │     │ │ │ ╰─────╯ │ │ │     │ │ ╭───────╯ │   │ │         │ │       │ │     │ │ │ │         │
+//│  │ │     │ │ ╰───────╮ │ │ │     │ │ │ ╭─────╮ │   │ │         │ │       │ │     │ │ │ │         │
+//│  │ ╰─────╯ │ ╭───────╯ │ │ │     │ │ │ ╰─────╯ │ ╭─╯ ╰─────╮ ╭─╯ ╰─────╮ │ ╰─────╯ │ │ ╰───────╮ │
+//│  ╰─────────╯ ╰─────────╯ ╰─╯     ╰─╯ ╰─────────╯ ╰─────────╯ ╰─────────╯ ╰─────────╯ ╰─────────╯ │
+//╰──────────────────────────────────────────────────────────────────────────────────────────────────╯ 
+#include "allocator.h" // includes CASPAL.h
 
-private VirtualHeap GlobalHeap;
+// The base address of the heap.
+private uint8* BaseAddress;
+// The total capacity of the heap, in bytes.
+private uint64 Capacity;
+// The cached pool lookup table (indexed by size class).
+private VirtualPool* Cached[312];
+// The bit tree of available virtual pools.
+private VirtualTree* BitTree;
+// Whether the heap has been initialized.
+private bool Initialized;
 
-VirtualHeap* VirtualHeapGetGlobalHeap(void) { 
-    return &GlobalHeap; 
-}
-
-void VirtualHeapInitialize(VirtualHeap* instance, uint64 size)
-{
+void VirtualHeapInitialize(uint64 size) {
     // Avoid overwriting the allocator instance if it has already been initialized.
-    if (instance->IsInitialized) return;
+    if (Initialized) return;
 
     // If the size is 0, then we allocate the default 2TiB of address space.
     if (size == 0) size = 2ull << 40;
@@ -20,40 +34,37 @@ void VirtualHeapInitialize(VirtualHeap* instance, uint64 size)
     // Align the heap to a 128KiB boundary (needed to make deallocation work properly)
     uintptr aligned = ((uintptr)base + (131072 - 1)) & -131072;
 
-    instance->BaseAddress = (uint8*)aligned;
-    instance->Capacity = size;
+    BaseAddress = (uint8*)aligned;
+    Capacity = size;
 
     // Allocate the bit tree.
-    instance->BitTree = (VirtualTree*)SystemAlloc(
+    BitTree = (VirtualTree*)SystemAlloc(
         nullptr, sizeof(VirtualTree), SYS_READWRITE, SYS_ALLOCATE
     );
+
+    Initialized = true;
 }
 
 initializer void VirtualHeapDefault(void) { 
-    VirtualHeapInitialize(&GlobalHeap, 0); 
+    VirtualHeapInitialize(0); 
 }
 
-private inline VirtualPool* VirtualPoolCreate(VirtualHeap* allocator, uint64 blockLength) {
-    VirtualTree* tree = allocator->BitTree;
+private VirtualPool* VirtualPoolCreate(uint64 blockLength) {
+    VirtualTree* tree = BitTree;
 
     uint64* root = &tree->Root;
-
     uint64 indexRoot = __tzcnt_u64(~(*root)); // 64
 
     uint64* trunk = &tree->Trunks[indexRoot];
-
     uint64 indexTrunk = __tzcnt_u64(~(*trunk)); // 4096
 
     uint64* branch = &tree->Branches[(indexRoot << 6) + indexTrunk];
-
     uint64 indexBranch = __tzcnt_u64(~(*branch)); // 131072
 
     uint64* twig = &tree->Twigs[(indexRoot << 12) + (indexTrunk << 6) + indexBranch];
-
     uint64 indexTwig = __tzcnt_u64(~(*twig)); // 4194304
 
     uint64* leaf = &tree->Leaves[(indexRoot << 18) + (indexTrunk << 12) + (indexBranch << 6) + indexTwig];
-
     uint64 indexLeaf = __tzcnt_u64(~(*leaf)); // 1073741824
 
     *leaf |= (1ull << indexLeaf);
@@ -67,10 +78,10 @@ private inline VirtualPool* VirtualPoolCreate(VirtualHeap* allocator, uint64 blo
     if (*trunk == ~0ull) *root |= (1ull << indexRoot);
 
     // If the root is full, then the entire heap is full (all 128TiB of it)
-    if (*root == ~0ull) return nullptr;
+    if likely(false, *root == ~0ull) return nullptr;
 
     VirtualPool* pool = (void*)(
-        allocator->BaseAddress 
+        BaseAddress 
         + ((indexRoot << 24) 
         + (indexTrunk << 18) 
         + (indexBranch << 12) 
@@ -100,7 +111,7 @@ private inline VirtualPool* VirtualPoolCreate(VirtualHeap* allocator, uint64 blo
     return pool;
 }
 
-private inline void VirtualPoolDecommit(VirtualHeap* allocator, VirtualPool* pool) {
+private void VirtualPoolDecommit(VirtualPool* pool) {
     VirtualIndex index = pool->Index;
 
     // Unpack the bit index back to uint64s.
@@ -110,7 +121,7 @@ private inline void VirtualPoolDecommit(VirtualHeap* allocator, VirtualPool* poo
     uint64 indexTwig   = index.Twig;
     uint64 indexLeaf   = index.Leaf;
 
-    VirtualTree* tree = allocator->BitTree;
+    VirtualTree* tree = BitTree;
 
     uint64* root = &tree->Root;
 
@@ -174,29 +185,27 @@ private inline uint64 AlignLengthToSizeClass(uint64 length) {
     return aligned - 1;
 }
 
-void* DynamicAlloc(uint64 length) {
-    // Get the global heap instance.
-    VirtualHeap* heap = &GlobalHeap;
+private inline void* SmallAlloc(uint64 length) {
     // Align the length to one of the small size classes.
     uint64 class = AlignLengthToSizeClass(length);
     // Fetch the heap's cached pool for the size class.
-    VirtualPool* pool = heap->Cached[class];
+    VirtualPool* pool = Cached[class];
 
     // Go to the fast path, if a cached pool is available.
-    if likely(true, pool != nullptr) goto AllocFastPath;
+    if likely(true, pool != nullptr) goto FastAllocPath;
 
-    // If it's not available, allocate a new one.
-    pool = VirtualPoolCreate(heap, length);
+    // If it's not available, allocate a new one (slow path).
+    pool = VirtualPoolCreate(length);
 
     // If we failed to allocate a new pool, most likely the heap is full.
     if likely(false, pool == nullptr) return nullptr;
     
     // If we successfully allocated a new pool:
     // Set it as the cached pool for the size class.
-    heap->Cached[class] = pool;
+    Cached[class] = pool;
 
-    AllocFastPath:/* empty */;
-    // Allocate a block from the pool.
+    FastAllocPath:/* empty */;
+    // Allocate a block from the pool (fast path).
     uint8* block = nullptr;
 
     // If there are any uninitialized blocks, initialize one.
@@ -219,15 +228,13 @@ void* DynamicAlloc(uint64 length) {
     
     // If the pool is now empty, set the cached pool to null.
     if likely(false, pool->Available == 0) {
-        heap->Cached[class] = nullptr;
+        Cached[class] = nullptr;
     }
 
     return block;
 }
 
-void DynamicDealloc(void* address) {
-    // Get the global heap instance.
-    VirtualHeap* heap = &GlobalHeap;
+private inline void SmallDealloc(void* address) {
     // Get the pool that the deallocated block belongs to.
     VirtualPool* pool = (VirtualPool*)((uintptr)address & -131072);
 
@@ -246,14 +253,62 @@ void DynamicDealloc(void* address) {
     uint64 class = AlignLengthToSizeClass(pool->BlockLength);
 
     // Get the cached pool for the size class.
-    VirtualPool** cached = &heap->Cached[class];
+    VirtualPool** cached = &Cached[class];
     // Set the pool as the cached pool for the size class, if there isn't one already.
     if (*cached == nullptr) *cached = pool;
 
     // Decommit the pool if it's empty and there's already a cached pool for the size class.
     if (*cached != pool && pool->Available == pool->Capacity) {
-        VirtualPoolDecommit(heap, pool);
+        VirtualPoolDecommit(pool);
     }
 }
 
+private inline void* LargeAlloc(uint64 length) {
+    // Large allocations (bigger than 32 KiB) are treated differently, 
+    // and are allocated outside the heap's fixed size virtual pools.
+    uint8* block = SystemAlloc(nullptr, length + 16, SYS_READWRITE, SYS_ALLOCATE);
+    // This is quite a bit slower than the virtual pools, but also,
+    // large allocations are much rarer according to recent research papers.
+    VirtualPool* pool = (VirtualPool*)block;
+
+    // We initialize a pool with a capacity of one, which is needed to make
+    // deallocation possible later (we need to keep track of the length).
+    pool->BlockLength = length;
+    pool->Capacity = 1;
+
+    // Skip the first 16 bytes, which we're using to store the pool header.
+    return block + 16;
+}
+
+private inline void LargeDealloc(void* address)
+{
+    // Get the single capacity virtual pool for this large block
+    VirtualPool* pool = (void*)((uint8*)address - 16);
+    // Get the length of the large allocation (+16 for the header)
+    uint64 allocLength = pool->BlockLength + 16;
+
+    // Deallocate it directly, we can't cache large blocks.
+    SystemDealloc(pool, allocLength);
+}
+
+public void* DynamicAlloc(uint64 length) {
+    // Likely false because large allocations are much more rare
+    // on average than smaller ones.
+    if likely(false, length > 32768) {
+        return LargeAlloc(length);
+    }
+    // This should get optimized to a tailcall, hopefully.
+    return SmallAlloc(length);
+}
+
+public void DynamicDealloc(void* address) {
+    uint8* base = BaseAddress;
+    uint64 capacity = Capacity;
+
+    if likely(false, (uint8*)address < base && (uint8*)address > (base + capacity)) {
+        LargeDealloc(address);
+    }
+
+    SmallDealloc(address);
+}
 

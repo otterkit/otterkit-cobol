@@ -59,11 +59,11 @@ typedef struct vheap_t
     // The total capacity of the heap, in bytes.
     uint64 Capacity;
     // The cached pool lookup table (indexed by size class).
-    VirtualPool* Cached[120];
+    VirtualPool* Cached[312];
     // The bit tree of available virtual pools.
     VirtualTree* BitTree;
     // Whether the heap has been initialized.
-    uint8 IsInitialized;
+    bool Initialized;
 } VirtualHeap;   
 
 // Virtual stack for static memory allocation
@@ -76,7 +76,7 @@ typedef struct vstack_t
     // The total capacity of the stack, in bytes.
     uint64 Capacity;
     // Whether the stack has been initialized.
-    uint8 IsInitialized;
+    bool Initialized;
 } VirtualStack;
 
 #endif // VIRTUAL_ALLOCATOR_H

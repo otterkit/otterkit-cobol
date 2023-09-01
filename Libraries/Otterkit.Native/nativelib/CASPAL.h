@@ -260,12 +260,10 @@ typedef int64 intptr;
 // Branch prediction hints for performance optimizations.
 #if defined __GNUC__ || defined __clang__
     // According to the C99, C11 and C23 standards, casting to a bool here should be safe.
-    #define likely(expression) (__builtin_expect((bool)(expression), true))
-    #define unlikely(expression) (__builtin_expect((bool)(expression), false))
+    #define likely(expect, condition) (__builtin_expect((bool)(condition), (bool)(expect)))
 #else
     // Not supported on other compilers, just ignore it.
-    #define likely(expression) (expression)
-    #define unlikely(expression) (expression)
+    #define likely(expect, condition) (condition)
 #endif
 
 #if (defined __GNUC__ || defined __clang__) && !defined PlatformDarwin

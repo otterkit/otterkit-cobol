@@ -238,7 +238,13 @@ typedef int64 intptr;
 
 // Shared library, set visibility to export all "public" symbols.
 // Should be used with `-fvisibility=hidden` compiler flag on GCC and Clang.
-#if defined __GNUC__ || defined __clang__
+#if (defined __GNUC__ || defined __clang__) && defined PlatformWindows
+    // `visibility("default")` doesn't seem to work on Windows. Fortunately both compilers
+    // support the below attribute as well, which doesn't require the `__declspec` MSVC syntax.
+    #define public __attribute__((dllexport))
+#elif (defined __GNUC__ || defined __clang__)
+    // This should work on most Unix-like systems. It should also be used together with 
+    // `-fvisibility=hidden` to avoid bloating the export table with unnecessary symbols.
     #define public __attribute__((visibility("default")))
 #else
     // Not supported on other compilers, just ignore it.

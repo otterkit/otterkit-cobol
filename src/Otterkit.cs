@@ -5,12 +5,49 @@ using Otterkit.Tokenizers;
 using Otterkit.Workspaces;
 using Otterkit.Types;
 
+using Otterkit.Native;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
+
+using System.Runtime.InteropServices;
+
 namespace Otterkit;
+
+[MemoryDiagnoser]
+public unsafe partial class Bench {
+    public static void Run() {
+        BenchmarkRunner.Run<Bench>();
+    }
+
+    [LibraryImport("nativelib", EntryPoint = "DynamicAlloc")]
+    public static partial void* DynamicAlloc(long length);
+
+    [LibraryImport("nativelib", EntryPoint = "DynamicDealloc")]
+    public static partial void DynamicDealloc(void* length);
+
+    [Benchmark]
+    public void BenchmarkDynamicAlloc() {
+        byte* alloc = (byte*)DynamicAlloc(32);
+        alloc[0] = 10;
+        alloc[31] = 200;
+        DynamicDealloc(alloc);
+    }
+
+    [Benchmark]
+    public void BenchmarkMalloc() {
+        byte* alloc = (byte*)NativeMemory.Alloc(32);
+        alloc[0] = 10;
+        alloc[31] = 200;
+        NativeMemory.Free(alloc);
+    }
+}
 
 public static class Otterkit
 {
     public static void Main(string[] args)
     {
+        Bench.Run();
+
         if (args.Length < 1 || args[0].Equals("-h") || args[0].Equals("--help"))
         {
             DisplayHelpMessage();

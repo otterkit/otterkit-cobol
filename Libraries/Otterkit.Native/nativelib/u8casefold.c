@@ -1735,13 +1735,13 @@ private inline uint64 PopulationCount(uint64 value)
 
 private inline uint8 RuneLength(uint8 byte)
 {
-    if (byte < 0b10000000) return 1;
+    if (byte < 128) return 1;
 
-    if ((byte & 0b11100000) == 0b11000000) return 2;
+    if ((byte & 224) == 192) return 2;
 
-    if ((byte & 0b11110000) == 0b11100000) return 3;
+    if ((byte & 240) == 224) return 3;
 
-    if ((byte & 0b11111000) == 0b11110000) return 4;
+    if ((byte & 248) == 240) return 4;
 
     return 0;
 }
@@ -1775,20 +1775,20 @@ private inline const uint8* MappingSearch(const uint8* data)
     {
         // The trie is designed to be used with non-ASCII UTF-8 data, so we only need to look at the last 6 bits.
         // The first two bits are always either 10xx.. or 11xx.., so we can toggle them off.
-        uint8 byte = *index++ & 0b00111111;
+        uint8 byte = *index++ & 63;
 
         // The above operation will leave us with a compressed byte with maximum value of 64.
         // This is a huge space optimization, we can then use a single uint64 to store the bitmap.
         // The bitmap is a 64-bit integer with each bit representing a possible next byte.
-        uint8 bitmap = node->bitmap;
+        uint64 bitmap = node->bitmap;
 
         // If the byte is not in the current node's bitmap, we can stop searching.
         // The byte sequence is not in the trie, so we return a no match error.
-        if (((bitmap >> byte) & 1UL) == 0) return data;
+        if (((bitmap >> byte) & 1ull) == 0) return data;
 
         // Count the number of bits set before the current byte.
         // This plus the offset of the current node's first child node is the index of the next node.
-        uint8 count = PopulationCount(bitmap & ((1UL << byte) - 1));
+        uint8 count = PopulationCount(bitmap & ((1ull << byte) - 1));
 
         // Fetch the next node.
         node = &root[node->offset + count];

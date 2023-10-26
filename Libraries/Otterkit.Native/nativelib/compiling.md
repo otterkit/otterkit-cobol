@@ -10,4 +10,4 @@ clang -shared -Wl,-rpath -O3 -fPIC -Wall -W -o ../build/nativelib.so *.c decNumb
 
 ## compile macos-x64:
 
-clang -dynamiclib -O3 -Wall -W -o ../build/nativelib.dylib *.c ../decNumber/decContext.c ../decNumber/decDouble.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c -march=core-avx2
+clang -dynamiclib -O3 -std=c11 -pedantic -Wall -Wextra -Werror -o ../build/nativelib.dylib *.c ../decNumber/decContext.c ../decNumber/decDouble.c ../decNumber/decQuad.c ../decNumber/decNumber.c ../decNumber/decimal128.c ../decNumber/decimal64.c -march=native

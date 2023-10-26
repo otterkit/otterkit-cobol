@@ -20,5 +20,5 @@ public void WriteLn(const uint8* string)
 
 public void ReadLn(uint8* buffer, int32 length)
 {
-    fgets((const char*)buffer, length, stdin);
+    fgets((char*)buffer, length, stdin);
 }

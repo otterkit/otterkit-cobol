@@ -17,7 +17,7 @@
     <PackageId>Otterkit.Runtime</PackageId>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.7.85</Version>
+    <Version>1.7.90</Version>
     <Copyright>Copyright (c) Otterkit 2023</Copyright>
     <Authors>Otterkit Authors</Authors>
     <Company>Otterkit Project</Company>

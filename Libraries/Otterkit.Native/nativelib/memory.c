@@ -1,12 +1,12 @@
 #include "CASPAL.h"
 
 // Thin abstraction of a contiguous block of memory.
-typedef struct span_t { void* pointer; uint64 length; } MemorySpan;
+typedef struct span_t { uint8* pointer; uint64 length; } MemorySpan;
 
 public void ottrkAlignedZeroFill(const MemorySpan to)
 {
 	// Goto loop buffer index.
-	uint32 i = 0;
+	uint64 i = 0;
 
 	// 128-bit vector of zeros.
     vec128i zeros = _mm_setzero_si128();
@@ -14,7 +14,7 @@ public void ottrkAlignedZeroFill(const MemorySpan to)
 	// Loop through the remaining bytes in the destination buffer, zeroing them out.
 	zeroLoop:
 	// 128-bit store of zeros to destination.
-	_mm_store_si128((vec128i*) to.pointer + i, zeros);
+	_mm_store_si128((vec128i*) (to.pointer + i), zeros);
 
 	i += 16;
 
@@ -25,7 +25,7 @@ public void ottrkAlignedZeroFill(const MemorySpan to)
 public void ottrkAlignedFill(const uint8 with, const MemorySpan to)
 {
 	// Goto loop buffer index.
-	uint32 i = 0;
+	uint64 i = 0;
 
 	// 128-bit vector of the fill byte.
 	vec128i fill = _mm_set1_epi8(with);
@@ -44,7 +44,7 @@ public void ottrkAlignedFill(const uint8 with, const MemorySpan to)
 public void ottrkAlignedMove(const MemorySpan from, const MemorySpan to)
 {
 	// Goto loop buffer index.
-	uint32 i = 0;
+	uint64 i = 0;
 
 	// Loop through the source and destination buffers, copying 16 bytes at a time.
 	copyLoop:

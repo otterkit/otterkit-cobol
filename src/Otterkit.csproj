@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Optimize>true</Optimize>
+    <Deterministic>true</Deterministic>
+    <PublishRelease>true</PublishRelease>
+    <!-- <PublishAot>true</PublishAot> -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackAsTool>true</PackAsTool>
+    <PackRelease>true</PackRelease> 
+    <ToolCommandName>otterkit</ToolCommandName>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Version>1.0.80</Version>
+    <Copyright>Copyright (c) Otterkit 2023</Copyright>
+    <Authors>Otterkit Authors</Authors>
+    <Company>Otterkit Project</Company>
+    <PackageIcon>OtterkitIcon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>Otterkit;Standard;COBOL;Compiler</PackageTags>
+    <PackageProjectUrl>https://github.com/otterkit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/otterkit/otterkit</RepositoryUrl> 
+    <RepositoryType>git</RepositoryType>
+    <Description>
+      Main package for the Otterkit COBOL compiler. This package installs the compiler as a dotnet global tool.
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../Assets/OtterkitIcon.png" Pack="true" PackagePath="/" />
+    <None Include="../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Libraries/Otterkit.Runtime/Otterkit.Runtime.csproj" />
+    <ProjectReference Include="../Libraries/Otterkit.Native/src/Otterkit.Native.csproj" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Otterkit.Analyzers/Otterkit.Analyzers.csproj" />
+    <ProjectReference Include="../Otterkit.CodeGenerators/Otterkit.CodeGenerators.csproj" />
+    <ProjectReference Include="../Otterkit.Tokenizers/Otterkit.Tokenizers.csproj" />
+    <ProjectReference Include="../Otterkit.Workspaces/Otterkit.Workspaces.csproj" />
+    <ProjectReference Include="../Otterkit.Types/Otterkit.Types.csproj" />
+  </ItemGroup>
+
+</Project>

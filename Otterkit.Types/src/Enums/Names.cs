@@ -1,0 +1,38 @@
+namespace Otterkit.Types;
+
+[Flags]
+public enum Names
+{
+    None,
+    Alphabet,
+    Class                   = 1 << 1,
+    CompilationVariable     = 1 << 2,
+    Condition               = 1 << 3,
+    Constant                = 1 << 4,
+    Data                    = 1 << 5,
+    Directive               = 1 << 6,
+    DynamicLengthStructure  = 1 << 7,
+    File                    = 1 << 8,
+    FunctionPrototype       = 1 << 9,
+    Index                   = 1 << 10,
+    Interface               = 1 << 11,
+    LevelNumber             = 1 << 12,
+    Locale                  = 1 << 13,
+    Method                  = 1 << 14,
+    Mnemonic                = 1 << 15,
+    ObjectClass             = 1 << 16,
+    Ordering                = 1 << 17,
+    Paragraph               = 1 << 18,
+    Parameter               = 1 << 19,
+    Program                 = 1 << 20,
+    ProgramPrototype        = 1 << 21,
+    Property                = 1 << 22,
+    RecordKey               = 1 << 23,
+    Record                  = 1 << 24,
+    Report                  = 1 << 25,
+    Screen                  = 1 << 26,
+    Section                 = 1 << 27,
+    SymbolicCharacter       = 1 << 28,
+    Type                    = 1 << 29,
+    UserFunction            = 1 << 30,
+}

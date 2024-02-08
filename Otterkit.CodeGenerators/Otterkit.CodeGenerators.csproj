@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Optimize>true</Optimize>
+    <Deterministic>true</Deterministic>
+    <PublishRelease>true</PublishRelease>
+    <!-- <PublishAot>true</PublishAot> -->
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackRelease>true</PackRelease>
+    <PackageId>Otterkit.CodeGenerators</PackageId>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Version>1.0.70</Version>
+    <Copyright>Copyright (c) Otterkit 2023</Copyright>
+    <Authors>Otterkit Authors</Authors>
+    <Company>Otterkit Project</Company>
+    <PackageIcon>OtterkitIcon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>Otterkit;COBOL;Compiler;Generators</PackageTags>
+    <PackageProjectUrl>https://github.com/otterkit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/otterkit/otterkit</RepositoryUrl> 
+    <RepositoryType>git</RepositoryType>
+    <Description>
+      This package contains the Standard COBOL code generators for the Otterkit compiler.
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../Assets/OtterkitIcon.png" Pack="true" PackagePath="/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Otterkit.Types/Otterkit.Types.csproj" />
+    <ProjectReference Include="../Otterkit.Analyzers/Otterkit.Analyzers.csproj" />
+  </ItemGroup>
+
+</Project>

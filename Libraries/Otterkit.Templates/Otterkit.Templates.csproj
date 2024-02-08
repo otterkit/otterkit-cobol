@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <PackageType>Template</PackageType>
+    <PackageId>Otterkit.Templates</PackageId>
+    <Title>Otterkit COBOL Templates</Title>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <NoWarn>$(NoWarn);NU5128;NU5100</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Version>1.7.50</Version>
+    <Copyright>Copyright (c) Otterkit 2023</Copyright>
+    <Authors>Otterkit Authors</Authors>
+    <Company>Otterkit Project</Company>
+    <PackageIcon>OtterkitIcon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>Otterkit;COBOL;Project;Templates</PackageTags>
+    <PackageProjectUrl>https://github.com/otterkit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/otterkit/otterkit</RepositoryUrl> 
+    <RepositoryType>git</RepositoryType>
+    <Description>
+      This package contains the templates needed to generate new Otterkit COBOL projects.
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="templates\**\*" Exclude="templates\**\bin\**;templates\**\obj\**" />
+    <Compile Remove="**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../Assets/OtterkitIcon.png" Pack="true" PackagePath="/"/>
+    <None Include="../../README.md" Pack="true" PackagePath="/"/>
+  </ItemGroup>
+
+</Project>

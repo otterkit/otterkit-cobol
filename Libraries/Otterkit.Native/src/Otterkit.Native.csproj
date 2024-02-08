@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Optimize>true</Optimize>
+    <Deterministic>true</Deterministic>
+    <PublishRelease>true</PublishRelease>
+    <!-- <PublishAot>true</PublishAot> -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);NU5100</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackRelease>true</PackRelease> 
+    <PackageId>Otterkit.Native</PackageId>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Version>1.7.80</Version>
+    <Copyright>Copyright (c) Otterkit 2023</Copyright>
+    <Authors>Otterkit Authors</Authors>
+    <Company>Otterkit Project</Company>
+    <PackageIcon>OtterkitIcon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>Otterkit;COBOL;Native;Library</PackageTags>
+    <PackageProjectUrl>https://github.com/otterkit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/otterkit/libotterkit</RepositoryUrl> 
+    <RepositoryType>git</RepositoryType>
+    <Description>
+      This package contains native interop methods for Otterkit's runtime library.
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../../Assets/OtterkitIcon.png" Pack="true" PackagePath="/" />
+    <None Include="../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="../build/nativelib.*" Pack="true" PackagePath="/">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+  </ItemGroup>
+
+</Project>

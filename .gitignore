@@ -3,16 +3,6 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-# Otterkit compiler files
-.otterkit/
-nupkg/
-publish/
-
-# COBOL source files
-*.cob
-*.cbl
-*.cpy
-
 # Build files
 nativeBindings/*.dylib
 nativeBindings/*.dll

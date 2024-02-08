@@ -34,8 +34,6 @@
 #endif
 
 #if !defined __STDC_VERSION__
-    // Will error on MSVC! It still seems to be stuck on C89, it doesn't define __STDC_VERSION__, and only runs on Windows.
-    // (Not worth the preprocessor gymnastics and compiler-specific hacks to support it in my opinion!)
     #error "Standard C99 (or later) support is required. Consider upgrading your compiler, or using GCC or Clang instead."
 #endif
 

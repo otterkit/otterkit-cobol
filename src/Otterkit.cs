@@ -259,6 +259,7 @@ public static class Otterkit
 
         if (CompilerOptions.Mode is BuildType.BuildOnly)
         {
+            Directory.CreateDirectory(".otterkit/Artifacts");
             CodeGenerator.Generate(CompilerContext.SourceTokens, CompilerOptions.Main);
 
             Directory.CreateDirectory(".otterkit/Build");
@@ -267,8 +268,10 @@ public static class Otterkit
 
         if (CompilerOptions.Mode is BuildType.BuildAndRun)
         {
+            Directory.CreateDirectory(".otterkit/Artifacts");
             CodeGenerator.Generate(CompilerContext.SourceTokens, CompilerOptions.Main);
 
+            CallDotnetCompiler("build");
             Directory.CreateDirectory(".otterkit/Build");
             CallDotnetCompiler("run");
         }
